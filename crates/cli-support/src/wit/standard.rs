@@ -452,18 +452,24 @@ pub enum Instruction {
     },
     /// pops ptr/length of a buffer holding `length` element ABIs, each laid
     /// out as `words`, pushes the array `elem` decodes them into (or
-    /// `undefined` for a null `optional` buffer), frees the buffer
+    /// `undefined` for a null `optional` buffer), frees the buffer. When
+    /// `staged`, every element's words are read out and the buffer freed
+    /// before any element is decoded, so `elem` may call into Wasm.
     EncodedSliceLoad {
         words: Vec<AdapterType>,
         elem: Vec<InstructionData>,
         mem: walrus::MemoryId,
         free: walrus::FunctionId,
         optional: Option<OptionKind>,
+        staged: bool,
     },
     /// pops an array (or, `optional`, `undefined`), encodes each element with
     /// `elem` into the `words` of its ABI in a buffer allocated with `malloc`
     /// (freed with `free` if an element throws), pushes the buffer's
-    /// ptr/length (ptr 0 for `undefined`)
+    /// ptr/length (ptr 0 for `undefined`). When `staged`, every element is
+    /// encoded before the buffer is allocated, so `elem` may call into Wasm,
+    /// and what the encoded elements own is released if a later one throws,
+    /// a handle with `drop` when externrefs live in the table.
     EncodedSliceStore {
         words: Vec<AdapterType>,
         elem: Vec<InstructionData>,
@@ -472,6 +478,8 @@ pub enum Instruction {
         mem: walrus::MemoryId,
         optional: bool,
         option_kind: OptionKind,
+        staged: bool,
+        drop: Option<walrus::FunctionId>,
     },
     /// pops i32, loads externref from externref table
     TableGet,
@@ -668,11 +676,18 @@ impl walrus::CustomSection for NonstandardWitSection {
                     roots.push_func(free);
                 }
                 EncodedSliceStore {
-                    malloc, free, mem, ..
+                    malloc,
+                    free,
+                    mem,
+                    drop,
+                    ..
                 } => {
                     roots.push_memory(mem);
                     roots.push_func(malloc);
                     roots.push_func(free);
+                    if let Some(drop) = drop {
+                        roots.push_func(drop);
+                    }
                 }
                 VectorLoad { free, mem, .. }
                 | OptionVectorLoad { free, mem, .. }

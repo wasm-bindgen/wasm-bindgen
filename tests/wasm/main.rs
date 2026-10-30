@@ -85,6 +85,7 @@ pub mod slice_elements;
 pub mod slice_jsvalue;
 pub mod slice_modes;
 pub mod slice_to_array;
+pub mod staged_vectors;
 pub mod static_string;
 pub mod string_vecs;
 pub mod struct_vecs;

@@ -1688,6 +1688,17 @@ fn abi_option(
     }
 }
 
+/// The length of an incoming optional encoded vector that's absent: a
+/// nullable `null` buffer is the null pointer with the `null` handle as its
+/// length.
+fn encoded_empty_len(val: &str, kind: OptionKind) -> String {
+    if kind.nullable() {
+        format!("{val} === null ? {NULL_HANDLE} : 0")
+    } else {
+        "0".into()
+    }
+}
+
 /// The empty value of an outgoing optional slice whose pointer is null: when
 /// `kind` is nullable, `null` for a length of the `null` handle.
 fn empty_vector_value(len: &str, kind: OptionKind) -> String {
@@ -2141,7 +2152,7 @@ fn instruction(
             let i = js.tmp();
             // `Nullable::Null` is the pointer `1`, which no instance can have.
             let (empty, owned) = if kind.nullable() {
-                (format!("{val} === null ? 1 : 0"), "> 1")
+                (format!("{val} === null ? 1 : 0"), " > 1")
             } else {
                 ("0".into(), "")
             };
@@ -2810,6 +2821,7 @@ fn instruction(
             mem,
             free,
             optional,
+            staged,
         } => {
             let len = js.pop();
             let ptr = js.pop();
@@ -2822,27 +2834,48 @@ fn instruction(
             } else {
                 format!("{memory}()")
             };
-            // Decoding never calls into wasm, so memory cannot grow under the
-            // loop and one view serves the whole buffer.
+            // Nothing calls into wasm while the buffer is read, so memory
+            // cannot grow under the loop and one view serves the whole
+            // buffer. A staged element may call into wasm as it's decoded, so
+            // every word is read out first.
             let view = js.local(format!("view{i}"));
             let (fields, stride, align) = encoded_slice_layout(words)?;
             let reads = fields
                 .iter()
                 .map(|(offset, ty)| format!("{view}.get{ty}({p} + {offset}, true)"))
                 .collect::<Vec<_>>();
+            let w = format!("w{i}");
+            let k = format!("k{i}");
+            let cells = if *staged {
+                js.local(w.clone());
+                js.local(k.clone());
+                (0..reads.len())
+                    .map(|n| match n {
+                        0 => format!("{w}[{k}]"),
+                        n => format!("{w}[{k} + {n}]"),
+                    })
+                    .collect()
+            } else {
+                reads.clone()
+            };
             // Decode one element from its words with its own instructions,
-            // into the loop body.
-            let reads = reads
+            // into the loop body. What an owned element defers, such as
+            // freeing a string, runs once it's decoded.
+            let cells = cells
                 .into_iter()
                 .map(|expr| Value::Expr { expr, pure: false })
                 .collect();
-            let stack = std::mem::replace(&mut js.stack, reads);
+            let stack = std::mem::replace(&mut js.stack, cells);
             let prelude = std::mem::take(&mut js.prelude);
+            let pre_try = std::mem::take(&mut js.pre_try);
+            let finally = std::mem::take(&mut js.finally);
             for instr in elem {
                 instruction(js, &instr.instr, log_error, constructor)?;
             }
             let value = js.pop();
-            let body = render(&std::mem::replace(&mut js.prelude, prelude));
+            let mut body = std::mem::replace(&mut js.pre_try, pre_try);
+            body.push_str(&render(&std::mem::replace(&mut js.prelude, prelude)));
+            let deferred = std::mem::replace(&mut js.finally, finally);
             js.stack = stack;
             let v = js.local(format!("v{i}"));
             let free = js.cx.wasm_export_of(*free);
@@ -2853,17 +2886,40 @@ fn instruction(
             } else {
                 js.prelude(&format!("const {v} = [];"));
             }
-            js.prelude(&format!(
-                "
-                let {p} = {ptr};
-                {coerce}
-                const {view} = {memory};
-                for (const {end} = {p} + {len} * {stride}; {p} < {end}; {p} += {stride}) {{
-                {body}{v}.push({value});
-                }}
-                {free}({ptr}, {len} * {stride}, {align});
-                "
-            ));
+            if *staged {
+                let n = reads.len();
+                let reads = reads.join(", ");
+                js.prelude(&format!(
+                    "
+                    let {p} = {ptr};
+                    {coerce}
+                    const {view} = {memory};
+                    const {w} = [];
+                    for (const {end} = {p} + {len} * {stride}; {p} < {end}; {p} += {stride}) {{
+                    {w}.push({reads});
+                    }}
+                    {free}({ptr}, {len} * {stride}, {align});
+                    for (let {k} = 0; {k} < {w}.length; {k} += {n}) {{
+                    {body}{v}.push({value});
+                    {deferred}}}
+                    "
+                ));
+            } else {
+                if !deferred.is_empty() {
+                    bail!("an encoded slice element that isn't staged defers a call");
+                }
+                js.prelude(&format!(
+                    "
+                    let {p} = {ptr};
+                    {coerce}
+                    const {view} = {memory};
+                    for (const {end} = {p} + {len} * {stride}; {p} < {end}; {p} += {stride}) {{
+                    {body}{v}.push({value});
+                    }}
+                    {free}({ptr}, {len} * {stride}, {align});
+                    "
+                ));
+            }
             if optional.is_some() {
                 js.prelude("}");
             }
@@ -2878,6 +2934,8 @@ fn instruction(
             mem,
             optional,
             option_kind,
+            staged: false,
+            ..
         } => {
             let val = js.pop();
             let i = js.tmp();
@@ -2919,13 +2977,7 @@ fn instruction(
             let alloc = format!("{malloc}({len} * {stride}, {align}){coerce}");
             if *optional {
                 js.declare("let", ptr.clone(), "0".into());
-                // A nullable `null` buffer is the null pointer with the
-                // `null` handle as its length.
-                let empty_len = if option_kind.nullable() {
-                    format!("{val} === null ? {NULL_HANDLE} : 0")
-                } else {
-                    "0".into()
-                };
+                let empty_len = encoded_empty_len(&val, *option_kind);
                 js.declare("let", len.clone(), empty_len);
                 let some = js.is_some(&val, *option_kind);
                 js.prelude(&format!(
@@ -2947,6 +2999,185 @@ fn instruction(
                 const {e} = {val}[{j}];
                 const {p} = {ptr} + {j} * {stride};
                 {body}}}
+                "
+            ));
+            if *optional {
+                js.prelude("}");
+            }
+            js.push(ptr);
+            js.push(len);
+        }
+
+        Instruction::EncodedSliceStore {
+            words,
+            elem,
+            malloc,
+            free,
+            mem,
+            optional,
+            option_kind,
+            staged: true,
+            drop,
+        } => {
+            let val = js.pop();
+            let i = js.tmp();
+            let ptr = js.local(format!("ptr{i}"));
+            let len = js.local(format!("len{i}"));
+            let j = js.local(format!("j{i}"));
+            let k = js.local(format!("k{i}"));
+            let p = js.local(format!("p{i}"));
+            let e = js.local(format!("e{i}"));
+            let w = js.local(format!("w{i}"));
+            let memory = js.cx.expose_dataview_memory(*mem);
+            let memory = if js.cx.config.mode.emscripten() {
+                memory.name.to_string()
+            } else {
+                format!("{memory}()")
+            };
+            let view = js.local(format!("view{i}"));
+            let (fields, stride, align) = encoded_slice_layout(words)?;
+            let n = fields.len();
+            // An element may call into wasm, which can grow memory, so every
+            // element is encoded into `w` first, and the buffer is allocated
+            // and written once nothing else runs.
+            let guard = js.guard.take();
+            let state = std::mem::take(&mut js.instr);
+            let locals = js.locals.clone();
+            let (pre_try, finally) = (js.pre_try.len(), js.finally.len());
+            let stack = std::mem::replace(&mut js.stack, vec![Value::Local(e.clone())]);
+            let prelude = std::mem::take(&mut js.prelude);
+            for instr in elem {
+                js.begin_instr();
+                instruction(js, &instr.instr, log_error, constructor)?;
+                js.end_instr();
+            }
+            if (pre_try, finally) != (js.pre_try.len(), js.finally.len()) {
+                bail!("an encoded vector element registered a `finally`");
+            }
+            let values = std::mem::replace(&mut js.stack, stack);
+            // What the element allocates is released should it throw after.
+            let mut releases = Vec::new();
+            if let Some(guard) = js.guard.take() {
+                let (rest, guarded) = js.split_guard(&guard);
+                releases.clone_from(&guard.releases);
+                js.close_guard(guard, rest, guarded);
+            }
+            // A handle is allocated last, once nothing in the element throws.
+            let mut cells = Vec::with_capacity(n);
+            let mut handles = Vec::new();
+            for (idx, value) in values.into_iter().enumerate() {
+                cells.push(match value {
+                    Value::Alloc(expr) => {
+                        handles.push(idx);
+                        js.declare("const", format!("a{i}_{idx}"), expr)
+                    }
+                    value => value.into_expr(),
+                });
+            }
+            js.prelude(&format!("{w}.push({});", cells.join(", ")));
+            let body = render(&std::mem::replace(&mut js.prelude, prelude));
+            let bound = js
+                .locals
+                .difference(&locals)
+                .cloned()
+                .collect::<HashSet<_>>();
+            js.instr = state;
+            js.guard = guard;
+
+            // The elements encoded so far are released by rebinding each
+            // one's words to the locals its releases name, and dropping its
+            // handles.
+            let mut bindings = Vec::new();
+            for release in &releases {
+                for ident in release.split(|c: char| !(c.is_alphanumeric() || c == '_' || c == '$'))
+                {
+                    if !bound.contains(ident) || bindings.iter().any(|(_, b)| b == ident) {
+                        continue;
+                    }
+                    let Some(idx) = cells.iter().position(|c| c == ident) else {
+                        bail!("an encoded vector element's release reads `{ident}`, which isn't one of its words");
+                    };
+                    bindings.push((idx, ident.to_string()));
+                }
+            }
+            let cell = |idx: usize| match idx {
+                0 => format!("{w}[{k}]"),
+                idx => format!("{w}[{k} + {idx}]"),
+            };
+            let mut release = String::new();
+            for (idx, name) in &bindings {
+                writeln!(release, "const {name} = {};", cell(*idx)).unwrap();
+            }
+            for stmt in &releases {
+                writeln!(release, "{stmt}").unwrap();
+            }
+            for idx in &handles {
+                let drop = match drop {
+                    Some(drop) => js.cx.wasm_export_of(*drop),
+                    None if js.cx.config.externref => {
+                        bail!("an encoded vector element allocates a handle with no `drop`")
+                    }
+                    None => {
+                        js.cx.expose_drop_ref();
+                        "dropObject".to_string()
+                    }
+                };
+                writeln!(release, "{drop}({});", cell(*idx)).unwrap();
+            }
+            let malloc = js.cx.wasm_export_of(*malloc);
+            let free = js.cx.wasm_export_of(*free);
+            let coerce = js.cx.coerce_ptr_suffix();
+            let alloc = format!("{malloc}({len} * {stride}, {align}){coerce}");
+            let mut release_all = String::new();
+            if !release.is_empty() {
+                write!(
+                    release_all,
+                    "if ({w}) for (let {k} = 0; {k} < {w}.length; {k} += {n}) {{\n{release}}}\n"
+                )
+                .unwrap();
+            }
+            write!(
+                release_all,
+                "if ({ptr}) {free}({ptr}, {len} * {stride}, {align});"
+            )
+            .unwrap();
+            if *optional {
+                js.declare("let", ptr.clone(), "0".into());
+                let empty_len = encoded_empty_len(&val, *option_kind);
+                js.declare("let", len.clone(), empty_len);
+                js.declare("const", w.clone(), "[]".into());
+                // An element may throw, which the guard releases the
+                // elements before it for.
+                js.release(release_all);
+                let some = js.is_some(&val, *option_kind);
+                js.prelude(&format!("if ({some}) {{\n{len} = {val}.length;"));
+            } else {
+                js.declare("const", len.clone(), format!("{val}.length"));
+                js.declare("const", w.clone(), "[]".into());
+                js.release(release_all);
+            }
+            js.prelude(&format!(
+                "
+                for (let {j} = 0; {j} < {len}; {j}++) {{
+                const {e} = {val}[{j}];
+                {body}}}
+                "
+            ));
+            if *optional {
+                js.prelude(&format!("{ptr} = {alloc};"));
+            } else {
+                js.declare("const", ptr.clone(), alloc);
+            }
+            let writes = fields
+                .iter()
+                .map(|(offset, ty)| format!("{view}.set{ty}({p} + {offset}, {w}[{k}++], true);\n"))
+                .collect::<String>();
+            js.prelude(&format!(
+                "
+                const {view} = {memory};
+                for (let {j} = 0, {k} = 0; {j} < {len}; {j}++) {{
+                const {p} = {ptr} + {j} * {stride};
+                {writes}}}
                 "
             ));
             if *optional {

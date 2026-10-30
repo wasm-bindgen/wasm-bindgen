@@ -652,15 +652,18 @@ impl InstructionBuilder<'_, '_> {
             seq_value: SeqValue::View,
         };
         // Every element that isn't in place reaches here, so this is what
-        // rejects one the glue can't encode. Element encoders must not call
-        // into wasm: the glue writes the whole buffer through one view after
-        // allocating it. That rules out elements that own memory, such as a
-        // string.
+        // rejects one the glue can't encode. An element that isn't a scalar
+        // may call into Wasm to allocate what it owns, so every element is
+        // encoded before the buffer is allocated. A Rust struct or a handle
+        // is in place on its own, and only reaches here under an `Option` or
+        // `Nullable`.
+        let staged = !elem.scalar_cell();
         match elem {
-            Descriptor::Boolean
-            | Descriptor::Char
-            | Descriptor::Enum { .. }
-            | Descriptor::StringEnum { .. } => encode._incoming(elem)?,
+            Descriptor::String
+            | Descriptor::CachedString
+            | Descriptor::Option(_)
+            | Descriptor::Nullable(_) => encode._incoming(elem)?,
+            _ if elem.scalar_cell() => encode._incoming(elem)?,
             _ => {
                 bail!("unsupported vector element type for calling Rust function from JS: {elem:?}")
             }
@@ -690,6 +693,8 @@ impl InstructionBuilder<'_, '_> {
                 mem,
                 optional,
                 option_kind,
+                staged,
+                drop: None,
             },
             &[ptr_ty.clone(), ptr_ty],
         );

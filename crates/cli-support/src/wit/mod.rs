@@ -3231,6 +3231,12 @@ mod tests {
         let vector = Descriptor::Vector(Box::new(Descriptor::Unit));
         let err = cx.instruction_builder(false).outgoing(&vector).unwrap_err();
         assert!(
+            err.to_string().contains("unsupported vector element type"),
+            "{err}"
+        );
+        let slice = Descriptor::Ref(Box::new(Descriptor::Slice(Box::new(Descriptor::Unit))));
+        let err = cx.instruction_builder(false).outgoing(&slice).unwrap_err();
+        assert!(
             err.to_string().contains("unsupported slice element type"),
             "{err}"
         );

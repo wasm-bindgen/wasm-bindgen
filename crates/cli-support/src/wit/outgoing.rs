@@ -171,7 +171,9 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Vector(cell) => {
                 let kind = match cell.sequence_cell() {
                     SequenceCell::InPlace(kind) => kind,
-                    SequenceCell::Encoded(elem) => return self.outgoing_encoded_slice(elem, None),
+                    SequenceCell::Encoded(elem) => {
+                        return self.outgoing_encoded_slice(elem, true, None)
+                    }
                 };
                 let mem = self.cx.memory()?;
                 let free = self.cx.free()?;
@@ -268,7 +270,9 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Slice(cell) => {
                 let kind = match cell.sequence_cell() {
                     SequenceCell::InPlace(kind) => kind,
-                    SequenceCell::Encoded(elem) => return self.outgoing_encoded_slice(elem, None),
+                    SequenceCell::Encoded(elem) => {
+                        return self.outgoing_encoded_slice(elem, false, None)
+                    }
                 };
                 let mem = self.cx.memory()?;
                 let ptr_ty = self.outgoing_internal_word_ty();
@@ -513,7 +517,7 @@ impl InstructionBuilder<'_, '_> {
                     Descriptor::Vector(cell) => match cell.sequence_cell() {
                         SequenceCell::InPlace(kind) => kind,
                         SequenceCell::Encoded(elem) => {
-                            return self.outgoing_encoded_slice(elem, Some(option_kind))
+                            return self.outgoing_encoded_slice(elem, true, Some(option_kind))
                         }
                     },
                     _ => VectorKind::String,
@@ -735,7 +739,7 @@ impl InstructionBuilder<'_, '_> {
                     Descriptor::Slice(cell) => match cell.sequence_cell() {
                         SequenceCell::InPlace(kind) => kind,
                         SequenceCell::Encoded(elem) => {
-                            return self.outgoing_encoded_slice(elem, Some(option_kind))
+                            return self.outgoing_encoded_slice(elem, false, Some(option_kind))
                         }
                     },
                     _ => VectorKind::String,
@@ -788,17 +792,19 @@ impl InstructionBuilder<'_, '_> {
     /// A sequence with encoded cells, borrowed or owned, is a buffer of its
     /// elements' scalar ABIs. JS reads each element's ABI words from the
     /// buffer and decodes them with the element's own instructions, as for an
-    /// argument of the element type.
+    /// argument of the element type: borrowed for a slice, owned for a
+    /// vector.
     fn outgoing_encoded_slice(
         &mut self,
         elem: &Descriptor,
+        owned: bool,
         optional: Option<OptionKind>,
     ) -> Result<(), Error> {
         // `&[&str]` / `Vec<&str>`: the element is a reference, decoded as
         // borrowed anyway.
-        let elem = match elem {
-            Descriptor::Ref(d) => &**d,
-            d => d,
+        let (elem, owned) = match elem {
+            Descriptor::Ref(d) => (&**d, false),
+            d => (d, owned),
         };
         let mut decode = InstructionBuilder {
             input: Vec::new(),
@@ -813,11 +819,23 @@ impl InstructionBuilder<'_, '_> {
             seq_value: SeqValue::View,
         };
         // Every element that isn't in place reaches here, so this is what
-        // rejects one the glue can't decode. Element decoders must neither call into wasm
-        // nor free: the glue reads the whole buffer through one view and frees
-        // it after the loop. That rules out owned elements, such as an owned
-        // string or a Rust struct.
+        // rejects one the glue can't decode. An owned element that isn't a
+        // scalar may call into Wasm to take what it owns, so its words are
+        // all read out of the buffer before any is decoded. An owned Rust
+        // struct or handle is in place on its own, and only reaches here
+        // under an `Option` or `Nullable`.
+        let staged = owned && !elem.scalar_cell();
         match elem {
+            _ if owned => match elem {
+                Descriptor::String
+                | Descriptor::CachedString
+                | Descriptor::Option(_)
+                | Descriptor::Nullable(_) => decode._outgoing(elem)?,
+                _ if elem.scalar_cell() => decode._outgoing(elem)?,
+                _ => bail!(
+                    "unsupported vector element type for calling JS function from Rust: {elem:?}"
+                ),
+            },
             // `&[&JsString]`: the cell is the borrowed handle.
             Descriptor::String
             | Descriptor::CachedString
@@ -856,6 +874,7 @@ impl InstructionBuilder<'_, '_> {
                 mem,
                 free,
                 optional,
+                staged,
             },
             &[match optional {
                 Some(kind) => array.option_kind(kind),

@@ -12,6 +12,17 @@
   `Option<f64>` or `Nullable<String>`, as std's `contains(&T)` does.
   [#5436](https://github.com/wasm-bindgen/wasm-bindgen/pull/5436)
 
+* Owned encoded vectors, which cross as a buffer of their elements' ABIs, now
+  take elements that own memory or JS handles, in both directions: strings,
+  and `Option<T>`, `Nullable<T>` and `Option<Nullable<T>>` of an exported Rust
+  struct, a JS handle or any other encoded element. The glue encodes every
+  element before it allocates the buffer, and reads every element out before
+  it decodes any, so an element's conversion may call into Wasm. If a later
+  element or argument throws, the strings, Rust objects and handles already
+  encoded are released. `WasmSlice::encode_owned` builds such a buffer in a
+  custom `VectorIntoWasmAbi` impl.
+  [#5432](https://github.com/wasm-bindgen/wasm-bindgen/pull/5432)
+
 * Added a rejection type parameter to `js_sys::Promise<T, E = JsValue>`,
   mirrored on `JsFuture<T, E>`, `PromiseState<T, E>` and
   `PromiseWithResolvers<T, E>`. Awaiting a `Promise<T, E>` yields
