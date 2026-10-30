@@ -239,7 +239,10 @@ and nested unions behave the same:
 pub fn shapes(list: Vec<Outer>) -> Vec<Outer> { list }
 ```
 
-This is not yet supported under `--cfg wasm_bindgen_unstable_generic_vec`.
+The generated TypeScript types such a vector as `any[]` rather than
+`Outer[]`. An array holding an element that matches no variant of a union
+without a `fallback` throws, as a single value does. This is not yet
+supported under `--cfg wasm_bindgen_unstable_generic_vec`.
 
 ### Hiding the type alias
 
