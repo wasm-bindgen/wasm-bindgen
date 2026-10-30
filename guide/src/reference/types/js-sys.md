@@ -151,6 +151,26 @@ let s: JsString = tuple.get1();
 let b: Boolean = tuple.get2();
 ```
 
+## ArrayHeadRest\<H, T\>
+
+Under `--cfg=js_sys_unstable_apis`, an array whose first element is an `H`
+and whose remaining elements are `T`s, TypeScript's `[H, ...T[]]`:
+
+```rust
+use js_sys::{Array, ArrayHeadRest, JsString};
+
+#[wasm_bindgen]
+extern "C" {
+    // `[string[], ...unknown[][]]`: column names, then rows
+    fn rows_with_columns() -> ArrayHeadRest<Array<JsString>, Array>;
+}
+
+let (columns, rows) = rows_with_columns().into_parts();
+```
+
+`head()` reads the first element as `H`, and `rest()` copies the others into
+a new `Array<T>`.
+
 ## Function\<fn(A) -> R\>
 
 Typed JavaScript function with return type and up to 8 arguments.
