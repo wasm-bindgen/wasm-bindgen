@@ -2,6 +2,7 @@ use core::borrow::Borrow;
 use core::ops::{Deref, DerefMut};
 use core::panic::AssertUnwindSafe;
 
+use crate::convert::VectorRefIntoWasmAbi;
 use crate::sys::{JsNullable, JsOption};
 use crate::{describe::*, JsCast};
 use crate::{ErasableGeneric, JsValue};
@@ -42,13 +43,13 @@ pub trait IntoWasmAbi: WasmDescribe {
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
 pub trait RefIntoWasmAbi: ref_into_wasm_abi::Sealed {
-    /// The Wasm ABI type that `&Self` converts into.
+    #[doc(hidden)]
     type Abi: WasmAbi;
 
-    /// Describe `&Self`.
+    #[doc(hidden)]
     fn describe_ref();
 
-    /// Convert `&self` into `Self::Abi`.
+    #[doc(hidden)]
     fn ref_into_abi(&self) -> Self::Abi;
 }
 
@@ -770,6 +771,11 @@ impl_tuple_upcast!([T1 T2 T3 T4 T5 T6 T7 T8] [Target1 Target2 Target3 Target4 Ta
 /// This is a shorthand for `ErasableGeneric<Repr = JsValue>`, used as a bound
 /// on generic parameters that must be representable as JavaScript values.
 ///
+/// It also carries the ABI conversion traits every such type implements, so
+/// generic code bounded by `JsGeneric` alone can pass `T` and `&T` to
+/// `experimental_generic_mono` imports. Its `IntoWasmAbi::Abi` is bounded to
+/// fit a `Result` return, so `Result<T, E>` callback returns cross too.
+///
 /// # When to Use
 ///
 /// Use `JsGeneric` as a trait bound when you need a generic type that:
@@ -789,7 +795,7 @@ impl_tuple_upcast!([T1 T2 T3 T4 T5 T6 T7 T8] [Target1 Target2 Target3 Target4 Ta
 /// # Implementors
 ///
 /// This trait is automatically implemented for all types that implement
-/// `ErasableGeneric<Repr = JsValue>`, including:
+/// `ErasableGeneric<Repr = JsValue>` and crosses the ABI as itself, including:
 /// - All `js_sys` types (`Object`, `Array`, `Function`, etc.)
 /// - `JsValue` itself
 /// - Custom types imported via `#[wasm_bindgen]`
@@ -799,12 +805,26 @@ pub trait JsGeneric:
     + Upcast<Self>
     + Upcast<JsValue>
     + JsCast
+    + IntoWasmAbi<Abi: WasmAbi<Prim3 = (), Prim4 = ()>>
+    + FromWasmAbi
+    + RefIntoWasmAbi
+    + OptionFromWasmAbi
+    + VectorRefIntoWasmAbi
     + 'static
 {
 }
 
-impl<T: ErasableGeneric<Repr = JsValue> + UpcastFrom<T> + Upcast<JsValue> + JsCast + 'static>
-    JsGeneric for T
+impl<T> JsGeneric for T where
+    T: ErasableGeneric<Repr = JsValue>
+        + UpcastFrom<T>
+        + Upcast<JsValue>
+        + JsCast
+        + IntoWasmAbi<Abi: WasmAbi<Prim3 = (), Prim4 = ()>>
+        + FromWasmAbi
+        + RefIntoWasmAbi
+        + OptionFromWasmAbi
+        + VectorRefIntoWasmAbi
+        + 'static
 {
 }
 

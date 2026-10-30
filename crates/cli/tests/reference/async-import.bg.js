@@ -46,7 +46,7 @@ export function __wbg_async_unit_3b3c57d3af03c991() {
     const ret = async_unit();
     return ret;
 }
-export function __wbg_call_a48f35d3fb7572a8() { return handleError(function (arg0, arg1, arg2) {
+export function __wbg_call_b254e041513f2aac() { return handleError(function (arg0, arg1, arg2) {
     const ret = arg0.call(arg1, arg2);
     return ret;
 }, arguments); }
@@ -75,7 +75,7 @@ export function __wbg_queueMicrotask_2030f4836bf1c47b(arg0) {
 export function __wbg_queueMicrotask_a72f977e97f23c5f(arg0) {
     queueMicrotask(arg0);
 }
-export function __wbg_resolve_5556851ee5625d79(arg0) {
+export function __wbg_resolve_05cca9f78fd16401(arg0) {
     const ret = Promise.resolve(arg0);
     return ret;
 }
@@ -117,12 +117,12 @@ export function __wbg_static_accessor_WINDOW_d7f903d1508cbdc4() {
     const ret = typeof window === 'undefined' ? undefined : window;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 }
-export function __wbg_then_230c9d737bc3c90b(arg0, arg1, arg2) {
-    const ret = arg0.then(arg1, arg2);
+export function __wbg_then_53df9d43ca740c27(arg0, arg1) {
+    const ret = arg0.then(arg1);
     return ret;
 }
-export function __wbg_then_ce2a321a994ccb81(arg0, arg1) {
-    const ret = arg0.then(arg1);
+export function __wbg_then_6b99e66fe362c162(arg0, arg1, arg2) {
+    const ret = arg0.then(arg1, arg2);
     return ret;
 }
 export function __wbindgen_generic_0000000000000000(arg0, arg1) {

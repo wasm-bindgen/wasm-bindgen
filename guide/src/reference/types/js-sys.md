@@ -32,6 +32,61 @@ All generic types listed implement `JsGeneric` and default to `JsValue` when typ
 | `Undefined` | JavaScript `undefined` value |
 | `Null` | JavaScript `null` value |
 
+### Rust element types (unstable)
+
+Under `--cfg=js_sys_unstable_apis`, the element APIs of `Array<T>`,
+`Map<K, V>`, `Set<T>`, `Iterator<T>`, `AsyncIterator<T>` and `Promise<T>`
+are [`experimental_generic_mono`](../attributes/on-js-imports/experimental_generic_mono.md)
+imports, so `T` can be any type with an ABI, such as `String`, `bool` or
+`f64`, crossing as itself:
+
+```rust
+use js_sys::{Array, Map, Promise};
+
+let a: Array<String> = ["a", "b"].into_iter().map(String::from).collect();
+a.push(&"c".into());
+assert_eq!(a.get(0).as_deref(), Some("a"));
+assert_eq!(a.iter().collect::<Vec<String>>(), ["a", "b", "c"]);
+
+let m: Map<String, f64> = Map::new_typed();
+m.set(&"k".into(), &1.0);
+assert_eq!(m.get(&"k".into()), Some(1.0));
+
+let v: String = Promise::resolve("x").await?;
+```
+
+Reads bound the element by `FromWasmAbi`, and writes take `&T` bounded by
+`T: RefIntoWasmAbi`, which holds for JS types, `String` and every primitive.
+Borrows deref-coerce to the element type, so
+`Array<JsValue>::push(&js_string)` still works. Each element type gets its own
+JS shim. Generic code over Rust and JS element types alike states the bound
+each position needs, adding `Option<T>: FromWasmAbi` for nullable reads.
+`JsGeneric` implies all of these, so generic code bounded by `T: JsGeneric`
+can use the element APIs as before.
+
+The same holds for `Function` signatures, `ArrayTuple` elements, `WeakMap`
+and `DisposableStack` values and element callbacks, such as those of
+`Array::map`, `Iterator::map`, `Map::group_by` and `Promise::then`:
+
+```rust
+use js_sys::{Array, ArrayTuple, Function};
+
+let f: Function<fn(String, u32) -> String> =
+    Function::new_with_args_typed("s, n", "return s.repeat(n)");
+assert_eq!(f.call(&JsValue::NULL, (&"ab".into(), &2))?, "abab");
+
+let a: Array<String> = ["a", "bb"].into_iter().map(String::from).collect();
+let lengths: Array<u32> = a.map(&mut |s: String, _, _| s.len() as u32);
+let pair: ArrayTuple<(String, u32)> = ArrayTuple::new2(&"a".into(), &1);
+assert_eq!(pair.into_tuple(), ("a".to_string(), 1));
+```
+
+A `Function<fn(..)>` slot may be any type. Calling or binding it needs each
+argument to be `RefIntoWasmAbi` and the return to be `FromWasmAbi`. A generic
+callback return in a `Result`, as in `Promise::then` or `Array::try_map`, is
+bounded by `Result<R, JsError>: ReturnWasmAbi`. `R: JsGeneric` implies it,
+while other generic callers state it themselves.
+
 ---
 
 ## Array\<T\>

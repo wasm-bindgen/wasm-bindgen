@@ -222,7 +222,7 @@ fn unsuffixed_methods_accept_property_keys() {
 
     let entries: Array<ArrayTuple<(u32, Number)>> = Array::new_typed();
     let entry: ArrayTuple<(u32, Number)> =
-        Array::of2(&JsValue::from(9), &Number::from(1)).unchecked_into();
+        Array::of2(&JsValue::from(9), &Number::from(1).into()).unchecked_into();
     entries.push(&entry);
     let from_entries = Object::from_entries(&entries).unwrap();
     assert!(Object::has_own(&from_entries, 9_u32).unwrap());

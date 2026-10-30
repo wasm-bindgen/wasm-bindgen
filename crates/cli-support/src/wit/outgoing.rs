@@ -264,6 +264,7 @@ impl InstructionBuilder<'_, '_> {
                     &[AdapterType::String],
                 );
             }
+
             Descriptor::Slice(cell) => {
                 let kind = match cell.sequence_cell() {
                     SequenceCell::InPlace(kind) => kind,

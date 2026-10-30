@@ -71,6 +71,7 @@ pub mod nullable_type;
 pub mod option;
 pub mod option_null;
 pub mod optional_primitives;
+pub mod primitive_refs;
 pub mod primitive_union_traits;
 pub mod reexport;
 pub mod result;

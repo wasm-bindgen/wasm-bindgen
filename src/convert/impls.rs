@@ -166,6 +166,10 @@ macro_rules! type_wasm_native {
         impl UpcastFrom<$t> for $t {}
         impl<Target: UpcastFrom<$t>> UpcastFrom<$t> for Option<Target> {}
         impl<Target: UpcastFrom<$t>> UpcastFrom<$t> for Nullable<Target> {}
+
+        impl Promising for $t {
+            type Resolution = $t;
+        }
     )*)
 }
 

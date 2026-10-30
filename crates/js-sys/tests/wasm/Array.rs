@@ -90,6 +90,7 @@ fn from_iter() {
 // the erased `Array<JsValue>`. To preserve the element type, use
 // `Array::<T>::from_iter_typed`, which is typed via `IntoJsGeneric`.
 #[wasm_bindgen_test]
+#[cfg_attr(js_sys_unstable_apis, allow(deprecated))]
 fn from_iter_wasm_bindgen_type() {
     // Stable form: erased `Array<JsValue>`, no turbofish needed.
     let arr = Array::from_iter([JsString::from("a"), JsString::from("b")]);
@@ -116,6 +117,7 @@ fn from_iter_wasm_bindgen_type() {
 // erased `Array<JsValue>`; `Array::<T>::from_iter_typed` infers the typed
 // `Array<T>` for callers who want it.
 #[wasm_bindgen_test]
+#[cfg_attr(js_sys_unstable_apis, allow(deprecated))]
 fn from_iter_owned_wasm_bindgen_type_infers() {
     fn take_object_array(arr: &Array<Object>) {
         assert_eq!(arr.length(), 1);
@@ -125,9 +127,21 @@ fn from_iter_owned_wasm_bindgen_type_infers() {
     }
 
     // Stable: erased `Array<JsValue>` (= `Array`).
-    let obj = Object::new();
-    let arr = Array::from_iter([obj]);
-    take_value_array(&arr);
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        let obj = Object::new();
+        let arr = Array::from_iter([obj]);
+        take_value_array(&arr);
+    }
+    // Unstable: the element type is the item's.
+    #[cfg(js_sys_unstable_apis)]
+    {
+        let obj = Object::new();
+        let arr = Array::from_iter([obj]);
+        take_object_array(&arr);
+        let arr = Array::from_iter([JsValue::from(Object::new())]);
+        take_value_array(&arr);
+    }
 
     // Typed: `Array<Object>` via `IntoJsGeneric` inference.
     let obj = Object::new();
@@ -136,6 +150,7 @@ fn from_iter_owned_wasm_bindgen_type_infers() {
 }
 
 #[wasm_bindgen_test]
+#[cfg_attr(js_sys_unstable_apis, allow(deprecated))]
 fn extend() {
     // Stable `Extend` on `Array` (= `Array<JsValue>`) is bound by
     // `AsRef<JsValue>`, so typed items extend an erased array directly.
@@ -1518,6 +1533,7 @@ fn test_array_to_vec() {
 }
 
 #[wasm_bindgen_test]
+#[cfg_attr(js_sys_unstable_apis, allow(deprecated))]
 fn test_array_from_iter_typed() {
     let items = vec![
         TestItem::new(1, &JsString::from("a")),
@@ -1533,6 +1549,7 @@ fn test_array_from_iter_typed() {
 }
 
 #[wasm_bindgen_test]
+#[cfg_attr(js_sys_unstable_apis, allow(deprecated))]
 fn test_array_extend_typed() {
     let mut arr: Array<TestItem> = Array::new_typed();
     arr.push(&TestItem::new(1, &JsString::from("a")));
@@ -2284,6 +2301,11 @@ fn test_array_try_reduce_error() {
     assert!(result.is_err());
 }
 
+#[cfg(not(js_sys_unstable_apis))]
+type ReduceRightAcc = JsValue;
+#[cfg(js_sys_unstable_apis)]
+type ReduceRightAcc = Number;
+
 #[wasm_bindgen_test]
 fn test_array_try_reduce_right() {
     let arr: Array<Number> = Array::new_typed();
@@ -2293,7 +2315,7 @@ fn test_array_try_reduce_right() {
 
     let initial = Number::from(0);
     let result = arr.try_reduce_right(
-        &mut |acc: JsValue, val: Number, _| {
+        &mut |acc: ReduceRightAcc, val: Number, _| {
             let acc_num: Number = acc.unchecked_into();
             Ok(Number::from(acc_num.value_of() + val.value_of()))
         },
@@ -2311,7 +2333,7 @@ fn test_array_try_reduce_right_error() {
 
     let initial = Number::from(0);
     let result = arr.try_reduce_right(
-        &mut |_acc: JsValue, val: Number, _| {
+        &mut |_acc: ReduceRightAcc, val: Number, _| {
             if val.value_of() == 1.0 {
                 Err(JsError::new("reduce_right error"))
             } else {
