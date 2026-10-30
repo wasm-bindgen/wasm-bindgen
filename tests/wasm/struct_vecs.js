@@ -17,7 +17,8 @@ exports.pass_invalid_struct_vec = () => {
     try {
         wasm.consume_struct_vec(['not a struct']);
     } catch (e) {
-        assert.match(e.message, /array contains a value of the wrong type/)
+        // The glue rejects it itself under `wasm_bindgen_unstable_generic_vec`.
+        assert.match(e.message, /array contains a value of the wrong type|expected instance of/)
         assert.match(e.stack, /consume_struct_vec/)
     }
 };

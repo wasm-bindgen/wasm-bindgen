@@ -23,6 +23,19 @@
   custom `VectorIntoWasmAbi` impl.
   [#5432](https://github.com/wasm-bindgen/wasm-bindgen/pull/5432)
 
+* Added experimental generic sequences, gated behind
+  `--cfg wasm_bindgen_unstable_generic_vec`: `Vec<T>`, `Box<[T]>` and `&[T]`
+  cross for every element whose own `IntoWasmAbi` / `FromWasmAbi` does (and,
+  for `&[T]`, whose `&T` does), with no per-element vector impls. Numbers,
+  `JsValue`, `JsError` and imported JS types still cross in place; any other
+  element, such as a `String`, an exported Rust struct, a `Closure<T>` or an
+  `Option<T>` / `Nullable<T>`, crosses as a buffer of its ABI, which a new
+  `ABI_CELL` descriptor tells the CLI to decode and free. Under the
+  cfg, `u8`, `i8`, `u16`, `i16` and `bool` are their own `Abi`, and
+  `VectorIntoWasmAbi`, `VectorFromWasmAbi` and `WasmDescribeVector` are
+  deprecated, as nothing reads them.
+  [#5433](https://github.com/wasm-bindgen/wasm-bindgen/pull/5433)
+
 * Added a rejection type parameter to `js_sys::Promise<T, E = JsValue>`,
   mirrored on `JsFuture<T, E>`, `PromiseState<T, E>` and
   `PromiseWithResolvers<T, E>`. Awaiting a `Promise<T, E>` yields

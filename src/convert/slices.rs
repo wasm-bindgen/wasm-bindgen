@@ -8,15 +8,20 @@ use core::str;
 
 use crate::__rt::{marker::ErasableGeneric, WasmWord};
 use crate::__wbindgen_copy_to_typed_array;
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 use crate::convert::{
-    js_value_vector_from_abi, js_value_vector_into_abi, try_js_value_vector_from_abi, FromWasmAbi,
-    IntoWasmAbi, LongRefFromWasmAbi, MaybeIntoWasmAbi, NullableIntoWasmAbi, OptionFromWasmAbi,
-    OptionIntoWasmAbi, RefFromWasmAbi, RefMutFromWasmAbi, UpcastFrom, VectorFromWasmAbi,
-    VectorIntoWasmAbi, WasmAbi,
+    js_value_vector_from_abi, js_value_vector_into_abi, try_js_value_vector_from_abi,
+    VectorFromWasmAbi, VectorIntoWasmAbi,
+};
+use crate::convert::{
+    FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, MaybeIntoWasmAbi, NullableIntoWasmAbi,
+    OptionFromWasmAbi, OptionIntoWasmAbi, RefFromWasmAbi, RefMutFromWasmAbi, UpcastFrom, WasmAbi,
 };
 use crate::describe::*;
 use crate::sys::{JsNullable, JsOption};
-use crate::{JsError, JsValue, Nullable};
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
+use crate::JsError;
+use crate::{JsValue, Nullable};
 
 use cfg_if::cfg_if;
 
@@ -151,10 +156,62 @@ macro_rules! vectors {
     ($($t:ty)*) => ($(
         vectors_internal!($t);
         vectors_internal!(MaybeUninit<$t>);
+        #[cfg(not(wasm_bindgen_unstable_generic_vec))]
+        vector_rows!($t);
+        #[cfg(not(wasm_bindgen_unstable_generic_vec))]
+        vector_rows!(MaybeUninit<$t>);
+        #[cfg(wasm_bindgen_unstable_generic_vec)]
+        uninit_vector_rows!($t);
     )*)
 }
 
-macro_rules! vectors_internal {
+// A `MaybeUninit` element has no ABI of its own, so its sequences keep their
+// rows, crossing in place as its number's do.
+#[cfg(wasm_bindgen_unstable_generic_vec)]
+macro_rules! uninit_vector_rows {
+    ($t:ty) => {
+        impl WasmDescribe for Box<[MaybeUninit<$t>]> {
+            #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+            fn describe() {
+                inform(VECTOR);
+                <$t>::describe();
+            }
+        }
+
+        impl IntoWasmAbi for Box<[MaybeUninit<$t>]> {
+            type Abi = WasmSlice;
+
+            #[inline]
+            fn into_abi(self) -> WasmSlice {
+                let len = self.len();
+                WasmSlice::from_usize(Box::into_raw(self) as *mut MaybeUninit<$t> as usize, len)
+            }
+        }
+
+        impl FromWasmAbi for Box<[MaybeUninit<$t>]> {
+            type Abi = WasmSlice;
+
+            #[inline]
+            unsafe fn from_abi(js: WasmSlice) -> Self {
+                let ptr = js.ptr.into_usize() as *mut MaybeUninit<$t>;
+                let len = js.len.into_usize();
+                Vec::from_raw_parts(ptr, len, len).into_boxed_slice()
+            }
+        }
+
+        impl VectorRefIntoWasmAbi for MaybeUninit<$t> {
+            #[inline]
+            fn slice_into_abi(slice: &[Self]) -> WasmSlice {
+                WasmSlice::borrow(slice)
+            }
+        }
+
+        impl crate::__rt::marker::VectorRefIntoWasmAbiSealed for MaybeUninit<$t> {}
+    };
+}
+
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
+macro_rules! vector_rows {
     ($t:ty) => {
         impl WasmDescribeVector for $t {
             #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
@@ -195,7 +252,11 @@ macro_rules! vectors_internal {
         }
 
         impl crate::__rt::marker::VectorRefIntoWasmAbiSealed for $t {}
+    };
+}
 
+macro_rules! vectors_internal {
+    ($t:ty) => {
         impl<'a> IntoWasmAbi for &'a mut [$t] {
             type Abi = WasmSlice;
 
@@ -252,6 +313,7 @@ vectors! {
     u8 i8 u16 i16 u32 i32 u64 i64 usize isize f32 f64
 }
 
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 impl WasmDescribeVector for String {
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe_vector() {
@@ -268,6 +330,7 @@ impl WasmDescribeVector for String {
     }
 }
 
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 impl VectorIntoWasmAbi for String {
     type Abi = <Box<[JsValue]> as IntoWasmAbi>::Abi;
 
@@ -276,6 +339,7 @@ impl VectorIntoWasmAbi for String {
     }
 }
 
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 impl VectorFromWasmAbi for String {
     type Abi = <Box<[JsValue]> as FromWasmAbi>::Abi;
 
@@ -341,9 +405,21 @@ impl_nullable_into_shared_abi!(
 /// tells them apart by the element's descriptor alone: numbers and JS handles
 /// are in place, and anything else is encoded. Encoded elements are declared
 /// once, with `__wbindgen_encoded_sequence!`.
+///
+/// Under `wasm_bindgen_unstable_generic_vec`, the slice's descriptor says
+/// instead, with an `ABI_CELL` for an encoded element (see
+/// [`ENCODED`](Self::ENCODED)).
 pub trait VectorRefIntoWasmAbi:
     WasmDescribe + Sized + crate::__rt::marker::VectorRefIntoWasmAbiSealed
 {
+    /// Whether `slice_into_abi` encodes, rather than borrows, the slice, which
+    /// the slice's descriptor tells the CLI with `ABI_CELL`: an element's
+    /// descriptor alone can't say, as a handle's may be in place while its
+    /// `Abi` isn't its memory.
+    #[cfg(wasm_bindgen_unstable_generic_vec)]
+    #[doc(hidden)]
+    const ENCODED: bool = false;
+
     fn slice_into_abi(slice: &[Self]) -> WasmSlice;
 }
 
@@ -391,11 +467,8 @@ impl WasmSlice {
 
     /// An encoded sequence: a fresh buffer of each element's cell, its scalar
     /// ABI by `f`, which JS decodes and frees.
-    pub fn encode<'a, T: IntoWasmAbi + 'a>(
-        slice: &'a [T],
-        mut f: impl FnMut(&'a T) -> T::Abi,
-    ) -> Self {
-        let cells: Box<[AbiCell<T::Abi>]> = slice
+    pub fn encode<'a, T: 'a, A: WasmAbi>(slice: &'a [T], mut f: impl FnMut(&'a T) -> A) -> Self {
+        let cells: Box<[AbiCell<A>]> = slice
             .iter()
             .map(|elem| {
                 let (p1, p2, p3, p4) = f(elem).split();
@@ -403,7 +476,7 @@ impl WasmSlice {
             })
             .collect();
         let len = cells.len();
-        Self::from_usize(Box::into_raw(cells) as *mut AbiCell<T::Abi> as usize, len)
+        Self::from_usize(Box::into_raw(cells) as *mut AbiCell<A> as usize, len)
     }
 
     /// An encoded sequence of owned elements: a fresh buffer of each
@@ -446,6 +519,7 @@ impl WasmSlice {
 /// owned vector to JS encodes as its borrowed slice, so `into` is only for
 /// elements that own nothing, which it checks at compile time. `from` takes
 /// its element with `FromWasmAbi` (see [`WasmSlice::try_decode`]).
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 #[macro_export]
 #[doc(hidden)]
 macro_rules! __wbindgen_encoded_sequence {
@@ -521,30 +595,122 @@ macro_rules! __wbindgen_encoded_sequence {
     };
 }
 
+// Under `wasm_bindgen_unstable_generic_vec`, every sequence crosses by its
+// element's own ABI, so a borrowed element only needs `&T` to cross, which
+// `$encode` gives.
+#[cfg(wasm_bindgen_unstable_generic_vec)]
+#[macro_export]
+#[doc(hidden)]
+macro_rules! __wbindgen_encoded_sequence {
+    (&$t:ty, $encode:expr, [ref_into]) => {
+        #[automatically_derived]
+        impl $crate::convert::IntoWasmAbi for &&$t {
+            type Abi = <&'static $t as $crate::convert::IntoWasmAbi>::Abi;
+
+            #[inline]
+            fn into_abi(self) -> Self::Abi {
+                (*self).into_abi()
+            }
+        }
+    };
+    ($t:ty, $encode:expr, [$($side:ident),+ $(,)?]) => {
+        $($crate::__wbindgen_encoded_sequence!(@$side $t, $encode);)+
+    };
+    (@ref_into $t:ty, $encode:expr) => {
+        #[automatically_derived]
+        impl<'a> $crate::convert::IntoWasmAbi for &'a $t {
+            type Abi = <$t as $crate::convert::IntoWasmAbi>::Abi;
+
+            #[inline]
+            fn into_abi(self) -> Self::Abi {
+                let encode: fn(&'a $t) -> Self::Abi = $encode;
+                encode(self)
+            }
+        }
+    };
+    (@into $t:ty, $encode:expr) => {};
+    (@from $t:ty, $encode:expr) => {};
+}
+
+/// Expands to its input unless `wasm_bindgen_unstable_generic_vec` is set,
+/// for the per-type sequence impls that bindings declare.
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
+#[macro_export]
+#[doc(hidden)]
+macro_rules! __wbindgen_sequence_rows {
+    ($($tt:tt)*) => { $($tt)* };
+}
+
+#[cfg(wasm_bindgen_unstable_generic_vec)]
+#[macro_export]
+#[doc(hidden)]
+macro_rules! __wbindgen_sequence_rows {
+    ($($tt:tt)*) => {};
+}
+
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 crate::__wbindgen_encoded_sequence!(bool, |b| (*b).into_abi(), [ref_into, into, from]);
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 crate::__wbindgen_encoded_sequence!(char, |c| (*c).into_abi(), [ref_into, into, from]);
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 crate::__wbindgen_encoded_sequence!(&str, |s| (*s).into_abi(), [ref_into, into]);
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 crate::__wbindgen_encoded_sequence!(&String, |s| (*s).into_abi(), [ref_into]);
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 crate::__wbindgen_encoded_sequence!(&Box<str>, |s| (*s).into_abi(), [ref_into]);
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 crate::__wbindgen_encoded_sequence!(&Cow<'_, str>, |s| (*s).into_abi(), [ref_into]);
 // An owned `Vec<String>` keeps its released `JsValue` form.
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 crate::__wbindgen_encoded_sequence!(String, |s| s.into_abi(), [ref_into]);
 
-impl crate::__rt::marker::VectorRefIntoWasmAbiSealed for JsValue {}
+crate::__wbindgen_sequence_rows! {
+    impl crate::__rt::marker::VectorRefIntoWasmAbiSealed for JsValue {}
 
-impl VectorRefIntoWasmAbi for JsValue {
-    #[inline]
-    fn slice_into_abi(slice: &[Self]) -> WasmSlice {
-        WasmSlice::borrow(slice)
+    impl VectorRefIntoWasmAbi for JsValue {
+        #[inline]
+        fn slice_into_abi(slice: &[Self]) -> WasmSlice {
+            WasmSlice::borrow(slice)
+        }
+    }
+
+    impl crate::__rt::marker::VectorRefIntoWasmAbiSealed for JsError {}
+
+    impl VectorRefIntoWasmAbi for JsError {
+        #[inline]
+        fn slice_into_abi(slice: &[Self]) -> WasmSlice {
+            WasmSlice::borrow(slice)
+        }
     }
 }
 
-impl crate::__rt::marker::VectorRefIntoWasmAbiSealed for JsError {}
+/// Under `wasm_bindgen_unstable_generic_vec`, `&[T]` crosses for every `T`
+/// whose borrow does: in place when `T` is
+/// [`ABI_TRANSPARENT`](IntoWasmAbi::ABI_TRANSPARENT), and otherwise as a
+/// buffer of each `&T`'s ABI.
+#[cfg(wasm_bindgen_unstable_generic_vec)]
+impl<T> crate::__rt::marker::VectorRefIntoWasmAbiSealed for T
+where
+    T: IntoWasmAbi,
+    for<'a> &'a T: IntoWasmAbi,
+{
+}
 
-impl VectorRefIntoWasmAbi for JsError {
+#[cfg(wasm_bindgen_unstable_generic_vec)]
+impl<T> VectorRefIntoWasmAbi for T
+where
+    T: IntoWasmAbi,
+    for<'a> &'a T: IntoWasmAbi,
+{
+    const ENCODED: bool = !T::ABI_TRANSPARENT;
+
     #[inline]
     fn slice_into_abi(slice: &[Self]) -> WasmSlice {
-        WasmSlice::borrow(slice)
+        if Self::ENCODED {
+            WasmSlice::encode(slice, |e| e.into_abi())
+        } else {
+            WasmSlice::borrow(slice)
+        }
     }
 }
 
@@ -729,6 +895,7 @@ unsafe impl<T: ErasableGeneric> ErasableGeneric for Vec<T> {
 
 impl<T, Target> UpcastFrom<Vec<T>> for Vec<Target> where Target: UpcastFrom<T> {}
 
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 impl<T: VectorIntoWasmAbi> IntoWasmAbi for Box<[T]> {
     type Abi = <T as VectorIntoWasmAbi>::Abi;
 
@@ -751,6 +918,7 @@ impl_nullable_into_shared_abi!(
     [T] Box<[T]> where Self: IntoWasmAbi<Abi = WasmSlice>
 );
 
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 impl<T: VectorFromWasmAbi> FromWasmAbi for Box<[T]> {
     type Abi = <T as VectorFromWasmAbi>::Abi;
 
@@ -778,6 +946,52 @@ impl_nullable_from_shared_abi!(
     [T] Box<[T]> where Self: FromWasmAbi<Abi = WasmSlice>
 );
 
+/// Under `wasm_bindgen_unstable_generic_vec`, an owned sequence crosses for
+/// every element that does: its own memory when the element is
+/// [`ABI_TRANSPARENT`](IntoWasmAbi::ABI_TRANSPARENT), and otherwise a buffer
+/// of each element's ABI.
+#[cfg(wasm_bindgen_unstable_generic_vec)]
+impl<T: IntoWasmAbi> IntoWasmAbi for Box<[T]> {
+    type Abi = WasmSlice;
+
+    #[inline]
+    fn into_abi(self) -> WasmSlice {
+        if T::ABI_TRANSPARENT {
+            let len = self.len();
+            WasmSlice::from_usize(Box::into_raw(self) as *mut T as usize, len)
+        } else {
+            WasmSlice::encode_owned(self, T::into_abi)
+        }
+    }
+}
+
+#[cfg(wasm_bindgen_unstable_generic_vec)]
+impl<T: IntoWasmAbi + FromWasmAbi> FromWasmAbi for Box<[T]> {
+    type Abi = WasmSlice;
+
+    #[inline]
+    unsafe fn from_abi(js: WasmSlice) -> Self {
+        // Thrown directly, as a closure's frames would push the caller past
+        // the debug-mode error stack's frame limit.
+        match Self::try_from_abi(js) {
+            Ok(vector) => vector,
+            Err(msg) => crate::throw_str(msg),
+        }
+    }
+
+    #[inline]
+    unsafe fn try_from_abi(js: WasmSlice) -> Result<Self, &'static str> {
+        if <T as FromWasmAbi>::ABI_TRANSPARENT {
+            let ptr = js.ptr.into_usize() as *mut T;
+            let len = js.len.into_usize();
+            Ok(Vec::from_raw_parts(ptr, len, len).into_boxed_slice())
+        } else {
+            js.try_decode()
+        }
+    }
+}
+
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe> VectorFromWasmAbi for T {
     type Abi = WasmSlice;
 
@@ -789,6 +1003,7 @@ impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe> VectorFromWasmAbi for T 
     }
 }
 
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe> VectorIntoWasmAbi for T {
     type Abi = WasmSlice;
 
@@ -893,38 +1108,40 @@ where
 // is an encoded sequence whose cell is `Option<&T>`'s ABI, which is
 // `Option<T>`'s, so numbers copy and strings and handles borrow, as `&[T]`
 // does. `Option<Nullable<T>>` nests as it does for a single value.
-impl<T> crate::__rt::marker::VectorRefIntoWasmAbiSealed for Option<T>
-where
-    Option<T>: IntoWasmAbi,
-    for<'a> &'a Option<T>: IntoWasmAbi<Abi = <Option<T> as IntoWasmAbi>::Abi>,
-{
-}
-
-impl<T> VectorRefIntoWasmAbi for Option<T>
-where
-    Option<T>: IntoWasmAbi,
-    for<'a> &'a Option<T>: IntoWasmAbi<Abi = <Option<T> as IntoWasmAbi>::Abi>,
-{
-    #[inline]
-    fn slice_into_abi(slice: &[Self]) -> WasmSlice {
-        WasmSlice::encode(slice, |e| e.into_abi())
+crate::__wbindgen_sequence_rows! {
+    impl<T> crate::__rt::marker::VectorRefIntoWasmAbiSealed for Option<T>
+    where
+        Option<T>: IntoWasmAbi,
+        for<'a> &'a Option<T>: IntoWasmAbi<Abi = <Option<T> as IntoWasmAbi>::Abi>,
+    {
     }
-}
 
-impl<T> crate::__rt::marker::VectorRefIntoWasmAbiSealed for Nullable<T>
-where
-    Nullable<T>: IntoWasmAbi,
-    for<'a> &'a Nullable<T>: IntoWasmAbi<Abi = <Nullable<T> as IntoWasmAbi>::Abi>,
-{
-}
+    impl<T> VectorRefIntoWasmAbi for Option<T>
+    where
+        Option<T>: IntoWasmAbi,
+        for<'a> &'a Option<T>: IntoWasmAbi<Abi = <Option<T> as IntoWasmAbi>::Abi>,
+    {
+        #[inline]
+        fn slice_into_abi(slice: &[Self]) -> WasmSlice {
+            WasmSlice::encode(slice, |e| e.into_abi())
+        }
+    }
 
-impl<T> VectorRefIntoWasmAbi for Nullable<T>
-where
-    Nullable<T>: IntoWasmAbi,
-    for<'a> &'a Nullable<T>: IntoWasmAbi<Abi = <Nullable<T> as IntoWasmAbi>::Abi>,
-{
-    #[inline]
-    fn slice_into_abi(slice: &[Self]) -> WasmSlice {
-        WasmSlice::encode(slice, |e| e.into_abi())
+    impl<T> crate::__rt::marker::VectorRefIntoWasmAbiSealed for Nullable<T>
+    where
+        Nullable<T>: IntoWasmAbi,
+        for<'a> &'a Nullable<T>: IntoWasmAbi<Abi = <Nullable<T> as IntoWasmAbi>::Abi>,
+    {
+    }
+
+    impl<T> VectorRefIntoWasmAbi for Nullable<T>
+    where
+        Nullable<T>: IntoWasmAbi,
+        for<'a> &'a Nullable<T>: IntoWasmAbi<Abi = <Nullable<T> as IntoWasmAbi>::Abi>,
+    {
+        #[inline]
+        fn slice_into_abi(slice: &[Self]) -> WasmSlice {
+            WasmSlice::encode(slice, |e| e.into_abi())
+        }
     }
 }

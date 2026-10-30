@@ -1263,3 +1263,32 @@ mod closure_variance {
         let _equiv: &mut Closure<dyn Fn(Undefined)> = (&mut closure).upcast_into();
     }
 }
+
+// Under `wasm_bindgen_unstable_generic_vec`, a `&[Closure<T>]` crosses as a
+// buffer of each `&Closure<T>`'s handle, which JS decodes and frees.
+#[cfg(wasm_bindgen_unstable_generic_vec)]
+mod slices {
+    use super::*;
+
+    #[wasm_bindgen(module = "tests/wasm/closures.js")]
+    extern "C" {
+        fn call_each(fs: &[Closure<dyn Fn(u32)>]) -> u32;
+    }
+
+    #[wasm_bindgen_test]
+    fn borrowed_closures() {
+        let sum = Rc::new(Cell::new(0));
+        let closures: Vec<Closure<dyn Fn(u32)>> = (1..=3)
+            .map(|i| {
+                let sum = sum.clone();
+                Closure::new(move |x: u32| sum.set(sum.get() + i * x))
+            })
+            .collect();
+        assert_eq!(call_each(&closures), 3);
+        assert_eq!(sum.get(), 60);
+        // JS only borrowed them, so they are still Rust's to call again.
+        assert_eq!(call_each(&closures), 3);
+        assert_eq!(sum.get(), 120);
+        assert_eq!(call_each(&[]), 0);
+    }
+}
