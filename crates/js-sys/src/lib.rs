@@ -10351,9 +10351,16 @@ impl<K: PropertyKey, V: Borrow<T>, T> core::iter::Extend<(K, V)> for Object<T>
 where
     T: RefIntoWasmAbi,
 {
+    // Defined rather than set, as `Object.fromEntries` does: `[[Set]]` would
+    // run the inherited `__proto__` setter for a `"__proto__"` key.
     fn extend<I: IntoIterator<Item = (K, V)>>(&mut self, iter: I) {
         for (k, v) in iter {
-            Reflect::set(self, k, v.borrow()).unwrap_or_else(|e| wasm_bindgen::throw_val(e));
+            let descriptor = PropertyDescriptor::new_value(v.borrow());
+            descriptor.set_writable(true);
+            descriptor.set_enumerable(true);
+            descriptor.set_configurable(true);
+            Object::define_property(self, k, &descriptor)
+                .unwrap_or_else(|e| wasm_bindgen::throw_val(e));
         }
     }
 }
