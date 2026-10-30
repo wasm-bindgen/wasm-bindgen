@@ -687,6 +687,19 @@ impl IntoWasmAbi for JsValue {
         mem::forget(self);
         ret
     }
+
+    #[inline]
+    fn arg_into_abi(slot: &mut Option<Self>) -> u32 {
+        match slot {
+            Some(value) => value.idx,
+            None => unreachable!(),
+        }
+    }
+
+    #[inline]
+    fn describe_arg() {
+        <&JsValue as crate::describe::WasmDescribe>::describe();
+    }
 }
 
 impl FromWasmAbi for JsValue {
@@ -770,6 +783,16 @@ impl<T: OptionIntoWasmAbi> MaybeIntoWasmAbi for T {
     fn none() -> T::Abi {
         <T as OptionIntoWasmAbi>::none()
     }
+
+    #[inline]
+    fn maybe_arg_into_abi(slot: &mut Option<Option<Self>>) -> T::Abi {
+        T::option_arg_into_abi(slot)
+    }
+
+    #[inline]
+    fn maybe_describe_arg() {
+        T::option_describe_arg()
+    }
 }
 
 impl<T: OptionFromWasmAbi> MaybeFromWasmAbi for T {
@@ -800,6 +823,17 @@ impl<T: MaybeIntoWasmAbi> IntoWasmAbi for Option<T> {
             None => T::none(),
             Some(me) => me.into_maybe_abi(),
         }
+    }
+
+    #[inline]
+    fn arg_into_abi(slot: &mut Option<Self>) -> T::MaybeAbi {
+        T::maybe_arg_into_abi(slot)
+    }
+
+    #[inline]
+    fn describe_arg() {
+        crate::describe::inform(crate::describe::OPTIONAL);
+        T::maybe_describe_arg();
     }
 }
 
