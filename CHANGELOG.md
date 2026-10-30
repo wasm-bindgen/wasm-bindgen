@@ -36,6 +36,12 @@
   deprecated, as nothing reads them.
   [#5433](https://github.com/wasm-bindgen/wasm-bindgen/pull/5433)
 
+* A dynamic-union enum is a `Vec<T>` / `Box<[T]>` element in both
+  directions, crossing as a JS array whose elements are each converted as a
+  single value is. Not yet under `--cfg wasm_bindgen_unstable_generic_vec`,
+  where the CLI cannot decode a union's encoded cells.
+  [#5449](https://github.com/wasm-bindgen/wasm-bindgen/pull/5449)
+
 * Added a rejection type parameter to `js_sys::Promise<T, E = JsValue>`,
   mirrored on `JsFuture<T, E>`, `PromiseState<T, E>` and
   `PromiseWithResolvers<T, E>`. Awaiting a `Promise<T, E>` yields
