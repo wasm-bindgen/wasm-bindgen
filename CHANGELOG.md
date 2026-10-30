@@ -5,6 +5,9 @@
 
 ### Added
 
+* Added `aarch64-pc-windows-msvc` release artifacts.
+  [#TBD](https://github.com/wasm-bindgen/wasm-bindgen/pull/TBD)
+
 * A borrowed number, `bool`, `char` or borrowed string crosses by copy, so
   `&f64`, `&Option<T>`, `&Nullable<T>`, `Option<&f64>` and
   `Option<&Nullable<T>>` are argument types, and an
