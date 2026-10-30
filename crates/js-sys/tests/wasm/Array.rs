@@ -2522,3 +2522,47 @@ fn rust_export_round_trip_arrays() {
     let sum = rust_sum_number_array(doubled);
     assert_eq!(sum, 12.0); // (1+2+3) * 2 = 12
 }
+
+#[cfg(js_sys_unstable_apis)]
+#[wasm_bindgen(inline_js = "
+export function headRest() { return [['id', 'name'], [1, 'a'], [2, 'b']]; }
+export function headOnly() { return [['id']]; }
+export function identity(v) { return v; }
+")]
+extern "C" {
+    #[wasm_bindgen(js_name = headRest)]
+    fn head_rest() -> ArrayHeadRest<Array<JsString>, Array>;
+    #[wasm_bindgen(js_name = headRest)]
+    fn head_rest_typed() -> ArrayHeadRest<Vec<String>, ArrayTuple<(Number, JsString)>>;
+    #[wasm_bindgen(js_name = headOnly)]
+    fn head_only() -> ArrayHeadRest<Array<JsString>, Array>;
+    #[wasm_bindgen(js_name = identity)]
+    fn later_head_rest(v: &JsValue) -> Promise<ArrayHeadRest<Array<JsString>, Array>>;
+}
+
+#[cfg(js_sys_unstable_apis)]
+#[wasm_bindgen_test]
+async fn head_rest_arrays() {
+    let (columns, rows) = head_rest().into_parts();
+    assert_eq!(columns.to_vec(), ["id", "name"]);
+    assert_eq!(rows.length(), 2);
+    assert_eq!(rows.get_unchecked(1).get_unchecked(1), "b");
+
+    let typed = head_rest_typed();
+    assert_eq!(typed.head(), ["id", "name"]);
+    let rows: Vec<(f64, String)> = typed
+        .rest()
+        .iter()
+        .map(|row| (row.get0().value_of(), String::from(row.get1())))
+        .collect();
+    assert_eq!(rows, [(1.0, "a".to_string()), (2.0, "b".to_string())]);
+
+    let (columns, rows): (Array<JsString>, Array<Array>) = head_only().into();
+    assert_eq!(columns.to_vec(), ["id"]);
+    assert_eq!(rows.length(), 0);
+
+    let resolved = later_head_rest(&Promise::resolve(&head_rest()))
+        .await
+        .unwrap();
+    assert_eq!(resolved.head().to_vec(), ["id", "name"]);
+}
