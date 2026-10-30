@@ -1146,6 +1146,17 @@ fn records_and_borrowed_arrays() {
     let back: std::collections::HashMap<String, String> = (&record).into_iter().collect();
     assert_eq!(back, map);
 
+    let proto: Object<String> = [("__proto__", "x".to_string())].into_iter().collect();
+    let entries: Vec<(String, String)> = proto.iter().collect();
+    assert_eq!(entries, [("__proto__".into(), "x".into())]);
+    let value = Object::new();
+    let proto: Object<Object> = [("__proto__", value.clone())].into_iter().collect();
+    assert_eq!(
+        proto.iter().map(|(k, _)| k).collect::<Vec<_>>(),
+        ["__proto__"]
+    );
+    assert!(!Object::is(&Object::get_prototype_of(&proto), &value));
+
     let a: Array<String> = strings();
     let mut joined = String::new();
     for s in &a {
