@@ -759,6 +759,11 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
             Descriptor::Ref(d) => self.outgoing_option_ref(_mutable, d, option_kind)?,
+            // `Option<&Option<T>>` crosses as `Option<&T>`: JS has one empty
+            // value for both of its empty states.
+            Descriptor::Option(d) if option_kind == OptionKind::Option => {
+                self.outgoing_option_ref(_mutable, d, OptionKind::Option)?
+            }
             Descriptor::Nullable(d) => {
                 if option_kind != OptionKind::Option {
                     bail!("unsupported nested optional type for calling JS function from Rust: {arg:?}");
