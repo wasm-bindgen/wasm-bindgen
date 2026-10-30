@@ -1318,7 +1318,7 @@ impl<'a>
             }
         });
 
-        validate_generics(&self.sig.generics)?;
+        validate_generics(&self.sig.generics, generic_per_mono)?;
 
         let ret = ast::ImportKind::Function(ast::ImportFunction {
             function: wasm,
@@ -1410,7 +1410,7 @@ impl<'a>
         }
 
         attrs.check_used();
-        validate_generics(&self.generics)?;
+        validate_generics(&self.generics, false)?;
 
         // Ensure defaults are set for all generic type params on imported class definitions.
         // JsValue as the default default.
@@ -3605,12 +3605,19 @@ fn bail_generic_unsupported(span: impl Spanned + ToTokens) -> Result<(), Diagnos
     bail_span!(span, "unsupported in wasm-bindgen generics");
 }
 
-fn validate_generic_type_param_bound(bound: &syn::TypeParamBound) -> Result<(), Diagnostic> {
+/// `?Sized` is allowed only on `experimental_generic_mono` imports, where a
+/// parameter is only ever named behind a reference (`key: &Q`).
+fn validate_generic_type_param_bound(
+    bound: &syn::TypeParamBound,
+    allow_maybe: bool,
+) -> Result<(), Diagnostic> {
     match bound {
         syn::TypeParamBound::Trait(trait_bound) => {
             // Higher-ranked trait bounds (for<'a>) are now supported
             if let Some(question) = &trait_bound.maybe {
-                bail_generic_unsupported(question)?;
+                if !allow_maybe {
+                    bail_generic_unsupported(question)?;
+                }
             }
         }
         syn::TypeParamBound::Lifetime(_) => {
@@ -3624,16 +3631,15 @@ fn validate_generic_type_param_bound(bound: &syn::TypeParamBound) -> Result<(), 
 
 /// Validates generic type parameters and their bounds both for inline parameters and where clauses.
 /// Bails for const params. Lifetimes are supported via hoisting.
-fn validate_generics(generics: &syn::Generics) -> Result<(), Diagnostic> {
+fn validate_generics(generics: &syn::Generics, allow_maybe: bool) -> Result<(), Diagnostic> {
     if let Some(where_clause) = &generics.where_clause {
         for predicate in &where_clause.predicates {
             match predicate {
                 syn::WherePredicate::Type(predicate_type) => {
                     // Lifetime bounds on types (for<'a>) are now supported
-                    predicate_type
-                        .bounds
-                        .iter()
-                        .try_for_each(validate_generic_type_param_bound)?;
+                    predicate_type.bounds.iter().try_for_each(|bound| {
+                        validate_generic_type_param_bound(bound, allow_maybe)
+                    })?;
                 }
                 syn::WherePredicate::Lifetime(_) => {
                     // Lifetime bounds (e.g., 'a: 'b) are now supported
@@ -3652,7 +3658,7 @@ fn validate_generics(generics: &syn::Generics) -> Result<(), Diagnostic> {
                 type_param
                     .bounds
                     .iter()
-                    .try_for_each(validate_generic_type_param_bound)?;
+                    .try_for_each(|bound| validate_generic_type_param_bound(bound, allow_maybe))?;
             }
             syn::GenericParam::Const(const_param) => bail_generic_unsupported(const_param)?,
         }

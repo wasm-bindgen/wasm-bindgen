@@ -62,6 +62,8 @@ struct Context<'a> {
     thread_count: Option<ThreadCount>,
     support_start: bool,
     linked_modules: bool,
+    /// Label manufactured generic-import bindings with their JS target.
+    keep_debug: bool,
     /// Tracks the descriptor signature (arguments, ret, inner_ret) used when
     /// creating each export adapter. Used to avoid incorrect deduplication
     /// when wasm-ld ICF merges invoke functions for different closure types
@@ -188,6 +190,7 @@ pub fn process(
         thread_count,
         support_start: bindgen.emit_start,
         linked_modules: bindgen.split_linked_modules,
+        keep_debug: bindgen.keep_debug,
         export_adapter_sigs: Default::default(),
         generic_import_bindings: Default::default(),
         pending_generic_imports: Default::default(),
@@ -711,9 +714,11 @@ impl<'a> Context<'a> {
                     // and `display` already names the import.
                     let mono = format!("{:?} -> {:?}", signature.arguments, signature.ret);
                     let id = self.import_adapter(import_id, signature, adapter_kind)?;
-                    self.aux
-                        .import_comments
-                        .insert(id, format!("generic import `{display}`: {mono}"));
+                    if self.keep_debug {
+                        self.aux
+                            .import_comments
+                            .insert(id, format!("generic import `{display}`: {mono}"));
+                    }
                     // `assert_no_shim` and `suspending` are rejected in
                     // combination with `experimental_generic_mono` by the macro (see
                     // `parser.rs`), so both are always false on this path.
@@ -3213,6 +3218,7 @@ mod tests {
             colliding_items: Default::default(),
             ambiguous_items: Default::default(),
             demangled_exports: Default::default(),
+            keep_debug: false,
         }
     }
 
