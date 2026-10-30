@@ -25,6 +25,30 @@ pub trait IntoWasmAbi: WasmDescribe {
     /// Convert `self` into `Self::Abi` so that it can be sent across the wasm
     /// ABI boundary.
     fn into_abi(self) -> Self::Abi;
+
+    /// Lowers an import argument held in `slot`, which the caller drops after
+    /// the call returns. Owning types whose borrow crosses identically (`String`
+    /// as `&str`, a JS handle as `&JsValue`) leave the value in the slot and
+    /// cross borrowed, so the owned and borrowed forms of a type share one
+    /// wire format; everything else takes the value.
+    #[doc(hidden)]
+    #[inline]
+    fn arg_into_abi(slot: &mut Option<Self>) -> Self::Abi
+    where
+        Self: Sized,
+    {
+        match slot.take() {
+            Some(value) => value.into_abi(),
+            None => unreachable!(),
+        }
+    }
+
+    /// Describes the wire format [`IntoWasmAbi::arg_into_abi`] produces.
+    #[doc(hidden)]
+    #[inline]
+    fn describe_arg() {
+        Self::describe()
+    }
 }
 
 /// A type whose shared references can cross the Wasm ABI, i.e.
@@ -47,10 +71,21 @@ pub trait RefIntoWasmAbi: ref_into_wasm_abi::Sealed {
     type Abi: WasmAbi;
 
     #[doc(hidden)]
+    type OptionAbi: WasmAbi;
+
+    #[doc(hidden)]
     fn describe_ref();
 
     #[doc(hidden)]
     fn ref_into_abi(&self) -> Self::Abi;
+
+    /// Describes the wire format of [`RefIntoWasmAbi::option_ref_into_abi`].
+    #[doc(hidden)]
+    fn describe_option_ref();
+
+    /// Converts an `Option<&Self>` into `Self::OptionAbi`.
+    #[doc(hidden)]
+    fn option_ref_into_abi(value: Option<&Self>) -> Self::OptionAbi;
 }
 
 mod ref_into_wasm_abi {
@@ -58,14 +93,21 @@ mod ref_into_wasm_abi {
 
     pub trait Sealed {}
 
-    impl<T: ?Sized> Sealed for T where for<'a> &'a T: IntoWasmAbi {}
+    impl<T: ?Sized> Sealed for T
+    where
+        for<'a> &'a T: IntoWasmAbi,
+        for<'a> Option<&'a T>: IntoWasmAbi,
+    {
+    }
 }
 
-impl<T: ?Sized, A: WasmAbi> RefIntoWasmAbi for T
+impl<T: ?Sized, A: WasmAbi, OA: WasmAbi> RefIntoWasmAbi for T
 where
     for<'a> &'a T: IntoWasmAbi<Abi = A>,
+    for<'a> Option<&'a T>: IntoWasmAbi<Abi = OA>,
 {
     type Abi = A;
+    type OptionAbi = OA;
 
     #[inline]
     fn describe_ref() {
@@ -75,6 +117,16 @@ where
     #[inline]
     fn ref_into_abi(&self) -> A {
         IntoWasmAbi::into_abi(self)
+    }
+
+    #[inline]
+    fn describe_option_ref() {
+        <Option<&T> as WasmDescribe>::describe()
+    }
+
+    #[inline]
+    fn option_ref_into_abi(value: Option<&Self>) -> OA {
+        IntoWasmAbi::into_abi(value)
     }
 }
 
@@ -254,6 +306,27 @@ pub trait OptionIntoWasmAbi: IntoWasmAbi {
     /// It should be guaranteed that the `IntoWasmAbi` can never produce the ABI
     /// value returned here.
     fn none() -> Self::Abi;
+
+    /// [`IntoWasmAbi::arg_into_abi`] for `Option<Self>`.
+    #[doc(hidden)]
+    #[inline]
+    fn option_arg_into_abi(slot: &mut Option<Option<Self>>) -> Self::Abi
+    where
+        Self: Sized,
+    {
+        match slot.take() {
+            Some(Some(value)) => value.into_abi(),
+            Some(None) => Self::none(),
+            None => unreachable!(),
+        }
+    }
+
+    /// [`IntoWasmAbi::describe_arg`] for `Option<Self>`, after `OPTIONAL`.
+    #[doc(hidden)]
+    #[inline]
+    fn option_describe_arg() {
+        Self::describe()
+    }
 }
 
 /// Indicates that this type can be received from JS as `Option<Self>` over
@@ -297,6 +370,27 @@ pub trait MaybeIntoWasmAbi: IntoWasmAbi {
     /// It should be guaranteed that
     /// [`into_maybe_abi`](Self::into_maybe_abi) can never produce this value.
     fn none() -> Self::MaybeAbi;
+
+    /// [`IntoWasmAbi::arg_into_abi`] for `Option<Self>`.
+    #[doc(hidden)]
+    #[inline]
+    fn maybe_arg_into_abi(slot: &mut Option<Option<Self>>) -> Self::MaybeAbi
+    where
+        Self: Sized,
+    {
+        match slot.take() {
+            Some(Some(value)) => value.into_maybe_abi(),
+            Some(None) => Self::none(),
+            None => unreachable!(),
+        }
+    }
+
+    /// [`IntoWasmAbi::describe_arg`] for `Option<Self>`, after `OPTIONAL`.
+    #[doc(hidden)]
+    #[inline]
+    fn maybe_describe_arg() {
+        Self::describe()
+    }
 }
 
 /// The ABI of `Option<Self>` received from JS. See [`MaybeIntoWasmAbi`].

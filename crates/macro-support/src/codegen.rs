@@ -1776,6 +1776,25 @@ impl TryToTokens for ast::ImportType {
         // The extra `Self: JsGeneric` predicate propagates any generic
         // type-parameter requirements the `JsGeneric` blanket imposes
         // through `ErasableGeneric<Repr = JsValue>` etc.
+        // Handles with owned-once destruction must transfer, not borrow.
+        let borrowed_arg = if no_into_js_generic {
+            quote! {}
+        } else {
+            quote! {
+                #[inline]
+                fn arg_into_abi(slot: &mut core::option::Option<Self>) -> Self::Abi {
+                    match slot {
+                        core::option::Option::Some(value) => IntoWasmAbi::into_abi(&value.obj),
+                        core::option::Option::None => core::unreachable!(),
+                    }
+                }
+
+                #[inline]
+                fn describe_arg() {
+                    <&Self as WasmDescribe>::describe();
+                }
+            }
+        };
         let into_js_generic_impl = if no_into_js_generic {
             quote! {}
         } else {
@@ -1878,6 +1897,8 @@ impl TryToTokens for ast::ImportType {
                     fn into_abi(self) -> Self::Abi {
                         self.obj.into_abi()
                     }
+
+                    #borrowed_arg
                 }
 
                 #[automatically_derived]
@@ -3757,6 +3778,8 @@ impl ast::ImportFunction {
         // an unconstrained impl parameter (E0207).
         let where_bounds = &fn_class_generics.fn_bounds;
         let mut wrapper_args = Vec::new();
+        let mut outer_args = Vec::new();
+        let mut call_args = Vec::new();
         let mut shim_abi_args = Vec::new();
         let mut all_prim_names = Vec::new();
         let mut arg_conversions = Vec::new();
@@ -3819,9 +3842,12 @@ impl ast::ImportFunction {
                     } else {
                         quote_spanned! { ty_span => & }
                     };
-                    wrapper_args.push(quote! {
+                    let arg = quote! {
                         #name: #amp (impl #fn_bounds + #wasm_bindgen::__rt::marker::MaybeUnwindSafe)
-                    });
+                    };
+                    outer_args.push(arg.clone());
+                    wrapper_args.push(arg);
+                    call_args.push(quote! { #name });
                     let fn_bounds = respan_all(fn_bounds.to_token_stream(), ty_span);
                     let abi_ty = quote_spanned! { ty_span => #amp dyn #fn_bounds };
                     let abi = quote_spanned! { ty_span =>
@@ -3843,6 +3869,11 @@ impl ast::ImportFunction {
             }
 
             let mut ref_elem = None;
+            // A by-value generic argument whose borrow crosses identically
+            // (`String` as `&str`, a handle as `&JsValue`) is lowered through
+            // `IntoWasmAbi::arg_into_abi` from a slot dropped after the call,
+            // so the owned and borrowed forms share one import.
+            let mut borrowed_slot = false;
             // A slice (`Option<&[T]>` included) is marshalled directly,
             // needing its element's `VectorRefIntoWasmAbi`.
             let is_slice = detect_slice_or_option_slice(ty).is_some_and(|s| {
@@ -3867,20 +3898,20 @@ impl ast::ImportFunction {
                     }
                     _ => false,
                 };
+                // Only a referent that is a type parameter or a projection
+                // off one needs the higher-ranked bound. Any other
+                // referent, like an imported `Holder<T>`, marshals through
+                // a single `&X` impl and keeps the direct route.
+                let ref_needs_bound = |r: &syn::TypeReference| match &*r.elem {
+                    syn::Type::Path(p) => {
+                        p.qself.is_some()
+                            || p.path.segments.first().is_some_and(|seg| {
+                                seg.arguments.is_none() && type_params.contains(&&seg.ident)
+                            })
+                    }
+                    _ => false,
+                };
                 if top_level_shared_ref {
-                    // Only a referent that is a type parameter or a projection
-                    // off one needs the higher-ranked bound. Any other
-                    // referent, like an imported `Holder<T>`, marshals through
-                    // a single `&X` impl and keeps the direct route.
-                    let ref_needs_bound = |r: &syn::TypeReference| match &*r.elem {
-                        syn::Type::Path(p) => {
-                            p.qself.is_some()
-                                || p.path.segments.first().is_some_and(|seg| {
-                                    seg.arguments.is_none() && type_params.contains(&&seg.ident)
-                                })
-                        }
-                        _ => false,
-                    };
                     if let Some(r) = match ty {
                         syn::Type::Reference(r) if ref_needs_bound(r) => Some(r),
                         _ => None,
@@ -3891,16 +3922,26 @@ impl ast::ImportFunction {
                         if let Some(lt) = r.lifetime.as_ref().filter(|lt| lt.ident != "_") {
                             ref_outlives.push(quote! { #elem: #lt });
                         }
-                        ref_elem = Some(elem);
+                        ref_elem = Some((elem, false));
                     }
+                } else if let Some(r) = option_shared_ref(ty).filter(|r| ref_needs_bound(r)) {
+                    // `Option<&T>` is marshalled through `RefIntoWasmAbi`'s
+                    // option form on the referent, as `&T` is.
+                    let elem = respan_all(r.elem.to_token_stream(), ty_span);
+                    if let Some(lt) = r.lifetime.as_ref().filter(|lt| lt.ident != "_") {
+                        ref_outlives.push(quote! { #elem: #lt });
+                    }
+                    ref_elem = Some((elem, true));
                 } else if generics::references_generic_param(ty, &type_params) {
                     bail_span!(
                         ty,
                         "experimental_generic_mono only supports a bare shared reference to a generic \
-                         type parameter (`&T`); mutable references (`&mut T`) and references \
-                         nested inside another type (e.g. `Option<&T>`) are not supported — \
+                         type parameter (`&T`, `Option<&T>`); mutable references (`&mut T`) and \
+                         references nested inside another type (e.g. `(T, &T)`) are not supported — \
                          take the argument by value or use the type-erasure generic path"
                     );
+                } else {
+                    borrowed_slot = true;
                 }
             }
 
@@ -3910,11 +3951,14 @@ impl ast::ImportFunction {
                 quote! { self }
             } else {
                 wrapper_args.push(quote! { #name: #ty });
+                let declared = &arg.pat_type.ty;
+                outer_args.push(quote! { #name: #declared });
+                call_args.push(quote! { #name });
                 quote! { #name }
             };
 
             let (abi, into_abi, describe) = match &ref_elem {
-                Some(elem) => (
+                Some((elem, false)) => (
                     quote_spanned! { ty_span =>
                         <#elem as #wasm_bindgen::convert::RefIntoWasmAbi>::Abi
                     },
@@ -3923,6 +3967,17 @@ impl ast::ImportFunction {
                     },
                     quote_spanned! { ty_span =>
                         <#elem as #wasm_bindgen::convert::RefIntoWasmAbi>::describe_ref
+                    },
+                ),
+                Some((elem, true)) => (
+                    quote_spanned! { ty_span =>
+                        <#elem as #wasm_bindgen::convert::RefIntoWasmAbi>::OptionAbi
+                    },
+                    quote_spanned! { ty_span =>
+                        <#elem as #wasm_bindgen::convert::RefIntoWasmAbi>::option_ref_into_abi
+                    },
+                    quote_spanned! { ty_span =>
+                        <#elem as #wasm_bindgen::convert::RefIntoWasmAbi>::describe_option_ref
                     },
                 ),
                 None => {
@@ -3945,14 +4000,30 @@ impl ast::ImportFunction {
             };
             let (args, names) = splat(wasm_bindgen, &name, &abi, ty_span);
             shim_abi_args.extend(args);
-            arg_conversions.push(quote_spanned! { ty_span =>
-                let #name = #into_abi(#var);
-                let (#(#names),*) = <#abi as #wasm_bindgen::convert::WasmAbi>::split(#name);
-            });
+            if borrowed_slot {
+                // The slot outlives the call, so a value lowered borrowed is
+                // dropped in Rust once JS returns.
+                let slot = Ident::new(&format!("__wbg_slot_{}", name.unraw()), Span::call_site());
+                arg_conversions.push(quote_spanned! { ty_span =>
+                    let mut #slot = #wasm_bindgen::__rt::core::option::Option::Some(#var);
+                    let #name = <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>::arg_into_abi(&mut #slot);
+                    let (#(#names),*) = <#abi as #wasm_bindgen::convert::WasmAbi>::split(#name);
+                });
+                let modes = seq_mode_words(ty, &arg.seq_modes).into_iter().rev();
+                describe_args.push(quote_spanned! { ty_span =>
+                    #(inform(SEQ_MODE); inform(#modes);)*
+                    <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>::describe_arg();
+                });
+            } else {
+                arg_conversions.push(quote_spanned! { ty_span =>
+                    let #name = #into_abi(#var);
+                    let (#(#names),*) = <#abi as #wasm_bindgen::convert::WasmAbi>::split(#name);
+                });
+                describe_args.push(quote_spanned! { ty_span =>
+                    #describe();
+                });
+            }
             all_prim_names.extend(names);
-            describe_args.push(quote_spanned! { ty_span =>
-                #describe();
-            });
         }
 
         // --- Return handling (mirrors the normal import path) ---
@@ -4281,12 +4352,60 @@ impl ast::ImportFunction {
             quote! { #me #(#wrapper_args),* },
         );
         wrapper_params.set_span(paren_span);
+
+        // Argument-position `impl Trait` has no name to pass explicitly, so
+        // Rust leaves it out of a call's turbofish. The named parameters it
+        // desugared to above would count there, so keep `impl Trait` in the
+        // public signature and forward to a hidden twin that names them. The
+        // declaration's bounds are the whole contract (nothing is synthesized
+        // onto the twin), so the outer wrapper carries the declared argument
+        // types and `where` clause unchanged.
+        let (body_name, body_vis, outer) = if synthesized_params.is_empty() {
+            (rust_name.clone(), quote! { #vis }, quote! {})
+        } else {
+            let body_name = Ident::new(
+                &format!("__wbg_mono_{}", rust_name.unraw()),
+                rust_name.span(),
+            );
+            let infer = synthesized_params.iter().map(|_| quote! { _ });
+            let turbofish = quote! { ::<#(#fn_generic_params,)* #(#infer),*> };
+            let call = if is_method {
+                quote! { self.#body_name #turbofish(#(#call_args),*) }
+            } else if class.is_some() {
+                quote! { Self::#body_name #turbofish(#(#call_args),*) }
+            } else {
+                quote! { #body_name #turbofish(#(#call_args),*) }
+            };
+            let call = match (self.function.r#async, self.function.r#unsafe) {
+                (true, true) => quote! { unsafe { #call }.await },
+                (true, false) => quote! { #call.await },
+                (false, true) => quote! { unsafe { #call } },
+                (false, false) => call,
+            };
+            let outer = quote! {
+                #[allow(nonstandard_style)]
+                #[allow(clippy::all, clippy::nursery, clippy::pedantic, clippy::restriction)]
+                #(#attrs)*
+                #doc
+                #vis #maybe_async #maybe_unsafe fn #rust_name <#(#fn_lifetime_params,)* #(#fn_generic_params),*> (#me #(#outer_args),*) #ret #where_clause {
+                    #call
+                }
+            };
+            (body_name, quote! { #[doc(hidden)] }, outer)
+        };
+        let doc = if synthesized_params.is_empty() {
+            doc
+        } else {
+            quote! {}
+        };
         let invocation = quote! {
+            #outer
+
             #[allow(nonstandard_style)]
             #[allow(clippy::all, clippy::nursery, clippy::pedantic, clippy::restriction)]
             #(#attrs)*
             #doc
-            #vis #maybe_async #maybe_unsafe fn #rust_name <#generic_params> #wrapper_params #ret #where_clause {
+            #body_vis #maybe_async #maybe_unsafe fn #body_name <#generic_params> #wrapper_params #ret #where_clause {
                 #shim
 
                 #body
@@ -6089,12 +6208,43 @@ fn result_err_ty(ty: &syn::Type) -> Option<&syn::Type> {
 /// CLI resolves against the argument's shape, so nothing here inspects the
 /// argument. The deprecated `slice_to_array` is the exception, keeping its
 /// released reach of `&[T]` and `Option<&[T]>` only.
+/// The shared reference inside an `Option<&T>` argument.
+fn option_shared_ref(ty: &syn::Type) -> Option<&syn::TypeReference> {
+    let syn::Type::Path(path) = ty else {
+        return None;
+    };
+    let segment = path.path.segments.last()?;
+    if path.qself.is_some() || segment.ident != "Option" {
+        return None;
+    }
+    let syn::PathArguments::AngleBracketed(args) = &segment.arguments else {
+        return None;
+    };
+    match args.args.first()? {
+        syn::GenericArgument::Type(syn::Type::Reference(r))
+            if r.mutability.is_none() && args.args.len() == 1 =>
+        {
+            Some(r)
+        }
+        _ => None,
+    }
+}
+
 fn seq_mode_describe_ty(
     wasm_bindgen: &syn::Path,
     ty: &syn::Type,
     modes: &[ast::SeqMode],
 ) -> syn::Type {
     let mut describe = ty.clone();
+    for word in seq_mode_words(ty, modes) {
+        describe = parse_quote! { #wasm_bindgen::describe::WasmDescribeSeqMode<#describe, #word> };
+    }
+    describe
+}
+
+/// The `SEQ_MODE` words for `modes`, innermost first.
+fn seq_mode_words(ty: &syn::Type, modes: &[ast::SeqMode]) -> Vec<u32> {
+    let mut words = Vec::new();
     for mode in modes {
         let value = match mode.value {
             ast::SeqValue::View => shared::tys::SEQ_MODE_VIEW,
@@ -6116,10 +6266,9 @@ fn seq_mode_describe_ty(
         } else {
             0
         };
-        let word = value | key | explicit;
-        describe = parse_quote! { #wasm_bindgen::describe::WasmDescribeSeqMode<#describe, #word> };
+        words.push(value | key | explicit);
     }
-    describe
+    words
 }
 
 /// Detects whether a type is a raw `&dyn Fn(...)` or `&mut dyn FnMut(...)` argument.
