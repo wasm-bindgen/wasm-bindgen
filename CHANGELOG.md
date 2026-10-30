@@ -194,6 +194,48 @@
 
 ### Changed
 
+* Reworked the `js_sys::Temporal` bindings and `Date::to_temporal_instant`,
+  which stay behind `js_sys_unstable_apis` and now also need the new `temporal`
+  feature, against the final Stage 4
+  specification and reshaped them to the web-sys conventions. Inputs are
+  typed: `*Like` dictionaries such as `PlainDateLike` for `from`, calendar-free
+  `*Fields` dictionaries for `with`, and the bare form of a method takes the
+  type its argument converts to (`&str` time zones and calendars, `&PlainTime`,
+  `&Duration`, `&Self` for `until`/`since`/`equals`), while every other member
+  of a specification union gets a `_with_<type>` variant, so
+  `with_calendar_with_plain_date`, `add_with_duration_like`, `add_with_str`,
+  `equals_with_zoned_date_time`, `with_plain_time_with_str`,
+  `PlainYearMonth::from_with_plain_date` and the typed `relativeTo`, `calendar`,
+  `timeZone` and `plainTime` dictionary setters all exist; `compare` keeps
+  taking `&Self` only. Optional arguments expand to the plain method plus
+  `_with_options`/`_and_options`, `to_locale_string` takes no locale, a
+  `_with_str`/`_with_str_sequence` one or an `Option<&str>` with options, and `round`,
+  `total` and `get_time_zone_transition` take their options dictionary, with
+  `round_with_unit`, `total_with_unit` and
+  `get_time_zone_transition_with_direction` shortcuts. The option dictionaries
+  are `OverflowOptions`, `DifferenceOptions`, `RoundToOptions::new(unit)`,
+  `DurationTotalOptions::new(unit)`, `TimeZoneTransitionOptions::new(direction)`
+  and friends, the enums drop their `Temporal` prefix (`Overflow`, `Unit`,
+  `LargestUnit`, `TransitionDirection`, …). Bindings for the removed
+  `toPlainYearMonth`/`toPlainMonthDay` on `PlainDateTime` and `ZonedDateTime`,
+  `ZonedDateTime::with_plain_date` and `PlainTime::to_plain_date_time` are gone,
+  `offset_nanoseconds` returns `f64`, `era`, `era_year`, `week_of_year` and
+  `year_of_week` return `Option`s, `fractionalSecondDigits` is a `u8`,
+  `get_time_zone_transition` returns `Nullable<ZonedDateTime>`,
+  `to_js_string_with_options` and `to_locale_string` are fallible, constructors
+  expand their optional trailing fields (`PlainTime::new()`, `new_with_hour`, …,
+  `PlainDate::new_with_calendar`), and `catch` follows the specification:
+  `equals`, `compare`, the typed `from` forms (except `PlainYearMonth`'s date
+  conversions, which can leave the range) and the option-less
+  `Instant`/`PlainTime` arithmetic are infallible, while
+  `ZonedDateTime::start_of_day`, `hours_in_day` and
+  `PlainDate::to_plain_year_month` are fallible. Fallible bindings return
+  `Result<T, RangeError>`, or `Result<T, Error>` where a property bag, a
+  `relativeTo`/`plainTime` union or `Intl` options can also throw a `TypeError`. `PartialEq`/`Eq` on the
+  date-time types compare by the spec `equals()`, and `Instant` and `PlainTime`
+  are `Ord` through `compare()`.
+  [#5402](https://github.com/wasm-bindgen/wasm-bindgen/pull/5402)
+
 * The js-sys `JsFunction*` traits' associated types (`Ret`, `ArgN`, `BindN`)
   no longer carry a `JsGeneric` bound, so a `Function<fn(..)>` signature may
   name a converted carrier such as `Nullable<JsString>`, and
