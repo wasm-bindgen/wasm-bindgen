@@ -1,5 +1,6 @@
 use js_sys::*;
-use wasm_bindgen::convert::Upcast;
+use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, Upcast};
+use wasm_bindgen::describe::WasmDescribe;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 #[cfg(js_sys_unstable_apis)]
@@ -883,4 +884,62 @@ fn upcast_accepts_option_for_payload() {
     let g: Function<fn(JsString) -> Number> = f.upcast_into();
     let g: Function = g.unchecked_into();
     assert_eq!(g.call1(&JsValue::NULL, &"abc".into()).unwrap(), 3);
+}
+
+#[wasm_bindgen(module = "tests/wasm/Function.js")]
+extern "C" {
+    #[wasm_bindgen(js_name = callWith)]
+    fn call_with(f: &Function<fn(String, f64) -> String>, a: &str, b: f64) -> String;
+    #[wasm_bindgen(js_name = callWith)]
+    fn call_unit(f: &Function<fn(String)>, a: &str);
+    #[wasm_bindgen(experimental_generic_mono, js_name = callThunk)]
+    fn call_thunk<T: FromWasmAbi>(f: &Function<fn() -> T>) -> T;
+}
+
+#[wasm_bindgen_test]
+fn function_from_owned_closure() {
+    let seen = std::rc::Rc::new(std::cell::RefCell::new(String::new()));
+    let s = seen.clone();
+    let c = Closure::<dyn FnMut(String)>::new(move |v: String| *s.borrow_mut() = v);
+    let f: Function<fn(String)> = c.into();
+    call_unit(&f, "x");
+    assert_eq!(*seen.borrow(), "x");
+}
+
+#[cfg(js_sys_unstable_apis)]
+#[wasm_bindgen_test]
+fn function_from_fn() {
+    let f: Function<fn(String, f64) -> String> = Function::from_fn(|s, n| format!("{s}{n}"));
+    assert_eq!(call_with(&f, "a", 1.0), "a1");
+
+    let closure = Closure::<dyn FnMut(String, f64) -> String>::new(|s, n| format!("{n}{s}"));
+    assert_eq!(call_with(Function::closure_ref(&closure), "b", 2.0), "2b");
+
+    let g: Function<fn(JsString, Number) -> JsString> =
+        Function::from_fn(|s: JsString, n: Number| {
+            JsString::from(format!("{}{}", String::from(s), n.value_of()))
+        });
+    let out = g
+        .call(&JsValue::NULL, (&JsString::from("x"), &Number::from(2)))
+        .unwrap();
+    assert_eq!(out, "x2");
+
+    let h: Function<fn() -> Boolean> = Function::from_fn(|| Boolean::from(true));
+    assert!(h.call(&JsValue::NULL, ()).unwrap().value_of());
+}
+
+#[cfg(js_sys_unstable_apis)]
+#[wasm_bindgen_test]
+fn function_once() {
+    let s = String::from("moved");
+    let out = call_thunk(&Function::once(move || s));
+    assert_eq!(out, "moved");
+}
+
+// A `Function` of a generic callback signature crosses with no bounds on its
+// argument or return types.
+#[allow(dead_code)]
+fn generic_function_abi<E, R>(f: &Function<fn(E, String) -> R>) {
+    fn crosses<T: IntoWasmAbi + WasmDescribe>(_: T) {}
+    crosses(f);
 }
