@@ -109,6 +109,13 @@
   handled in wasm there, and traps now go through `abort()`.
   [#5457](https://github.com/wasm-bindgen/wasm-bindgen/pull/5457)
 
+* `extends` takes a parent with type arguments, concrete or naming the
+  child's own parameters: `#[wasm_bindgen(extends = Map<JsString, Number>)]`
+  or `type Scores<T>` with `extends = Map<JsString, T>`. The generated
+  conversions go through `JsCast`, since a parent's `From<JsValue>` only
+  exists at its default type arguments.
+  [#5441](https://github.com/wasm-bindgen/wasm-bindgen/pull/5441)
+
 ### Changed
 
 * `VectorIntoWasmAbi`, `VectorFromWasmAbi` and `WasmDescribeVector` are

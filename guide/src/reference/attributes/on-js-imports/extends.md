@@ -58,4 +58,21 @@ let bar: Bar = baz.clone().upcast_into();
 let foo: &Foo = baz.upcast();
 ```
 
+A parent may be a generic type with type arguments, either concrete or naming
+the child's own type parameters:
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(extends = Map<JsString, Number>, extends = Object, js_name = Map)]
+    type ScoreMap;
+
+    #[wasm_bindgen(extends = Map<JsString, T>, extends = Object, js_name = Map)]
+    type Scores<T = JsValue>;
+}
+
+let scores: Scores<Number> = ...;
+let map: &Map<JsString, Number> = scores.as_ref();
+```
+
 > The `upcast()` method is also used when working with generic types. For example, when passing an `Array<Number>` to a function expecting `&Array<JsValue>`, use `my_array.upcast()`. See [Working with Generics](../../working-with-generics.md#upcasting-types) for more details.
