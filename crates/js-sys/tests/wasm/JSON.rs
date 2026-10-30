@@ -91,13 +91,22 @@ fn stringify() {
     arr.push(&JsValue::from(true));
     arr.push(&JsValue::from("hello"));
 
+    #[cfg(not(js_sys_unstable_apis))]
     let str1: String = JSON::stringify(&JsValue::from(arr)).unwrap().into();
+    #[cfg(js_sys_unstable_apis)]
+    let str1 = JSON::stringify(&JsValue::from(arr)).unwrap().unwrap();
     assert_eq!(str1, "[1,true,\"hello\"]");
 
     let obj = Object::new();
     Reflect::set_str(obj.as_ref(), &"foo".into(), &JsValue::from("bar")).unwrap();
+    #[cfg(not(js_sys_unstable_apis))]
     let str2: String = JSON::stringify(&JsValue::from(obj)).unwrap().into();
+    #[cfg(js_sys_unstable_apis)]
+    let str2 = JSON::stringify(&JsValue::from(obj)).unwrap().unwrap();
     assert_eq!(str2, "{\"foo\":\"bar\"}");
+
+    #[cfg(js_sys_unstable_apis)]
+    assert_eq!(JSON::stringify(&JsValue::UNDEFINED).unwrap(), None);
 }
 
 #[wasm_bindgen_test]
@@ -159,7 +168,7 @@ fn stringify_with_replacer() {
     {
         output2 = JSON::stringify_with_replacer(
             &JsValue::from(obj),
-            &mut |k: JsString, v: JsValue| {
+            &mut |k: String, v: JsValue| {
                 if k == "hello" {
                     Ok(None)
                 } else {
@@ -169,7 +178,7 @@ fn stringify_with_replacer() {
             None,
         )
         .unwrap()
-        .into();
+        .unwrap();
     }
     assert_eq!(output2, "{\"foo\":\"bar\"}");
 }
@@ -191,7 +200,7 @@ fn stringify_with_replacer_error() {
     {
         result = JSON::stringify_with_replacer(
             &JsValue::from(arr),
-            &mut |_: JsString, _: JsValue| Err(JsError::new("rust really rocks")),
+            &mut |_: String, _: JsValue| Err(JsError::new("rust really rocks")),
             None,
         );
     }
@@ -310,6 +319,16 @@ fn stringify_with_replacer_list_typed() {
     assert_eq!(output, "{\"a\":1,\"c\":3}");
 }
 
+#[cfg(not(js_sys_unstable_apis))]
+fn stringified(value: &JsValue) -> String {
+    JSON::stringify(value).unwrap().into()
+}
+
+#[cfg(js_sys_unstable_apis)]
+fn stringified(value: &JsValue) -> String {
+    JSON::stringify(value).unwrap().unwrap()
+}
+
 #[wasm_bindgen_test]
 fn raw_json() {
     if !has_raw_json() {
@@ -322,17 +341,17 @@ fn raw_json() {
     assert!(!JSON::is_raw_json(&JsValue::from("12345678901234567890")));
     assert!(!JSON::is_raw_json(&JsValue::from(1)));
 
-    let output: String = JSON::stringify(&JsValue::from(raw.clone())).unwrap().into();
+    let output = stringified(&JsValue::from(raw.clone()));
     assert_eq!(output, "12345678901234567890");
 
     let obj = Object::new();
     Reflect::set_str(obj.as_ref(), &"id".into(), &JsValue::from(raw)).unwrap();
     Reflect::set_str(obj.as_ref(), &"n".into(), &JsValue::from(1)).unwrap();
-    let output: String = JSON::stringify(&JsValue::from(obj)).unwrap().into();
+    let output = stringified(&JsValue::from(obj));
     assert_eq!(output, "{\"id\":12345678901234567890,\"n\":1}");
 
     let raw_str = JSON::raw_json("\"text\"").unwrap();
-    let output: String = JSON::stringify(&JsValue::from(raw_str)).unwrap().into();
+    let output = stringified(&JsValue::from(raw_str));
     assert_eq!(output, "\"text\"");
 
     assert!(JSON::raw_json("{}")

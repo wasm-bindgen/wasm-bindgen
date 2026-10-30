@@ -884,3 +884,10 @@ fn upcast_accepts_option_for_payload() {
     let g: Function = g.unchecked_into();
     assert_eq!(g.call1(&JsValue::NULL, &"abc".into()).unwrap(), 3);
 }
+
+#[cfg(js_sys_unstable_apis)]
+#[wasm_bindgen_test]
+fn name_is_a_string() {
+    let name: String = MAX.with(|max| max.name());
+    assert_eq!(name, "max");
+}

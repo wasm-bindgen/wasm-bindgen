@@ -12,6 +12,13 @@
   `Option<f64>` or `Nullable<String>`, as std's `contains(&T)` does.
   [#5436](https://github.com/wasm-bindgen/wasm-bindgen/pull/5436)
 
+* Under `js_sys_unstable_apis`, `Date::new_with_value` creates a `Date`
+  from a time value or a date string (`impl JsNumberOrStringLike`), and
+  `ArrayBuffer` converts to and from bytes: `ArrayBuffer::to_vec`,
+  `From<&[u8]>` and `From<Vec<u8>>` for `ArrayBuffer`, and
+  `From<ArrayBuffer>` / `From<&ArrayBuffer>` for `Vec<u8>`.
+  [#5446](https://github.com/wasm-bindgen/wasm-bindgen/pull/5446)
+
 * Added a rejection type parameter to `js_sys::Promise<T, E = JsValue>`,
   mirrored on `JsFuture<T, E>`, `PromiseState<T, E>` and
   `PromiseWithResolvers<T, E>`. Awaiting a `Promise<T, E>` yields
@@ -193,6 +200,18 @@
   [#5421](https://github.com/wasm-bindgen/wasm-bindgen/pull/5421)
 
 ### Changed
+
+* **Breaking (experimental):** under `js_sys_unstable_apis`, small built-in
+  string results return `String` rather than `JsString`, as
+  `Symbol::to_string` already did: `Error::message`, `name` and
+  `to_string`, the `Date` string formatters, `Number::to_fixed`,
+  `to_precision`, `to_exponential` and `to_string_with_radix`,
+  `RegExp::source`, `flags` and `to_string`, `Function::name`, and the
+  string fields of the `Intl` resolved options and format parts.
+  `JSON::stringify` and `JSON::stringify_with_replacer` return
+  `Result<Option<String>, JsValue>`, `None` for a value with no JSON form
+  such as `undefined`, and the replacer receives the key as a `String`.
+  [#5446](https://github.com/wasm-bindgen/wasm-bindgen/pull/5446)
 
 * The js-sys `JsFunction*` traits' associated types (`Ret`, `ArgN`, `BindN`)
   no longer carry a `JsGeneric` bound, so a `Function<fn(..)>` signature may
