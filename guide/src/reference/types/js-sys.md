@@ -123,9 +123,7 @@ let closure: Closure<dyn FnMut(Number) -> JsString> = Closure::new(|n: Number| {
     JsString::from(format!("Value: {}", n.value_of()))
 });
 let func: Function<fn(Number) -> JsString> = Function::from_closure(closure);
-
-// or through `From`
-let func: Function<fn(Number) -> JsString> = closure.into();
+// or, equivalently, through `From`: `let func: Function<fn(Number) -> JsString> = closure.into();`
 ```
 
 Under `--cfg=js_sys_unstable_apis`, `Function::from_fn` builds a typed
