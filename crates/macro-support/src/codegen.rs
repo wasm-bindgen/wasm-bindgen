@@ -2781,12 +2781,13 @@ impl ToTokens for ast::DynamicUnion {
                     type Abi = <#wasm_bindgen::__rt::alloc::boxed::Box<[#wasm_bindgen::JsValue]> as #wasm_bindgen::convert::FromWasmAbi>::Abi;
 
                     unsafe fn vector_from_abi(js: Self::Abi) -> #wasm_bindgen::__rt::alloc::boxed::Box<[Self]> {
-                        use #wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi};
-                        <#wasm_bindgen::__rt::alloc::boxed::Box<[#wasm_bindgen::JsValue]> as FromWasmAbi>::from_abi(js)
-                            .into_vec()
-                            .into_iter()
-                            .map(|value| <Self as FromWasmAbi>::from_abi(value.into_abi()))
-                            .collect()
+                        #wasm_bindgen::convert::js_value_vector_from_abi(js)
+                    }
+
+                    unsafe fn try_vector_from_abi(
+                        js: Self::Abi,
+                    ) -> #wasm_bindgen::__rt::core::result::Result<#wasm_bindgen::__rt::alloc::boxed::Box<[Self]>, &'static str> {
+                        #wasm_bindgen::convert::try_js_value_vector_from_abi(js)
                     }
                 }
 
@@ -2795,12 +2796,7 @@ impl ToTokens for ast::DynamicUnion {
                     type Abi = <#wasm_bindgen::__rt::alloc::boxed::Box<[#wasm_bindgen::JsValue]> as #wasm_bindgen::convert::IntoWasmAbi>::Abi;
 
                     fn vector_into_abi(vector: #wasm_bindgen::__rt::alloc::boxed::Box<[Self]>) -> Self::Abi {
-                        let values: #wasm_bindgen::__rt::alloc::boxed::Box<[#wasm_bindgen::JsValue]> = vector
-                            .into_vec()
-                            .into_iter()
-                            .map(#wasm_bindgen::JsValue::from)
-                            .collect();
-                        #wasm_bindgen::convert::IntoWasmAbi::into_abi(values)
+                        #wasm_bindgen::convert::js_value_vector_into_abi(vector)
                     }
                 }
             }

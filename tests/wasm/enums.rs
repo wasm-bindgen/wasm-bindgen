@@ -33,6 +33,9 @@ extern "C" {
     fn js_union_vec_roundtrip(v: Vec<StringEnumWithFallback>) -> Vec<StringEnumWithFallback>;
     #[cfg(not(wasm_bindgen_unstable_generic_vec))]
     fn js_union_list() -> Vec<StringEnumWithFallback>;
+    #[cfg(not(wasm_bindgen_unstable_generic_vec))]
+    #[wasm_bindgen(catch)]
+    fn js_outer_union_vec_len(with_bad_element: bool) -> Result<usize, JsValue>;
 
     // Async round-trip: imports an `async fn` returning a dynamic union,
     // exercising `Promise<Union>` resolution across the `JsFuture` seam.
@@ -346,6 +349,19 @@ pub fn nested_union_roundtrip(o: OuterUnion) -> OuterUnion {
 #[wasm_bindgen]
 pub fn optional_union_roundtrip(o: Option<OuterUnion>) -> Option<OuterUnion> {
     o
+}
+
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
+#[wasm_bindgen]
+pub fn outer_union_vec_len(v: Vec<OuterUnion>) -> usize {
+    v.len()
+}
+
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
+#[wasm_bindgen_test]
+fn test_union_vec_rejects_an_element() {
+    assert_eq!(js_outer_union_vec_len(false).unwrap(), 3);
+    assert!(js_outer_union_vec_len(true).is_err());
 }
 
 #[wasm_bindgen_test]
