@@ -22,6 +22,25 @@ If calling the imported function throws an exception, then `Err` will be
 returned with the exception that was raised. Otherwise, `Ok` is returned with
 the result of the function.
 
+An import returning a `js_sys::Promise<T>` may instead keep its `Promise`
+return. A synchronous throw is then returned as a rejected promise, so it
+surfaces where the promise is awaited, as it would for an `async` JS function:
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(catch)]
+    fn fetch_text(url: &str) -> Promise<String>;
+}
+
+// `Err` here whether `fetchText` threw or its promise rejected.
+let result = fetch_text("/").await;
+```
+
+The return type converts the exception through the
+`wasm_bindgen::convert::FromCaughtException` trait, which `js-sys` implements
+for `Promise<T, E>`.
+
 > By default `wasm-bindgen` will take no action when Wasm calls a JS function
 > which ends up throwing an exception. The Wasm spec right now doesn't support
 > stack unwinding and as a result Rust code **will not execute destructors**.
