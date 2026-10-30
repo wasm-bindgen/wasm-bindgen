@@ -50,9 +50,37 @@ assert_eq!(a.iter().collect::<Vec<String>>(), ["a", "b", "c"]);
 
 let m: Map<String, f64> = Map::new_typed();
 m.set(&"k".into(), &1.0);
-assert_eq!(m.get(&"k".into()), Some(1.0));
+assert_eq!(m.get("k"), Some(1.0));
 
 let v: String = Promise::resolve("x").await?;
+```
+
+The collections also behave as Rust collections under the cfg.
+`Map::get`, `has` and `delete` and `Set::has` and `delete` take any borrowed
+form of the key, as `HashMap` does, so a `Map<String, V>` is read with `"k"`.
+`Map::get` is `Some` for every present key, even one whose value is
+`undefined` or `null`, so a `Map<String, Option<String>>` reads as
+`Option<Option<String>>`. An `Iterator<T>` iterates as `T`, rethrowing a
+throwing `next()` into JS as `for...of` does, while `try_iter` and
+`into_try_iter` keep the protocol's errors as `Err` items. `Map`, `Set` and
+`Object<T>` have `iter()`, `IntoIterator`, `FromIterator` and `Extend`, `Map`
+and `Object<T>` over `(key, value)` tuples (an `Object<T>` record over its
+own enumerable string keys), and `Entries<K, V>` turns any `[key, value]`
+iterator into tuples:
+
+```rust
+use js_sys::{Map, Object, Set};
+
+let m: Map<String, f64> = [("a".to_string(), 1.0)].into_iter().collect();
+for (key, value) in &m {
+    // key: String, value: f64
+}
+
+let s: Set<u32> = [3, 1, 3].into_iter().collect();
+assert!(s.has(&3));
+
+let record: Object<String> = hash_map.iter().collect();
+let pairs: Vec<(String, String)> = record.iter().collect();
 ```
 
 Reads bound the element by `FromWasmAbi`, and writes take `&T` bounded by
