@@ -12,6 +12,31 @@
   `Option<f64>` or `Nullable<String>`, as std's `contains(&T)` does.
   [#5436](https://github.com/wasm-bindgen/wasm-bindgen/pull/5436)
 
+* `experimental_generic_mono` imports emit one binding per wire format: an
+  owned `String`, `Option<String>`, `JsValue` or imported type argument is
+  passed borrowed and dropped in Rust after the call, so `"a"`, `&s` and `s`
+  share one binding, and instantiations that differ only in a handle's
+  TypeScript type share one too. The per-binding `// generic import` comments
+  are only emitted under `--keep-debug`. Such imports also take
+  `Option<&T>` arguments under the same `T: RefIntoWasmAbi` bound as `&T`,
+  `?Sized` type parameters named only behind a reference (`key: &Q` with
+  `K: Borrow<Q>`), and raw identifiers as argument and function names, and
+  keep argument-position `impl Trait` in the public signature, so it is left
+  out of a turbofish as in any Rust function.
+  [#5440](https://github.com/wasm-bindgen/wasm-bindgen/pull/5440)
+
+* Under `js_sys_unstable_apis`, js-sys collections behave as Rust
+  collections: `Map::get` / `has` / `delete` and `Set::has` / `delete` take
+  any borrowed form of the key (`K: Borrow<Q>`), and `Map::get` is `Some` for
+  every present key, whatever its value; `Map`, `Set` and `Object<T>` (as a
+  record of its own string keys) have `iter()`, `IntoIterator`,
+  `FromIterator` and `Extend`; `Entries<K, V>` iterates any `[key, value]`
+  iterator as tuples, and `ArrayTuple` converts into a Rust tuple; and
+  `JsStream<T>` streams any `FromWasmAbi` type. In both configurations,
+  `Iterator<T>` gains `try_iter` / `into_try_iter`, which yield the
+  protocol's errors as `Err` items, and `&Array<T>` is `IntoIterator`.
+  [#5450](https://github.com/wasm-bindgen/wasm-bindgen/pull/5450)
+
 * Added a rejection type parameter to `js_sys::Promise<T, E = JsValue>`,
   mirrored on `JsFuture<T, E>`, `PromiseState<T, E>` and
   `PromiseWithResolvers<T, E>`. Awaiting a `Promise<T, E>` yields
@@ -218,6 +243,17 @@
   [#5421](https://github.com/wasm-bindgen/wasm-bindgen/pull/5421)
 
 ### Changed
+
+* **Breaking (experimental):** under `js_sys_unstable_apis`, an
+  `Iterator<T>` iterates as `T`, rethrowing a throwing `next()` into JS as
+  `for...of` does; use `try_iter` / `into_try_iter` for the previous
+  `Result<T, JsValue>` items. `Map::get` checks `has` and then reads
+  through the new `Map::get_unchecked` (JS `get`, read as `V`), rather than
+  reading `Option<V>`, so a present `undefined` or `null` value is `Some`.
+  `Object::keys` returns `Array<String>`,
+  `Object::entries` keys are `String`, and `Array::entries` indices are
+  `u32`.
+  [#5450](https://github.com/wasm-bindgen/wasm-bindgen/pull/5450)
 
 * The js-sys `JsFunction*` traits' associated types (`Ret`, `ArgN`, `BindN`)
   no longer carry a `JsGeneric` bound, so a `Function<fn(..)>` signature may
