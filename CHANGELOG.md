@@ -55,6 +55,13 @@
   out of a turbofish as in any Rust function.
   [#5440](https://github.com/wasm-bindgen/wasm-bindgen/pull/5440)
 
+* A `slice` or `vec` mode written on an `experimental_generic_mono` argument
+  whose type is generic applies at each instantiation it fits, as an
+  inherited mode does, and is a no-op on the others, so
+  `#[wasm_bindgen(slice = copy)] chunk: T` copies a `&[u8]` and passes an
+  `ArrayBuffer` through unchanged.
+  [#5445](https://github.com/wasm-bindgen/wasm-bindgen/pull/5445)
+
 * Added `aarch64-pc-windows-msvc` release artifacts.
   [#5439](https://github.com/wasm-bindgen/wasm-bindgen/pull/5439)
 

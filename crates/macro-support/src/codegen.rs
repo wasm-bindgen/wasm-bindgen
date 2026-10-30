@@ -3923,11 +3923,21 @@ impl ast::ImportFunction {
                 quote! { #name }
             };
 
+            // A mode written on a generic argument applies to the
+            // instantiations it fits, as an inherited mode does.
+            let seq_modes: Vec<ast::SeqMode> = arg
+                .seq_modes
+                .iter()
+                .map(|mode| ast::SeqMode {
+                    explicit: mode.explicit && !generics::uses_generic_params(ty, &type_params),
+                    ..*mode
+                })
+                .collect();
             let (abi, into_abi, describe) = match &ref_elem {
                 Some((elem, option)) => {
                     // The words `seq_mode_describe_ty` wraps around a type,
                     // ahead of a describe that isn't one's.
-                    let modes = seq_mode_words(ty, &arg.seq_modes).into_iter().rev();
+                    let modes = seq_mode_words(ty, &seq_modes).into_iter().rev();
                     let [carrier, abi, into_abi, describe] = if *option {
                         [
                             "MaybeRefIntoWasmAbi",
@@ -3957,7 +3967,7 @@ impl ast::ImportFunction {
                 }
                 None => {
                     let describe_ty = respan_all(
-                        seq_mode_describe_ty(wasm_bindgen, ty, &arg.seq_modes).to_token_stream(),
+                        seq_mode_describe_ty(wasm_bindgen, ty, &seq_modes).to_token_stream(),
                         ty_span,
                     );
                     (
@@ -3984,7 +3994,7 @@ impl ast::ImportFunction {
                     let #name = <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>::arg_into_abi(&mut #slot);
                     let (#(#names),*) = <#abi as #wasm_bindgen::convert::WasmAbi>::split(#name);
                 });
-                let modes = seq_mode_words(ty, &arg.seq_modes).into_iter().rev();
+                let modes = seq_mode_words(ty, &seq_modes).into_iter().rev();
                 describe_args.push(quote_spanned! { ty_span =>
                     #(inform(SEQ_MODE); inform(#modes);)*
                     <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>::describe_arg();
