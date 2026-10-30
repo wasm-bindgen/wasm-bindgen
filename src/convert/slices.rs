@@ -663,6 +663,9 @@ crate::__wbindgen_encoded_sequence!(&Cow<'_, str>, |s| (*s).into_abi(), [ref_int
 // An owned `Vec<String>` keeps its released `JsValue` form.
 #[cfg(not(wasm_bindgen_unstable_generic_vec))]
 crate::__wbindgen_encoded_sequence!(String, |s| s.into_abi(), [ref_into]);
+// Each element reaches JS as a `Uint8Array` copy.
+crate::__wbindgen_encoded_sequence!(&[u8], |s| (*s).into_abi(), [ref_into]);
+crate::__wbindgen_encoded_sequence!(Vec<u8>, |v| v.as_slice().into_abi(), [ref_into]);
 
 crate::__wbindgen_sequence_rows! {
     impl crate::__rt::marker::VectorRefIntoWasmAbiSealed for JsValue {}
