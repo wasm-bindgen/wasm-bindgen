@@ -5,6 +5,16 @@ use wasm_bindgen::{JsCast, JsError};
 use wasm_bindgen_futures::{future_to_promise_typed, JsFuture};
 use wasm_bindgen_test::*;
 
+#[cfg(not(js_sys_unstable_apis))]
+fn message_len(err: &TypeError) -> u32 {
+    err.message().length()
+}
+
+#[cfg(js_sys_unstable_apis)]
+fn message_len(err: &TypeError) -> u32 {
+    err.message().len() as u32
+}
+
 #[wasm_bindgen_test]
 fn promise_inheritance() {
     #[cfg(not(js_sys_unstable_apis))]
@@ -774,8 +784,7 @@ async fn typed_rejection_handlers() {
     reject_type_error("c").catch(&closure).await.unwrap();
 
     let resolve = Closure::new(|_: Number| Ok::<_, JsError>(Number::from(0)));
-    let reject =
-        Closure::new(|err: TypeError| Ok::<_, JsError>(Number::from(err.message().length())));
+    let reject = Closure::new(|err: TypeError| Ok::<_, JsError>(Number::from(message_len(&err))));
     let recovered: Promise<Number> = reject_type_error("abc").then_with_reject(&resolve, &reject);
     assert_eq!(recovered.await.unwrap().value_of(), 3.0);
 

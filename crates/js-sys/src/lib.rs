@@ -3595,6 +3595,43 @@ extern "C" {
 
 impl UpcastFrom<&[u8]> for ArrayBuffer {}
 
+#[cfg(js_sys_unstable_apis)]
+impl ArrayBuffer {
+    /// Copies the buffer's bytes into a `Vec`.
+    pub fn to_vec(&self) -> Vec<u8> {
+        Uint8Array::new(self).to_vec()
+    }
+}
+
+/// A fresh buffer holding a copy of the bytes.
+#[cfg(js_sys_unstable_apis)]
+impl From<&[u8]> for ArrayBuffer {
+    fn from(bytes: &[u8]) -> ArrayBuffer {
+        Uint8Array::new_from_slice(bytes).buffer()
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl From<Vec<u8>> for ArrayBuffer {
+    fn from(bytes: Vec<u8>) -> ArrayBuffer {
+        bytes.as_slice().into()
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl From<&ArrayBuffer> for Vec<u8> {
+    fn from(buffer: &ArrayBuffer) -> Vec<u8> {
+        buffer.to_vec()
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl From<ArrayBuffer> for Vec<u8> {
+    fn from(buffer: ArrayBuffer) -> Vec<u8> {
+        buffer.to_vec()
+    }
+}
+
 // SharedArrayBuffer
 #[wasm_bindgen]
 extern "C" {
@@ -5173,16 +5210,32 @@ extern "C" {
     /// The message property is a human-readable description of the error.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/message)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, getter)]
     pub fn message(this: &Error) -> JsString;
+
+    /// The message property is a human-readable description of the error.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/message)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, getter)]
+    pub fn message(this: &Error) -> String;
     #[wasm_bindgen(method, setter)]
     pub fn set_message(this: &Error, message: &str);
 
     /// The name property represents a name for the type of error. The initial value is "Error".
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/name)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, getter)]
     pub fn name(this: &Error) -> JsString;
+
+    /// The name property represents a name for the type of error. The initial value is "Error".
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/name)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, getter)]
+    pub fn name(this: &Error) -> String;
     #[wasm_bindgen(method, setter)]
     pub fn set_name(this: &Error, name: &str);
 
@@ -5192,6 +5245,11 @@ extern "C" {
     #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = toString)]
     pub fn to_string(this: &Error) -> JsString;
+
+    /// The `toString()` method returns a string representing the object.
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = toString)]
+    pub fn to_string(this: &Error) -> String;
 
     /// The `Error.stackTraceLimit` property controls the number of stack
     /// frames collected by a stack trace.
@@ -6644,8 +6702,16 @@ extern "C" {
     /// created anonymously.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/name)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, getter)]
     pub fn name<T: JsFunction = fn() -> JsValue>(this: &Function<T>) -> JsString;
+
+    /// A Function object's read-only name property.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/name)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, getter)]
+    pub fn name<T: JsFunction = fn() -> JsValue>(this: &Function<T>) -> String;
 
     /// The `toString()` method returns a string representing the source code of the function.
     ///
@@ -8864,22 +8930,49 @@ extern "C" {
     /// object to the specified precision.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toPrecision)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(catch, method, js_name = toPrecision)]
     pub fn to_precision(this: &Number, precision: u8) -> Result<JsString, JsValue>;
+
+    /// The `toPrecision()` method returns a string representing the Number
+    /// object to the specified precision.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toPrecision)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(catch, method, js_name = toPrecision)]
+    pub fn to_precision(this: &Number, precision: u8) -> Result<String, JsValue>;
 
     /// The `toFixed()` method returns a string representing the Number
     /// object using fixed-point notation.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toFixed)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(catch, method, js_name = toFixed)]
     pub fn to_fixed(this: &Number, digits: u8) -> Result<JsString, JsValue>;
+
+    /// The `toFixed()` method returns a string representing the Number
+    /// object using fixed-point notation.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toFixed)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(catch, method, js_name = toFixed)]
+    pub fn to_fixed(this: &Number, digits: u8) -> Result<String, JsValue>;
 
     /// The `toExponential()` method returns a string representing the Number
     /// object in exponential notation.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toExponential)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(catch, method, js_name = toExponential)]
     pub fn to_exponential(this: &Number, fraction_digits: u8) -> Result<JsString, JsValue>;
+
+    /// The `toExponential()` method returns a string representing the Number
+    /// object in exponential notation.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toExponential)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(catch, method, js_name = toExponential)]
+    pub fn to_exponential(this: &Number, fraction_digits: u8) -> Result<String, JsValue>;
 
     /// The `toString()` method returns a string representing the
     /// specified Number object.
@@ -8895,8 +8988,17 @@ extern "C" {
     /// specified Number object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toString)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(catch, method, js_name = toString)]
     pub fn to_string_with_radix(this: &Number, radix: u8) -> Result<JsString, JsValue>;
+
+    /// The `toString()` method returns a string representing the
+    /// specified Number object.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toString)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(catch, method, js_name = toString)]
+    pub fn to_string_with_radix(this: &Number, radix: u8) -> Result<String, JsValue>;
 
     /// The `valueOf()` method returns the wrapped primitive value of
     /// a Number object.
@@ -9260,6 +9362,15 @@ extern "C" {
     #[wasm_bindgen(constructor)]
     pub fn new(init: &JsValue) -> Date;
 
+    /// Creates a JavaScript `Date` from a time value in milliseconds since
+    /// 1 January 1970 UTC, or from a date string: `Date::new_with_value(0.0)`,
+    /// `Date::new_with_value("2020-01-01")`.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/Date)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(constructor, js_class = "Date", experimental_generic_mono)]
+    pub fn new_with_value(value: impl JsNumberOrStringLike) -> Date;
+
     /// Creates a JavaScript `Date` instance that represents the current moment in
     /// time.
     ///
@@ -9479,8 +9590,17 @@ extern "C" {
     /// in human readable form in American English.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toDateString)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = toDateString)]
     pub fn to_date_string(this: &Date) -> JsString;
+
+    /// The `toDateString()` method returns the date portion of a Date object
+    /// in human readable form in American English.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toDateString)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = toDateString)]
+    pub fn to_date_string(this: &Date) -> String;
 
     /// The `toISOString()` method returns a string in simplified extended ISO format (ISO
     /// 8601), which is always 24 or 27 characters long (YYYY-MM-DDTHH:mm:ss.sssZ or
@@ -9488,14 +9608,33 @@ extern "C" {
     /// as denoted by the suffix "Z"
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = toISOString)]
     pub fn to_iso_string(this: &Date) -> JsString;
+
+    /// The `toISOString()` method returns a string in simplified extended ISO format (ISO
+    /// 8601), which is always 24 or 27 characters long (YYYY-MM-DDTHH:mm:ss.sssZ or
+    /// ±YYYYYY-MM-DDTHH:mm:ss.sssZ, respectively). The timezone is always zero UTC offset,
+    /// as denoted by the suffix "Z"
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = toISOString)]
+    pub fn to_iso_string(this: &Date) -> String;
 
     /// The `toJSON()` method returns a string representation of the Date object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toJSON)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = toJSON)]
     pub fn to_json(this: &Date) -> JsString;
+
+    /// The `toJSON()` method returns a string representation of the Date object.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toJSON)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = toJSON)]
+    pub fn to_json(this: &Date) -> String;
 
     /// The `toLocaleDateString()` method returns a string with a language sensitive
     /// representation of the date portion of this date. The new locales and options
@@ -9587,19 +9726,42 @@ extern "C" {
     #[wasm_bindgen(method, js_name = toString)]
     pub fn to_string(this: &Date) -> JsString;
 
+    /// The `toString()` method returns a string representing the object.
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = toString)]
+    pub fn to_string(this: &Date) -> String;
+
     /// The `toTimeString()` method returns the time portion of a Date object in human
     /// readable form in American English.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toTimeString)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = toTimeString)]
     pub fn to_time_string(this: &Date) -> JsString;
+
+    /// The `toTimeString()` method returns the time portion of a Date object in human
+    /// readable form in American English.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toTimeString)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = toTimeString)]
+    pub fn to_time_string(this: &Date) -> String;
 
     /// The `toUTCString()` method converts a date to a string,
     /// using the UTC time zone.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toUTCString)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = toUTCString)]
     pub fn to_utc_string(this: &Date) -> JsString;
+
+    /// The `toUTCString()` method converts a date to a string,
+    /// using the UTC time zone.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toUTCString)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = toUTCString)]
+    pub fn to_utc_string(this: &Date) -> String;
 
     /// The `Date.UTC()` method accepts the same parameters as the
     /// longest form of the constructor, and returns the number of
@@ -10983,8 +11145,17 @@ extern "C" {
     /// the current regular expression object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/flags)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, getter)]
     pub fn flags(this: &RegExp) -> JsString;
+
+    /// The flags property returns a string consisting of the flags of
+    /// the current regular expression object.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/flags)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, getter)]
+    pub fn flags(this: &RegExp) -> String;
 
     /// The global property indicates whether or not the "g" flag is
     /// used with the regular expression. global is a read-only
@@ -11105,8 +11276,18 @@ extern "C" {
     /// forward slashes on both sides and any flags.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/source)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, getter)]
     pub fn source(this: &RegExp) -> JsString;
+
+    /// The source property returns a String containing the source
+    /// text of the regexp object, and it doesn't contain the two
+    /// forward slashes on both sides and any flags.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/source)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, getter)]
+    pub fn source(this: &RegExp) -> String;
 
     /// The sticky property reflects whether or not the search is
     /// sticky (searches in strings only from the index indicated by
@@ -11133,6 +11314,11 @@ extern "C" {
     #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = toString)]
     pub fn to_string(this: &RegExp) -> JsString;
+
+    /// The `toString()` method returns a string representing the object.
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = toString)]
+    pub fn to_string(this: &RegExp) -> String;
 
     /// The unicode property indicates whether or not the "u" flag is
     /// used with a regular expression. unicode is a read-only
@@ -12671,6 +12857,7 @@ pub mod JSON {
         /// The `JSON.stringify()` method converts a JavaScript value to a JSON string.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify)
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(catch, js_namespace = JSON)]
         pub fn stringify(obj: &JsValue) -> Result<JsString, JsValue>;
 
@@ -12689,6 +12876,16 @@ pub mod JSON {
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/isRawJSON)
         #[wasm_bindgen(js_namespace = JSON, js_name = isRawJSON)]
         pub fn is_raw_json(value: &JsValue) -> bool;
+
+        /// The `JSON.stringify()` method converts a JavaScript value to a JSON string.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify)
+        ///
+        /// `None` when `obj` has no JSON form (`undefined`, a function, a
+        /// symbol).
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(catch, js_namespace = JSON)]
+        pub fn stringify(obj: &JsValue) -> Result<Option<String>, JsValue>;
 
         /// The `JSON.stringify()` method converts a JavaScript value to a JSON string.
         ///
@@ -12719,9 +12916,9 @@ pub mod JSON {
         #[wasm_bindgen(catch, js_namespace = JSON, js_name = stringify)]
         pub fn stringify_with_replacer<'a>(
             obj: &JsValue,
-            replacer: &mut dyn FnMut(JsString, JsValue) -> Result<Option<JsValue>, JsError>,
+            replacer: &mut dyn FnMut(String, JsValue) -> Result<Option<JsValue>, JsError>,
             space: Option<u32>,
-        ) -> Result<JsString, JsValue>;
+        ) -> Result<Option<String>, JsValue>;
 
         // Next major: deprecate
         /// The `JSON.stringify()` method converts a JavaScript value to a JSON string.
@@ -13778,8 +13975,16 @@ extern "C" {
     /// The `toString()` method returns a string representing the specified Symbol object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/toString)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = toString)]
     pub fn to_string(this: &Symbol) -> JsString;
+
+    /// The `toString()` method returns a string representing the specified Symbol object.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/toString)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = toString)]
+    pub fn to_string(this: &Symbol) -> String;
 
     /// The `toString()` method returns a string representing the specified Symbol object.
     ///
@@ -14585,12 +14790,24 @@ pub mod Intl {
         pub type ResolvedRelativeTimeFormatOptions;
 
         /// The resolved locale string.
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(method, getter = locale)]
         pub fn get_locale(this: &ResolvedRelativeTimeFormatOptions) -> JsString;
 
+        /// The resolved locale string.
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(method, getter = locale)]
+        pub fn get_locale(this: &ResolvedRelativeTimeFormatOptions) -> String;
+
         /// The numbering system used.
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(method, getter = numberingSystem)]
         pub fn get_numbering_system(this: &ResolvedRelativeTimeFormatOptions) -> JsString;
+
+        /// The numbering system used.
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(method, getter = numberingSystem)]
+        pub fn get_numbering_system(this: &ResolvedRelativeTimeFormatOptions) -> String;
     }
 
     // Intl.RelativeTimeFormatPart
@@ -14608,8 +14825,14 @@ pub mod Intl {
         pub fn type_(this: &RelativeTimeFormatPart) -> RelativeTimeFormatPartType;
 
         /// The string value of this part.
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(method, getter = value)]
         pub fn value(this: &RelativeTimeFormatPart) -> JsString;
+
+        /// The string value of this part.
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(method, getter = value)]
+        pub fn value(this: &RelativeTimeFormatPart) -> String;
 
         /// The unit used in this part (only for integer parts).
         #[wasm_bindgen(method, getter = unit)]
@@ -14701,10 +14924,18 @@ pub mod Intl {
         #[derive(Clone, Debug)]
         pub type ResolvedCollatorOptions;
 
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(method, getter = locale)]
         pub fn get_locale(this: &ResolvedCollatorOptions) -> JsString; // not Option, always present
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(method, getter = locale)]
+        pub fn get_locale(this: &ResolvedCollatorOptions) -> String;
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(method, getter = collation)]
         pub fn get_collation(this: &ResolvedCollatorOptions) -> JsString;
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(method, getter = collation)]
+        pub fn get_collation(this: &ResolvedCollatorOptions) -> String;
     }
 
     // Intl.Collator
@@ -14951,8 +15182,14 @@ pub mod Intl {
         pub type ResolvedDateTimeFormatOptions;
 
         /// The resolved locale string.
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(method, getter = locale)]
         pub fn get_locale(this: &ResolvedDateTimeFormatOptions) -> JsString;
+
+        /// The resolved locale string.
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(method, getter = locale)]
+        pub fn get_locale(this: &ResolvedDateTimeFormatOptions) -> String;
     }
 
     // Intl.DateTimeFormatPart
@@ -14970,8 +15207,14 @@ pub mod Intl {
         pub fn type_(this: &DateTimeFormatPart) -> DateTimeFormatPartType;
 
         /// The value of the part.
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(method, getter)]
         pub fn value(this: &DateTimeFormatPart) -> JsString;
+
+        /// The value of the part.
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(method, getter)]
+        pub fn value(this: &DateTimeFormatPart) -> String;
     }
 
     // Intl.DateTimeRangeFormatPart
@@ -15039,7 +15282,7 @@ pub mod Intl {
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/format)
         #[cfg(js_sys_unstable_apis)]
         #[wasm_bindgen(method, js_class = "Intl.DateTimeFormat")]
-        pub fn format(this: &DateTimeFormat, date: &Date) -> JsString;
+        pub fn format(this: &DateTimeFormat, date: &Date) -> String;
 
         /// The `Intl.DateTimeFormat.prototype.formatToParts()` method allows locale-aware
         /// formatting of strings produced by DateTimeFormat formatters.
@@ -15064,12 +15307,28 @@ pub mod Intl {
         /// Throws a `TypeError` if the dates are invalid.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/formatRange)
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(method, js_class = "Intl.DateTimeFormat", js_name = formatRange, catch)]
         pub fn format_range(
             this: &DateTimeFormat,
             start_date: &Date,
             end_date: &Date,
         ) -> Result<JsString, JsValue>;
+
+        /// The `Intl.DateTimeFormat.prototype.formatRange()` method formats a date range
+        /// in the most concise way based on the locales and options provided when
+        /// instantiating this `Intl.DateTimeFormat` object.
+        ///
+        /// Throws a `TypeError` if the dates are invalid.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/formatRange)
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(method, js_class = "Intl.DateTimeFormat", js_name = formatRange, catch)]
+        pub fn format_range(
+            this: &DateTimeFormat,
+            start_date: &Date,
+            end_date: &Date,
+        ) -> Result<String, JsValue>;
 
         /// The `Intl.DateTimeFormat.prototype.formatRangeToParts()` method returns an array
         /// of locale-specific tokens representing each part of the formatted date range
@@ -15296,8 +15555,14 @@ pub mod Intl {
         pub type ResolvedNumberFormatOptions;
 
         /// The resolved locale string.
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(method, getter = locale)]
         pub fn get_locale(this: &ResolvedNumberFormatOptions) -> JsString;
+
+        /// The resolved locale string.
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(method, getter = locale)]
+        pub fn get_locale(this: &ResolvedNumberFormatOptions) -> String;
     }
 
     // Intl.NumberFormatPart
@@ -15315,8 +15580,14 @@ pub mod Intl {
         pub fn type_(this: &NumberFormatPart) -> NumberFormatPartType;
 
         /// The value of the part.
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(method, getter)]
         pub fn value(this: &NumberFormatPart) -> JsString;
+
+        /// The value of the part.
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(method, getter)]
+        pub fn value(this: &NumberFormatPart) -> String;
     }
 
     // Intl.NumberRangeFormatPart
@@ -15387,7 +15658,7 @@ pub mod Intl {
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/format)
         #[cfg(js_sys_unstable_apis)]
         #[wasm_bindgen(method, js_class = "Intl.NumberFormat")]
-        pub fn format(this: &NumberFormat, value: &JsString) -> JsString;
+        pub fn format(this: &NumberFormat, value: &JsString) -> String;
 
         /// The `Intl.Numberformat.prototype.formatToParts()` method allows locale-aware
         /// formatting of strings produced by NumberTimeFormat formatters.
@@ -15417,12 +15688,30 @@ pub mod Intl {
         /// Throws a `TypeError` if the values are invalid.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/formatRange)
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(method, js_class = "Intl.NumberFormat", js_name = formatRange, catch)]
         pub fn format_range(
             this: &NumberFormat,
             start: &JsString,
             end: &JsString,
         ) -> Result<JsString, JsValue>;
+
+        /// Formats a range of numbers according to the locale and formatting options
+        /// of this `Intl.NumberFormat` object.
+        ///
+        /// Accepts numeric strings for BigInt/arbitrary precision (e.g., `"123n"` → `"123"`,
+        /// or use E notation: `"1000000E-6"` → `"1"`).
+        ///
+        /// Throws a `TypeError` if the values are invalid.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/formatRange)
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(method, js_class = "Intl.NumberFormat", js_name = formatRange, catch)]
+        pub fn format_range(
+            this: &NumberFormat,
+            start: &JsString,
+            end: &JsString,
+        ) -> Result<String, JsValue>;
 
         /// Returns an array of locale-specific tokens representing each part of
         /// the formatted number range.
@@ -15588,8 +15877,14 @@ pub mod Intl {
         pub type ResolvedPluralRulesOptions;
 
         /// The resolved locale string.
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(method, getter = locale)]
         pub fn get_locale(this: &ResolvedPluralRulesOptions) -> JsString;
+
+        /// The resolved locale string.
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(method, getter = locale)]
+        pub fn get_locale(this: &ResolvedPluralRulesOptions) -> String;
 
         /// The plural categories used by the locale.
         #[wasm_bindgen(method, getter = pluralCategories)]
@@ -15781,7 +16076,7 @@ pub mod Intl {
             this: &RelativeTimeFormat,
             value: f64,
             unit: RelativeTimeFormatUnit,
-        ) -> JsString;
+        ) -> String;
 
         /// The `Intl.RelativeTimeFormat.prototype.formatToParts()` method returns an array of
         /// objects representing the relative time format in parts that can be used for custom locale-aware formatting.
@@ -15911,8 +16206,14 @@ pub mod Intl {
         pub type ResolvedListFormatOptions;
 
         /// The resolved locale string.
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(method, getter = locale)]
         pub fn get_locale(this: &ResolvedListFormatOptions) -> JsString;
+
+        /// The resolved locale string.
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(method, getter = locale)]
+        pub fn get_locale(this: &ResolvedListFormatOptions) -> String;
     }
 
     // Intl.ListFormatPart
@@ -15930,8 +16231,14 @@ pub mod Intl {
         pub fn type_(this: &ListFormatPart) -> ListFormatPartType;
 
         /// The value of the part.
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(method, getter)]
         pub fn value(this: &ListFormatPart) -> JsString;
+
+        /// The value of the part.
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(method, getter)]
+        pub fn value(this: &ListFormatPart) -> String;
     }
 
     // Intl.ListFormat
@@ -15975,7 +16282,7 @@ pub mod Intl {
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/ListFormat/format)
         #[cfg(js_sys_unstable_apis)]
         #[wasm_bindgen(method, js_class = "Intl.ListFormat")]
-        pub fn format(this: &ListFormat, list: &[JsString]) -> JsString;
+        pub fn format(this: &ListFormat, list: &[JsString]) -> String;
 
         /// Returns an array of objects representing the list in parts.
         ///
@@ -16086,8 +16393,14 @@ pub mod Intl {
         pub type ResolvedSegmenterOptions;
 
         /// The resolved locale string.
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(method, getter = locale)]
         pub fn get_locale(this: &ResolvedSegmenterOptions) -> JsString;
+
+        /// The resolved locale string.
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(method, getter = locale)]
+        pub fn get_locale(this: &ResolvedSegmenterOptions) -> String;
     }
 
     // Intl.SegmentData
@@ -16101,16 +16414,28 @@ pub mod Intl {
         pub type SegmentData;
 
         /// The segment string.
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(method, getter)]
         pub fn segment(this: &SegmentData) -> JsString;
+
+        /// The segment string.
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(method, getter)]
+        pub fn segment(this: &SegmentData) -> String;
 
         /// The index of the segment in the original string.
         #[wasm_bindgen(method, getter)]
         pub fn index(this: &SegmentData) -> u32;
 
         /// The original input string.
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(method, getter)]
         pub fn input(this: &SegmentData) -> JsString;
+
+        /// The original input string.
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(method, getter)]
+        pub fn input(this: &SegmentData) -> String;
 
         /// Whether the segment is word-like (only for word granularity).
         #[wasm_bindgen(method, getter = isWordLike)]
@@ -16278,8 +16603,14 @@ pub mod Intl {
         pub type ResolvedDisplayNamesOptions;
 
         /// The resolved locale string.
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(method, getter = locale)]
         pub fn get_locale(this: &ResolvedDisplayNamesOptions) -> JsString;
+
+        /// The resolved locale string.
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(method, getter = locale)]
+        pub fn get_locale(this: &ResolvedDisplayNamesOptions) -> String;
     }
 
     // Intl.DisplayNames
@@ -16380,8 +16711,16 @@ pub mod Intl {
         /// The base name of the locale (language + region + script).
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Locale/baseName)
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(method, getter = baseName)]
         pub fn base_name(this: &Locale) -> JsString;
+
+        /// The base name of the locale (language + region + script).
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Locale/baseName)
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(method, getter = baseName)]
+        pub fn base_name(this: &Locale) -> String;
 
         /// The calendar type for the locale.
         ///
@@ -16410,8 +16749,16 @@ pub mod Intl {
         /// The language code for the locale.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Locale/language)
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(method, getter)]
         pub fn language(this: &Locale) -> JsString;
+
+        /// The language code for the locale.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Locale/language)
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(method, getter)]
+        pub fn language(this: &Locale) -> String;
 
         /// The numbering system for the locale.
         ///
@@ -16545,8 +16892,14 @@ pub mod Intl {
         pub type TextInfo;
 
         /// The text direction ("ltr" or "rtl").
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(method, getter)]
         pub fn direction(this: &TextInfo) -> JsString;
+
+        /// The text direction ("ltr" or "rtl").
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(method, getter)]
+        pub fn direction(this: &TextInfo) -> String;
     }
 
     // Intl.DurationFormat enums
@@ -16774,12 +17127,24 @@ pub mod Intl {
         pub type ResolvedDurationFormatOptions;
 
         /// The resolved locale string.
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(method, getter = locale)]
         pub fn get_locale(this: &ResolvedDurationFormatOptions) -> JsString;
 
+        /// The resolved locale string.
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(method, getter = locale)]
+        pub fn get_locale(this: &ResolvedDurationFormatOptions) -> String;
+
         /// The resolved numbering system.
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(method, getter = numberingSystem)]
         pub fn get_numbering_system(this: &ResolvedDurationFormatOptions) -> JsString;
+
+        /// The resolved numbering system.
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(method, getter = numberingSystem)]
+        pub fn get_numbering_system(this: &ResolvedDurationFormatOptions) -> String;
     }
 
     // Intl.Duration (input object for DurationFormat)
@@ -16870,8 +17235,14 @@ pub mod Intl {
         pub fn type_(this: &DurationFormatPart) -> DurationFormatPartType;
 
         /// The value of the part.
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(method, getter)]
         pub fn value(this: &DurationFormatPart) -> JsString;
+
+        /// The value of the part.
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(method, getter)]
+        pub fn value(this: &DurationFormatPart) -> String;
 
         /// The unit this part represents (if applicable).
         #[wasm_bindgen(method, getter)]
@@ -16902,8 +17273,16 @@ pub mod Intl {
         /// Formats a duration according to the locale and formatting options.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DurationFormat/format)
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(method, js_class = "Intl.DurationFormat")]
         pub fn format(this: &DurationFormat, duration: &Duration) -> JsString;
+
+        /// Formats a duration according to the locale and formatting options.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DurationFormat/format)
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(method, js_class = "Intl.DurationFormat")]
+        pub fn format(this: &DurationFormat, duration: &Duration) -> String;
 
         /// Returns an array of objects representing the formatted duration in parts.
         ///

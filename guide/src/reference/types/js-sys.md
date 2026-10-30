@@ -499,3 +499,19 @@ let from_opt = JsNullable::from_option(Some(Number::from(42)));
 | `Option<T>` | Undefined or Null check at ABI boundary, immediately converts to `Some(T)` or `None` |
 | `JsOption<T>` | Defers undefined check, works in `JsGeneric` positions |
 | `JsNullable<T>` | Defers null or undefined check, works in `JsGeneric` positions |
+
+## Strings and bytes (unstable)
+
+Under `--cfg=js_sys_unstable_apis`, small built-in string results are
+`String`, such as `Error::message`, `Date::to_iso_string`, `Number::to_fixed`,
+`RegExp::source`, `Function::name` and the `Intl` resolved options and parts,
+and `JSON::stringify` returns `Result<Option<String>, JsValue>`, with `None`
+for a value that has no JSON form. `Date::new_with_value` takes a time value
+or a date string, and an `ArrayBuffer` converts to and from bytes:
+
+```rust
+let message: String = err.message();
+let date = Date::new_with_value("2020-01-01");
+let buf = ArrayBuffer::from(&bytes[..]);
+let copy: Vec<u8> = buf.to_vec();
+```

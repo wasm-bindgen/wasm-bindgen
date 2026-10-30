@@ -943,3 +943,10 @@ fn generic_function_abi<E, R>(f: &Function<fn(E, String) -> R>) {
     fn crosses<T: IntoWasmAbi + WasmDescribe>(_: T) {}
     crosses(f);
 }
+
+#[cfg(js_sys_unstable_apis)]
+#[wasm_bindgen_test]
+fn name_is_a_string() {
+    let name: String = MAX.with(|max| max.name());
+    assert_eq!(name, "max");
+}
