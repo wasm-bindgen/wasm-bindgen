@@ -6,7 +6,7 @@
 ### Added
 
 * Added `aarch64-pc-windows-msvc` release artifacts.
-  [#TBD](https://github.com/wasm-bindgen/wasm-bindgen/pull/TBD)
+  [#5439](https://github.com/wasm-bindgen/wasm-bindgen/pull/5439)
 
 * A borrowed number, `bool`, `char` or borrowed string crosses by copy, so
   `&f64`, `&Option<T>`, `&Nullable<T>`, `Option<&f64>` and
