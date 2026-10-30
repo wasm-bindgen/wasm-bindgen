@@ -345,15 +345,16 @@ async fn can_use_an_async_iterable_as_stream() {
     use futures_lite::stream::StreamExt;
     use js_sys::futures::stream::JsStream;
 
-    let async_iter = js_sys::Function::new_no_args(
+    let f: js_sys::Function = js_sys::Function::new_no_args(
         "return async function*() {
             yield 42;
             yield 24;
         }()",
-    )
-    .call0(&JsValue::undefined())
-    .unwrap()
-    .unchecked_into::<js_sys::AsyncIterator>();
+    );
+    let async_iter = f
+        .call0(&JsValue::undefined())
+        .unwrap()
+        .unchecked_into::<js_sys::AsyncIterator>();
 
     let mut stream = JsStream::from(async_iter);
     assert_eq!(stream.next().await, Some(Ok(JsValue::from(42))));

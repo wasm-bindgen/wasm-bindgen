@@ -329,7 +329,7 @@ fn match_all() {
         let re = RegExp::new("[A-Z]([a-z]*)", "g");
         let result: Vec<_> = JsString::from(s)
             .match_all(&re)
-            .into_iter()
+            .into_try_iter()
             .collect::<Result<_, _>>()
             .unwrap();
 
@@ -343,7 +343,7 @@ fn match_all() {
 
         let result: Vec<_> = JsString::from("foo")
             .match_all(&re)
-            .into_iter()
+            .into_try_iter()
             .collect::<Result<_, _>>()
             .unwrap();
         assert_eq!(result.len(), 0);
@@ -352,7 +352,7 @@ fn match_all() {
         let re = RegExp::new("see (chapter \\d+(\\.\\d)*)", "gi");
         let result: Vec<_> = JsString::from(s)
             .match_all(&re)
-            .into_iter()
+            .into_try_iter()
             .collect::<Result<_, _>>()
             .unwrap();
 
@@ -379,7 +379,7 @@ fn match_all() {
         let re = RegExp::new("[A-Z]([a-z]*)", "g");
         let result: Vec<RegExpMatchArray> = JsString::from(s)
             .match_all(&re)
-            .into_iter()
+            .into_try_iter()
             .collect::<Result<_, _>>()
             .unwrap();
 
@@ -397,7 +397,7 @@ fn match_all() {
 
         let result: Vec<RegExpMatchArray> = JsString::from("foo")
             .match_all(&re)
-            .into_iter()
+            .into_try_iter()
             .collect::<Result<_, _>>()
             .unwrap();
         assert_eq!(result.len(), 0);
@@ -406,7 +406,7 @@ fn match_all() {
         let re = RegExp::new("see (chapter \\d+(\\.\\d)*)", "gi");
         let result: Vec<RegExpMatchArray> = JsString::from(s)
             .match_all(&re)
-            .into_iter()
+            .into_try_iter()
             .collect::<Result<_, _>>()
             .unwrap();
 
