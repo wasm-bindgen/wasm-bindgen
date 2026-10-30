@@ -8,11 +8,11 @@ export function foo(bytes) {
     const ret = wasm.foo(ptr0, len0);
     return ret;
 }
-export function __wbg___wbindgen_string_from_utf8_lossy_da861c7d40e6c311(arg0, arg1) {
+export function __wbg___wbindgen_string_from_utf8_lossy_396336d3428c3bd9(arg0, arg1) {
     const ret = decodeText(getArrayU8FromWasm0(arg0, arg1));
     return ret;
 }
-export function __wbg___wbindgen_throw_41e9ee4f547fc59a(arg0, arg1) {
+export function __wbg___wbindgen_throw_4c88d8bf264fd984(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbindgen_init_externref_table() {

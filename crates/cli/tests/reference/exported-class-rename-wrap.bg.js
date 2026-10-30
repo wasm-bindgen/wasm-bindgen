@@ -59,7 +59,7 @@ export function readRenameds(renameds) {
     const ret = wasm.readRenameds(ptr0, len0);
     return ret >>> 0;
 }
-export function __wbg___wbindgen_throw_41e9ee4f547fc59a(arg0, arg1) {
+export function __wbg___wbindgen_throw_4c88d8bf264fd984(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbg_renamed_new(arg0) {

@@ -9,7 +9,7 @@
   (type (;7;) (func (result externref)))
   (type (;8;) (func (result i32)))
   (type (;9;) (func))
-  (import "./reference_test_bg.js" "__wbg___wbindgen_throw_41e9ee4f547fc59a" (func (;0;) (type 5)))
+  (import "./reference_test_bg.js" "__wbg___wbindgen_throw_4c88d8bf264fd984" (func (;0;) (type 5)))
   (import "./reference_test_bg.js" "__wbg_fetch_number_5170522aaa809683" (func (;1;) (type 7)))
   (import "./reference_test_bg.js" "__wbg_fetch_text_34534fabe4d1d100" (func (;2;) (type 7)))
   (import "./reference_test_bg.js" "__wbg_sleep_c1b3c1cdf7d71e45" (func (;3;) (type 6)))
