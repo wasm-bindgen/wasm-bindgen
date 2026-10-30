@@ -659,6 +659,20 @@ jobs:
         name: dist_windows
         path: "target/release/wasm*"
 
+  dist_windows_aarch64:
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+    runs-on: windows-11-arm
+    steps:
+    - uses: actions/checkout@v7
+    - uses: dtolnay/rust-toolchain@stable
+    - run: cargo build --manifest-path crates/cli/Cargo.toml --release
+      env:
+        RUSTFLAGS: -Ctarget-feature=+crt-static
+    - uses: actions/upload-artifact@v7
+      with:
+        name: dist_windows_aarch64
+        path: "target/release/wasm*"
+
   doc_book:
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
@@ -813,6 +827,7 @@ jobs:
       - dist_macos_x86_64
       - dist_macos_aarch64
       - dist_windows
+      - dist_windows_aarch64
       - build_examples
       - build_benchmarks
     runs-on: ubuntu-latest
@@ -851,6 +866,7 @@ jobs:
         mk x86_64-apple-darwin dist_macos_x86_64
         mk aarch64-apple-darwin dist_macos_aarch64
         mk x86_64-pc-windows-msvc dist_windows
+        mk aarch64-pc-windows-msvc dist_windows_aarch64
     - uses: actions/upload-artifact@v7
       with:
         name: gh-release
