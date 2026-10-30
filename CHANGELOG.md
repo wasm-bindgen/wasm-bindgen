@@ -62,6 +62,13 @@
   out of a turbofish as in any Rust function.
   [#5440](https://github.com/wasm-bindgen/wasm-bindgen/pull/5440)
 
+* `catch` on an import returning `js_sys::Promise<T>` rather than a `Result`
+  returns a synchronous throw as a rejected promise, so the error surfaces at
+  `.await` instead of unwinding through Wasm. The conversion goes through the
+  new `wasm_bindgen::convert::FromCaughtException` trait, which js-sys
+  implements for `Promise<T, E>`.
+  [#5442](https://github.com/wasm-bindgen/wasm-bindgen/pull/5442)
+
 * Added a rejection type parameter to `js_sys::Promise<T, E = JsValue>`,
   mirrored on `JsFuture<T, E>`, `PromiseState<T, E>` and
   `PromiseWithResolvers<T, E>`. Awaiting a `Promise<T, E>` yields
