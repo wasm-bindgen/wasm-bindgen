@@ -4017,6 +4017,16 @@ impl ast::ImportFunction {
                 quote! { #name }
             };
 
+            // A mode written on a generic argument applies to the
+            // instantiations it fits, as an inherited mode does.
+            let seq_modes: Vec<ast::SeqMode> = arg
+                .seq_modes
+                .iter()
+                .map(|mode| ast::SeqMode {
+                    explicit: mode.explicit && !generics::uses_generic_params(ty, &type_params),
+                    ..*mode
+                })
+                .collect();
             let (abi, into_abi, describe) = match &ref_elem {
                 Some((elem, false)) => (
                     quote_spanned! { ty_span =>
@@ -4042,7 +4052,7 @@ impl ast::ImportFunction {
                 ),
                 None => {
                     let describe_ty = respan_all(
-                        seq_mode_describe_ty(wasm_bindgen, ty, &arg.seq_modes).to_token_stream(),
+                        seq_mode_describe_ty(wasm_bindgen, ty, &seq_modes).to_token_stream(),
                         ty_span,
                     );
                     (

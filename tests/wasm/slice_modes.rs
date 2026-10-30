@@ -38,7 +38,7 @@
 //! - fast-path guard: a bare `&[u8]` import still hands JS a view of wasm
 //!   memory (no accidental default flip)
 
-use js_sys::JsString;
+use js_sys::{JsString, Uint8Array};
 use wasm_bindgen::convert::{IntoWasmAbi, VectorRefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::Clamped;
@@ -418,4 +418,42 @@ fn per_mono_per_arg_modes_resolve_per_instantiation() {
     );
     let s = ["a".to_string()];
     assert_eq!(kinds_generic_explicit_array(&s, s.to_vec()), "Array,Array");
+}
+
+#[wasm_bindgen(module = "tests/wasm/slice_modes.js")]
+extern "C" {
+    #[wasm_bindgen(experimental_generic_mono, js_name = keep)]
+    fn keep_view<T: IntoWasmAbi>(v: T);
+    #[wasm_bindgen(experimental_generic_mono, js_name = keep)]
+    fn keep_copy<T: IntoWasmAbi>(#[wasm_bindgen(slice = copy)] v: T);
+    #[wasm_bindgen(experimental_generic_mono, js_name = keep)]
+    fn keep_maybe_copy<T>(#[wasm_bindgen(slice = copy)] v: Option<T>)
+    where
+        Option<T>: IntoWasmAbi;
+    fn kept() -> String;
+}
+
+// A mode written on an argument whose type is a type parameter applies to the
+// instantiations it fits and is a no-op on the others.
+#[wasm_bindgen_test]
+fn generic_argument_modes_apply_per_instantiation() {
+    let mut bytes = vec![1u8, 2, 3];
+    keep_view(&bytes[..]);
+    bytes[0] = 9;
+    assert_eq!(kept(), "Uint8Array:9,2,3");
+    keep_copy(&bytes[..]);
+    bytes[0] = 7;
+    assert_eq!(kept(), "Uint8Array:9,2,3");
+    keep_maybe_copy(Some(&bytes[..]));
+    bytes[0] = 5;
+    assert_eq!(kept(), "Uint8Array:7,2,3");
+    keep_copy(bytes.clone());
+    assert_eq!(kept(), "Uint8Array:5,2,3");
+    let buf = Uint8Array::new_from_slice(&bytes).buffer();
+    keep_copy(&buf);
+    assert_eq!(kept(), "ArrayBuffer:5,2,3");
+    keep_copy(Uint8Array::new_from_slice(&bytes).subarray(1, 3));
+    assert_eq!(kept(), "Uint8Array:2,3");
+    keep_maybe_copy(None::<&[u8]>);
+    assert_eq!(kept(), "none");
 }
