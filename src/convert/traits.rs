@@ -913,3 +913,10 @@ impl_js_string_like!(
     &alloc::boxed::Box<str>,
     &alloc::borrow::Cow<'_, str>,
 );
+
+/// The return type of a `catch` import that isn't a `Result`: a synchronous
+/// JS throw is returned as `from_caught_exception(e)`. js-sys implements it
+/// for `Promise<T>` as a rejected promise, so the throw arrives at `.await`.
+pub trait FromCaughtException {
+    fn from_caught_exception(e: JsValue) -> Self;
+}

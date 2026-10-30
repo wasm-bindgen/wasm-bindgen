@@ -1,4 +1,5 @@
 use js_sys::*;
+use wasm_bindgen::convert::{FromWasmAbi, RefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::{JsCast, JsError};
 use wasm_bindgen_futures::{future_to_promise_typed, JsFuture};
@@ -825,4 +826,39 @@ async fn typed_rejection_combinators() {
     assert!(err.is_instance_of::<TypeError>());
     let err: JsValue = Promise::race_iterable(&arr).await.unwrap_err();
     assert!(err.is_instance_of::<TypeError>());
+}
+
+#[wasm_bindgen(module = "tests/wasm/Promise.js")]
+extern "C" {
+    #[wasm_bindgen(catch, js_name = maybeAsync)]
+    fn maybe_async(fail: bool) -> Promise<String>;
+    #[wasm_bindgen(catch, experimental_generic_mono, js_name = maybeAsync)]
+    fn maybe_async_like(fail: impl JsBooleanOrStringLike) -> Promise<String>;
+
+    type Thrower;
+    #[wasm_bindgen(constructor)]
+    fn new() -> Thrower;
+    #[wasm_bindgen(catch, method, js_name = maybeAsync)]
+    fn run(this: &Thrower, fail: bool) -> Promise<String>;
+    #[wasm_bindgen(catch, static_method_of = Thrower, js_name = maybeAsync)]
+    fn make(fail: bool) -> Promise<String>;
+    #[wasm_bindgen(catch, method, experimental_generic_mono, js_name = echo)]
+    fn echo<T: RefIntoWasmAbi>(this: &Thrower, value: &T, fail: bool) -> Promise<T>;
+}
+
+#[wasm_bindgen_test]
+async fn catch_rejects_sync_throws() {
+    async fn message<T: FromWasmAbi + 'static>(p: Promise<T>) -> String {
+        String::from(p.await.err().unwrap().unchecked_into::<Error>().message())
+    }
+    assert_eq!(maybe_async(false).await.unwrap(), "ok");
+    assert_eq!(message(maybe_async(true)).await, "sync");
+    assert_eq!(maybe_async_like("").await.unwrap(), "ok");
+    assert_eq!(message(maybe_async_like("fail")).await, "sync");
+    let t = Thrower::new();
+    assert_eq!(t.run(false).await.unwrap(), "ok");
+    assert_eq!(message(t.run(true)).await, "sync");
+    assert_eq!(message(Thrower::make(true)).await, "sync");
+    assert_eq!(t.echo(&2.5, false).await.unwrap(), 2.5);
+    assert_eq!(message(t.echo(&"x".to_string(), true)).await, "sync");
 }

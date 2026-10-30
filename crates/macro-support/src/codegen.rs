@@ -3187,7 +3187,15 @@ impl ast::ImportFunction {
         }
 
         let mut exceptional_ret = quote!();
-        if self.catch && !self.function.r#async && !self.suspending {
+        if self.catch_rejects {
+            if self.function.r#async || self.suspending {
+                bail_span!(
+                    self.rust_name,
+                    "`catch` on an `async` or `suspending` import needs a `Result` return"
+                );
+            }
+            exceptional_ret = catch_rejects_ret(wasm_bindgen, &self.function);
+        } else if self.catch && !self.function.r#async && !self.suspending {
             convert_ret = quote! { Ok(#convert_ret) };
             exceptional_ret = quote! {
                 #wasm_bindgen::__rt::take_last_exception()?;
@@ -4088,7 +4096,15 @@ impl ast::ImportFunction {
         }
 
         let mut exceptional_ret = quote!();
-        if self.catch && !self.function.r#async {
+        if self.catch_rejects {
+            if self.function.r#async {
+                bail_span!(
+                    self.rust_name,
+                    "`catch` on an `async` import needs a `Result` return"
+                );
+            }
+            exceptional_ret = catch_rejects_ret(wasm_bindgen, &self.function);
+        } else if self.catch && !self.function.r#async {
             convert_ret = quote! { Ok(#convert_ret) };
             exceptional_ret = quote! {
                 #wasm_bindgen::__rt::take_last_exception()?;
@@ -6184,6 +6200,17 @@ fn fn_trait_bound_sig(
         return Some((inputs, ret, tb.lifetimes.is_some()));
     }
     None
+}
+
+/// A `catch` import returning `Promise<..>` hands a synchronous throw to its
+/// return type, before the (then meaningless) return value is converted.
+fn catch_rejects_ret(wasm_bindgen: &syn::Path, function: &ast::Function) -> TokenStream {
+    let ret = &function.ret.as_ref().unwrap().r#type;
+    quote! {
+        if let Err(e) = #wasm_bindgen::__rt::take_last_exception() {
+            return <#ret as #wasm_bindgen::convert::FromCaughtException>::from_caught_exception(e);
+        }
+    }
 }
 
 #[cfg(test)]
