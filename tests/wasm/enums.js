@@ -77,6 +77,11 @@ exports.js_nested_union_roundtrip = o => wasm.nested_union_roundtrip(o);
 exports.js_optional_union_roundtrip = o => wasm.optional_union_roundtrip(o);
 exports.js_fallback_union_roundtrip = u => wasm.fallback_union_roundtrip(u);
 exports.js_shade_union_roundtrip = u => wasm.shade_union_roundtrip(u);
+exports.js_union_vec_roundtrip = v => {
+    assert.ok(Array.isArray(v));
+    return wasm.union_vec_roundtrip(v);
+};
+exports.js_union_list = () => ['green', 'custom', 7];
 
 // Async round-trip: returning from an `async function` produces a
 // `Promise<Union>` on the JS side; awaiting it on the Rust import side

@@ -228,6 +228,19 @@ export type Outer = "loading" | Inner | Theme | Foo;
 export function maybe(o?: Outer | null): Outer | undefined;
 ```
 
+### Vectors
+
+`Vec<T>` and `Box<[T]>` of a dynamic union cross in both directions as a JS
+array, each element converted exactly as a single value is, so `fallback`
+and nested unions behave the same:
+
+```rust
+#[wasm_bindgen]
+pub fn shapes(list: Vec<Outer>) -> Vec<Outer> { list }
+```
+
+This is not yet supported under `--cfg wasm_bindgen_unstable_generic_vec`.
+
 ### Hiding the type alias
 
 By default the generated TypeScript alias is emitted as `export type`. To
