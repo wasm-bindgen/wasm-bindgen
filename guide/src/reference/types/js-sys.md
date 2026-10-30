@@ -123,6 +123,21 @@ let closure: Closure<dyn FnMut(Number) -> JsString> = Closure::new(|n: Number| {
     JsString::from(format!("Value: {}", n.value_of()))
 });
 let func: Function<fn(Number) -> JsString> = Function::from_closure(closure);
+
+// or through `From`
+let func: Function<fn(Number) -> JsString> = closure.into();
+```
+
+Under `--cfg=js_sys_unstable_apis`, `Function::from_fn` builds a typed
+`Function` straight from a Rust closure, whose argument types are inferred
+from the signature, and `Function::once` does the same for an `FnOnce`, which
+throws if JS calls it a second time:
+
+```rust
+let f: Function<fn(String, f64) -> String> = Function::from_fn(|s, n| format!("{s}{n}"));
+
+let token = String::from("moved");
+let g: Function<fn() -> String> = Function::once(move || token);
 ```
 
 For borrowed closures, use `closure_ref`:
