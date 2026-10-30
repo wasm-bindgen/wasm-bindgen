@@ -90,6 +90,12 @@
   [#5427](https://github.com/wasm-bindgen/wasm-bindgen/pull/5427)
   [#5437](https://github.com/wasm-bindgen/wasm-bindgen/pull/5437)
 
+* `Option<T>` and `Nullable<T>` are now borrowed sequence elements:
+  `&[Option<T>]`, `&[Nullable<T>]` and `&[Option<Nullable<T>>]` cross as
+  encoded slices for every `T` a `&[T]` takes, typed `(T | null)[]` and the
+  like.
+  [#5434](https://github.com/wasm-bindgen/wasm-bindgen/pull/5434)
+
 * Added `MaybeIntoWasmAbi` / `MaybeFromWasmAbi`, the ABI of `Option<T>` for
   every `T`, with an associated `MaybeAbi` that lets a type without a spare
   value in its own ABI, such as `i32` or `f64`, pick a wider one. `Option<T>`

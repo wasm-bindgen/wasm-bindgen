@@ -85,6 +85,28 @@ the null pointer itself is `Null`. A JS `0` passed for either a
 `Nullable<NonNull<T>>` or an `Option<Nullable<NonNull<T>>>` reaches Rust as
 `Null`, as it is `None` for `Option<NonNull<T>>`.
 
+## As an element
+
+`Option<T>` and `Nullable<T>` are also accepted as the element of a borrowed
+slice, for the same `T` a `&[T]` accepts. `&[Option<T>]`, `&[Nullable<T>]`
+and `&[Option<Nullable<T>>]` are encoded per element, numbers copied and
+strings and JS handles borrowed, into a fresh `Array`, typed
+`(T | undefined)[]` or `(T | null)[]`.
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    fn plot(points: &[Option<f64>]);
+    fn names(ids: &[Nullable<String>]);
+}
+```
+
+Under [`experimental_generic_mono`](../attributes/on-js-imports/experimental_generic_mono.md)
+they satisfy the bounds a generic import names for these positions:
+`VectorRefIntoWasmAbi` for a `&[T]` argument and `RefIntoWasmAbi` for a `&T`
+argument, so `log_items(&[Some(1.0), None])` instantiates over `Option<f64>`
+as over any element.
+
 ## In a `Function` signature
 
 A js-sys `Function` signature may name them, since a slot may be any Rust
@@ -96,10 +118,10 @@ and a `Promise<Nullable<JsString>>` awaits to a `Nullable<JsString>`.
 ## `Nullable<T>` and `JsNullable<T>`
 
 `Nullable<T>` and `Option<T>` are Rust-side types that convert at the
-boundary, so they fit wherever the value, or the promise holding it, is
-converted on crossing. [`JsNullable<T>`](./js-sys.md) and `JsOption<T>` are
-JS-side handles: the value stays a JS value, and they are what the
-type-erased generic methods of js-sys's containers work on. An
+boundary, so they fit wherever the value, or the sequence or promise holding
+it, is converted on crossing. [`JsNullable<T>`](./js-sys.md) and
+`JsOption<T>` are JS-side handles: the value stays a JS value, and they are
+what the type-erased generic methods of js-sys's containers work on. An
 `Array<Nullable<JsString>>` or `Map<JsString, Nullable<JsString>>` is a valid
 type, and crosses whole, but `Array::get` or `Map::get` on it does not
 resolve: those marshal the element as a `JsValue` handle, which a Rust enum
