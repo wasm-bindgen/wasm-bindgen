@@ -895,6 +895,35 @@ jobs:
         body_path: release-notes.md
         files: "gh-release/*.tar.gz*"
 
+  # GitHub's own notice of a pending approval is easy to miss, so the release
+  # PR, whose participants are notified, gets a comment while the publish job
+  # waits.
+  notify:
+    name: Request publish approval
+    if: github.repository == 'wasm-bindgen/wasm-bindgen' && startsWith(github.ref, 'refs/tags/')
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write #  to see the draft release
+      pull-requests: write
+    steps:
+    - env:
+        GH_TOKEN: ${{ github.token }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        pr=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls" --jq '.[0].number // empty')
+        if [ -z "$pr" ]; then
+          echo "No PR merged $GITHUB_SHA"
+          exit 0
+        fi
+        url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/$GITHUB_REF_NAME
+        # Drafts have their own URL until they're published.
+        url=$(gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --json url --jq .url 2>/dev/null || echo "$url")
+        gh pr comment "$pr" --repo "$GITHUB_REPOSITORY" --body "🚀 $GITHUB_REF_NAME is ready to publish, pending approval: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+
+        Release: $url"
+
   publish:
     environment:
       name: publish
