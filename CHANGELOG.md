@@ -5,6 +5,9 @@
 
 ### Added
 
+* Added `aarch64-pc-windows-msvc` release artifacts.
+  [#5439](https://github.com/wasm-bindgen/wasm-bindgen/pull/5439)
+
 ### Changed
 
 ### Fixed
