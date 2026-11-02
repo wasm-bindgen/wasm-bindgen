@@ -39,7 +39,7 @@ pub mod SetIterator;
 pub mod SharedArrayBuffer;
 pub mod Symbol;
 pub mod SyntaxError;
-#[cfg(js_sys_unstable_apis)]
+#[cfg(all(js_sys_unstable_apis, feature = "temporal"))]
 pub mod Temporal;
 pub mod Thenable;
 pub mod TypeError;

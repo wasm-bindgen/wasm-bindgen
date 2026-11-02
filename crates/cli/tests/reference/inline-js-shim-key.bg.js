@@ -9,13 +9,13 @@ export function read() {
     const ret = wasm.read();
     return ret >>> 0;
 }
-export function __wbg___wbindgen_number_get_2e0e7dee9f701a71(arg0, arg1) {
+export function __wbg___wbindgen_number_get_934b640d0889af78(arg0, arg1) {
     const obj = arg1;
     const ret = typeof(obj) === 'number' ? obj : undefined;
     getDataViewMemory0().setFloat64((arg0 >>> 0) + 8 * 1, isLikeNone(ret) ? 0 : ret, true);
     getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 0, !isLikeNone(ret), true);
 }
-export function __wbg___wbindgen_throw_41e9ee4f547fc59a(arg0, arg1) {
+export function __wbg___wbindgen_throw_4c88d8bf264fd984(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbg_static_accessor_X_b08eaf5295bd0096() {

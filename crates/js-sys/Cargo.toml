@@ -14,7 +14,7 @@ name = "js-sys"
 readme = "./README.md"
 repository = "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/js-sys"
 rust-version = "1.81"
-version = "0.3.106"
+version = "0.3.107"
 
 [lib]
 doctest = false
@@ -31,12 +31,15 @@ unsafe-eval = []
 # Pulls in `futures-util` directly so this keeps working under
 # `default-features = false`.
 futures-core-03-stream = ["dep:futures-util", "dep:futures-core"]
+# Enables the `Temporal` bindings and `Date::to_temporal_instant`, which also
+# need `--cfg js_sys_unstable_apis` while they are unstable.
+temporal = []
 
 [dependencies]
 cfg-if = "1.0.0"
 futures-core = { version = "0.3.8", default-features = false, optional = true }
 futures-util = { version = "0.3.31", default-features = false, optional = true }
-wasm-bindgen = { path = "../..", version = "=0.2.129", default-features = false }
+wasm-bindgen = { path = "../..", version = "=0.2.130", default-features = false }
 
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
 futures-channel = "0.3"
