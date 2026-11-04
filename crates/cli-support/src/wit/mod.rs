@@ -628,6 +628,48 @@ impl<'a> Context<'a> {
         });
 
         let mut duplicate_import_map = HashMap::new();
+
+        // An owned externref crosses the Rust ABI as its heap slot index, moved
+        // out of the source and adopted by the target, so a cast between two
+        // externref types is the identity on that index, and a cast from `()`
+        // is the reserved `undefined` slot. Neither needs JS.
+        let is_owned_externref =
+            |d: &Descriptor| matches!(d, Descriptor::Externref | Descriptor::NamedExternref(_));
+        let mut folded_funcs = HashMap::new();
+        sorted.retain(|(_, key, signature, orig_func_ids)| {
+            if *key != GenericImportKey::Cast || !is_owned_externref(&signature.ret) {
+                return true;
+            }
+            let from_unit = match &signature.arguments[..] {
+                [Descriptor::Unit] => true,
+                [arg] if is_owned_externref(arg) => false,
+                _ => return true,
+            };
+            let ty = self.module.funcs.get(orig_func_ids[0]).ty();
+            let (params, results) = self.module.types.params_results(ty);
+            let (params, results) = (params.to_vec(), results.to_vec());
+            if results.len() != 1 || params != if from_unit { vec![] } else { results.clone() } {
+                return true;
+            }
+            let val_ty = results[0];
+            let folded = *folded_funcs.entry((from_unit, val_ty)).or_insert_with(|| {
+                let mut builder =
+                    walrus::FunctionBuilder::new(&mut self.module.types, &params, &results);
+                if from_unit {
+                    builder
+                        .func_body()
+                        .i32_const(crate::INITIAL_HEAP_OFFSET as i32);
+                    builder.finish(vec![], &mut self.module.funcs)
+                } else {
+                    let param = self.module.locals.add(val_ty);
+                    builder.func_body().local_get(param);
+                    builder.finish(vec![param], &mut self.module.funcs)
+                }
+            });
+            duplicate_import_map.extend(orig_func_ids.iter().map(|&f| (f, folded)));
+            false
+        });
+
         for (idx, (sig_comment, key, signature, orig_func_ids)) in sorted.into_iter().enumerate() {
             let import_name = format!("__wbindgen_generic_{:016x}", idx + 1);
             // Every monomorphisation in a group was keyed by an identical

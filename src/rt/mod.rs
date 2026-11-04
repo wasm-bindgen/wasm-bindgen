@@ -1019,31 +1019,18 @@ pub trait IntoJsResult {
     fn into_js_result(self) -> Result<JsValue, JsValue>;
 }
 
-impl IntoJsResult for () {
+// The resolved value crosses exactly as a sync return of `T` would, while
+// the rejection coerces through `Into<JsValue>` like a sync `Result` throw.
+impl<T: IntoWasmAbi> IntoJsResult for T {
     fn into_js_result(self) -> Result<JsValue, JsValue> {
-        Ok(JsValue::undefined())
+        Ok(wbg_cast(self))
     }
 }
 
-impl<T: Into<JsValue>> IntoJsResult for T {
-    fn into_js_result(self) -> Result<JsValue, JsValue> {
-        Ok(self.into())
-    }
-}
-
-impl<T: Into<JsValue>, E: Into<JsValue>> IntoJsResult for Result<T, E> {
+impl<T: IntoWasmAbi, E: Into<JsValue>> IntoJsResult for Result<T, E> {
     fn into_js_result(self) -> Result<JsValue, JsValue> {
         match self {
-            Ok(e) => Ok(e.into()),
-            Err(e) => Err(e.into()),
-        }
-    }
-}
-
-impl<E: Into<JsValue>> IntoJsResult for Result<(), E> {
-    fn into_js_result(self) -> Result<JsValue, JsValue> {
-        match self {
-            Ok(()) => Ok(JsValue::undefined()),
+            Ok(v) => Ok(wbg_cast(v)),
             Err(e) => Err(e.into()),
         }
     }

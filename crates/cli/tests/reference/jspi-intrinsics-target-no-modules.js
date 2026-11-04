@@ -26,11 +26,6 @@ let wasm_bindgen = (function(exports) {
             __wbg___wbindgen_throw_4c88d8bf264fd984: function(arg0, arg1) {
                 throw new Error(getStringFromWasm0(arg0, arg1));
             },
-            __wbindgen_generic_0000000000000000: function(arg0) {
-                // Cast intrinsic for `Externref -> Externref`.
-                const ret = arg0;
-                return ret;
-            },
             __wbindgen_init_externref_table: function() {
                 const table = wasm.__wbindgen_externrefs;
                 table.set(0, undefined);
