@@ -52,9 +52,10 @@ async fn load_config() -> Result<Object, TypeError> {
 }
 ```
 
-Like `T`, `E` is an unchecked assertion about the JS side: JS can reject
-with any value, and the rejection reason is converted as an `E` without a
-check. Both parameters are covariant, so a `Promise<T, TypeError>` upcasts
+JS can reject with any value, so the rejection reason converts through
+`E: From<JsValue>`, as a `catch` import's error does. For a JS type such as
+`TypeError` that is an unchecked cast, while a Rust error type can implement
+`From<JsValue>` to inspect the reason. Both parameters are covariant, so a `Promise<T, TypeError>` upcasts
 to `Promise<T, Error>` or to `Promise<T>`, and a `JsFuture<T, E>` does the
 same.
 

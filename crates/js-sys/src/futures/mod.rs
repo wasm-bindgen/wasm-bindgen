@@ -142,7 +142,7 @@ struct Inner<T = JsValue, E = JsValue> {
     task: Option<Waker>,
     callbacks: Option<(
         Closure<dyn FnMut(T) -> Result<(), JsError>>,
-        Closure<dyn FnMut(E) -> Result<(), JsError>>,
+        Closure<dyn FnMut(JsValue) -> Result<(), JsError>>,
     )>,
 }
 
@@ -154,9 +154,9 @@ struct Inner<T = JsValue, E = JsValue> {
 /// with the JavaScript `Promise`.
 ///
 /// A `JsFuture<T, E>` built from a `Promise<T, E>` resolves to
-/// `Result<T, E>`: the fulfilled value is converted as a `T` and the
-/// rejection reason as an `E`, both unchecked, just as JS could have
-/// settled the promise with anything.
+/// `Result<T, E>`. The fulfilled value is converted as a `T`, unchecked, as
+/// any declared return is. The rejection reason is whatever JS threw, so it
+/// converts through `E: From<JsValue>`, as a `catch` import's error does.
 ///
 /// Currently this type is constructed with `JsFuture::from`.
 pub struct JsFuture<T = JsValue, E = JsValue> {
@@ -190,7 +190,7 @@ impl<T, E> fmt::Debug for JsFuture<T, E> {
 // no layout equivalence with `JsValue` is required at this seam — the
 // per-type `from_abi` does the conversion (e.g. for dynamic unions it
 // runs the variant dispatcher).
-impl<T: FromWasmAbi + 'static, E: FromWasmAbi + 'static> From<Promise<T, E>> for JsFuture<T, E> {
+impl<T: FromWasmAbi + 'static, E: From<JsValue> + 'static> From<Promise<T, E>> for JsFuture<T, E> {
     fn from(js: Promise<T, E>) -> JsFuture<T, E> {
         // Use the `then` method to schedule two callbacks, one for the
         // resolved value and one for the rejected value. We're currently
@@ -248,12 +248,13 @@ impl<T: FromWasmAbi + 'static, E: FromWasmAbi + 'static> From<Promise<T, E>> for
 
         let reject = {
             let state = AssertUnwindSafe(state.clone());
-            Closure::once(move |val: E| {
-                finish(&*state, Err(val));
+            Closure::once(move |val: JsValue| {
+                finish(&*state, Err(E::from(val)));
                 Ok(())
             })
         };
 
+        let js: Promise<T> = js.unchecked_into();
         let _ = js.then_with_reject(&resolve, &reject);
 
         state.borrow_mut().callbacks = Some((resolve, reject));
@@ -280,7 +281,7 @@ impl<T, E> Future for JsFuture<T, E> {
     }
 }
 
-impl<T: FromWasmAbi + 'static, E: FromWasmAbi + 'static> IntoFuture for Promise<T, E> {
+impl<T: FromWasmAbi + 'static, E: From<JsValue> + 'static> IntoFuture for Promise<T, E> {
     type Output = Result<T, E>;
     type IntoFuture = JsFuture<T, E>;
 

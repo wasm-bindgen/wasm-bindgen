@@ -834,6 +834,8 @@ extern "C" {
     fn maybe_async(fail: bool) -> Promise<String>;
     #[wasm_bindgen(catch, experimental_generic_mono, js_name = maybeAsync)]
     fn maybe_async_like(fail: impl JsBooleanOrStringLike) -> Promise<String>;
+    #[wasm_bindgen(catch, js_name = maybeAsync)]
+    fn maybe_async_message(fail: bool) -> Promise<String, Message>;
 
     type Thrower;
     #[wasm_bindgen(constructor)]
@@ -844,6 +846,28 @@ extern "C" {
     fn make(fail: bool) -> Promise<String>;
     #[wasm_bindgen(catch, method, experimental_generic_mono, js_name = echo)]
     fn echo<T: RefIntoWasmAbi>(this: &Thrower, value: &T, fail: bool) -> Promise<T>;
+}
+
+#[derive(Debug, PartialEq)]
+struct Message(String);
+
+impl From<JsValue> for Message {
+    fn from(value: JsValue) -> Self {
+        Message(value.unchecked_into::<Error>().message().into())
+    }
+}
+
+// A sync throw and an async rejection both reach `E` through `From<JsValue>`.
+#[wasm_bindgen_test]
+async fn catch_rejects_sync_throws_as_typed_error() {
+    assert_eq!(maybe_async_message(false).await.unwrap(), "ok");
+    assert_eq!(
+        maybe_async_message(true).await.unwrap_err(),
+        Message("sync".into())
+    );
+    let rejected: Promise<String, Message> =
+        Promise::<String>::reject_typed(&Error::new("async").into()).unchecked_into();
+    assert_eq!(rejected.await.unwrap_err(), Message("async".into()));
 }
 
 #[wasm_bindgen_test]

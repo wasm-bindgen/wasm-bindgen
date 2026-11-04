@@ -8,7 +8,21 @@
 * Added `aarch64-pc-windows-msvc` release artifacts.
   [#5439](https://github.com/wasm-bindgen/wasm-bindgen/pull/5439)
 
+* `catch` on an import returning `js_sys::Promise<T>` rather than a `Result`
+  returns a synchronous throw as a rejected promise, so the error surfaces at
+  `.await` instead of unwinding through Wasm. The conversion goes through the
+  new `wasm_bindgen::convert::FromCaughtException` trait, which js-sys
+  implements for `Promise<T, E>`.
+  [#5442](https://github.com/wasm-bindgen/wasm-bindgen/pull/5442)
+
 ### Changed
+
+* Awaiting a `js_sys::Promise<T, E>` converts the rejection reason through
+  `E: From<JsValue>` rather than `E: FromWasmAbi`, as a `catch` import's
+  error does, since JS can reject with any value. JS types still convert
+  unchecked, a Rust error type can inspect the reason, and a value type such
+  as `String` is no longer accepted as `E` there.
+  [#5442](https://github.com/wasm-bindgen/wasm-bindgen/pull/5442)
 
 ### Fixed
 
@@ -24,13 +38,6 @@
   `experimental_generic_mono` import taking `&T` accepts `T = f64`,
   `Option<f64>` or `Nullable<String>`, as std's `contains(&T)` does.
   [#5436](https://github.com/wasm-bindgen/wasm-bindgen/pull/5436)
-
-* `catch` on an import returning `js_sys::Promise<T>` rather than a `Result`
-  returns a synchronous throw as a rejected promise, so the error surfaces at
-  `.await` instead of unwinding through Wasm. The conversion goes through the
-  new `wasm_bindgen::convert::FromCaughtException` trait, which js-sys
-  implements for `Promise<T, E>`.
-  [#5442](https://github.com/wasm-bindgen/wasm-bindgen/pull/5442)
 
 * Added a rejection type parameter to `js_sys::Promise<T, E = JsValue>`,
   mirrored on `JsFuture<T, E>`, `PromiseState<T, E>` and
