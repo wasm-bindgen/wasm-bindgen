@@ -15,6 +15,12 @@
   implements for `Promise<T, E>`.
   [#5442](https://github.com/wasm-bindgen/wasm-bindgen/pull/5442)
 
+* Added `SafeInteger<u64>` and `SafeInteger<i64>` (aliased `SafeU64` and
+  `SafeI64`), which cross the boundary as a JS `number` instead of a
+  `BigInt`, in every position including `catch`, `Option`, `Vec`, closures,
+  `async` imports and `experimental_generic_mono` generics. The safe integer range is checked under debug assertions.
+  [#5455](https://github.com/wasm-bindgen/wasm-bindgen/pull/5455)
+
 ### Changed
 
 * Awaiting a `js_sys::Promise<T, E>` converts the rejection reason through

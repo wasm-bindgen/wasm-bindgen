@@ -49,3 +49,8 @@ exports.asyncEchoU32 = async function(x) {
   }
   return x;
 };
+
+exports.asyncSafeInteger = async function() {
+  await null;
+  return Number.MAX_SAFE_INTEGER;
+};

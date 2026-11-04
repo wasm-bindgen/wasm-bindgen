@@ -150,9 +150,11 @@ pub mod convert;
 pub mod describe;
 mod link;
 mod nullable;
+mod safe_integer;
 pub mod sys;
 
 pub use crate::nullable::Nullable;
+pub use crate::safe_integer::{SafeI64, SafeInteger, SafeIntegerPrimitive, SafeU64};
 
 #[cfg(wbg_reference_types)]
 mod externref;

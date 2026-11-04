@@ -6,6 +6,7 @@
 //! concrete values for the same reason.
 
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::SafeInteger;
 use wasm_bindgen_test::*;
 
 #[wasm_bindgen(module = "tests/wasm/async_import.js")]
@@ -28,6 +29,10 @@ extern "C" {
     async fn async_u32_throws() -> Result<u32, JsValue>;
     #[wasm_bindgen(js_name = asyncEchoU32)]
     async fn async_echo_u32(x: u32) -> u32;
+    #[wasm_bindgen(js_name = asyncSafeInteger)]
+    async fn async_safe_integer() -> SafeInteger<u64>;
+    #[wasm_bindgen(js_name = asyncOptSome)]
+    async fn async_opt_safe_integer() -> Option<SafeInteger<i64>>;
 }
 
 #[wasm_bindgen_test]
@@ -65,4 +70,10 @@ async fn async_import_takes_and_returns_scalar() {
     // The JS side rejects a non-number argument, covering the argument
     // direction as well.
     assert_eq!(async_echo_u32(12345).await, 12345);
+}
+
+#[wasm_bindgen_test]
+async fn async_import_returns_safe_integer() {
+    assert_eq!(async_safe_integer().await, SafeInteger::<u64>::MAX);
+    assert_eq!(async_opt_safe_integer().await, Some(SafeInteger::from(7)));
 }
