@@ -6,6 +6,7 @@
 //! concrete values for the same reason.
 
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::SafeInteger;
 use wasm_bindgen_test::*;
 
 #[wasm_bindgen(module = "tests/wasm/async_import.js")]

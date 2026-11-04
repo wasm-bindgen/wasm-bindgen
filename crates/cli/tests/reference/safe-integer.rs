@@ -1,4 +1,5 @@
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::SafeInteger;
 
 #[wasm_bindgen]
 extern "C" {

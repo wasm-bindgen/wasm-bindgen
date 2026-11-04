@@ -73,6 +73,8 @@ impl SafeIntegerPrimitive for i64 {}
 /// TypeScript it is `number`.
 ///
 /// ```ignore
+/// use wasm_bindgen::SafeInteger;
+///
 /// #[wasm_bindgen]
 /// extern "C" {
 ///     type QueueMetrics;
@@ -107,6 +109,12 @@ impl SafeIntegerPrimitive for i64 {}
 #[repr(transparent)]
 #[derive(Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SafeInteger<T: SafeIntegerPrimitive>(T);
+
+/// A `u64` that crosses the JS boundary as a `number`. See [`SafeInteger`].
+pub type SafeU64 = SafeInteger<u64>;
+
+/// An `i64` that crosses the JS boundary as a `number`. See [`SafeInteger`].
+pub type SafeI64 = SafeInteger<i64>;
 
 #[inline]
 fn is_safe<T: SafeIntegerPrimitive>(n: f64) -> bool {

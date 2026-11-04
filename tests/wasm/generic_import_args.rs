@@ -26,6 +26,7 @@ use std::borrow::Cow;
 use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, RefIntoWasmAbi, VectorRefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsStringLike;
+use wasm_bindgen::SafeInteger;
 use wasm_bindgen_test::*;
 
 #[wasm_bindgen(module = "tests/wasm/generic_import_args.js")]

@@ -3,10 +3,11 @@
 A `u64` or `i64` is a `BigInt` in JavaScript, but many JS APIs type integer
 counts as `number`. `SafeInteger<u64>` and `SafeInteger<i64>` keep the Rust
 integer type while crossing the boundary as a `number`. In TypeScript they are
-`number`.
+`number`. `SafeU64` and `SafeI64` are aliases for the two.
 
 ```rust
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::SafeInteger;
 
 #[wasm_bindgen]
 extern "C" {

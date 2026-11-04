@@ -1,4 +1,5 @@
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::SafeInteger;
 use wasm_bindgen_test::*;
 
 #[wasm_bindgen(module = "tests/wasm/bigint.js")]
@@ -127,7 +128,7 @@ extern "C" {
     #[wasm_bindgen(catch)]
     fn safe_catch(ok: bool) -> Result<SafeInteger<u64>, JsValue>;
     fn safe_call(f: &Closure<dyn Fn(SafeInteger<i64>) -> SafeInteger<i64>>) -> SafeInteger<i64>;
-    fn safe_returns(n: f64) -> SafeInteger<u64>;
+    fn safe_returns(n: f64) -> wasm_bindgen::SafeU64;
     fn safe_js_works();
 }
 
@@ -179,7 +180,7 @@ fn safe_integer_round_trips() {
     assert_eq!(safe_opt_js_identity(Some(0.into())), Some(0.into()));
     assert_eq!(safe_opt_js_identity(None), None);
 
-    let values: Vec<SafeInteger<i64>> = vec![0.into(), (-5).into(), SafeInteger::MIN];
+    let values: Vec<wasm_bindgen::SafeI64> = vec![0.into(), (-5).into(), SafeInteger::MIN];
     assert_eq!(safe_vec_js_identity(values.clone()), values);
     assert!(safe_vec_js_identity(Vec::new()).is_empty());
 

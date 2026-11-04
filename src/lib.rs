@@ -135,7 +135,6 @@ pub mod prelude {
     pub use crate::JsCast;
     pub use crate::JsValue;
     pub use crate::Nullable;
-    pub use crate::SafeInteger;
     pub use crate::UnwrapThrowExt;
     #[doc(hidden)]
     pub use wasm_bindgen_macro::__wasm_bindgen_class_marker;
@@ -155,7 +154,7 @@ mod safe_integer;
 pub mod sys;
 
 pub use crate::nullable::Nullable;
-pub use crate::safe_integer::{SafeInteger, SafeIntegerPrimitive};
+pub use crate::safe_integer::{SafeI64, SafeInteger, SafeIntegerPrimitive, SafeU64};
 
 #[cfg(wbg_reference_types)]
 mod externref;
