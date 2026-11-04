@@ -17,7 +17,7 @@
   uplifts, which its new build-dir layout separates from the `snippets/`
   directory. If any snippet may import another module, none are embedded and
   that directory is still needed beside the output.
-  [#0000](https://github.com/wasm-bindgen/wasm-bindgen/pull/0000)
+  [#5454](https://github.com/wasm-bindgen/wasm-bindgen/pull/5454)
 
 ### Removed
 
