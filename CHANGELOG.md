@@ -28,8 +28,11 @@
   `IntoWasmAbi`, exactly as a sync return of the same type, rather than
   through `Into<JsValue>`, so any returnable type such as `char` can be
   returned from an `async` export. The rejection still converts through
-  `Into<JsValue>`, as a sync `Result` error does. Casts between externref
-  types, and from `()` to an externref, no longer call into JS.
+  `Into<JsValue>`, as a sync `Result` error does. A resolved type that only
+  implements `From<T> for JsValue` no longer compiles; return
+  `JsValue::from(value)` instead. Casts between externref types, and from
+  `()` to an externref, no longer call into JS.
+  [#5453](https://github.com/wasm-bindgen/wasm-bindgen/pull/5453)
 
 ### Fixed
 
