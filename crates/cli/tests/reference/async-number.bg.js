@@ -106,14 +106,14 @@ export function __wbindgen_generic_0000000000000000(arg0, arg1) {
     const ret = makeMutClosure(arg0, arg1, wasm_bindgen_0000000000000003___convert__closures_____invoke___wasm_bindgen_0000000000000003___JsValue__core_0000000000000005___result__Result_____wasm_bindgen_0000000000000003___JsError___true_);
     return ret;
 }
-export function __wbindgen_generic_0000000000000001(arg0) {
-    // Cast intrinsic for `F64 -> Externref`.
-    const ret = arg0;
-    return ret;
-}
-export function __wbindgen_generic_0000000000000002(arg0, arg1) {
+export function __wbindgen_generic_0000000000000001(arg0, arg1) {
     // Cast intrinsic for `Ref(String) -> Externref`.
     const ret = getStringFromWasm0(arg0, arg1);
+    return ret;
+}
+export function __wbindgen_generic_0000000000000002(arg0) {
+    // Cast intrinsic for `U32 -> Externref`.
+    const ret = arg0 >>> 0;
     return ret;
 }
 export function __wbindgen_init_externref_table() {

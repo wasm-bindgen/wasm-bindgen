@@ -17,11 +17,6 @@ export const __wbg___wbindgen_jspi_suspend_83a35dabfa04fa34 = ((__inner) => new 
 export function __wbg___wbindgen_throw_4c88d8bf264fd984(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
-export function __wbindgen_generic_0000000000000000(arg0) {
-    // Cast intrinsic for `Externref -> Externref`.
-    const ret = arg0;
-    return ret;
-}
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_externrefs;
     table.set(0, undefined);

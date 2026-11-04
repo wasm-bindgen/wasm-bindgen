@@ -6153,13 +6153,17 @@ addToLibrary({
             AuxImport::Cast { sig_comment } => {
                 assert!(kind == AdapterJsImportKind::Normal);
                 assert!(!variadic);
-                assert_eq!(args.len(), 1);
+                assert!(args.len() <= 1);
 
                 // Emitted through the shared generic-import pipeline as a
                 // `__wbindgen_generic_*` shim, but this particular one is an
-                // identity cast (returns its argument unchanged).
+                // identity cast (returns its argument unchanged). A `()`
+                // source has no ABI argument, and casts to `undefined`.
                 writeln!(prelude, "// Cast intrinsic for `{sig_comment}`.")?;
-                Ok(args[0].clone())
+                Ok(args
+                    .first()
+                    .cloned()
+                    .unwrap_or_else(|| "undefined".to_owned()))
             }
 
             AuxImport::StructuralMethod(name) => {

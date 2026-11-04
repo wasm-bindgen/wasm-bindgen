@@ -152,25 +152,20 @@ async function shim() {
 
 ## Return values of `async fn`
 
-When using an `async fn` in Rust and exporting it to JS there are some
-restrictions on the return type. The return value of an exported Rust function
-will eventually become `Result<JsValue, JsValue>` where `Ok` turns into a
-successfully resolved promise and `Err` is equivalent to throwing an exception.
+An exported `async fn` accepts the same return types as a sync export. The
+resolved value converts exactly as a sync return of the same type would, and
+an `Err` rejects the promise the way a sync export's `Err` throws:
 
-The following types are supported as return types from an `async fn`:
-
-* `()` — turns into a successful `undefined` in JS
-* `T: Into<JsValue>` — turns into a successful JS value
-* `Result<(), E: Into<JsValue>>` — `Ok(())` resolves to `undefined`; `Err`
+* `T: IntoWasmAbi` — resolves with `T` converted as a sync return, so `()`
+  resolves to `undefined`
+* `Result<T: IntoWasmAbi, E: Into<JsValue>>` — `Ok` resolves as above; `Err`
   rejects with `E` converted to a JS value
-* `Result<T: Into<JsValue>, E: Into<JsValue>>` — both payloads are converted
-  into a `JsValue`
 
-Note that many types implement being converted into a `JsValue`, such as all
-imported types via `#[wasm_bindgen]` (aka those in `js-sys` or `web-sys`),
-primitives like `u32`, and all exported `#[wasm_bindgen]` types. In general,
-you should be able to write code without having too many explicit conversions,
-and the macro should take care of the rest!
+Every type a sync export can return implements `IntoWasmAbi`, including
+imported JS types (such as those in `js-sys` or `web-sys`), primitives,
+strings, vectors and exported `#[wasm_bindgen]` types. A type that only
+implements `From<T> for JsValue` can be resolved by returning
+`JsValue::from(value)`.
 
 The arguments of an exported `async fn` are converted when JS calls it, before
 its future first runs. An argument Rust rejects, such as an invalid enum value,
