@@ -12,6 +12,13 @@
 
 ### Fixed
 
+* Emscripten: snippets are embedded in the output as `data:` URLs, so
+  `inline_js` and `module = "/..."` imports keep working from the `.js` Cargo
+  uplifts, which its new build-dir layout separates from the `snippets/`
+  directory. If any snippet may import another module, none are embedded and
+  that directory is still needed beside the output.
+  [#5454](https://github.com/wasm-bindgen/wasm-bindgen/pull/5454)
+
 ### Removed
 
 ## [0.2.130](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.129...0.2.130)
