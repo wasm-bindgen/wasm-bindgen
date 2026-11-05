@@ -29,6 +29,7 @@
   enum discriminant, returns `Err` instead of throwing through the caller, and
   awaiting a `Promise<T, E>` whose fulfilled value `T` rejects yields `Err`
   instead of never resolving.
+  [#5456](https://github.com/wasm-bindgen/wasm-bindgen/pull/5456)
 
 * Awaiting a `js_sys::Promise<T, E>` converts the rejection reason through
   `E: From<JsValue>` rather than `E: FromWasmAbi`, as a `catch` import's
