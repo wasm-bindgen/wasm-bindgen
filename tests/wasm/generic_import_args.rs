@@ -432,8 +432,6 @@ fn experimental_generic_mono_catch_throw_path() {
     );
 
     assert!(try_get_string::<String>(0).is_err());
-    // A returned value the `Ok` type rejects is an `Err` too.
-    assert!(try_get_string::<SafeInteger<u64>>(7).is_err());
 
     // The exception slot must be cleared, so a subsequent call still succeeds.
     assert_eq!(try_get::<u32>(5).unwrap(), 10);

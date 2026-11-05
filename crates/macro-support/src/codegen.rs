@@ -3055,7 +3055,6 @@ impl ast::ImportFunction {
         }
         let abi_ret;
         let mut convert_ret;
-        let mut catch_convert_ret = None;
         match &self.js_ret {
             Some(syn::Type::Reference(_)) => {
                 bail_span!(
@@ -3093,16 +3092,9 @@ impl ast::ImportFunction {
                         parse_quote! { #ty: #wasm_bindgen::__rt::marker::ErasableGenericOwn<#concrete_ty> },
                     );
                     convert_ret = quote! { unsafe { #wasm_bindgen::__rt::core::mem::transmute_copy(&#wasm_bindgen::__rt::core::mem::ManuallyDrop::new(<#concrete_ty as #wasm_bindgen::convert::FromWasmAbi>::from_abi(#ret_ident.join()))) } };
-                    catch_convert_ret = Some(quote! {
-                        #wasm_bindgen::__rt::try_from_abi_or_err::<#concrete_ty, _>(#ret_ident.join())
-                            .map(|ret| unsafe { #wasm_bindgen::__rt::core::mem::transmute_copy(&#wasm_bindgen::__rt::core::mem::ManuallyDrop::new(ret)) })
-                    });
                     abi_ret = quote! { #wasm_bindgen::convert::WasmRet<<#concrete_ty as #wasm_bindgen::convert::FromWasmAbi>::Abi> };
                 } else {
                     convert_ret = quote! { <#ty as #wasm_bindgen::convert::FromWasmAbi>::from_abi(#ret_ident.join()) };
-                    catch_convert_ret = Some(quote! {
-                        #wasm_bindgen::__rt::try_from_abi_or_err::<#ty, _>(#ret_ident.join())
-                    });
                     abi_ret = quote! { #wasm_bindgen::convert::WasmRet<<#ty as #wasm_bindgen::convert::FromWasmAbi>::Abi> };
                 }
                 if self.function.r#async {
@@ -3204,7 +3196,7 @@ impl ast::ImportFunction {
             }
             exceptional_ret = catch_rejects_ret(wasm_bindgen, &self.function);
         } else if self.catch && !self.function.r#async && !self.suspending {
-            convert_ret = catch_convert_ret.unwrap_or_else(|| quote! { Ok(#convert_ret) });
+            convert_ret = quote! { Ok(#convert_ret) };
             exceptional_ret = quote! {
                 #wasm_bindgen::__rt::take_last_exception()?;
             };
@@ -3977,7 +3969,6 @@ impl ast::ImportFunction {
         let shim_ret_expr;
         let describe_ret;
         let mut convert_ret;
-        let mut catch_convert_ret = None;
         // Paths in here go through `#wasm_bindgen::__rt::core` (the `pub extern
         // crate core` re-export) rather than a bare `core::`, because the shim is
         // expanded with call-site hygiene into the user's module: a user item named
@@ -4060,9 +4051,6 @@ impl ast::ImportFunction {
                 convert_ret = quote_spanned! { ret_span =>
                     <#ty as #wasm_bindgen::convert::FromWasmAbi>::from_abi(#ret_ident.join())
                 };
-                catch_convert_ret = Some(quote_spanned! { ret_span =>
-                    #wasm_bindgen::__rt::try_from_abi_or_err::<#ty, _>(#ret_ident.join())
-                });
                 if self.function.r#async {
                     convert_ret = quote_spanned! { ret_span =>
                         #futures::JsFuture::from(
@@ -4117,7 +4105,7 @@ impl ast::ImportFunction {
             }
             exceptional_ret = catch_rejects_ret(wasm_bindgen, &self.function);
         } else if self.catch && !self.function.r#async {
-            convert_ret = catch_convert_ret.unwrap_or_else(|| quote! { Ok(#convert_ret) });
+            convert_ret = quote! { Ok(#convert_ret) };
             exceptional_ret = quote! {
                 #wasm_bindgen::__rt::take_last_exception()?;
             };

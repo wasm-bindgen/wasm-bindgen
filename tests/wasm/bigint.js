@@ -86,7 +86,6 @@ exports.safe_js_rejects = () => {
     const signed = /expected a safe integer/;
     for (const bad of [2 ** 53, 1.5, -1, NaN, Infinity]) {
         assert.throws(() => wasm.safe_u64_rust_identity(bad), unsigned);
-        assert.throws(() => wasm.safe_returns_rust(bad), unsigned);
     }
     assert.strictEqual(wasm.safe_u64_rust_identity(Number.MAX_SAFE_INTEGER), Number.MAX_SAFE_INTEGER);
     assert.throws(() => wasm.safe_i64_rust_identity(-(2 ** 53)), signed);

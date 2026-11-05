@@ -15,10 +15,6 @@ export function use_scoped_callback() {
 export function use_stack_callback(a) {
     wasm.use_stack_callback(a);
 }
-export function __wbg_Error_208446807d0d1e30(arg0, arg1) {
-    const ret = Error(getStringFromWasm0(arg0, arg1));
-    return ret;
-}
 export function __wbg___wbindgen_is_undefined_be5b34249ff1fc15(arg0) {
     const ret = arg0 === undefined;
     return ret;

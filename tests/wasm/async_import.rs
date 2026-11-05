@@ -78,7 +78,8 @@ async fn async_import_takes_and_returns_scalar() {
 async fn async_import_returns_safe_integer() {
     assert_eq!(async_safe_integer().await, SafeInteger::<u64>::MAX);
     assert_eq!(async_opt_safe_integer().await, Some(SafeInteger::from(7)));
-    // A resolved value the type rejects is an `Err`, not a pending future.
+    // The resolved value arrives through a closure, so it is checked, and a
+    // rejected one is an `Err` rather than a future that never resolves.
     let err = async_safe_integer_rejects().await.unwrap_err();
     assert_eq!(
         err.unchecked_into::<js_sys::Error>().message(),

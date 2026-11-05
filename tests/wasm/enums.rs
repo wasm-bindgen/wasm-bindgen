@@ -14,8 +14,6 @@ extern "C" {
     fn js_numeric_enum_abi();
     fn js_echo_signed_enum(e: SignedEnum) -> SignedEnum;
     fn js_echo_unsigned_top_enum(e: UnsignedTopEnum) -> UnsignedTopEnum;
-    #[wasm_bindgen(catch, js_name = js_raw_enum)]
-    fn js_raw_color(n: u32) -> Result<Color, JsValue>;
 
     pub type FooCase;
     #[wasm_bindgen(js_name = makeFoo)]
@@ -468,12 +466,4 @@ async fn test_async_union_result_catch() {
         res,
         Ok(OuterUnion::Wrapped(InnerUnion::Number(123)))
     ));
-}
-
-// A `catch` import returning a value the enum rejects is an `Err` rather than
-// a throw through the caller.
-#[wasm_bindgen_test]
-fn catch_import_rejects_invalid_enum() {
-    assert!(matches!(js_raw_color(2), Ok(Color::Red)));
-    assert!(js_raw_color(99).is_err());
 }

@@ -8,10 +8,6 @@ export function exported() {
     }
     return ret[0];
 }
-export function __wbg_Error_208446807d0d1e30(arg0, arg1) {
-    const ret = Error(getStringFromWasm0(arg0, arg1));
-    return ret;
-}
 export function __wbg___wbindgen_throw_4c88d8bf264fd984(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }

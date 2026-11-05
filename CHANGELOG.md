@@ -18,17 +18,16 @@
 * Added `SafeInteger<u64>` and `SafeInteger<i64>` (aliased `SafeU64` and
   `SafeI64`), which cross the boundary as a JS `number` instead of a
   `BigInt`, in every position including `catch`, `Option`, `Vec`, closures,
-  `async` imports and `experimental_generic_mono` generics. A `number` from
-  JS that is not a safe integer throws a JS error at the boundary, or is an
-  `Err` from a `catch` import.
+  `async` imports and `experimental_generic_mono` generics. A `number` passed
+  into an export or closure that is not a safe integer throws a JS error at
+  the boundary. Import returns are trusted, as every import return is, and
+  checked only under debug assertions.
   [#5455](https://github.com/wasm-bindgen/wasm-bindgen/pull/5455)
 
 ### Changed
 
-* A `catch` import returning a value its `Ok` type rejects, such as an invalid
-  enum discriminant, returns `Err` instead of throwing through the caller, and
-  awaiting a `Promise<T, E>` whose fulfilled value `T` rejects yields `Err`
-  instead of never resolving.
+* Awaiting a `js_sys::Promise<T, E>` whose fulfilled value `T` rejects, such
+  as an invalid enum discriminant, yields `Err` instead of never resolving.
   [#5456](https://github.com/wasm-bindgen/wasm-bindgen/pull/5456)
 
 * Awaiting a `js_sys::Promise<T, E>` converts the rejection reason through
