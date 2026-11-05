@@ -255,7 +255,10 @@ impl<T: FromWasmAbi + 'static, E: From<JsValue> + 'static> From<Promise<T, E>> f
         };
 
         let js: Promise<T> = js.unchecked_into();
-        let _ = js.then_with_reject(&resolve, &reject);
+        // A fulfilled value that `T` rejects throws from `resolve` before it
+        // runs, rejecting the derived promise, so that is routed to `reject`
+        // too rather than leaving the future pending.
+        let _ = js.then_with_reject(&resolve, &reject).catch_map(&reject);
 
         state.borrow_mut().callbacks = Some((resolve, reject));
 

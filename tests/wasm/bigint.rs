@@ -129,6 +129,12 @@ extern "C" {
     fn safe_catch(ok: bool) -> Result<SafeInteger<u64>, JsValue>;
     fn safe_call(f: &Closure<dyn Fn(SafeInteger<i64>) -> SafeInteger<i64>>) -> SafeInteger<i64>;
     fn safe_returns(n: f64) -> wasm_bindgen::SafeU64;
+    #[wasm_bindgen(catch, js_name = safe_returns)]
+    fn safe_returns_catch(n: f64) -> Result<SafeInteger<u64>, JsValue>;
+    #[wasm_bindgen(catch, js_name = safe_returns)]
+    fn safe_returns_signed_catch(n: f64) -> Result<SafeInteger<i64>, JsValue>;
+    fn safe_call_bad(f: &Closure<dyn Fn(SafeInteger<i64>) -> SafeInteger<i64>>) -> String;
+    fn safe_js_rejects();
     fn safe_js_works();
 }
 
@@ -236,16 +242,28 @@ fn safe_integer_try_from_js_value() {
     assert!(SafeInteger::<i64>::try_from(JsValue::from_f64(-((MAX_SAFE + 1) as f64))).is_err());
 }
 
-#[cfg(debug_assertions)]
-#[wasm_bindgen_test]
-#[should_panic(expected = "9007199254740992 is not a safe integer")]
-fn safe_integer_rejects_unsafe_integer() {
-    safe_returns((MAX_SAFE + 1) as f64);
+#[wasm_bindgen]
+pub fn safe_returns_rust(n: f64) -> SafeInteger<u64> {
+    safe_returns(n)
 }
 
-#[cfg(debug_assertions)]
+// Values from JS are checked in every build, so these hold without debug
+// assertions too.
 #[wasm_bindgen_test]
-#[should_panic(expected = "1.5 is not a safe integer")]
-fn safe_integer_rejects_fraction() {
-    safe_returns(1.5);
+fn safe_integer_rejects_js_values() {
+    for bad in [(MAX_SAFE + 1) as f64, 1.5, -1.0, f64::NAN] {
+        let err = safe_returns_catch(bad).unwrap_err();
+        assert_eq!(
+            err.unchecked_into::<js_sys::Error>().message(),
+            "expected a non-negative safe integer"
+        );
+    }
+    assert_eq!(safe_returns_catch(MAX_SAFE as f64).unwrap(), MAX_SAFE);
+    assert!(safe_returns_signed_catch(-(MAX_SAFE as f64)).is_ok());
+    assert!(safe_returns_signed_catch(-((MAX_SAFE + 1) as f64)).is_err());
+
+    let double = Closure::new(|n: SafeInteger<i64>| n * 2);
+    assert_eq!(safe_call_bad(&double), "expected a safe integer");
+
+    safe_js_rejects();
 }

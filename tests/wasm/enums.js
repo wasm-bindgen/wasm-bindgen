@@ -86,3 +86,5 @@ exports.js_async_union_roundtrip = async o => wasm.async_union_roundtrip(o);
 // Same shape, `Result<Union, JsValue>` form (success-only here; reject
 // path is exercised by other catch tests in the suite).
 exports.js_async_union_result = async o => wasm.async_union_roundtrip(o);
+
+exports.js_raw_enum = n => n;

@@ -5,6 +5,10 @@ export function exported() {
     const ret = wasm.exported();
     return ret;
 }
+export function __wbg_Error_208446807d0d1e30(arg0, arg1) {
+    const ret = Error(getStringFromWasm0(arg0, arg1));
+    return ret;
+}
 export function __wbg___wbindgen_debug_string_f249a2a76caa9a55(arg0, arg1) {
     const ret = debugString(arg1);
     const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
@@ -50,6 +54,10 @@ export function __wbg_call_a410eb4b59ed5965() { return handleError(function (arg
     const ret = arg0.call(arg1, arg2);
     return ret;
 }, arguments); }
+export function __wbg_catch_46fefb1d819a85da(arg0, arg1) {
+    const ret = arg0.catch(arg1);
+    return ret;
+}
 export function __wbg_new_typed_e09da9dae6ee5935(arg0, arg1) {
     try {
         var state0 = {a: arg0, b: arg1};

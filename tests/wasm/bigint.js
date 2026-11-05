@@ -72,6 +72,29 @@ exports.safe_catch = ok => {
 };
 exports.safe_call = f => f(-21);
 exports.safe_returns = n => n;
+exports.safe_call_bad = f => {
+    try {
+        f(1.5);
+        return 'no throw';
+    } catch (e) {
+        return e.message;
+    }
+};
+
+exports.safe_js_rejects = () => {
+    const unsigned = /expected a non-negative safe integer/;
+    const signed = /expected a safe integer/;
+    for (const bad of [2 ** 53, 1.5, -1, NaN, Infinity]) {
+        assert.throws(() => wasm.safe_u64_rust_identity(bad), unsigned);
+        assert.throws(() => wasm.safe_returns_rust(bad), unsigned);
+    }
+    assert.strictEqual(wasm.safe_u64_rust_identity(Number.MAX_SAFE_INTEGER), Number.MAX_SAFE_INTEGER);
+    assert.throws(() => wasm.safe_i64_rust_identity(-(2 ** 53)), signed);
+    assert.throws(() => wasm.safe_opt_rust_identity(0.5), signed);
+    assert.throws(() => wasm.safe_slice_doubled([1, 1.5]), unsigned);
+    // The instance is still usable after each rejection.
+    assert.deepStrictEqual(wasm.safe_slice_doubled([1, 2]), new Float64Array([2, 4]));
+};
 
 exports.safe_js_works = () => {
     for (const value of [0, 1, Number.MAX_SAFE_INTEGER]) {

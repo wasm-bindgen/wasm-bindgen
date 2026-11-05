@@ -419,6 +419,7 @@ fn experimental_generic_mono_catch_ok_path() {
     assert_eq!(try_get::<u32>(3).unwrap(), 6);
     assert_eq!(try_get::<f64>(4).unwrap(), 8.0);
     assert_eq!(try_get_string::<String>(7).unwrap(), "v7");
+    assert_eq!(try_get::<SafeInteger<u64>>(4).unwrap(), 8);
 }
 
 #[wasm_bindgen_test]
@@ -431,6 +432,8 @@ fn experimental_generic_mono_catch_throw_path() {
     );
 
     assert!(try_get_string::<String>(0).is_err());
+    // A returned value the `Ok` type rejects is an `Err` too.
+    assert!(try_get_string::<SafeInteger<u64>>(7).is_err());
 
     // The exception slot must be cleared, so a subsequent call still succeeds.
     assert_eq!(try_get::<u32>(5).unwrap(), 10);

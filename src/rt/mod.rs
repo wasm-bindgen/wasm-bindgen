@@ -1001,6 +1001,13 @@ pub unsafe extern "C" fn __wbindgen_exn_store(idx: u32) {
     GLOBAL_EXNDATA.0.set([1, idx]);
 }
 
+/// Converts a `catch` import's return value, reporting a value that the
+/// return type rejects as an `Err` rather than throwing through the caller.
+#[inline]
+pub unsafe fn try_from_abi_or_err<T: FromWasmAbi, E: From<JsValue>>(js: T::Abi) -> Result<T, E> {
+    T::try_from_abi(js).map_err(|msg| E::from(JsValue::from(crate::JsError::new(msg))))
+}
+
 pub fn take_last_exception() -> Result<(), super::JsValue> {
     let ret = if GLOBAL_EXNDATA.0.get()[0] == 1 {
         Err(super::JsValue::_new(GLOBAL_EXNDATA.0.get()[1]))

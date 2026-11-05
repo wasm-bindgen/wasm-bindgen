@@ -19,8 +19,10 @@ extern "C" {
 ```
 
 If calling the imported function throws an exception, then `Err` will be
-returned with the exception that was raised. Otherwise, `Ok` is returned with
-the result of the function.
+returned with the exception that was raised. If the function returns a value
+that the `Ok` type rejects, such as an invalid enum discriminant or a
+`SafeInteger` that is out of range, `Err` is returned with an `Error`
+describing it. Otherwise, `Ok` is returned with the result of the function.
 
 An import returning a `js_sys::Promise<T>` may instead keep its `Promise`
 return. A synchronous throw is then returned as a rejected promise, so it

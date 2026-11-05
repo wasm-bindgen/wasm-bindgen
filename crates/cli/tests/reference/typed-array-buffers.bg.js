@@ -74,6 +74,10 @@ export function strings(input) {
     wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
     return v2;
 }
+export function __wbg_Error_208446807d0d1e30(arg0, arg1) {
+    const ret = Error(getStringFromWasm0(arg0, arg1));
+    return ret;
+}
 export function __wbg___wbindgen_debug_string_f249a2a76caa9a55(arg0, arg1) {
     const ret = debugString(arg1);
     const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
