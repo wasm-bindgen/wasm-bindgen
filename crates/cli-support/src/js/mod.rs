@@ -20,6 +20,7 @@ use binding::TsReference;
 use std::borrow::Cow;
 use std::collections::btree_map::Entry;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::env;
 use std::fmt::Write;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -4728,7 +4729,14 @@ if (require('worker_threads').isMainThread) {{
     /// All or nothing, so empty if any used snippet may import: one file left behind
     /// fails startup anyway, and a module reached both through a `data:` URL
     /// and through a sibling's relative import would load twice.
+    ///
+    /// `WASM_BINDGEN_NO_EMBED_SNIPPETS` turns it off, as an environment variable
+    /// because `emcc` runs wasm-bindgen with a fixed command. Output that serves
+    /// `snippets/` itself may need that under a CSP that forbids `data:`.
     fn emscripten_embedded_snippets(&self) -> HashMap<String, String> {
+        if env::var_os("WASM_BINDGEN_NO_EMBED_SNIPPETS").is_some() {
+            return HashMap::new();
+        }
         let inline = self.aux.snippets.iter().flat_map(|(id, list)| {
             let names = (0..).map(|i| self.config.inline_js_module_name(id, i));
             names.zip(list)

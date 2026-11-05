@@ -151,6 +151,8 @@ uplift it, so consume from there or copy it next to the `.js`.
 A strict `script-src` Content Security Policy must allow `data:`. workerd can't
 load `data:` modules directly, so bundle first: esbuild inlines them. Bun 1.3.4
 can't load `data:` URLs over about 1.5 KB, which is a snippet over about 1.1 KB.
+If output can't use `data:` URLs and `snippets/` is served beside it, set
+`WASM_BINDGEN_NO_EMBED_SNIPPETS` for the build to turn embedding off.
 
 ### Linking as a static library
 
