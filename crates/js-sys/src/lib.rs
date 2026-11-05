@@ -5123,6 +5123,54 @@ impl<F: JsFunction> Function<F> {
     }
 }
 
+impl<F, C> From<ScopedClosure<'static, C>> for Function<F>
+where
+    F: JsFunction + FunctionIntoClosure,
+    C: WasmClosure + ?Sized,
+    <F as FunctionIntoClosure>::ClosureTypeMut: UpcastFrom<<C as WasmClosure>::AsMut>,
+{
+    /// See [`Function::from_closure`].
+    fn from(closure: ScopedClosure<'static, C>) -> Self {
+        Function::from_closure(closure)
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<F: FunctionIntoClosure> Function<F> {
+    /// A typed JavaScript Function backed by a Rust closure, whose argument
+    /// types are inferred from `F`:
+    /// `Function::<fn(String) -> bool>::from_fn(|s| s.is_empty())`.
+    ///
+    /// Like [`Function::from_closure`], ownership of the closure passes to
+    /// JS.
+    #[inline]
+    pub fn from_fn<C>(f: C) -> Self
+    where
+        C: wasm_bindgen::closure::IntoWasmClosure<F::ClosureTypeMut>
+            + wasm_bindgen::__rt::marker::MaybeUnwindSafe
+            + 'static,
+    {
+        ScopedClosure::<'static, F::ClosureTypeMut>::new(f)
+            .into_js_value()
+            .unchecked_into()
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<F: FunctionIntoClosure> Function<F> {
+    /// A typed JavaScript Function backed by a Rust `FnOnce`, whose argument
+    /// types are inferred from `F` as for [`Function::from_fn`]. Calling it a
+    /// second time throws.
+    #[inline]
+    pub fn once<C, A, R>(f: C) -> Self
+    where
+        C: wasm_bindgen::closure::WasmClosureFnOnce<F::ClosureTypeMut, A, R>
+            + wasm_bindgen::__rt::marker::MaybeUnwindSafe,
+    {
+        ScopedClosure::<'static, F::ClosureTypeMut>::once_into_js(f).unchecked_into()
+    }
+}
+
 #[cfg(not(js_sys_unstable_apis))]
 impl Function {
     /// Returns the `Function` value of this JS value if it's an instance of a
