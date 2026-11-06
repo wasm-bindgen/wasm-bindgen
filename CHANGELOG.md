@@ -26,8 +26,9 @@
 
 ### Changed
 
-* Awaiting a `js_sys::Promise<T, E>` whose fulfilled value `T` rejects, such
-  as an invalid enum discriminant, yields `Err` instead of never resolving.
+* Awaiting a `js_sys::Promise<T, E>` whose fulfilled value fails to convert
+  to `T`, such as an invalid enum discriminant, yields `Err` instead of never
+  resolving.
   [#5456](https://github.com/wasm-bindgen/wasm-bindgen/pull/5456)
 
 * Awaiting a `js_sys::Promise<T, E>` converts the rejection reason through
