@@ -599,16 +599,7 @@ impl Bindgen {
         // Generate Wasm catch wrappers for imports with #[wasm_bindgen(catch)].
         // This runs after externref processing so that we have access to the
         // externref table and allocation function.
-        //
-        // Emscripten output may contain wasm exception-handling instructions
-        // from linked libc++ / embind that have no relation to wasm-bindgen's
-        // `#[wasm_bindgen(catch)]` machinery, and the wasm-bindgen runtime
-        // intrinsics (`__externref_table`, `__externref_table_alloc`,
-        // `__wbindgen_exn_store`) may be absent. Skip the transform until
-        // proper emscripten-mode catch support lands.
-        if !matches!(self.mode, OutputMode::Emscripten) {
-            run_exception_handling_transforms(&mut module, eh_version)?;
-        }
+        run_exception_handling_transforms(&mut module, eh_version, self.mode.emscripten())?;
 
         // We've done a whole bunch of transformations to the Wasm module, many
         // of which leave "garbage" lying around, so let's prune out all our
@@ -1050,6 +1041,7 @@ fn run_jspi_transform(
 fn run_exception_handling_transforms(
     module: &mut Module,
     eh_version: transforms::ExceptionHandlingVersion,
+    emscripten: bool,
 ) -> Result<(), Error> {
     log::debug!("Exception handling version: {eh_version:?}");
 
@@ -1075,7 +1067,7 @@ fn run_exception_handling_transforms(
         aux.exn_store
     );
 
-    let result = transforms::catch_handler::run(module, &mut aux, &wit, eh_version)
+    let result = transforms::catch_handler::run(module, &mut aux, &wit, eh_version, emscripten)
         .context("failed to generate catch wrappers");
     if result.is_ok() {
         transforms::export_sp_restore::run(module, &wit, eh_version);

@@ -164,6 +164,11 @@ pub struct Context<'a> {
     /// If exception handling / unwinding is enabled.
     unwind_enabled: bool,
 
+    /// Polyfill `WebAssembly.JSTag` with a plain tag, with every import wrapped
+    /// in `wrapError` to rethrow against it. The polyfill is compatibility code
+    /// for Node 20, remove when we drop Node 20 support.
+    jstag_polyfill: bool,
+
     /// Whether reinit machinery should be emitted. True when `schedule_reinit()`
     /// is used (auto-detected via the `__wbindgen_reinit` intrinsic) or when
     /// `--experimental-reset-state-function` is passed. Controls instance-id
@@ -363,6 +368,8 @@ impl<'a> Context<'a> {
             config,
             threads_enabled: threads_xform::is_enabled(module),
             unwind_enabled: has_local_exception_tags(module),
+            jstag_polyfill: aux.legacy_exception_handling
+                && !matches!(config.mode, OutputMode::Emscripten),
             // Emscripten owns instantiation, so the instance cannot be reset
             // from the bindgen glue; reinit requests are no-ops there.
             generate_reinit: !matches!(config.mode, OutputMode::Emscripten)
@@ -2498,16 +2505,7 @@ if (require('worker_threads').isMainThread) {{
             "{}(ptr, 0)",
             self.wasm_export_ref(&wasm_bindgen_shared::free_function(qualified))
         );
-        free = binding::maybe_wrap_export_call(
-            &free,
-            if self.aux.wrapped_js_tag.is_some() {
-                binding::ExportGuard::Abort
-            } else if self.generate_reinit {
-                binding::ExportGuard::GuardOnly
-            } else {
-                binding::ExportGuard::None
-            },
-        );
+        free = binding::maybe_wrap_export_call(&free, self.export_guard());
         let destroy_body = if participates {
             let mut body = String::new();
             body.push_str("const ptr = this.__wbg_ptr;\n");
@@ -4517,15 +4515,10 @@ if (require('worker_threads').isMainThread) {{
             "PanicError".into(),
             {
                 if matches!(self.config.mode, OutputMode::Emscripten) {
-                    "addToLibrary({
-                    $PanicError: function(message) {
-                        class PanicError extends Error {}
-                        Object.defineProperty(PanicError.prototype, 'name', {
-                            value: 'PanicError',
-                        });
-                        return new PanicError(message);
-                    }
-                });\n"
+                    "addToLibrary({\n    \
+                        $PanicError: '=class PanicError extends Error {}',\n    \
+                        $PanicError__postset: \"Object.defineProperty(PanicError.prototype, 'name', { value: 'PanicError' });\",\n\
+                    });\n"
                         .into()
                 } else {
                     "class PanicError extends Error {}
@@ -5117,15 +5110,14 @@ if (require('worker_threads').isMainThread) {{
         };
 
         if matches!(self.config.mode, OutputMode::Emscripten) {
-            if self.aux.legacy_exception_handling {
-                self.emscripten_library.push_str(
-                    "addToLibrary({\n  __wbindgen_jstag: \"(globalThis.__wbindgen_jstag = new WebAssembly.Tag({ parameters: ['externref'] }))\",\n});\n",
-                );
-            } else {
-                self.emscripten_library
-                    .push_str("addToLibrary({\n  __wbindgen_jstag: \"WebAssembly.JSTag\",\n});\n");
-            }
-        } else if self.aux.legacy_exception_handling {
+            // We don't support Emscripten + unwinding + Node 20.
+            assert!(
+                !self.jstag_polyfill,
+                "jstag_polyfill not supported with Emscripten"
+            );
+            self.emscripten_library
+                .push_str("addToLibrary({\n  __wbindgen_jstag: \"WebAssembly.JSTag\",\n});\n");
+        } else if self.jstag_polyfill {
             self.global(
                 "const __wbindgen_jstag_polyfill = new WebAssembly.Tag({ parameters: ['externref'] });",
             );
@@ -5161,22 +5153,12 @@ if (require('worker_threads').isMainThread) {{
 
         if matches!(self.config.mode, OutputMode::Emscripten) {
             self.emscripten_library.push_str(
-                r#"
-addToLibrary({
-    __wbindgen_wrapped_jstag: "(globalThis.__wbindgen_wrapped_jstag = new WebAssembly.Tag({ parameters: ['externref'] }))",
-
-    __wbindgen_wrapped_jstag__postset: `
-        function __wbg_call_guard() {}
-
-        function __wbg_handle_catch(e) {
-            if (e instanceof WebAssembly.Exception && e.is(globalThis.__wbindgen_wrapped_jstag)) {
-                throw e.getArg(globalThis.__wbindgen_wrapped_jstag, 0);
-            }
-            throw e;
-        }
-    `
-});
-"#);
+                "addToLibrary({\n  \
+                   $__wbindgen_wrapped_jstag: \"new WebAssembly.Tag({ parameters: ['externref'] })\",\n  \
+                   __wbindgen_wrapped_jstag: \"=__wbindgen_wrapped_jstag\",\n  \
+                   __wbindgen_wrapped_jstag__deps: ['$__wbindgen_wrapped_jstag'],\n\
+                 });\n",
+            );
             return Ok(());
         }
 
@@ -5233,6 +5215,45 @@ addToLibrary({
         );
     }
 
+    /// How calls into wasm exports are wrapped against instance termination.
+    pub(crate) fn export_guard(&self) -> binding::ExportGuard {
+        let emscripten = matches!(self.config.mode, OutputMode::Emscripten);
+        let catch = self.aux.wrapped_js_tag.is_some();
+        binding::ExportGuard {
+            call_guard: (catch && !emscripten) || self.generate_reinit,
+            catch,
+        }
+    }
+
+    /// Record for Emscripten that the adapter references `__wbindgen_wrapped_jstag`.
+    fn register_wrapped_jstag_dep(&mut self) {
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            self.adapter_deps
+                .insert("__wbindgen_wrapped_jstag".to_string());
+        }
+    }
+
+    /// Emscripten flavour of `maybe_generate_call_guard`. On termination, we
+    /// call Emscripten's abort. We don't need any of wasm-bindgen's runtime
+    /// support for termination.
+    fn generate_emscripten_call_guard(&mut self) -> Result<(), Error> {
+        if self.aux.wrapped_js_tag.is_none() {
+            return Ok(());
+        }
+        let library = "addToLibrary({
+    $__wbg_handle_catch__deps: ['$__wbindgen_wrapped_jstag'],
+    $__wbg_handle_catch: function(e) {
+        if (e instanceof WebAssembly.Exception && e.is(__wbindgen_wrapped_jstag)) {
+            throw e.getArg(__wbindgen_wrapped_jstag, 0);
+        }
+        abort(e);
+    },
+});
+";
+        self.intrinsic("__wbg_handle_catch".into(), None, library.into(), &[]);
+        Ok(())
+    }
+
     /// Emit a `__wbg_call_guard`, handling hard aborts and reinitialization
     /// - Hard aborts are emitted when we are using js exception tagging.
     /// - For reinitialization, checks __wbg_reinit_scheduled.
@@ -5241,6 +5262,10 @@ addToLibrary({
         // No call guard needed when we dont have hard aborts or reinit
         if self.aux.wrapped_js_tag.is_none() && !self.generate_reinit {
             return Ok(());
+        }
+
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            return self.generate_emscripten_call_guard();
         }
 
         let mut termination_guard = String::from("function __wbg_call_guard() {");
@@ -5365,8 +5390,7 @@ addToLibrary({
         // (a clone of an empty set).
         let adapter_deps_before = self.adapter_deps.clone();
         let catch = self.aux.imports_with_catch.contains(&id);
-        let needs_jstag_wrap =
-            self.aux.legacy_exception_handling && matches!(kind, ContextAdapterKind::Import(_));
+        let needs_jstag_wrap = self.jstag_polyfill && matches!(kind, ContextAdapterKind::Import(_));
         // Compute before builder borrows self mutably.
         let is_suspending = matches!(kind, ContextAdapterKind::Import(_))
             && self.aux.imports_with_suspending.contains(&id);
@@ -5703,7 +5727,7 @@ addToLibrary({
                 // JSTag polyfill: when running on Node 20, wrap each import in a JS try/catch that re-throws via a
                 // `new WebAssembly.Exception(__wbindgen_jstag, [e])` against
                 // the polyfilled tag
-                let code = if self.aux.legacy_exception_handling {
+                let code = if self.jstag_polyfill {
                     self.expose_wrap_error();
                     format!("() {{ return wrapError(function {code}, arguments); }}")
                 } else {
@@ -6577,6 +6601,7 @@ addToLibrary({
             Intrinsic::Throw => {
                 assert_eq!(args.len(), 1);
                 if self.aux.wrapped_js_tag.is_some() {
+                    self.register_wrapped_jstag_dep();
                     format!(
                         "throw new WebAssembly.Exception(__wbindgen_wrapped_jstag, [new Error({})])",
                         args[0]
@@ -6589,6 +6614,7 @@ addToLibrary({
             Intrinsic::Rethrow => {
                 assert_eq!(args.len(), 1);
                 if self.aux.wrapped_js_tag.is_some() {
+                    self.register_wrapped_jstag_dep();
                     format!(
                         "throw new WebAssembly.Exception(__wbindgen_wrapped_jstag, [{}])",
                         args[0]

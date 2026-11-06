@@ -973,6 +973,9 @@ pub static mut __abort_handler: fn() = NO_OP_PTR;
 /// builds. On `panic=abort` builds the abort machinery is only emitted when
 /// `wasm-bindgen` is run with `--force-enable-abort-handler`; without that flag
 /// the handler is registered but never fires.
+///
+/// On Emscripten the handler never fires. Use Emscripten's `Module.onAbort`
+/// callback instead.
 pub fn set_on_abort(f: fn()) -> Option<fn()> {
     let prev = unsafe { __abort_handler };
     unsafe {

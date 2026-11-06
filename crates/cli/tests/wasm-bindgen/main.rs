@@ -3664,21 +3664,13 @@ fn emscripten_jspi_codegen() {
     );
 }
 
-/// End-to-end emscripten build as a user would do it: a bin crate built with
-/// `cargo build --target wasm32-unknown-emscripten` and `-sWASM_BINDGEN`, so
-/// emcc links via wasm-ld, runs this workspace's `wasm-bindgen` CLI from
-/// `PATH` as a post-link step and integrates the bindings into its output,
-/// which node then exercises. Needs emcc >= 6.0.10 on `PATH`; skipped
-/// otherwise (CI runs it in the emscripten job).
-///
-/// The `experimental_tokio` export is the runtime coverage for the tokio
-/// attribute: the harness in `tests/wasm32-emscripten` only checks the
-/// generated library. The tokio/mio `[patch]`es mirror the workspace ones.
-#[test]
-fn emscripten_end_to_end() {
+/// Whether an `emcc` recent enough for the `-sWASM_BINDGEN` post-link flow
+/// (>= 6.0.10) is on `PATH`. Prints a skip notice and returns `false` when
+/// there's no `emcc` at all; panics on one that's too old.
+fn require_emcc(test: &str) -> bool {
     let Some(emcc) = which("emcc") else {
-        eprintln!("skipping emscripten_end_to_end: `emcc` not found on PATH");
-        return;
+        eprintln!("skipping {test}: `emcc` not found on PATH");
+        return false;
     };
     let version = Command::new(&emcc).arg("--version").output().unwrap();
     let version = String::from_utf8_lossy(&version.stdout);
@@ -3696,9 +3688,40 @@ fn emscripten_end_to_end() {
         .unwrap_or_else(|| panic!("could not parse emcc version from {version:?}"));
     assert!(
         (major, minor, patch) >= (6, 0, 10),
-        "emscripten_end_to_end needs emcc >= 6.0.10 for the -sWASM_BINDGEN post-link \
-         flow, found {major}.{minor}.{patch}"
+        "{test} needs emcc >= 6.0.10 for the -sWASM_BINDGEN post-link flow, found \
+         {major}.{minor}.{patch}"
     );
+    true
+}
+
+/// `PATH` with this workspace's `wasm-bindgen` CLI first, for emcc's
+/// `-sWASM_BINDGEN` post-link step to resolve.
+fn path_with_workspace_cli() -> std::ffi::OsString {
+    let cli_dir = Path::new(env!("CARGO_BIN_EXE_wasm-bindgen"))
+        .parent()
+        .unwrap();
+    env::join_paths(
+        std::iter::once(cli_dir.to_path_buf())
+            .chain(env::split_paths(&env::var_os("PATH").unwrap_or_default())),
+    )
+    .unwrap()
+}
+
+/// End-to-end emscripten build as a user would do it: a bin crate built with
+/// `cargo build --target wasm32-unknown-emscripten` and `-sWASM_BINDGEN`, so
+/// emcc links via wasm-ld, runs this workspace's `wasm-bindgen` CLI from
+/// `PATH` as a post-link step and integrates the bindings into its output,
+/// which node then exercises. Needs emcc >= 6.0.10 on `PATH`; skipped
+/// otherwise (CI runs it in the emscripten job).
+///
+/// The `experimental_tokio` export is the runtime coverage for the tokio
+/// attribute: the harness in `tests/wasm32-emscripten` only checks the
+/// generated library. The tokio/mio `[patch]`es mirror the workspace ones.
+#[test]
+fn emscripten_end_to_end() {
+    if !require_emcc("emscripten_end_to_end") {
+        return;
+    }
 
     let mut project = Project::new("emscripten_end_to_end");
     project.target("wasm32-unknown-emscripten");
@@ -3835,15 +3858,7 @@ fn emscripten_end_to_end() {
         );
 
     // emcc resolves `wasm-bindgen` from PATH: put this workspace's CLI first.
-    let cli_dir = Path::new(env!("CARGO_BIN_EXE_wasm-bindgen"))
-        .parent()
-        .unwrap();
-    let path = env::join_paths(
-        std::iter::once(cli_dir.to_path_buf())
-            .chain(env::split_paths(&env::var_os("PATH").unwrap_or_default())),
-    )
-    .unwrap();
-    project.cargo_cmd.env("PATH", path);
+    project.cargo_cmd.env("PATH", path_with_workspace_cli());
 
     let wasm = project.build();
     let js = wasm.with_extension("js");
@@ -3893,6 +3908,302 @@ fn emscripten_end_to_end() {
 
         console.log('ok');
         "#,
+    )
+    .unwrap();
+
+    Command::new("node")
+        .arg("run.mjs")
+        .current_dir(&out_dir)
+        .assert()
+        .success()
+        .stdout(str::contains("main ran"))
+        .stdout(str::contains("ok\n"));
+}
+
+/// `panic=unwind` across the wasm-bindgen boundary on emscripten, which is
+/// that target's default strategy (no `-Zbuild-std` needed). rustc links with
+/// `-fwasm-exceptions`, so panics are C++ exceptions in the legacy
+/// `try`/`catch` dialect; the CLI's catch wrappers and shadow-stack restore
+/// pass run on top of that. Exercises the same observable contract as the
+/// wasm32-unknown-unknown unwind tests: a panicking export throws a
+/// `PanicError` and the instance stays usable, `catch` imports work, a JS
+/// exception from a non-`catch` import propagates unchanged through Rust
+/// frames, and the shadow stack doesn't drift across escaping panics. A trap
+/// goes to Emscripten's own `abort()` (`Module.onAbort`, `ABORT`,
+/// `RuntimeError: Aborted(...)`) rather than wasm-bindgen's termination
+/// machinery.
+#[test]
+fn emscripten_end_to_end_unwind_legacy() {
+    emscripten_unwind_end_to_end("emscripten_end_to_end_unwind_legacy", EhDialect::Legacy);
+}
+
+/// The same contract with the standardized (`exnref`) exception-handling
+/// instructions, the way the guide describes: `-sWASM_LEGACY_EXCEPTIONS=0`
+/// switches emcc's system libraries, and `-Cllvm-args=-wasm-use-legacy-eh=0`
+/// plus a `-Zbuild-std` rebuild of `std` (the prebuilt one is legacy) do the
+/// same for the Rust side. The CLI then emits its wrappers as `try_table`.
+/// Skipped when there is no nightly with `rust-src`. The `node` on `PATH`
+/// must support `exnref` (Node 22.22.3+ / 24.15.0+); that isn't probed, so
+/// an older node fails the run step rather than skipping.
+#[test]
+fn emscripten_end_to_end_unwind_exnref() {
+    emscripten_unwind_end_to_end("emscripten_end_to_end_unwind_exnref", EhDialect::Exnref);
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum EhDialect {
+    Legacy,
+    Exnref,
+}
+
+/// Whether `rustup run nightly` resolves to a toolchain carrying `rust-src`
+/// (needed by `-Zbuild-std`).
+fn nightly_has_rust_src() -> bool {
+    let Ok(out) = Command::new("rustup")
+        .args(["run", "nightly", "rustc", "--print", "sysroot"])
+        .output()
+    else {
+        return false;
+    };
+    if !out.status.success() {
+        return false;
+    }
+    let sysroot = String::from_utf8_lossy(&out.stdout).trim().to_string();
+    Path::new(&sysroot)
+        .join("lib/rustlib/src/rust/library/std/Cargo.toml")
+        .is_file()
+}
+
+fn emscripten_unwind_end_to_end(name: &str, dialect: EhDialect) {
+    if !require_emcc(name) {
+        return;
+    }
+    if dialect == EhDialect::Exnref && !nightly_has_rust_src() {
+        eprintln!("skipping {name}: no nightly toolchain with `rust-src` for -Zbuild-std");
+        return;
+    }
+
+    let mut project = Project::new(name);
+    project.target("wasm32-unknown-emscripten");
+    let rustflags = match dialect {
+        // The documented `panic=unwind` configuration.
+        EhDialect::Legacy => "",
+        EhDialect::Exnref => {
+            r#""-Cllvm-args=-wasm-use-legacy-eh=0",
+              "-Clink-arg=-sWASM_LEGACY_EXCEPTIONS=0","#
+        }
+    };
+    project
+        .file(
+            "Cargo.toml",
+            &format!(
+                r#"
+                [package]
+                name = "{name}"
+                version = "0.0.0"
+                edition = "2021"
+
+                [dependencies]
+                wasm-bindgen = {{ path = "{root}" }}
+
+                [workspace]
+                "#,
+                root = REPO_ROOT.display(),
+            ),
+        )
+        .file(
+            ".cargo/config.toml",
+            &format!(
+                r#"
+            [target.wasm32-unknown-emscripten]
+            rustflags = [
+              {rustflags}
+              "-Crelocation-model=static",
+              "-Clink-arg=-sWASM_BINDGEN",
+              "-Clink-arg=-Wno-experimental",
+              "-Clink-arg=-sMODULARIZE",
+              "-Clink-arg=-sEXPORT_ES6",
+            ]
+            "#
+            ),
+        )
+        .file(
+            "src/main.rs",
+            r#"
+            use wasm_bindgen::prelude::*;
+
+            #[wasm_bindgen]
+            extern "C" {
+                #[wasm_bindgen(catch, js_name = "jsThrows")]
+                fn js_throws() -> Result<(), JsValue>;
+                #[wasm_bindgen(js_name = "jsThrowsNoCatch")]
+                fn js_throws_no_catch();
+            }
+
+            #[wasm_bindgen]
+            pub fn maybe_panic(x: u32) -> u32 {
+                if x == 0 {
+                    panic!("boom");
+                }
+                x + 1
+            }
+
+            #[wasm_bindgen]
+            pub fn call_catch() -> String {
+                match js_throws() {
+                    Ok(()) => "ok".to_string(),
+                    Err(e) => e.as_string().unwrap_or_else(|| format!("{e:?}")),
+                }
+            }
+
+            #[wasm_bindgen]
+            pub fn call_no_catch() {
+                js_throws_no_catch();
+            }
+
+            #[wasm_bindgen]
+            pub fn sp_now() -> u32 {
+                let x = 0u32;
+                std::hint::black_box(&x as *const u32 as u32)
+            }
+
+            #[wasm_bindgen]
+            pub fn sp_leak_panic(v: u32) {
+                let buf = [v; 64];
+                std::hint::black_box(&buf);
+                panic!("leak {}", buf[0]);
+            }
+
+            #[wasm_bindgen]
+            pub fn trap() {
+                std::arch::wasm32::unreachable()
+            }
+
+            #[wasm_bindgen]
+            pub struct Counter {
+                n: u32,
+            }
+
+            #[wasm_bindgen]
+            impl Counter {
+                #[wasm_bindgen(constructor)]
+                pub fn new(n: u32) -> Counter {
+                    Counter { n }
+                }
+
+                pub fn incr(&mut self) -> u32 {
+                    self.n += 1;
+                    self.n
+                }
+            }
+
+            fn main() {
+                println!("main ran");
+            }
+            "#,
+        );
+
+    project.cargo_cmd.env("PATH", path_with_workspace_cli());
+    if dialect == EhDialect::Exnref {
+        project
+            .cargo_cmd
+            .env("RUSTUP_TOOLCHAIN", "nightly")
+            .arg("-Zbuild-std=std,panic_unwind");
+    }
+
+    let wasm = project.build();
+    let js = wasm.with_extension("js");
+    assert!(js.is_file(), "emcc should emit {}", js.display());
+
+    // The transformed module is entirely in the requested dialect and carries
+    // the catch wrappers and shadow-stack wrappers.
+    let bytes = fs::read(&wasm).unwrap();
+    let wat = wasmprinter::print_bytes(&bytes).unwrap();
+    let (has_legacy, has_modern) = (wat.contains(" try "), wat.contains("try_table"));
+    match dialect {
+        EhDialect::Legacy => {
+            assert!(has_legacy, "module should use legacy EH");
+            assert!(!has_modern, "legacy module must not contain `try_table`");
+        }
+        EhDialect::Exnref => {
+            assert!(has_modern, "module should use exnref EH");
+            assert!(!has_legacy, "exnref module must not contain legacy `try`");
+        }
+    }
+    assert!(
+        wat.contains("catch wrapper"),
+        "imports should be wrapped by the catch-handler pass"
+    );
+    assert!(
+        wat.contains("sp wrapper"),
+        "exports should be wrapped by the shadow-stack restore pass"
+    );
+
+    let out_dir = project.root.join("pkg");
+    fs::create_dir_all(&out_dir).unwrap();
+    fs::copy(&js, out_dir.join(format!("{name}.js"))).unwrap();
+    fs::copy(&wasm, out_dir.join(format!("{name}.wasm"))).unwrap();
+    fs::write(out_dir.join("package.json"), r#"{ "type": "module" }"#).unwrap();
+    fs::write(
+        out_dir.join("run.mjs"),
+        format!(
+            r#"
+        import Module from './{name}.js';
+        const assert = (c, msg) => {{ if (!c) throw new Error('assertion failed: ' + msg); }};
+
+        globalThis.jsThrows = () => {{ throw new Error('from js'); }};
+        globalThis.jsThrowsNoCatch = () => {{ throw new TypeError('no catch'); }};
+        let aborts = [];
+
+        // Silence the panic message the Rust default hook prints.
+        const m = await Module({{ printErr() {{}}, onAbort(what) {{ aborts.push(what); }} }});
+
+        assert(m.maybe_panic(1) === 2, 'plain call');
+
+        // A panic becomes a PanicError and the instance survives.
+        let err;
+        try {{ m.maybe_panic(0); }} catch (e) {{ err = e; }}
+        assert(err instanceof Error, 'panic throws an Error');
+        assert(err.name === 'PanicError', `panic error name ${{err.name}}`);
+        assert(err.message === 'boom', `panic message ${{err.message}}`);
+        assert(m.maybe_panic(41) === 42, 'instance usable after panic');
+        let err2;
+        try {{ m.maybe_panic(0); }} catch (e) {{ err2 = e; }}
+        assert(Object.getPrototypeOf(err2) === Object.getPrototypeOf(err), 'one PanicError class');
+
+        // `catch` imports hand the JS exception to Rust as an Err.
+        assert(m.call_catch() === 'Error: from js' || m.call_catch().includes('from js'), 'catch import');
+
+        // A non-`catch` import's exception propagates through Rust unchanged.
+        let passthrough;
+        try {{ m.call_no_catch(); }} catch (e) {{ passthrough = e; }}
+        assert(passthrough instanceof TypeError && passthrough.message === 'no catch', 'js exception passthrough');
+
+        // Escaping panics don't leak shadow-stack frames.
+        const sp0 = m.sp_now();
+        for (let i = 0; i < 64; i++) {{
+            try {{ m.sp_leak_panic(i); }} catch (e) {{ assert(e.name === 'PanicError', 'leak panic'); }}
+        }}
+        assert(m.sp_now() === sp0, `shadow stack drifted by ${{m.sp_now() - sp0}}`);
+
+        // Class methods go through the same guard.
+        const c = new m.Counter(41);
+        assert(c.incr() === 42, 'Counter.incr');
+
+        // A trap is handed to Emscripten's abort(): Module.onAbort sees the
+        // original RuntimeError, and abort() then re-traps through the
+        // module's `__trap` export (a real trap, which no wasm `catch_all`
+        // on the way out can swallow) so the caller gets a RuntimeError.
+        assert(aborts.length === 0, 'no abort so far');
+        let trap;
+        try {{ m.trap(); }} catch (e) {{ trap = e; }}
+        assert(trap instanceof WebAssembly.RuntimeError, `abort surfaces as RuntimeError, got ${{trap}}`);
+        assert(aborts.length === 1, `onAbort calls ${{aborts.length}}`);
+        assert(aborts[0] instanceof WebAssembly.RuntimeError && /unreachable/.test(aborts[0].message), `onAbort gets the trap, got ${{aborts[0]}}`);
+
+        console.log('ok');
+        "#
+        ),
     )
     .unwrap();
 
