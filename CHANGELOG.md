@@ -21,6 +21,13 @@
   `async` imports and `experimental_generic_mono` generics. The safe integer range is checked under debug assertions.
   [#5455](https://github.com/wasm-bindgen/wasm-bindgen/pull/5455)
 
+* `panic=unwind` is now supported across the `wasm-bindgen` boundary on
+  Emscripten, including legacy eh and `exnref` eh. panics reaching an export or
+  closure are thrown to JavaScript as `PanicError` with the shadow stack
+  restored and `#[wasm_bindgen(catch)]` imports work. If a fatal error escapes
+  an export, we call Emscripten's `abort()`.
+  [#5457](https://github.com/wasm-bindgen/wasm-bindgen/pull/5457)
+
 ### Changed
 
 * Awaiting a `js_sys::Promise<T, E>` converts the rejection reason through

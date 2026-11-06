@@ -28,6 +28,12 @@ is rejected with the `PanicError`.
   Node.js 18 is not supported on this path because its V8 10.2 has
   unrelated funcref interop bugs that affect the wasm-bindgen runtime.
 
+> On `wasm32-unknown-emscripten`, `panic=unwind` is the default and `std` is
+> prebuilt for it, so no nightly toolchain or `-Zbuild-std` is required there.
+> Emscripten emits the legacy EH dialect by default; exnref is available with
+> `-sWASM_LEGACY_EXCEPTIONS=0` plus a `-Zbuild-std` rebuild. See
+> [Emscripten](emscripten.md#panics).
+
 ## Building
 
 Build your project with the required flags:
