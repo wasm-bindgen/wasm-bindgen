@@ -141,7 +141,7 @@ struct Inner<T = JsValue, E = JsValue> {
     result: Option<Result<T, E>>,
     task: Option<Waker>,
     callbacks: Option<(
-        Closure<dyn FnMut(T) -> Result<(), JsError>>,
+        Closure<dyn FnMut(TryArg<T>) -> Result<(), JsError>>,
         Closure<dyn FnMut(JsValue) -> Result<(), JsError>>,
     )>,
 }
@@ -154,9 +154,10 @@ struct Inner<T = JsValue, E = JsValue> {
 /// with the JavaScript `Promise`.
 ///
 /// A `JsFuture<T, E>` built from a `Promise<T, E>` resolves to
-/// `Result<T, E>`. The fulfilled value is converted as a `T`, unchecked, as
-/// any declared return is. The rejection reason is whatever JS threw, so it
-/// converts through `E: From<JsValue>`, as a `catch` import's error does.
+/// `Result<T, E>`. The fulfilled value is converted as a `T`, and one that
+/// `T` rejects, such as an invalid enum discriminant, resolves to `Err`. The
+/// rejection reason is whatever JS threw, so it converts through
+/// `E: From<JsValue>`, as a `catch` import's error does.
 ///
 /// Currently this type is constructed with `JsFuture::from`.
 pub struct JsFuture<T = JsValue, E = JsValue> {
@@ -183,6 +184,27 @@ where
 impl<T, E> fmt::Debug for JsFuture<T, E> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "JsFuture {{ ... }}")
+    }
+}
+
+// A fulfilled value that `T` rejects would otherwise throw from the `resolve`
+// shim before it runs, which only rejects the promise `then` returns and
+// leaves the future pending. Carrying the conversion result into the closure
+// lets `resolve` settle the future with `Err` instead.
+struct TryArg<T>(Result<T, &'static str>);
+
+impl<T: wasm_bindgen::describe::WasmDescribe> wasm_bindgen::describe::WasmDescribe for TryArg<T> {
+    fn describe() {
+        T::describe()
+    }
+}
+
+impl<T: FromWasmAbi> FromWasmAbi for TryArg<T> {
+    type Abi = T::Abi;
+
+    #[inline]
+    unsafe fn from_abi(js: T::Abi) -> Self {
+        TryArg(T::try_from_abi(js))
     }
 }
 
@@ -240,8 +262,11 @@ impl<T: FromWasmAbi + 'static, E: From<JsValue> + 'static> From<Promise<T, E>> f
 
         let resolve = {
             let state = AssertUnwindSafe(state.clone());
-            Closure::once(move |val: T| {
-                finish(&*state, Ok(val));
+            Closure::once(move |val: TryArg<T>| {
+                finish(
+                    &*state,
+                    val.0.map_err(|msg| E::from(JsError::new(msg).into())),
+                );
                 Ok(())
             })
         };
@@ -254,7 +279,7 @@ impl<T: FromWasmAbi + 'static, E: From<JsValue> + 'static> From<Promise<T, E>> f
             })
         };
 
-        let js: Promise<T> = js.unchecked_into();
+        let js: Promise<TryArg<T>> = js.unchecked_into();
         let _ = js.then_with_reject(&resolve, &reject);
 
         state.borrow_mut().callbacks = Some((resolve, reject));

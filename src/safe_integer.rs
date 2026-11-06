@@ -90,14 +90,17 @@ impl SafeIntegerPrimitive for i64 {}
 /// It derefs to the inner integer, so its methods are available directly,
 /// and compares and does arithmetic with both itself and the inner type.
 ///
-/// The value is expected to be within `±(2^53 - 1)` (`Number.MAX_SAFE_INTEGER`)
-/// and, for `u64`, non-negative, so that it is exactly representable as a JS
-/// `number`. Like the overflow checks on Rust's own integers, this is only
-/// checked with debug assertions enabled: constructing a value out of range,
-/// arithmetic leaving the range, or receiving a non-integer or out-of-range
-/// `number` from JS then panics. Without debug assertions an out-of-range
-/// value converts lossily, as an `as` cast would. [`SafeInteger::new`] and
-/// the `TryFrom<JsValue>` conversion always check.
+/// A safe integer is within `±(2^53 - 1)` (`Number.MAX_SAFE_INTEGER`) and, for
+/// `u64`, non-negative, so that it is exactly representable as a JS `number`.
+///
+/// A `number` passed into an export or a closure is always checked: one that
+/// is not a safe integer throws a JS error at the boundary, before any Rust
+/// code sees it. A value returned by an import is trusted to honour the
+/// declared type, as every import return is, and so are values built in
+/// Rust. Both are checked like the overflow checks on Rust's own integers,
+/// only with debug assertions enabled: an out-of-range value then panics,
+/// and without them converts lossily, as an `as` cast would.
+/// [`SafeInteger::new`] and the `TryFrom<JsValue>` conversion always check.
 ///
 /// `SafeInteger` is supported in every position its conversion is reached
 /// through: arguments and returns, `catch` results, `Option`, `Vec` and
@@ -157,7 +160,20 @@ impl<T: SafeIntegerPrimitive> SafeInteger<T> {
     }
 
     #[inline]
-    fn from_f64(n: f64) -> Self {
+    fn try_from_f64(n: f64) -> Result<Self, &'static str> {
+        if is_safe::<T>(n) {
+            Ok(SafeInteger(T::from_f64(n)))
+        } else if T::SIGNED {
+            Err("expected a safe integer")
+        } else {
+            Err("expected a non-negative safe integer")
+        }
+    }
+
+    // Import returns are trusted to honour the declared type, like any other
+    // import return, so they are only checked under debug assertions.
+    #[inline]
+    fn from_f64_trusted(n: f64) -> Self {
         debug_assert!(is_safe::<T>(n), "{n} is not a safe integer");
         SafeInteger(T::from_f64(n))
     }
@@ -306,7 +322,12 @@ impl<T: SafeIntegerPrimitive> FromWasmAbi for SafeInteger<T> {
 
     #[inline]
     unsafe fn from_abi(js: f64) -> Self {
-        Self::from_f64(js)
+        Self::from_f64_trusted(js)
+    }
+
+    #[inline]
+    unsafe fn try_from_abi(js: f64) -> Result<Self, &'static str> {
+        Self::try_from_f64(js)
     }
 }
 
@@ -338,7 +359,12 @@ impl<T: SafeIntegerPrimitive> MaybeFromWasmAbi for SafeInteger<T> {
 
     #[inline]
     unsafe fn from_maybe_abi(js: Self::MaybeAbi) -> Self {
-        Self::from_f64(f64::from_maybe_abi(js))
+        Self::from_f64_trusted(f64::from_maybe_abi(js))
+    }
+
+    #[inline]
+    unsafe fn try_from_maybe_abi(js: Self::MaybeAbi) -> Result<Self, &'static str> {
+        Self::try_from_f64(f64::from_maybe_abi(js))
     }
 
     #[inline]
@@ -431,10 +457,25 @@ impl<T: SafeIntegerPrimitive> VectorFromWasmAbi for SafeInteger<T> {
         let ptr = Box::into_raw(floats) as *mut f64;
         for i in 0..len {
             let elem = ptr.add(i);
-            let n = Self::from_f64(*elem);
+            let n = Self::from_f64_trusted(*elem);
             elem.cast::<Self>().write(n);
         }
         Box::from_raw(core::ptr::slice_from_raw_parts_mut(ptr.cast::<Self>(), len))
+    }
+
+    unsafe fn try_vector_from_abi(js: WasmSlice) -> Result<Box<[Self]>, &'static str> {
+        let mut floats = f64::vector_from_abi(js);
+        let len = floats.len();
+        let ptr = floats.as_mut_ptr();
+        for i in 0..len {
+            let elem = ptr.add(i);
+            // A rejected element drops `floats`, which still owns the
+            // allocation at `f64`'s identical layout.
+            let n = Self::try_from_f64(*elem)?;
+            elem.cast::<Self>().write(n);
+        }
+        let ptr = Box::into_raw(floats) as *mut Self;
+        Ok(Box::from_raw(core::ptr::slice_from_raw_parts_mut(ptr, len)))
     }
 }
 
@@ -446,6 +487,11 @@ impl<T: SafeIntegerPrimitive> RefFromWasmAbi for [SafeInteger<T>] {
     unsafe fn ref_from_abi(js: WasmSlice) -> Self::Anchor {
         <Box<[SafeInteger<T>]>>::from_abi(js)
     }
+
+    #[inline]
+    unsafe fn try_ref_from_abi(js: WasmSlice) -> Result<Self::Anchor, &'static str> {
+        <Box<[SafeInteger<T>]>>::try_from_abi(js)
+    }
 }
 
 impl<T: SafeIntegerPrimitive> LongRefFromWasmAbi for [SafeInteger<T>] {
@@ -455,6 +501,11 @@ impl<T: SafeIntegerPrimitive> LongRefFromWasmAbi for [SafeInteger<T>] {
     #[inline]
     unsafe fn long_ref_from_abi(js: WasmSlice) -> Self::Anchor {
         <Box<[SafeInteger<T>]>>::from_abi(js)
+    }
+
+    #[inline]
+    unsafe fn try_long_ref_from_abi(js: WasmSlice) -> Result<Self::Anchor, &'static str> {
+        <Box<[SafeInteger<T>]>>::try_from_abi(js)
     }
 }
 
@@ -501,12 +552,7 @@ impl<T: SafeIntegerPrimitive> PartialEq<SafeInteger<T>> for JsValue {
 impl<T: SafeIntegerPrimitive> TryFromJsValue for SafeInteger<T> {
     #[inline]
     fn try_from_js_value_ref(value: &JsValue) -> Option<Self> {
-        let n = value.as_f64()?;
-        if is_safe::<T>(n) {
-            Some(SafeInteger(T::from_f64(n)))
-        } else {
-            None
-        }
+        Self::try_from_f64(value.as_f64()?).ok()
     }
 }
 
