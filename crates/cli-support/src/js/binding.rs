@@ -237,45 +237,48 @@ pub enum TsReference {
     DynamicUnion(String),
 }
 
-/// Whether and how to guard an export call against instance termination.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ExportGuard {
-    /// No guard wrapping needed.
-    None,
-    /// Wrap with termination guard and try-catch for panic=abort with error handling.
-    Abort,
-    /// Wrap with just termination guard for schedule_reinit() support.
-    GuardOnly,
+/// How a call into a wasm export is wrapped against instance termination.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct ExportGuard {
+    /// Call `__wbg_call_guard()` first?
+    pub call_guard: bool,
+    /// Run the call inside `try { .. } catch(e) { __wbg_handle_catch(e) }`?
+    pub catch: bool,
 }
 
-fn wrap_try_catch(call: &str) -> String {
-    format!(
-        "\
-        __wbg_call_guard();
+impl ExportGuard {
+    pub const NONE: Self = Self {
+        call_guard: false,
+        catch: false,
+    };
+
+    pub fn is_none(self) -> bool {
+        self == Self::NONE
+    }
+}
+
+pub fn maybe_wrap_export_call(call: &str, guard: ExportGuard) -> String {
+    let mut out = String::new();
+    if guard.call_guard {
+        out.push_str("__wbg_call_guard();\n");
+    }
+    if guard.catch {
+        out.push_str(&format!(
+            "\
         try {{
             {call};
         }} catch(e) {{
             __wbg_handle_catch(e);
         }}
         "
-    )
-}
-
-fn wrap_call_guard(call: &str) -> String {
-    format!(
-        "\
-        __wbg_call_guard();
-        {call};
-        "
-    )
-}
-
-pub fn maybe_wrap_export_call(call: &str, guard: ExportGuard) -> String {
-    match guard {
-        ExportGuard::Abort => wrap_try_catch(call),
-        ExportGuard::GuardOnly => wrap_call_guard(call),
-        ExportGuard::None => format!("{call};"),
+        ));
+    } else {
+        out.push_str(&format!("{call};"));
+        if guard.call_guard {
+            out.push('\n');
+        }
     }
+    out
 }
 
 /// Sentinel used by the f64-ABI `Option` paths to represent `None`. Must not
@@ -1763,12 +1766,10 @@ fn instruction(
                 instr,
                 Instruction::CallExport(_) | Instruction::DeferFree { .. }
             );
-            let mut guard = if js.cx.aux.wrapped_js_tag.is_some() && is_export_call {
-                ExportGuard::Abort
-            } else if js.cx.generate_reinit && is_export_call {
-                ExportGuard::GuardOnly
+            let mut guard = if is_export_call {
+                js.cx.export_guard()
             } else {
-                ExportGuard::None
+                ExportGuard::NONE
             };
             let invoc = Invocation::from(instr, js.cx.module);
             let (mut params, results) = invoc.params_results(js.cx);
@@ -1851,7 +1852,7 @@ fn instruction(
                     } else {
                         ""
                     };
-                    let body = if matches!(guard, ExportGuard::None) {
+                    let body = if guard.is_none() {
                         format!("const ret = {maybe_await}{call};")
                     } else {
                         format!(
@@ -3228,7 +3229,7 @@ impl Invocation {
                     *log_error = false;
                 }
                 if cx.import_never_handle_error(import) {
-                    *guard = ExportGuard::None;
+                    *guard = ExportGuard::NONE;
                 }
                 // Label manufactured bindings whose name says nothing about what
                 // they bind. A `experimental_generic_mono` monomorphisation is emitted as

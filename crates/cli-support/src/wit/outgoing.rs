@@ -342,10 +342,21 @@ impl InstructionBuilder<'_, '_> {
         {
             return export.id();
         }
-        let name = match &module.funcs.get(func_id).name {
+        let base = match &module.funcs.get(func_id).name {
             Some(name) => to_valid_ident(name),
             None => format!("__wasm_bindgen_func_elem_{}", func_id.index()),
         };
+        // Distinct functions can share a demangled name: e.g. the closure
+        // `invoke` shim for `dyn Fn(u32) -> u32` and for `dyn FnMut(u32) ->
+        // u32` are different instantiations whose symbol names differ only
+        // in a hash the demangler drops. Export names must be unique, so
+        // suffix on collision.
+        let mut name = base.clone();
+        let mut n = 1;
+        while module.exports.iter().any(|e| e.name == name) {
+            n += 1;
+            name = format!("{base}_{n}");
+        }
         module.exports.add(&name, func_id)
     }
 
