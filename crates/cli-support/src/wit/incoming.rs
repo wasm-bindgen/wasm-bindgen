@@ -648,6 +648,36 @@ impl InstructionBuilder<'_, '_> {
         optional: bool,
         option_kind: OptionKind,
     ) -> Result<(), Error> {
+        if let Some(kind) = elem.typed_cell() {
+            let malloc = self.cx.malloc()?;
+            let free = self.cx.free()?;
+            let mem = self.cx.memory()?;
+            let ptr_ty = self.incoming_internal_word_ty();
+            let (ty, instr) = if optional {
+                (
+                    AdapterType::Vector(kind.clone()).option_kind(option_kind),
+                    Instruction::OptionVector {
+                        kind,
+                        malloc,
+                        free,
+                        mem,
+                        option_kind,
+                    },
+                )
+            } else {
+                (
+                    AdapterType::Vector(kind.clone()),
+                    Instruction::VectorToMemory {
+                        kind,
+                        malloc,
+                        free,
+                        mem,
+                    },
+                )
+            };
+            self.instruction(&[ty], instr, &[ptr_ty.clone(), ptr_ty]);
+            return Ok(());
+        }
         let mut encode = InstructionBuilder {
             input: Vec::new(),
             output: Vec::new(),

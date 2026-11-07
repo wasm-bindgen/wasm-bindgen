@@ -85,6 +85,9 @@ exports.safe_js_works = () => {
     assert.strictEqual(wasm.safe_opt_rust_identity(undefined), undefined);
     assert.deepStrictEqual(wasm.safe_slice_doubled([1, 2, 2 ** 51]), new Float64Array([2, 4, 2 ** 52]));
     assert.deepStrictEqual(wasm.safe_slice_doubled([]), new Float64Array());
+    assert.deepStrictEqual(wasm.safe_opt_vec_identity(new Float64Array([-1, 2 ** 52])), new Float64Array([-1, 2 ** 52]));
+    assert.deepStrictEqual(wasm.safe_opt_vec_identity([3]), new Float64Array([3]));
+    assert.strictEqual(wasm.safe_opt_vec_identity(undefined), undefined);
     assert.strictEqual(wasm.safe_catch_export(true), Number.MAX_SAFE_INTEGER);
     assert.throws(() => wasm.safe_catch_export(false), /not ok/);
 };
