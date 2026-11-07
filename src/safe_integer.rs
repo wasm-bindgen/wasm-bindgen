@@ -10,9 +10,13 @@ use crate::__rt::marker::ErasableGeneric;
 use crate::convert::{
     FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, MaybeFromWasmAbi, MaybeIntoWasmAbi,
     NullableFromWasmAbi, NullableIntoWasmAbi, RefFromWasmAbi, TryFromJsValue, UpcastFrom,
-    VectorFromWasmAbi, VectorIntoWasmAbi, WasmSlice,
+    WasmSlice,
 };
-use crate::describe::{inform, WasmDescribe, WasmDescribeVector, F64, VECTOR};
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
+use crate::convert::{VectorFromWasmAbi, VectorIntoWasmAbi};
+use crate::describe::{inform, WasmDescribe, F64};
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
+use crate::describe::{WasmDescribeVector, VECTOR};
 use crate::sys::{JsNullable, JsOption, Promising};
 use crate::{JsValue, Nullable};
 
@@ -387,7 +391,8 @@ impl<T: SafeIntegerPrimitive> NullableIntoWasmAbi for &SafeInteger<T> {
 
 // Vectors cross as `Float64Array`s. `SafeInteger<T>` has the size and
 // alignment of `f64`, so each element is converted in place and the
-// allocation is handed over as-is.
+// allocation is handed over as-is. Under `wasm_bindgen_unstable_generic_vec`,
+// they cross by the element's own ABI instead.
 const _: () = assert!(
     mem::size_of::<SafeInteger<u64>>() == mem::size_of::<f64>()
         && mem::align_of::<SafeInteger<u64>>() == mem::align_of::<f64>()
@@ -395,6 +400,7 @@ const _: () = assert!(
         && mem::align_of::<SafeInteger<i64>>() == mem::align_of::<f64>()
 );
 
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 impl<T: SafeIntegerPrimitive> WasmDescribeVector for SafeInteger<T> {
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe_vector() {
@@ -403,6 +409,7 @@ impl<T: SafeIntegerPrimitive> WasmDescribeVector for SafeInteger<T> {
     }
 }
 
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 impl<T: SafeIntegerPrimitive> VectorIntoWasmAbi for SafeInteger<T> {
     type Abi = WasmSlice;
 
@@ -422,6 +429,7 @@ impl<T: SafeIntegerPrimitive> VectorIntoWasmAbi for SafeInteger<T> {
     }
 }
 
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 impl<T: SafeIntegerPrimitive> VectorFromWasmAbi for SafeInteger<T> {
     type Abi = WasmSlice;
 
