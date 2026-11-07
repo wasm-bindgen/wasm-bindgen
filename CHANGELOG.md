@@ -49,6 +49,11 @@
   Optional arguments of async iterable declarations are now also supported,
   adding e.g. `ReadableStream::values_with_options()`.
 
+* The `entries()`, `keys()` and `values()` methods of WebIDL iterable, maplike
+  and setlike declarations are no longer skipped when their key or value type
+  is defined later. This adds the missing `XrHand::entries()` and
+  `XrHand::values()` in web-sys.
+
 ### Removed
 
 ## [0.2.130](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.129...0.2.130)

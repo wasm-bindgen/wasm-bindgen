@@ -22,8 +22,8 @@ use crate::first_pass::{
 };
 use crate::generator::{
     Const, Dictionary, DictionaryField, DictionaryFieldSetter, Enum, EnumVariant, Function,
-    Interface, InterfaceAttribute, InterfaceAttributeKind, InterfaceMethod, Namespace,
-    NamespaceAttribute, NamespaceAttributeKind,
+    Interface, InterfaceAttribute, InterfaceAttributeKind, InterfaceMethod, InterfaceMethodKind,
+    Namespace, NamespaceAttribute, NamespaceAttributeKind,
 };
 use crate::traverse::TraverseType;
 use crate::util::{
@@ -1106,10 +1106,25 @@ impl<'src> FirstPassRecord<'src> {
         // changing `undefined` to `PerformanceMark` for Performance.mark).
         mark_stable_methods_with_unstable_overrides(&mut methods);
 
-        // Add custom methods (e.g., maplike/setlike iterators)
+        // Add iterator methods of iterable/maplike/setlike declarations
         // Generator will produce both compat and non-compat output
-        for method in data.custom_methods.values() {
-            methods.push(method.clone());
+        for (name, method) in data.iterator_methods.iter() {
+            methods.push(InterfaceMethod {
+                name: rust_ident(name),
+                js_name: name.to_string(),
+                deprecated: None,
+                arguments: vec![],
+                variadic_type: None,
+                // Store WbgTypes - conversion to syn::Type happens during code generation
+                ret_wbg_ty: Some(WbgType::Iterator(Box::new(method.item.to_wbg_type(self)))),
+                kind: InterfaceMethodKind::Regular,
+                is_static: false,
+                catch: false,
+                variadic: false,
+                unstable: method.stability.is_unstable(),
+                has_unstable_override: false,
+                wbg_generic,
+            });
         }
 
         for member in data.async_iterables.iter() {
