@@ -112,6 +112,8 @@ pub(crate) enum IteratorItem<'src> {
     Value(&'src Type<'src>),
     /// A pair of values, as a `[K, V]` array.
     Pair(&'src Type<'src>, &'src Type<'src>),
+    /// An index and a value of a value iterator, as an `[index, V]` array.
+    IndexedValue(&'src Type<'src>),
 }
 
 impl<'src> IteratorItem<'src> {
@@ -121,6 +123,10 @@ impl<'src> IteratorItem<'src> {
             IteratorItem::Value(ty) => ty.to_wbg_type(record),
             IteratorItem::Pair(key, value) => WbgType::ArrayTuple(
                 Box::new(key.to_wbg_type(record)),
+                Box::new(value.to_wbg_type(record)),
+            ),
+            IteratorItem::IndexedValue(value) => WbgType::ArrayTuple(
+                Box::new(WbgType::UnsignedLong),
                 Box::new(value.to_wbg_type(record)),
             ),
         }
@@ -1126,13 +1132,16 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)>
                 record.iterators.insert("Iterator");
 
                 // For single-typed iterable (value iterator):
-                // - entries() returns Iterator<V>
+                // - entries() returns Iterator<ArrayTuple<u32, V>> (index and value)
                 // - keys() returns Iterator<u32> (index)
                 // - values() returns Iterator<V>
-                let value = IteratorItem::Value(&value_ty.type_);
-                record.add_iterator_method(self_name, "entries", value, stability);
+                // https://webidl.spec.whatwg.org/#es-iterable
+                let value_ty = &value_ty.type_;
+                let entries = IteratorItem::IndexedValue(value_ty);
+                record.add_iterator_method(self_name, "entries", entries, stability);
                 record.add_iterator_method(self_name, "keys", IteratorItem::Index, stability);
-                record.add_iterator_method(self_name, "values", value, stability);
+                let values = IteratorItem::Value(value_ty);
+                record.add_iterator_method(self_name, "values", values, stability);
 
                 // forEach callback - single-value iterable: (value, index)
                 // Use interface-specific callback name to avoid collisions between iterables

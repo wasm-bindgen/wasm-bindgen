@@ -54,6 +54,11 @@
   is defined later. This adds the missing `XrHand::entries()` and
   `XrHand::values()` in web-sys.
 
+* The `entries()` method of WebIDL value iterables (`iterable<V>`) now returns
+  an iterator over `[index, value]` pairs, matching the WebIDL spec, instead of
+  an iterator over values. This changes the typed return type of e.g.
+  `XrInputSourceArray::entries()` in web-sys.
+
 ### Removed
 
 ## [0.2.130](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.129...0.2.130)

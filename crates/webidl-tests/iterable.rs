@@ -9,31 +9,35 @@ fn single_iterable() {
     // Single-typed iterable - value iterator for indexed properties
     let iterable = TestSingleIterable::new().unwrap();
 
-    // Test entries() - Iterator<V>
+    // Test entries() - Iterator<ArrayTuple<u32, V>> (index and value)
     let mut entries_vec = vec![];
 
     #[cfg(not(wbg_next_unstable))]
     {
         for entry in iterable.entries().into_iter() {
             let entry = entry.unwrap();
-            entries_vec.push(entry.as_string().unwrap());
+            let pair = entry.dyn_into::<js_sys::Array>().unwrap();
+            let index = pair.get(0).as_f64().unwrap() as u32;
+            let value = pair.get(1).as_string().unwrap();
+            entries_vec.push((index, value));
         }
     }
 
     #[cfg(wbg_next_unstable)]
     {
         for entry in iterable.entries().into_iter() {
-            let value = entry.unwrap();
-            entries_vec.push(value);
+            let pair = entry.unwrap();
+            let index = pair.first().value_of() as u32;
+            entries_vec.push((index, String::from(pair.last())));
         }
     }
 
     assert_eq!(
         &entries_vec,
         &[
-            "item0".to_string(),
-            "item1".to_string(),
-            "item2".to_string()
+            (0, "item0".to_string()),
+            (1, "item1".to_string()),
+            (2, "item2".to_string())
         ]
     );
 

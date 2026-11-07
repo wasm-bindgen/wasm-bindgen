@@ -635,7 +635,7 @@ global.TestSingleIterable = class {
   }
 
   entries() {
-    return this.items.values();
+    return this.items.entries();
   }
 
   keys() {
