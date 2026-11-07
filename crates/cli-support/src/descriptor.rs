@@ -527,6 +527,18 @@ impl Descriptor {
         }
     }
 
+    /// The typed array that a buffer of this encoded element's cells already
+    /// is. An `f64` cell is laid out as a `Float64Array` element, so a
+    /// sequence of an element that crosses as an `f64`, such as
+    /// `SafeInteger<T>`, crosses as the same `Float64Array` as when it is in
+    /// place.
+    pub fn typed_cell(&self) -> Option<VectorKind> {
+        match self {
+            Descriptor::F64 => Some(VectorKind::F64),
+            _ => None,
+        }
+    }
+
     /// Whether an encoded element's cell is a scalar, which converts without
     /// calling into Wasm or owning anything, so its buffer can be read or
     /// written in the same pass that converts the elements.
