@@ -923,7 +923,9 @@ impl<'src> FirstPassRecord<'src> {
     /// while a pair async iterable (`async iterable<K, V>`) has `entries()`,
     /// `keys()` and `values()`.
     ///
-    /// The methods are generated like those of a regular operation.
+    /// Each method takes the arguments of the `async iterable` declaration,
+    /// so its overloads are generated like those of a regular operation,
+    /// e.g. `values()` and `values_with_options(options)`.
     fn append_async_iterable_methods(
         &'src self,
         type_name: &str,

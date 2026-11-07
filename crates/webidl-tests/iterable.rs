@@ -215,6 +215,18 @@ async fn single_async_iterable() {
     let values = collect(iterable.values().as_ref()).await;
     let values: Vec<String> = values.iter().map(|v| v.as_string().unwrap()).collect();
     assert_eq!(values, ["item0", "item1", "item2"]);
+
+    // Test values() with the optional arguments of the async iterable declaration
+    let options = TestAsyncIterableOptions::new();
+    options.set_reverse(true);
+    let values = collect(iterable.values_with_options(&options).as_ref()).await;
+    let values: Vec<String> = values.iter().map(|v| v.as_string().unwrap()).collect();
+    assert_eq!(values, ["item2", "item1", "item0"]);
+
+    // Every optional argument gets its own overload
+    let values = collect(iterable.values_with_options_and_skip(&options, 1).as_ref()).await;
+    let values: Vec<String> = values.iter().map(|v| v.as_string().unwrap()).collect();
+    assert_eq!(values, ["item1", "item0"]);
 }
 
 #[wasm_bindgen_test]

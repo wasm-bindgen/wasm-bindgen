@@ -682,12 +682,13 @@ global.TestSingleAsyncIterable = class {
     this.items = ['item0', 'item1', 'item2'];
   }
 
-  async *values() {
-    yield* this.items;
+  async *values(options = {}, skip = 0) {
+    const items = options.reverse ? [...this.items].reverse() : this.items;
+    yield* items.slice(skip);
   }
 
-  [Symbol.asyncIterator]() {
-    return this.values();
+  [Symbol.asyncIterator](options, skip) {
+    return this.values(options, skip);
   }
 };
 

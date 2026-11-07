@@ -139,4 +139,15 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ReadableStream`*"]
     pub fn values(this: &ReadableStream) -> ::js_sys::AsyncIterator;
+    #[cfg(feature = "ReadableStreamIteratorOptions")]
+    #[wasm_bindgen(method, js_class = "ReadableStream", js_name = "values")]
+    #[doc = "The `values()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream/values)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ReadableStream`, `ReadableStreamIteratorOptions`*"]
+    pub fn values_with_options(
+        this: &ReadableStream,
+        options: &ReadableStreamIteratorOptions,
+    ) -> ::js_sys::AsyncIterator;
 }

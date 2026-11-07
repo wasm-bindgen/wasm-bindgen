@@ -46,6 +46,8 @@
   `values()` method, matching the WebIDL spec. Previously, they also generated
   `entries()` and `keys()` methods, which do not exist at runtime
   (e.g. `ReadableStream::entries()` and `ReadableStream::keys()` in web-sys).
+  Optional arguments of async iterable declarations are now also supported,
+  adding e.g. `ReadableStream::values_with_options()`.
 
 ### Removed
 

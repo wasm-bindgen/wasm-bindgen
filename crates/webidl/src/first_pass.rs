@@ -1274,24 +1274,38 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)>
             .async_iterables
             .push(AsyncIterableData {
                 definition: self,
-                operation: async_iterable_operation(self, ctx.1),
+                operation: async_iterable_operation(ctx.0, self, ctx.1),
             });
         Ok(())
     }
 }
 
-/// Creates an operation for the methods of an `async iterable` declaration.
+/// Creates an operation with the arguments of an `async iterable` declaration.
+///
+/// Per WebIDL, all arguments of an `async iterable` declaration are optional.
+/// A trailing variadic argument is not supported (no spec uses one, and the
+/// JS binding converts at most one value per declared argument), so it is
+/// left out.
 fn async_iterable_operation<'src>(
+    self_name: &str,
     member: &'src AsyncIterableInterfaceMember<'src>,
     stability: ApiStability,
 ) -> OperationData<'src> {
-    let attrs = match member {
-        AsyncIterableInterfaceMember::Single(value) => &value.attributes,
-        AsyncIterableInterfaceMember::Double(pair) => &pair.attributes,
+    let (attrs, args) = match member {
+        AsyncIterableInterfaceMember::Single(value) => (&value.attributes, &value.args),
+        AsyncIterableInterfaceMember::Double(pair) => (&pair.attributes, &pair.args),
     };
+    let mut signature_args = Vec::new();
+    for arg in args.iter().flat_map(|args| &args.body.list) {
+        if let Argument::Variadic(_) = arg {
+            log::warn!("Unsupported variadic argument on async iterable of {self_name}");
+            break;
+        }
+        signature_args.push(Arg::from(arg));
+    }
     OperationData {
         signatures: vec![Signature {
-            args: vec![],
+            args: signature_args,
             // The return type is determined by the caller,
             // depending on which method is generated.
             ret: ReturnType::Undefined(term!(undefined)),
