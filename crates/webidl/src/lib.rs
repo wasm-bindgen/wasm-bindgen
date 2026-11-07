@@ -919,6 +919,10 @@ impl<'src> FirstPassRecord<'src> {
 
     /// Generates the methods of an `async iterable` declaration.
     ///
+    /// A value async iterable (`async iterable<V>`) only has `values()`,
+    /// while a pair async iterable (`async iterable<K, V>`) has `entries()`,
+    /// `keys()` and `values()`.
+    ///
     /// The methods are generated like those of a regular operation.
     fn append_async_iterable_methods(
         &'src self,
@@ -941,21 +945,12 @@ impl<'src> FirstPassRecord<'src> {
                 // async iterable<V>; - value async iterator
                 let value_wbg = to_wbg_type(&value.generics.body);
 
-                // For value async iterables:
-                // - entries() returns AsyncIterator<V>
-                // - keys() returns AsyncIterator<u32> (index)
+                // For value async iterables, only values() is defined:
                 // - values() returns AsyncIterator<V>
-                vec![
-                    (
-                        &ENTRIES,
-                        WbgType::AsyncIterator(Box::new(value_wbg.clone())),
-                    ),
-                    (
-                        &KEYS,
-                        WbgType::AsyncIterator(Box::new(WbgType::UnsignedLong)),
-                    ),
-                    (&VALUES, WbgType::AsyncIterator(Box::new(value_wbg))),
-                ]
+                // Unlike sync value iterables, async value iterables do not
+                // have entries() or keys() methods.
+                // https://webidl.spec.whatwg.org/#es-asynchronous-iterable
+                vec![(&VALUES, WbgType::AsyncIterator(Box::new(value_wbg)))]
             }
             AsyncIterableInterfaceMember::Double(pair) => {
                 // async iterable<K, V>; - pair async iterator

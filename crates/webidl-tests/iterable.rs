@@ -208,6 +208,16 @@ async fn collect(iterator: &JsValue) -> Vec<JsValue> {
 }
 
 #[wasm_bindgen_test]
+async fn single_async_iterable() {
+    // Value async iterable - only has values()
+    let iterable = TestSingleAsyncIterable::new().unwrap();
+
+    let values = collect(iterable.values().as_ref()).await;
+    let values: Vec<String> = values.iter().map(|v| v.as_string().unwrap()).collect();
+    assert_eq!(values, ["item0", "item1", "item2"]);
+}
+
+#[wasm_bindgen_test]
 async fn double_async_iterable() {
     // Pair async iterable - has entries(), keys() and values()
     let iterable = TestDoubleAsyncIterable::new().unwrap();

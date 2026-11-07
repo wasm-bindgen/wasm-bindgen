@@ -42,6 +42,11 @@
 
 ### Fixed
 
+* Value async iterables in WebIDL (`async iterable<V>`) now only generate a
+  `values()` method, matching the WebIDL spec. Previously, they also generated
+  `entries()` and `keys()` methods, which do not exist at runtime
+  (e.g. `ReadableStream::entries()` and `ReadableStream::keys()` in web-sys).
+
 ### Removed
 
 ## [0.2.130](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.129...0.2.130)

@@ -677,6 +677,20 @@ global.TestDoubleIterable = class {
   }
 };
 
+global.TestSingleAsyncIterable = class {
+  constructor() {
+    this.items = ['item0', 'item1', 'item2'];
+  }
+
+  async *values() {
+    yield* this.items;
+  }
+
+  [Symbol.asyncIterator]() {
+    return this.values();
+  }
+};
+
 global.TestDoubleAsyncIterable = class {
   constructor() {
     this.data = new Map([

@@ -12,6 +12,12 @@ interface TestDoubleIterable {
   iterable<DOMString, long>;
 };
 
+// Value async iterable - only has values()
+[Constructor()]
+interface TestSingleAsyncIterable {
+  async iterable<DOMString>;
+};
+
 // Pair async iterable
 [Constructor()]
 interface TestDoubleAsyncIterable {
