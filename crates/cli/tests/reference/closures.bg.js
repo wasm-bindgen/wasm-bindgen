@@ -28,7 +28,7 @@ export function __wbg__wbg_cb_unref_09736879a3f67559(arg0) {
 export function __wbg_call_scoped_343c79dd3d3f172b(arg0) {
     call_scoped(arg0);
 }
-export function __wbg_forEach_fb24ab6301b250ee(arg0, arg1, arg2) {
+export function __wbg_forEach_01a15a56beda7cd7(arg0, arg1, arg2) {
     try {
         var state0 = {a: arg1, b: arg2};
         var cb0 = (arg0, arg1, arg2) => {
