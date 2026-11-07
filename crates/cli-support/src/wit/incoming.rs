@@ -273,7 +273,12 @@ impl InstructionBuilder<'_, '_> {
                     &[ptr_ty.clone(), ptr_ty],
                 );
             }
-            Descriptor::Slice(_) => {
+            Descriptor::Slice(inner) => {
+                // An encoded element's slice is received as the owned vector
+                // it anchors in, so it crosses like one.
+                if let (false, Descriptor::Cell(elem)) = (mutable, &**inner) {
+                    return self.incoming_encoded_vector(elem, false, OptionKind::Option);
+                }
                 // like strings, this allocation is cleaned up after being
                 // received in Rust.
                 let kind = arg.vector_kind().ok_or_else(|| {
