@@ -677,6 +677,40 @@ global.TestDoubleIterable = class {
   }
 };
 
+global.TestDoubleAsyncIterable = class {
+  constructor() {
+    this.data = new Map([
+      ['key1', 10],
+      ['key2', 20],
+      ['key3', 30]
+    ]);
+  }
+
+  async *entries() {
+    yield* this.data.entries();
+  }
+
+  async *keys() {
+    yield* this.data.keys();
+  }
+
+  async *values() {
+    yield* this.data.values();
+  }
+
+  [Symbol.asyncIterator]() {
+    return this.entries();
+  }
+};
+
+exports.collectAsyncIterator = async function (iterator) {
+  const result = [];
+  for await (const value of { [Symbol.asyncIterator]: () => iterator }) {
+    result.push(value);
+  }
+  return result;
+};
+
 global.TestRecord = class {
   constructor() {
     this.lastSetRecord = null;

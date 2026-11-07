@@ -193,3 +193,50 @@ fn double_iterable() {
 
     iterable.for_each(cb.as_ref().unchecked_ref()).unwrap();
 }
+
+#[wasm_bindgen(module = "/globals.js")]
+extern "C" {
+    #[wasm_bindgen(js_name = collectAsyncIterator)]
+    fn collect_async_iterator(iterator: &JsValue) -> js_sys::Promise;
+}
+
+async fn collect(iterator: &JsValue) -> Vec<JsValue> {
+    let array = wasm_bindgen_futures::JsFuture::from(collect_async_iterator(iterator))
+        .await
+        .unwrap();
+    js_sys::Array::from(&array).iter().collect()
+}
+
+#[wasm_bindgen_test]
+async fn double_async_iterable() {
+    // Pair async iterable - has entries(), keys() and values()
+    let iterable = TestDoubleAsyncIterable::new().unwrap();
+
+    let entries = collect(iterable.entries().as_ref()).await;
+    let entries: Vec<(String, i32)> = entries
+        .iter()
+        .map(|entry| {
+            let entry = js_sys::Array::from(entry);
+            (
+                entry.get(0).as_string().unwrap(),
+                entry.get(1).as_f64().unwrap() as i32,
+            )
+        })
+        .collect();
+    assert_eq!(
+        entries,
+        [
+            ("key1".to_string(), 10),
+            ("key2".to_string(), 20),
+            ("key3".to_string(), 30)
+        ]
+    );
+
+    let keys = collect(iterable.keys().as_ref()).await;
+    let keys: Vec<String> = keys.iter().map(|v| v.as_string().unwrap()).collect();
+    assert_eq!(keys, ["key1", "key2", "key3"]);
+
+    let values = collect(iterable.values().as_ref()).await;
+    let values: Vec<i32> = values.iter().map(|v| v.as_f64().unwrap() as i32).collect();
+    assert_eq!(values, [10, 20, 30]);
+}

@@ -140,6 +140,15 @@ pub(crate) struct InterfaceData<'src> {
     pub(crate) definition_attributes: Option<&'src ExtendedAttributeList<'src>>,
     pub(crate) stability: ApiStability,
     pub(crate) custom_methods: BTreeMap<&'src str, InterfaceMethod<'src>>,
+    pub(crate) async_iterables: Vec<AsyncIterableData<'src>>,
+}
+
+pub(crate) struct AsyncIterableData<'src> {
+    pub(crate) definition: &'src AsyncIterableInterfaceMember<'src>,
+    /// The `async iterable` declaration as an operation with a single signature,
+    /// so that its `entries()`, `keys()` and `values()` methods can be generated
+    /// like regular operations.
+    pub(crate) operation: OperationData<'src>,
 }
 
 pub(crate) struct AttributeMixinData<'src> {
@@ -1252,64 +1261,45 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)>
         record: &mut FirstPassRecord<'src>,
         ctx: (&'src str, ApiStability),
     ) -> Result<()> {
-        let self_name = ctx.0;
-        let stability = ctx.1;
+        // Always store typed iterators - generator will produce both compat and non-compat output
+        record.async_iterators.insert("AsyncIterator");
 
-        match self {
-            AsyncIterableInterfaceMember::Single(single) => {
-                // async iterable<V>; - async value iterator
-                let value_ty = &single.generics.body;
-
-                // Always store typed iterators - generator will produce both compat and non-compat output
-                record.async_iterators.insert("AsyncIterator");
-
-                let value_wbg = value_ty.type_.to_wbg_type(record);
-
-                // For single-typed async iterable:
-                // - entries() returns AsyncIterator<V>
-                // - keys() returns AsyncIterator<u32> (index)
-                // - values() returns AsyncIterator<V>
-
-                // Store WbgTypes - conversion to syn::Type happens during code generation
-                let entries_wbg = WbgType::AsyncIterator(Box::new(value_wbg.clone()));
-                let keys_wbg = WbgType::AsyncIterator(Box::new(WbgType::UnsignedLong));
-                let values_wbg = WbgType::AsyncIterator(Box::new(value_wbg));
-
-                record.add_custom_method(self_name, "entries", entries_wbg, stability);
-                record.add_custom_method(self_name, "keys", keys_wbg, stability);
-                record.add_custom_method(self_name, "values", values_wbg, stability);
-            }
-            AsyncIterableInterfaceMember::Double(double) => {
-                // async iterable<K, V>; - async pair iterator
-                let key_ty = &double.generics.body.0;
-                let value_ty = &double.generics.body.2;
-
-                // Always store typed iterators - generator will produce both compat and non-compat output
-                record.async_iterators.insert("AsyncIterator");
-
-                let key_wbg = key_ty.type_.to_wbg_type(record);
-                let value_wbg = value_ty.type_.to_wbg_type(record);
-
-                // For double-typed async iterable:
-                // - entries() returns AsyncIterator<ArrayTuple<K, V>>
-                // - keys() returns AsyncIterator<K>
-                // - values() returns AsyncIterator<V>
-
-                // Store WbgTypes - conversion to syn::Type happens during code generation
-                let entries_wbg = WbgType::AsyncIterator(Box::new(WbgType::ArrayTuple(
-                    Box::new(key_wbg.clone()),
-                    Box::new(value_wbg.clone()),
-                )));
-                let keys_wbg = WbgType::AsyncIterator(Box::new(key_wbg));
-                let values_wbg = WbgType::AsyncIterator(Box::new(value_wbg));
-
-                record.add_custom_method(self_name, "entries", entries_wbg, stability);
-                record.add_custom_method(self_name, "keys", keys_wbg, stability);
-                record.add_custom_method(self_name, "values", values_wbg, stability);
-            }
-        }
-
+        // The methods are generated in `append_interface`, since the iterated
+        // types and the arguments may refer to definitions (such as
+        // dictionaries) that have not been seen yet.
+        record
+            .interfaces
+            .get_mut(ctx.0)
+            .unwrap()
+            .async_iterables
+            .push(AsyncIterableData {
+                definition: self,
+                operation: async_iterable_operation(self, ctx.1),
+            });
         Ok(())
+    }
+}
+
+/// Creates an operation for the methods of an `async iterable` declaration.
+fn async_iterable_operation<'src>(
+    member: &'src AsyncIterableInterfaceMember<'src>,
+    stability: ApiStability,
+) -> OperationData<'src> {
+    let attrs = match member {
+        AsyncIterableInterfaceMember::Single(value) => &value.attributes,
+        AsyncIterableInterfaceMember::Double(pair) => &pair.attributes,
+    };
+    OperationData {
+        signatures: vec![Signature {
+            args: vec![],
+            // The return type is determined by the caller,
+            // depending on which method is generated.
+            ret: ReturnType::Undefined(term!(undefined)),
+            attrs,
+            stability,
+        }],
+        is_static: false,
+        stability,
     }
 }
 

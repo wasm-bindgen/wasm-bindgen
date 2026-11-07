@@ -11,3 +11,9 @@ interface TestSingleIterable {
 interface TestDoubleIterable {
   iterable<DOMString, long>;
 };
+
+// Pair async iterable
+[Constructor()]
+interface TestDoubleAsyncIterable {
+  async iterable<DOMString, long>;
+};
