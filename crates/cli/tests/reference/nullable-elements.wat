@@ -4,7 +4,7 @@
   (type (;2;) (func (param i32 i32 i32)))
   (type (;3;) (func (param i32 i32)))
   (type (;4;) (func))
-  (import "./reference_test_bg.js" "__wbg___wbindgen_throw_41e9ee4f547fc59a" (func (;0;) (type 3)))
+  (import "./reference_test_bg.js" "__wbg___wbindgen_throw_4c88d8bf264fd984" (func (;0;) (type 3)))
   (import "./reference_test_bg.js" "__wbg_call_nullable_61a2ccea214cfd68" (func (;1;) (type 0)))
   (import "./reference_test_bg.js" "__wbg_nullable_js_strings_4d25a7d2d74571c9" (func (;2;) (type 3)))
   (import "./reference_test_bg.js" "__wbg_nullable_strings_e1dfa29465202c22" (func (;3;) (type 3)))
