@@ -418,10 +418,10 @@ export function wide(v) {
     wasm.__wbindgen_free(ret[0], ret[1] * 16, 8);
     return v2;
 }
-export function __wbg___wbindgen_throw_41e9ee4f547fc59a(arg0, arg1) {
+export function __wbg___wbindgen_throw_4c88d8bf264fd984(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
-export function __wbg__wbg_cb_unref_dcc1a90847f04c41(arg0) {
+export function __wbg__wbg_cb_unref_09736879a3f67559(arg0) {
     arg0._wbg_cb_unref();
 }
 export function __wbg_give_bytes_c33f23bab560542b(arg0) {
