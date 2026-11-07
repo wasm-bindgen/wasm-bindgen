@@ -155,6 +155,11 @@ pub fn safe_slice_doubled(a: &[SafeInteger<u64>]) -> Vec<SafeInteger<u64>> {
 }
 
 #[wasm_bindgen]
+pub fn safe_opt_vec_identity(a: Option<Vec<SafeInteger<i64>>>) -> Option<Vec<SafeInteger<i64>>> {
+    a
+}
+
+#[wasm_bindgen]
 pub fn safe_catch_export(ok: bool) -> Result<SafeInteger<u64>, JsError> {
     if ok {
         Ok(SafeInteger::MAX)

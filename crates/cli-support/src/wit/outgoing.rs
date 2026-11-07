@@ -807,6 +807,37 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Ref(d) => (&**d, false),
             d => (d, owned),
         };
+        // The buffer is freshly encoded in either case, so it's freed like an
+        // owned vector's.
+        if let Some(kind) = elem.typed_cell() {
+            let mem = self.cx.memory()?;
+            let free = self.cx.free()?;
+            let ptr_ty = self.outgoing_internal_word_ty();
+            let mode = self.seq_value;
+            let (instr, ty) = match optional {
+                Some(option_kind) => (
+                    Instruction::OptionVectorLoad {
+                        kind: kind.clone(),
+                        mem,
+                        free,
+                        mode,
+                        option_kind,
+                    },
+                    AdapterType::Vector(kind).option_kind(option_kind),
+                ),
+                None => (
+                    Instruction::VectorLoad {
+                        kind: kind.clone(),
+                        mem,
+                        free,
+                        mode,
+                    },
+                    AdapterType::Vector(kind),
+                ),
+            };
+            self.instruction(&[ptr_ty.clone(), ptr_ty], instr, &[ty]);
+            return Ok(());
+        }
         let mut decode = InstructionBuilder {
             input: Vec::new(),
             output: Vec::new(),
