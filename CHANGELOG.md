@@ -40,6 +40,12 @@
   `()` to an externref, no longer call into JS.
   [#5453](https://github.com/wasm-bindgen/wasm-bindgen/pull/5453)
 
+* `JsOption<T>` reads `null` as empty, as `Option<T>` does, in `is_empty`,
+  `as_option`, `into_option` and the `unwrap` family, so a JS `null` in a
+  `JsGeneric` position is `None` rather than a `T`. The empty value produced
+  from Rust is still `undefined`.
+  [#5463](https://github.com/wasm-bindgen/wasm-bindgen/pull/5463)
+
 ### Fixed
 
 ### Removed

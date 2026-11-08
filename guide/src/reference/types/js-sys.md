@@ -22,7 +22,7 @@ All generic types listed implement `JsGeneric` and default to `JsValue` when typ
 | [`Generator<T>` / `AsyncGenerator<T>`](#generatort-and-asyncgeneratort) | Typed generators |
 | [`Object<T>`](#objectt) | Object with typed values |
 | [`WeakMap<K, V>` / `WeakSet<T>` / `WeakRef<T>`](#weakmapk-v-weaksett-weakreft) | Weak collections |
-| [`JsOption<T>`](#jsoptiont) | Optional JS value (`T` or `undefined`) |
+| [`JsOption<T>`](#jsoptiont) | Optional JS value (`T`, `undefined` or `null`) |
 | [`JsNullable<T>`](#jsnullablet) | Nullable JS value (`T` or `null`) |
 | `Number` | JavaScript number primitive |
 | `JsString` | JavaScript string primitive |
@@ -322,9 +322,9 @@ let weak_ref: WeakRef<Object> = WeakRef::new(&my_object);
 
 ## JsOption\<T\>
 
-Represents a JS value that may be `T` or `undefined`, matching TypeScript's
-`T | undefined`. Only `undefined` is treated as absent; JS `null` is a
-distinct present value.
+Represents a JS value that may be `T` or empty, matching TypeScript's
+`T | undefined`. As for `Option<T>`, both `undefined` and `null` are read as
+absent, and the empty value produced from Rust is `undefined`.
 
 ```rust
 use js_sys::{JsOption, Number};
@@ -338,13 +338,13 @@ let value = maybeGetValue();
 
 // Check emptiness
 if value.is_empty() {
-    // undefined
+    // undefined or null
 }
 
 // Convert to Option
 match value.into_option() {
     Some(num) => { /* use num */ }
-    None => { /* handle undefined */ }
+    None => { /* handle undefined or null */ }
 }
 
 // Unwrap methods
@@ -399,5 +399,5 @@ let from_opt = JsNullable::from_option(Some(Number::from(42)));
 | Type | Behavior |
 | ---- | -------- |
 | `Option<T>` | Undefined or Null check at ABI boundary, immediately converts to `Some(T)` or `None` |
-| `JsOption<T>` | Defers undefined check, works in `JsGeneric` positions |
+| `JsOption<T>` | Defers null or undefined check, works in `JsGeneric` positions |
 | `JsNullable<T>` | Defers null or undefined check, works in `JsGeneric` positions |

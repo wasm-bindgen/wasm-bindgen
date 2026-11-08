@@ -55,7 +55,7 @@ exports.test_js_nullable_exports = () => {
 };
 
 exports.test_nullable_exports = () => {
-    // Test rust functions that return JsOption — strict: empty == undefined only.
+    // A JsOption reads both null and undefined as empty, and writes empty as undefined.
     const nullVal = wasm.rust_return_nullable_null();
     assert.strictEqual(nullVal, undefined,
         `expected undefined from rust_return_nullable_null, got ${nullVal}`);
@@ -67,6 +67,7 @@ exports.test_nullable_exports = () => {
 
     // Test rust functions that take JsOption
     wasm.rust_take_nullable_null(undefined);
+    wasm.rust_take_nullable_null(null);
     wasm.rust_take_nullable_value(789);
 };
 
