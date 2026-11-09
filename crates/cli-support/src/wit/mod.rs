@@ -3036,7 +3036,13 @@ to open an issue at https://github.com/wasm-bindgen/wasm-bindgen/issues!
 "
                 );
             }
-            let next = get_remaining(&mut payload).unwrap();
+            let next = match get_remaining(&mut payload) {
+                Some(next) => next,
+                None => bail!(
+                    "the `__wasm_bindgen_unstable` custom section is truncated: it \
+                     ends after the version metadata with no program chunk"
+                ),
+            };
             log::debug!("found a program of length {}", next.len());
             ret.push(<decode::Program as decode::Decode>::decode_all(next));
         }
@@ -3346,5 +3352,28 @@ mod tests {
             !run_discover_main(&mut module, mem),
             "on wasm64 a 32-bit-argv `main` must not be treated as the entry point"
         );
+    }
+
+    #[test]
+    fn truncated_unstable_section_errors_instead_of_panicking() {
+        let version = format!(
+            "{{\"schema_version\":\"{}\",\"version\":\"0.2.130\"}}",
+            wasm_bindgen_shared::SCHEMA_VERSION
+        );
+        let mut data = (version.len() as u32).to_le_bytes().to_vec();
+        data.extend_from_slice(version.as_bytes());
+
+        let mut module = Module::default();
+        module.customs.add(walrus::RawCustomSection {
+            name: "__wasm_bindgen_unstable".into(),
+            data,
+        });
+
+        let mut storage = Vec::new();
+        let err = match extract_programs(&mut module, &mut storage) {
+            Ok(_) => panic!("expected a truncated-section error"),
+            Err(e) => e,
+        };
+        assert!(err.to_string().contains("truncated"), "{err}");
     }
 }
