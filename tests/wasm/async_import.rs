@@ -33,6 +33,8 @@ extern "C" {
     async fn async_safe_integer() -> SafeInteger<u64>;
     #[wasm_bindgen(js_name = asyncOptSome)]
     async fn async_opt_safe_integer() -> Option<SafeInteger<i64>>;
+    #[wasm_bindgen(catch, js_name = asyncF64)]
+    async fn async_safe_integer_rejects() -> Result<SafeInteger<u64>, JsValue>;
 }
 
 #[wasm_bindgen_test]
@@ -76,4 +78,11 @@ async fn async_import_takes_and_returns_scalar() {
 async fn async_import_returns_safe_integer() {
     assert_eq!(async_safe_integer().await, SafeInteger::<u64>::MAX);
     assert_eq!(async_opt_safe_integer().await, Some(SafeInteger::from(7)));
+    // The resolved value arrives through a closure, so it is checked, and a
+    // rejected one is an `Err` rather than a future that never resolves.
+    let err = async_safe_integer_rejects().await.unwrap_err();
+    assert_eq!(
+        err.unchecked_into::<js_sys::Error>().message(),
+        "expected a non-negative safe integer"
+    );
 }

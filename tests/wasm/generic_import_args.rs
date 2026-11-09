@@ -419,6 +419,7 @@ fn experimental_generic_mono_catch_ok_path() {
     assert_eq!(try_get::<u32>(3).unwrap(), 6);
     assert_eq!(try_get::<f64>(4).unwrap(), 8.0);
     assert_eq!(try_get_string::<String>(7).unwrap(), "v7");
+    assert_eq!(try_get::<SafeInteger<u64>>(4).unwrap(), 8);
 }
 
 #[wasm_bindgen_test]

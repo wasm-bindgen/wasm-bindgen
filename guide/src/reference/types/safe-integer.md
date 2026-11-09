@@ -41,12 +41,18 @@ A safe integer is within `±(2^53 - 1)` (`Number.MIN_SAFE_INTEGER` to
 `Number.MAX_SAFE_INTEGER`) and, for `SafeInteger<u64>`, non-negative. Every
 value in that range is exactly representable as a JS `number`.
 
-The range is checked the way Rust checks integer overflow: only with debug
-assertions enabled. In a debug build, constructing an out-of-range value with
-`From`, arithmetic leaving the range, or receiving a `number` from JS that is
-not an integer or is out of range panics. In a release build the conversion is
-a plain `as` cast, so out-of-range values convert lossily, the same way a `u32`
-argument wraps.
+A `number` passed into an export or a closure is checked in every build. One
+that is not a safe integer (a fraction, `NaN`, `Infinity`, out of range, or
+negative for `u64`) throws a JS error at the boundary before any Rust code
+runs, including as an element of an `Option`, `Vec` or slice. An `async`
+import's resolved value arrives through a closure, so it is checked too, and a
+rejected one is an `Err` from a `catch` import.
+
+A value returned by an import is trusted to honour the declared type, as every
+import return is. It is checked the way Rust checks integer overflow, only
+with debug assertions enabled, and so are values built in Rust with `From` or
+arithmetic: an out-of-range value panics in a debug build, and in a release
+build converts as an `as` cast would.
 
 `SafeInteger::new(value)` returns `None` for an out-of-range value, and
 `SafeInteger::try_from(js_value)` returns an error for a `JsValue` that is not
