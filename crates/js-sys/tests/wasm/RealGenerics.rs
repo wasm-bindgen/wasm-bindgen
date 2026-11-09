@@ -16,6 +16,8 @@ extern "C" {
     #[wasm_bindgen(js_name = asyncStrings)]
     fn async_strings() -> AsyncIterator<String>;
     fn strings() -> Array<String>;
+    #[wasm_bindgen(js_name = throwingIterator)]
+    fn throwing_iterator() -> Iterator<String>;
 
     #[wasm_bindgen(experimental_generic_mono, js_name = describe)]
     fn describe_like(values: &Array<impl JsStringLike>) -> String;
@@ -224,23 +226,50 @@ fn map_of_rust_types() {
     let m: Map<String, f64> = Map::new_typed();
     m.set(&"k".into(), &1.0);
     m.set(&"j".into(), &2.0);
-    assert_eq!(m.get(&"k".into()), Some(1.0));
-    assert_eq!(m.get(&"j".into()), Some(2.0));
-    assert_eq!(m.get(&"missing".into()), None);
-    assert!(m.has(&"k".into()));
+    assert_eq!(m.get("k"), Some(1.0));
+    assert_eq!(m.get(&"j".to_string()), Some(2.0));
+    assert_eq!(m.get("missing"), None);
+    assert!(m.has("k"));
     assert_eq!(m.size(), 2);
 
-    let keys: Vec<String> = m.keys().into_iter().map(Result::unwrap).collect();
+    let keys: Vec<String> = m.keys().into_iter().collect();
     assert_eq!(keys, ["k", "j"]);
-    let values: Vec<f64> = m.values().into_iter().map(Result::unwrap).collect();
+    let values: Vec<f64> = m.values().into_iter().collect();
     assert_eq!(values, [1.0, 2.0]);
+    let entries: Vec<(String, f64)> = m.iter().collect();
+    assert_eq!(entries, [("k".to_string(), 1.0), ("j".to_string(), 2.0)]);
+    let mut total = 0.0;
+    for (_, v) in &m {
+        total += v;
+    }
+    assert_eq!(total, 3.0);
+
+    let copy: Map<String, f64> = m.iter().collect();
+    assert_eq!(copy.get("j"), Some(2.0));
+    let mut extended = copy.clone();
+    extended.extend([("z".to_string(), 9.0)]);
+    assert_eq!(m.size(), 2);
+    assert_eq!(copy.get("z"), Some(9.0));
 
     let mut seen = Vec::new();
     m.for_each(&mut |value, key| seen.push((key, value)));
     assert_eq!(seen, [("k".to_string(), 1.0), ("j".to_string(), 2.0)]);
 
-    assert!(m.delete(&"k".into()));
-    assert!(!m.has(&"k".into()));
+    assert!(m.delete("k"));
+    assert!(!m.has("k"));
+
+    // A present key reads as `Some` even when its value is `null`.
+    let m: Map<String, Option<String>> = Map::new_typed();
+    m.set(&"a".into(), &Some("x".into()));
+    m.set(&"b".into(), &None);
+    assert_eq!(m.get("a"), Some(Some("x".to_string())));
+    assert_eq!(m.get("b"), Some(None));
+    assert_eq!(m.get("c"), None);
+
+    let m: Map<JsValue, f64> = Map::new_typed();
+    let key = JsValue::from("k");
+    m.set(&key, &1.0);
+    assert_eq!(m.get(&key), Some(1.0));
 }
 
 #[wasm_bindgen_test]
@@ -248,28 +277,60 @@ fn set_of_rust_types() {
     let s: Set<String> = Set::new_from_items(&["a".to_string()]);
     s.add(&"b".into()).add(&"a".into());
     assert_eq!(s.size(), 2);
-    assert!(s.has(&"b".into()));
-    let values: Vec<String> = s.values().into_iter().map(Result::unwrap).collect();
+    assert!(s.has("b"));
+    let values: Vec<String> = s.values().into_iter().collect();
     assert_eq!(values, ["a", "b"]);
+    assert_eq!(s.iter().collect::<Vec<_>>(), ["a", "b"]);
+    let mut joined = String::new();
+    for v in &s {
+        joined += &v;
+    }
+    assert_eq!(joined, "ab");
+    let pairs: Vec<(String, String)> = Entries::from(s.entries()).collect();
+    assert_eq!(pairs[1], ("b".to_string(), "b".to_string()));
 
     let mut seen = Vec::new();
     s.for_each(&mut |value: String| seen.push(value));
     assert_eq!(seen, ["a", "b"]);
 
-    assert!(s.delete(&"a".into()));
-    assert!(!s.has(&"a".into()));
+    assert!(s.delete("a"));
+    assert!(!s.has(&"a".to_string()));
 
     let numbers: Set<u32> = Set::new_typed();
     numbers.add(&1).add(&1).add(&2);
     assert_eq!(numbers.size(), 2);
+
+    let mut numbers: Set<u32> = [3, 1, 3].into_iter().collect();
+    numbers.extend(&[4, 1]);
+    assert_eq!(numbers.iter().collect::<Vec<_>>(), [3, 1, 4]);
 }
 
 #[wasm_bindgen_test]
 async fn iterators_of_rust_types() {
     let values: Array<String> = strings();
     let it: Iterator<String> = values.values();
-    let collected: Vec<String> = it.into_iter().map(Result::unwrap).collect();
+    let collected: Vec<String> = it.into_iter().collect();
     assert_eq!(collected, ["x", "y"]);
+    let mut seen = Vec::new();
+    for v in &values.values() {
+        seen.push(v);
+    }
+    assert_eq!(seen, ["x", "y"]);
+
+    let fallible: Result<Vec<String>, JsValue> = values.values().try_iter().collect();
+    assert_eq!(fallible.unwrap(), ["x", "y"]);
+    let thrown = throwing_iterator()
+        .try_iter()
+        .collect::<Result<Vec<_>, _>>();
+    assert_eq!(thrown.unwrap_err().as_string().as_deref(), Some("boom"));
+
+    let indexed: Vec<(u32, String)> = Entries::from(values.entries()).collect();
+    assert_eq!(indexed, [(0, "x".to_string()), (1, "y".to_string())]);
+    let pair: (u32, String) = values.entries().into_iter().next().unwrap().into();
+    assert_eq!(pair, (0, "x".to_string()));
+
+    let keys: Array<String> = Object::keys(&values.unchecked_ref::<Object>());
+    assert_eq!(keys.to_vec(), ["0", "1"]);
 
     let it = async_strings();
     let mut collected = Vec::new();
@@ -281,6 +342,15 @@ async fn iterators_of_rust_types() {
         collected.push(next.value());
     }
     assert_eq!(collected, ["a", "b"]);
+
+    #[cfg(feature = "futures-core-03-stream")]
+    {
+        use futures_lite::stream::StreamExt;
+        let mut stream = js_sys::futures::stream::JsStream::from(async_strings());
+        assert_eq!(stream.next().await, Some(Ok("a".to_string())));
+        assert_eq!(stream.next().await, Some(Ok("b".to_string())));
+        assert_eq!(stream.next().await, None);
+    }
 }
 
 #[wasm_bindgen_test]
@@ -395,19 +465,19 @@ fn entries_of_rust_types() {
         &ArrayTuple::new2(&"j".to_string(), &2.0),
     );
     let m: Map<String, f64> = Map::new_from_entries(&entries);
-    assert_eq!(m.get(&"j".into()), Some(2.0));
+    assert_eq!(m.get("j"), Some(2.0));
     let pairs: Vec<(String, f64)> = m
         .entries()
         .into_iter()
-        .map(|entry| entry.unwrap().into_tuple())
+        .map(|entry| entry.into_tuple())
         .collect();
     assert_eq!(pairs, [("k".to_string(), 1.0), ("j".to_string(), 2.0)]);
 
     let a: Array<String> = strings();
-    let pairs: Vec<(Number, String)> = a
+    let pairs: Vec<(u32, String)> = a
         .entries()
         .into_iter()
-        .map(|entry| entry.unwrap().into_tuple())
+        .map(|entry| entry.into_tuple())
         .collect();
     assert_eq!(pairs[1].0, 1);
     assert_eq!(pairs[1].1, "y");
@@ -416,18 +486,18 @@ fn entries_of_rust_types() {
     let pairs: Vec<(u32, u32)> = s
         .entries()
         .into_iter()
-        .map(|entry| entry.unwrap().into_tuple())
+        .map(|entry| entry.into_tuple())
         .collect();
     assert_eq!(pairs, [(3, 3), (4, 4)]);
 
     let o: Object<u32> =
         Object::from_entries(&Array::of1(&ArrayTuple::new2(&"n".to_string(), &5u32))).unwrap();
-    let pairs: Vec<(JsString, u32)> = Object::entries(&o)
+    let pairs: Vec<(String, u32)> = Object::entries(&o)
         .unwrap()
         .iter()
         .map(|entry| entry.into_tuple())
         .collect();
-    assert_eq!(pairs, [(JsString::from("n"), 5)]);
+    assert_eq!(pairs, [("n".to_string(), 5)]);
 }
 
 #[wasm_bindgen_test]
@@ -1058,4 +1128,39 @@ async fn disposable_stacks_of_rust_types() {
     stack.defer(&deferred).unwrap();
     JsFuture::from(stack.dispose_async()).await.unwrap();
     assert_eq!(*disposed.borrow(), ["a", "deferred", "7"]);
+}
+
+#[wasm_bindgen_test]
+fn records_and_borrowed_arrays() {
+    let mut map = std::collections::HashMap::new();
+    map.insert("a".to_string(), "x".to_string());
+    let record: Object<String> = map.iter().collect();
+    let mut record2: Object<String> = [("b", "y".to_string())].into_iter().collect();
+    record2.extend(&map);
+    let mut entries: Vec<(String, String)> = record2.iter().collect();
+    entries.sort();
+    assert_eq!(
+        entries,
+        [("a".into(), "x".into()), ("b".into(), "y".into())]
+    );
+    let back: std::collections::HashMap<String, String> = (&record).into_iter().collect();
+    assert_eq!(back, map);
+
+    let proto: Object<String> = [("__proto__", "x".to_string())].into_iter().collect();
+    let entries: Vec<(String, String)> = proto.iter().collect();
+    assert_eq!(entries, [("__proto__".into(), "x".into())]);
+    let value = Object::new();
+    let proto: Object<Object> = [("__proto__", value.clone())].into_iter().collect();
+    assert_eq!(
+        proto.iter().map(|(k, _)| k).collect::<Vec<_>>(),
+        ["__proto__"]
+    );
+    assert!(!Object::is(&Object::get_prototype_of(&proto), &value));
+
+    let a: Array<String> = strings();
+    let mut joined = String::new();
+    for s in &a {
+        joined += &s;
+    }
+    assert_eq!(joined, "xy");
 }
