@@ -164,8 +164,7 @@
   [#5474](https://github.com/wasm-bindgen/wasm-bindgen/pull/5474)
 
 * The CLI now returns a descriptive error instead of panicking when a
-  `__wasm_bindgen_unstable` custom section is truncated after the version
-  metadata with no program chunk.
+  `__wasm_bindgen_unstable` custom section is truncated.
   [#5461](https://github.com/wasm-bindgen/wasm-bindgen/pull/5461)
 
 ### Removed
