@@ -162,7 +162,8 @@ timers and Tokio I/O then work inside the export without JSPI. By default
 an export roots on the current runtime: the calling task's, else the one a
 host entered, else the thread's ambient runtime.
 `experimental_tokio = "isolated"` gives each invocation its own runtime,
-which lives until the root and every task it spawned have finished, for
+which lives until the root and every task it started with `EventLoop::spawn`
+have finished, for
 multiplexed hosts where one invocation's I/O must not cross into another's
 context.
 
@@ -174,7 +175,8 @@ pub async fn fetch(req: Request) -> Response {
 ```
 
 Runtimes are `wasm_bindgen_futures::tokio::EventLoop`s, and every root and
-task holds its loop. `EventLoop::current().spawn(fut)` keeps an isolated
+every `EventLoop::spawn` task holds its loop; a plain `tokio::spawn` task does
+not. `EventLoop::current().spawn(fut)` keeps an isolated
 runtime alive until `fut` finishes, for work that outlives the response,
 such as a Workers `ctx.waitUntil`. A host that wants one runtime per
 long-lived context, such as a Durable Object instance, holds an `EventLoop`

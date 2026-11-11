@@ -5,8 +5,9 @@
 //! An [`EventLoop`] is a hosted tokio event loop: it ticks itself from host
 //! callbacks (reactor readiness, the next timer deadline, an immediate while
 //! work is ready), and a schedule from a top-level JS call ticks it once on
-//! the caller's stack for a synchronous first poll. Every root and spawned
-//! task holds its loop, so a loop lives while anyone holds it.
+//! the caller's stack for a synchronous first poll. Every root and every
+//! [`EventLoop::spawn`] task holds its loop, so a loop lives while anyone
+//! holds it. A plain `tokio::spawn` task does not, and is dropped with it.
 //!
 //! An `experimental_tokio` export roots on [`EventLoop::current`]: the
 //! calling task's loop, else the innermost [`EventLoop::enter`], else the
