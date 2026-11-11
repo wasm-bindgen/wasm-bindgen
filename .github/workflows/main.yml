@@ -280,9 +280,10 @@ jobs:
       - name: Setup Emscripten SDK
         uses: mymindstorm/setup-emsdk@v16
         with:
-          # Minimum for the `-sWASM_BINDGEN` post-link flow, where emcc runs
-          # `wasm-bindgen` itself at link time (emscripten-core/emscripten#27208).
-          version: 6.0.10
+          # The `-sWASM_BINDGEN` post-link flow, where emcc runs `wasm-bindgen`
+          # itself at link time, needs 6.0.10 (emscripten-core/emscripten#27208),
+          # and tokio's hosted event loop the epoll listeners of 6.0.12.
+          version: 7.0.0
       - uses: actions/setup-node@v7
         with:
           # JSPI (`WebAssembly.Suspending`) for the JSPI end-to-end builds.
@@ -291,6 +292,15 @@ jobs:
         run: cargo test --test wasm32-emscripten --target wasm32-unknown-emscripten
       - name: Run Emscripten end-to-end build
         run: cargo test -p wasm-bindgen-cli --test wasm-bindgen emscripten_end_to_end
+      # The patchset the guide's Tokio section describes: the release plus
+      # async DNS and microtask delivery of the epoll listener callbacks.
+      - name: Run Emscripten end-to-end build against the Tokio patchset
+        run: |
+          git clone --depth 1 --branch 7.0.0-cf.emscripten https://github.com/guybedford/emscripten "$RUNNER_TEMP/emscripten-tokio"
+          (cd "$RUNNER_TEMP/emscripten-tokio" && python3 bootstrap.py)
+          printf "LLVM_ROOT = '%s'\nBINARYEN_ROOT = '%s'\n" "$(em-config LLVM_ROOT)" "$(em-config BINARYEN_ROOT)" > "$RUNNER_TEMP/emscripten-tokio/.emscripten"
+          PATH="$RUNNER_TEMP/emscripten-tokio:$PATH" emcc --version | head -1
+          PATH="$RUNNER_TEMP/emscripten-tokio:$PATH" cargo test -p wasm-bindgen-cli --test wasm-bindgen emscripten_end_to_end
       # The patchset the guide's JSPI section describes, set up the way it
       # says: the guybedford/emscripten tag as the frontend over the emsdk
       # toolchain, and the binaryen release carrying the `--jspi-hooks` pass.
