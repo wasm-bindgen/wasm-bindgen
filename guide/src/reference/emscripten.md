@@ -158,11 +158,13 @@ in the same module.
 An exported `async fn` marked `#[wasm_bindgen(experimental_tokio)]` is driven
 as a root on a Tokio event-loop runtime instead of the `wasm-bindgen-futures`
 executor, with its outcome bridged to the returned `Promise`. `tokio::spawn`,
-timers and Tokio I/O then work inside the export without JSPI. All such
-exports share the thread's ambient runtime; `experimental_tokio = "isolated"`
-gives each invocation its own runtime, torn down once the root future
-settles, for multiplexed hosts where one invocation's I/O must not cross
-into another's context.
+timers and Tokio I/O then work inside the export without JSPI. By default
+an export roots on the current runtime: the calling task's, else the one a
+host entered, else the thread's ambient runtime.
+`experimental_tokio = "isolated"` gives each invocation its own runtime,
+which lives until the root and every task it spawned have finished, for
+multiplexed hosts where one invocation's I/O must not cross into another's
+context.
 
 ```rust
 #[wasm_bindgen(experimental_tokio)]
