@@ -453,7 +453,7 @@ impl Descriptor {
             d => d,
         };
         let d = match d {
-            Descriptor::Nullable(inner) => inner,
+            Descriptor::Option(inner) => inner,
             d => d,
         };
         let (borrowed, mutable) = match d {

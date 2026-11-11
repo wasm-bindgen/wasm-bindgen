@@ -29,7 +29,7 @@ extern "C" {
     #[wasm_bindgen(js_name = js_nullable_echo)]
     fn js_echo_ref_opt_f64(v: &Option<f64>) -> JsValue;
     #[wasm_bindgen(js_name = js_nullable_echo)]
-    fn js_echo_opt_ref_nullable_string(v: Option<&Nullable<String>>) -> JsValue;
+    fn js_echo_opt_ref_nullable_string(v: Nullable<&Option<String>>) -> JsValue;
     #[wasm_bindgen(experimental_generic_mono, js_name = js_nullable_echo)]
     fn js_echo_mono_ref<T: RefIntoWasmAbi>(v: &T) -> JsValue;
 
@@ -676,10 +676,10 @@ fn borrowed_by_copy() {
     assert_eq!(js_echo_ref_f64(&1.5), 1.5);
     assert_eq!(js_echo_ref_opt_f64(&Some(1.5)), 1.5);
     assert!(js_echo_ref_opt_f64(&None).is_undefined());
-    assert!(js_echo_opt_ref_nullable_string(None).is_undefined());
-    assert!(js_echo_opt_ref_nullable_string(Some(&Nullable::Null)).is_null());
+    assert!(js_echo_opt_ref_nullable_string(Nullable::Value(&None)).is_undefined());
+    assert!(js_echo_opt_ref_nullable_string(Nullable::Null).is_null());
     assert_eq!(
-        js_echo_opt_ref_nullable_string(Some(&Nullable::Value("a".to_string()))),
+        js_echo_opt_ref_nullable_string(Nullable::Value(&Some("a".to_string()))),
         "a"
     );
     assert_eq!(js_echo_mono_ref(&1.5), 1.5);

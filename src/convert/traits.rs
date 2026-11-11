@@ -246,6 +246,12 @@ pub trait RefMutFromWasmAbi: WasmDescribe {
 /// This is part of the internal [`convert`](crate::convert) module, **no
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
+#[cfg_attr(
+    wbg_diagnostic,
+    diagnostic::on_unimplemented(
+        note = "an `Option` cannot wrap a `Nullable`: use `Nullable<Option<T>>` for `T | null | undefined`"
+    )
+)]
 pub trait OptionIntoWasmAbi: IntoWasmAbi {
     /// Returns an ABI instance indicating "none", which JS will interpret as
     /// the `None` branch of this option.
@@ -263,6 +269,12 @@ pub trait OptionIntoWasmAbi: IntoWasmAbi {
 /// This is part of the internal [`convert`](crate::convert) module, **no
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
+#[cfg_attr(
+    wbg_diagnostic,
+    diagnostic::on_unimplemented(
+        note = "an `Option` cannot wrap a `Nullable`: use `Nullable<Option<T>>` for `T | null | undefined`"
+    )
+)]
 pub trait OptionFromWasmAbi: FromWasmAbi {
     /// Tests whether the argument is a "none" instance. If so it will be
     /// deserialized as `None`, and otherwise it will be passed to
@@ -334,7 +346,7 @@ pub trait MaybeFromWasmAbi: FromWasmAbi {
 /// `Option<Self>` with a second spare value beside
 /// [`none`](MaybeIntoWasmAbi::none).
 ///
-/// `Nullable<T>` and `Option<Nullable<T>>` take their conversions from this
+/// `Nullable<T>` and `Nullable<Option<T>>` take their conversions from this
 /// trait, so every `T` implementing it can be wrapped, including under a
 /// generic bound such as `Nullable<impl JsStringLike>`.
 ///
@@ -563,16 +575,6 @@ impl<T: WasmAbi> WasmRet<T> {
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
 pub trait TryFromJsValue: Sized {
-    /// Whether `Self` accepts `null` as a distinct value space, as
-    /// `Nullable<T>` does. An enclosing `Option` then passes `null` through
-    /// instead of reading it as `None`, so `Option<T>` is itself nullable
-    /// exactly when `T` is not. `JsValue` does not set this: it accepts
-    /// `null` as one value among all of them, not as a distinct space, and
-    /// `Option<JsValue>` reads it as `None` like the ABI does. This is the
-    /// JS-value side of [`NullableFromWasmAbi`], which claims `null` at the
-    /// ABI.
-    const NULLABLE: bool = false;
-
     /// Performs the conversion.
     fn try_from_js_value(value: JsValue) -> Result<Self, JsValue> {
         Self::try_from_js_value_ref(&value).ok_or(value)

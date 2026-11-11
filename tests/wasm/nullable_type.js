@@ -202,10 +202,10 @@ exports.nullable_type_js_exports = () => {
 };
 
 exports.nullable_type_closure_driver = f => {
-    assert.strictEqual(f(null, undefined), 'Null None');
-    assert.strictEqual(f(1, null), 'Value(1) Some(Null)');
-    assert.strictEqual(f(1, 'a'), 'Value(1) Some(Value("a"))');
-    checkUndefined(v => f(v, undefined), { value: 'Value(0) None' });
+    assert.strictEqual(f(null, undefined), 'Null Value(None)');
+    assert.strictEqual(f(1, null), 'Value(1) Null');
+    assert.strictEqual(f(1, 'a'), 'Value(1) Value(Some("a"))');
+    checkUndefined(v => f(v, undefined), { value: 'Value(0) Value(None)' });
 };
 
 exports.nullable_type_nullable_closure_driver = f => {

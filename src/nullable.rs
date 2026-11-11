@@ -7,7 +7,7 @@ use crate::{JsCast, JsValue};
 /// A `T` or `null` at the JS boundary.
 ///
 /// `Nullable<T>` is the Rust-side type for a JS value of type `T | null`, as
-/// `Option<T>` is for `T | undefined`, and `Option<Nullable<T>>` is the union
+/// `Option<T>` is for `T | undefined`, and `Nullable<Option<T>>` is the union
 /// `T | null | undefined`. All three are accepted in the same positions: as an
 /// argument or return value of exported and imported functions, as a public
 /// field of an exported struct, and as a closure argument or return value,
@@ -17,13 +17,15 @@ use crate::{JsCast, JsValue};
 /// |---|---|---|---|
 /// | `Option<T>` | `T \| undefined` | `undefined` and `null` → `None`; anything else goes to `T`'s conversion | `None` → `undefined` |
 /// | `Nullable<T>` | `T \| null` | `null` → `Null`; anything else, `undefined` included, goes to `T`'s conversion | `Null` → `null` |
-/// | `Option<Nullable<T>>` | `T \| null \| undefined` | `undefined` → `None`, `null` → `Some(Null)`, else `Some(Value(..))` | `None` → `undefined`, `Some(Null)` → `null` |
+/// | `Nullable<Option<T>>` | `T \| null \| undefined` | `null` → `Null`, `undefined` → `Value(None)`, else `Value(Some(..))` | `Null` → `null`, `Value(None)` → `undefined` |
 ///
-/// The `Option` layer of `Option<Nullable<T>>` treats only `undefined` as
-/// `None`, since `null` has to reach the `Nullable` layer.
-/// `opt.and_then(Nullable::value)` collapses the union to an
-/// `Option<T>`. No other nesting is supported: `Nullable<Nullable<T>>`,
-/// `Nullable<Option<T>>` and `Option<Option<T>>` do not cross the boundary.
+/// The layers read from the outside in: the `Nullable` layer of
+/// `Nullable<Option<T>>` claims `null`, so only `undefined` reaches the
+/// `Option` layer as `None`. `nullable.value().flatten()` collapses the union
+/// to an `Option<T>`. No other nesting is supported: `Nullable<Nullable<T>>`,
+/// `Option<Option<T>>` and `Option<Nullable<T>>` do not cross the boundary,
+/// as an outer `Option` reads `null` as `None` before it reaches the
+/// `Nullable` inside.
 ///
 /// Both may also name a slot of a js-sys `Function<fn(..)>` signature or a
 /// `Promise<T>` resolution. Where a js-sys container's type-erased methods
@@ -413,26 +415,28 @@ impl<T: JsGeneric> From<Nullable<T>> for JsNullable<T> {
     }
 }
 
-/// `None` is `undefined`, which `JsNullable` admits as its other empty state.
-impl<T: JsGeneric> From<Option<Nullable<T>>> for JsNullable<T> {
+/// `Value(None)` is `undefined`, which `JsNullable` admits as its other empty
+/// state.
+impl<T: JsGeneric> From<Nullable<Option<T>>> for JsNullable<T> {
     #[inline]
-    fn from(option: Option<Nullable<T>>) -> Self {
-        match option {
-            Some(nullable) => nullable.into(),
-            None => JsValue::UNDEFINED.unchecked_into(),
+    fn from(nullable: Nullable<Option<T>>) -> Self {
+        match nullable {
+            Nullable::Null => JsNullable::new(),
+            Nullable::Value(Some(v)) => JsNullable::wrap(v),
+            Nullable::Value(None) => JsValue::UNDEFINED.unchecked_into(),
         }
     }
 }
 
-impl<T: JsGeneric> From<JsNullable<T>> for Option<Nullable<T>> {
+impl<T: JsGeneric> From<JsNullable<T>> for Nullable<Option<T>> {
     #[inline]
     fn from(nullable: JsNullable<T>) -> Self {
-        if JsValue::is_undefined(&nullable) {
-            None
-        } else if JsValue::is_null(&nullable) {
-            Some(Nullable::Null)
+        if JsValue::is_null(&nullable) {
+            Nullable::Null
+        } else if JsValue::is_undefined(&nullable) {
+            Nullable::Value(None)
         } else {
-            Some(Nullable::Value(nullable.unchecked_into()))
+            Nullable::Value(Some(nullable.unchecked_into()))
         }
     }
 }

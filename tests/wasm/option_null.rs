@@ -1,7 +1,7 @@
 //! JS → Rust `Option<T>` reads both JS empties as `None`: `null` as well as
 //! `undefined`, for every `T` and in every position. Rust → JS `None` is
 //! always `undefined`; a slot that has to carry `null` out, or tell the two
-//! apart coming in, is `Nullable<T>` / `Option<Nullable<T>>`.
+//! apart coming in, is `Nullable<T>` / `Nullable<Option<T>>`.
 
 use std::cell::Cell;
 use std::panic::AssertUnwindSafe;
