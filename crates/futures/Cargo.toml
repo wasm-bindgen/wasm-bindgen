@@ -21,9 +21,10 @@ js-sys = { path = "../js-sys", version = "=0.3.107", default-features = false }
 wasm-bindgen = { path = "../..", version = "=0.2.130", default-features = false }
 
 # Unstable: only pulled in under `--cfg wasm_bindgen_unstable_tokio`, and
-# requires tokio's emscripten event-loop support (tokio-rs/tokio#8484).
+# requires tokio's emscripten event-loop support (tokio-rs/tokio#8484) on
+# Emscripten 6.0.12 or later.
 [target.'cfg(all(target_os = "emscripten", wasm_bindgen_unstable_tokio))'.dependencies]
-tokio = { version = "1", features = ["rt", "time"], default-features = false }
+tokio = { version = "1.54", features = ["rt", "time"], default-features = false }
 
 [features]
 default = ["std"]

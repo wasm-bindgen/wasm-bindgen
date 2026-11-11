@@ -1298,8 +1298,8 @@ impl TryToTokens for ast::Export {
                 // work), bridging its outcome to the returned `Promise`:
                 // the thread's shared ambient runtime, or with
                 // `experimental_tokio = "isolated"` a fresh runtime owned by
-                // this invocation. `schedule` drives before returning when
-                // safe. Off emscripten (or without the unstable cfg)
+                // this invocation. `schedule` ticks the loop before returning
+                // when safe. Off emscripten (or without the unstable cfg)
                 // `wasm_bindgen_futures::tokio` is a stub whose bound
                 // reports the unsupported target at the attribute.
                 let promise = if ast::use_js_sys_futures() {

@@ -3673,7 +3673,7 @@ fn emscripten_jspi_codegen() {
 ///
 /// The `experimental_tokio` export is the runtime coverage for the tokio
 /// attribute: the harness in `tests/wasm32-emscripten` only checks the
-/// generated library. The tokio/mio `[patch]`es mirror the workspace ones.
+/// generated library. The tokio `[patch]`es mirror the workspace ones.
 #[test]
 fn emscripten_end_to_end() {
     let Some(emcc) = which("emcc") else {
@@ -3719,8 +3719,7 @@ fn emscripten_end_to_end() {
                 tokio = {{ version = "1", default-features = false, features = ["rt", "time"] }}
 
                 [patch.crates-io]
-                mio = {{ git = "https://github.com/guybedford/mio", tag = "1.2.3-cf.emscripten" }}
-                tokio = {{ git = "https://github.com/guybedford/tokio", tag = "1.53.1-cf.emscripten" }}
+                tokio = {{ git = "https://github.com/guybedford/tokio", tag = "1.54.1-cf.emscripten" }}
 
                 [workspace]
                 "#,
@@ -3728,8 +3727,8 @@ fn emscripten_end_to_end() {
             ),
         )
         // The documented configuration, plus `-sERROR_ON_UNDEFINED_SYMBOLS=0`
-        // which stock emscripten needs for the tokio patchset's epoll
-        // listener intrinsics (CI runs the emsdk release, not the patchset).
+        // for tokio's epoll listener intrinsics on the Emscripten 6.0.10 the
+        // JSPI patchset is based on.
         .file(
             ".cargo/config.toml",
             r#"
@@ -3828,6 +3827,27 @@ fn emscripten_end_to_end() {
                 ms * 2
             }
 
+            // Calls `f` in its first poll, then settles on a later tick.
+            #[wasm_bindgen(experimental_tokio)]
+            pub async fn tokio_first_poll(f: js_sys::Function) -> u32 {
+                f.call0(&JsValue::NULL).unwrap();
+                tokio::task::yield_now().await;
+                1
+            }
+
+            #[wasm_bindgen(experimental_tokio = "isolated")]
+            pub async fn tokio_isolated_first_poll(f: js_sys::Function) -> u32 {
+                f.call0(&JsValue::NULL).unwrap();
+                tokio::task::yield_now().await;
+                2
+            }
+
+            // Settles in its first poll.
+            #[wasm_bindgen(experimental_tokio = "isolated")]
+            pub async fn tokio_isolated_ready() -> u32 {
+                3
+            }
+
             fn main() {
                 println!("main ran");
             }
@@ -3890,6 +3910,31 @@ fn emscripten_end_to_end() {
         assert(Date.now() - t0 >= 35, 'tokio timers actually waited');
         // The ambient loop is reusable after its roots settle.
         assert(await m.tokio_sleep_spawn(1) === 2, 'ambient loop reuse');
+
+        // The first poll runs on the caller's stack.
+        for (const first of [m.tokio_first_poll, m.tokio_isolated_first_poll]) {
+            let polled = false;
+            const p = first(() => { polled = true; });
+            assert(polled, 'synchronous first poll');
+            assert([1, 2].includes(await p), 'first poll result');
+        }
+        assert(await m.tokio_isolated_ready() === 3, 'isolated root settling in its first poll');
+
+        // An export invoked from a task's first poll, where no tick can
+        // nest, is queued: on the loop being ticked, or on a fresh one.
+        for (const first of [m.tokio_first_poll, m.tokio_isolated_first_poll]) {
+            let nested;
+            await first(() => {
+                let polled = false;
+                nested = [
+                    m.tokio_sleep_spawn(1),
+                    m.tokio_isolated(1),
+                    m.tokio_first_poll(() => { polled = true; }),
+                ];
+                assert(!polled, 'a nested schedule only queues');
+            });
+            assert((await Promise.all(nested)).join() === '2,2,1', 'nested schedules');
+        }
 
         console.log('ok');
         "#,
@@ -3965,8 +4010,7 @@ fn emscripten_jspi_end_to_end(name: &str, reentrant: bool) {
                 # The workspace `.cargo/config.toml` applies here too and
                 # enables the tokio cfg, so its patches are needed as well.
                 [patch.crates-io]
-                mio = {{ git = "https://github.com/guybedford/mio", tag = "1.2.3-cf.emscripten" }}
-                tokio = {{ git = "https://github.com/guybedford/tokio", tag = "1.53.1-cf.emscripten" }}
+                tokio = {{ git = "https://github.com/guybedford/tokio", tag = "1.54.1-cf.emscripten" }}
 
                 [workspace]
                 "#,
@@ -4118,10 +4162,9 @@ fn emscripten_jspi_end_to_end(name: &str, reentrant: bool) {
 
 /// `#[wasm_bindgen(jspi, experimental_tokio)]`: a promising export that runs
 /// its future to completion with `block_on` on a tokio runtime which parks by
-/// JSPI suspension of the activation, so invocations interleave at every
-/// wait; tokio's fiber-owned runtime context (`tokio_unstable_jspi_hooks`)
-/// lets a sibling enter while another is parked, whether the park is tokio's
-/// own or a suspension issued from task code. Built with
+/// JSPI suspension of the activation, whether the park is tokio's own or a
+/// suspension issued from task code. The runtime stays entered while parked,
+/// so the invocations run one at a time. Built with
 /// `-sJSPI -sREENTRANT_JSPI`.
 #[test]
 fn emscripten_end_to_end_jspi_tokio() {
@@ -4184,8 +4227,7 @@ fn emscripten_jspi_tokio_project(name: &str) -> Option<(PathBuf, &'static [&'sta
                 tokio = {{ version = "1", default-features = false, features = ["rt", "time"] }}
 
                 [patch.crates-io]
-                mio = {{ git = "https://github.com/guybedford/mio", tag = "1.2.3-cf.emscripten" }}
-                tokio = {{ git = "https://github.com/guybedford/tokio", tag = "1.53.1-cf.emscripten" }}
+                tokio = {{ git = "https://github.com/guybedford/tokio", tag = "1.54.1-cf.emscripten" }}
 
                 [workspace]
                 "#,
@@ -4203,9 +4245,9 @@ fn emscripten_jspi_tokio_project(name: &str) -> Option<(PathBuf, &'static [&'sta
               "--cfg=wasm_bindgen_unstable_jspi",
               "--cfg=wasm_bindgen_unstable_tokio",
               "--cfg=tokio_unstable",
-              "--cfg=tokio_unstable_jspi_hooks",
               "-Clink-arg=-sWASM_BINDGEN",
               "-Clink-arg=-Wno-experimental",
+              "-Clink-arg=-sERROR_ON_UNDEFINED_SYMBOLS=0",
               "-Clink-arg=-sJSPI",
               "-Clink-arg=-sREENTRANT_JSPI",
               "-Clink-arg=-sMODULARIZE",
@@ -4306,36 +4348,10 @@ fn emscripten_jspi_tokio_project(name: &str) -> Option<(PathBuf, &'static [&'sta
         assert(await a === 21, 'sleep_and_spawn');
         assert(Date.now() - t0 >= 15, 'the tokio timer waited');
 
-        // Independent parking: completion follows the sleep lengths.
-        const order = [];
-        t0 = Date.now();
-        const settled = await Promise.all([40, 10, 25].map(ms => m.isolated_sleep(ms).then(v => {{ order.push(v); return v; }})));
-        assert(settled.join() === '40,10,25', `isolated results ${{settled}}`);
-        assert(order.join() === '10,25,40', `isolated completion order ${{order}}`);
-        assert(Date.now() - t0 < 80, `isolated invocations overlapped (${{Date.now() - t0}} ms)`);
-
-        // The shared runtime: a sibling enters while another is parked.
-        order.length = 0;
-        t0 = Date.now();
-        await Promise.all([40, 10].map(ms => m.sleep_and_spawn(ms).then(v => order.push(v))));
-        assert(order.join() === '11,41', `ambient completion order ${{order}}`);
-        assert(Date.now() - t0 < 80, `ambient invocations overlapped (${{Date.now() - t0}} ms)`);
-
+        assert(await m.isolated_sleep(10) === 10, 'isolated_sleep');
         assert(await m.block_on_promise(Promise.resolve(40)) === 42, 'jspi_block_on_promise in the root');
         assert(await m.task_suspends(5) === 8, 'a suspension inside task code');
-
-        // A sibling enters while a task-issued suspension holds another
-        // activation parked. On the shared runtime the parked activation
-        // owns the scheduler core mid-poll, so the sibling's timers only
-        // fire once it resumes; an isolated runtime parks independently.
-        order.length = 0;
-        await Promise.all([m.task_suspends(40).then(v => order.push(v)), m.sleep_and_spawn(5).then(v => order.push(v))]);
-        assert(order.join() === '43,6', `ambient sibling during a task suspension ${{order}}`);
-        order.length = 0;
-        t0 = Date.now();
-        await Promise.all([m.isolated_task_suspends(40).then(v => order.push(v)), m.isolated_sleep(5).then(v => order.push(v))]);
-        assert(order.join() === '5,44', `isolated sibling during a task suspension ${{order}}`);
-        assert(Date.now() - t0 < 80, `isolated sibling overlapped (${{Date.now() - t0}} ms)`);
+        assert(await m.isolated_task_suspends(5) === 9, 'a suspension inside an isolated task');
 
         console.log('ok');
         "#

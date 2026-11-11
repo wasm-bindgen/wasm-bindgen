@@ -23,6 +23,14 @@
 
 ### Changed
 
+* The experimental `#[wasm_bindgen(experimental_tokio)]` support targets the
+  hosted event loop of the current Tokio patchset (`1.54.1-cf.emscripten`),
+  which ticks itself from host callbacks and needs Emscripten 6.0.12 or
+  later. The mio patch is no longer needed. A `jspi, experimental_tokio`
+  export no longer admits a second invocation while one is parked, and
+  `--cfg tokio_unstable_jspi_hooks` is gone.
+  [#5466](https://github.com/wasm-bindgen/wasm-bindgen/pull/5466)
+
 * Awaiting a `js_sys::Promise<T, E>` converts the rejection reason through
   `E: From<JsValue>` rather than `E: FromWasmAbi`, as a `catch` import's
   error does, since JS can reject with any value. JS types still convert

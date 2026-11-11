@@ -176,15 +176,16 @@ The cfg makes `wasm-bindgen-futures` depend on Tokio and expose the runtime
 glue; without it nothing Tokio-related is compiled or linked, and the
 attribute is a compile error (as it is on any other target).
 
-Until the Tokio side lands upstream ([tokio#8484], with [mio#1969] for the
-reactor), both crates come from a tagged patchset, together with Tokio's own
-`--cfg tokio_unstable`:
+Until the Tokio side lands upstream ([tokio#8484]), Tokio comes from a tagged
+patchset, together with its own `--cfg tokio_unstable`:
 
 ```toml
 # Cargo.toml
 [patch.crates-io]
-mio = { git = "https://github.com/guybedford/mio", tag = "1.2.3-cf.emscripten" }
-tokio = { git = "https://github.com/guybedford/tokio", tag = "1.53.1-cf.emscripten" }
+tokio = { git = "https://github.com/guybedford/tokio", tag = "1.54.1-cf.emscripten" }
+tokio-macros = { git = "https://github.com/guybedford/tokio", tag = "1.54.1-cf.emscripten" }
+# With Tokio's `net` feature, until tokio-rs/mio#1969 is in a mio release:
+mio = { git = "https://github.com/tokio-rs/mio" }
 ```
 
 ```toml
@@ -193,27 +194,36 @@ tokio = { git = "https://github.com/guybedford/tokio", tag = "1.53.1-cf.emscript
 rustflags = ["--cfg=wasm_bindgen_unstable_tokio", "--cfg=tokio_unstable", ...]
 ```
 
-The reactor also needs Emscripten's epoll readiness listeners
-([emscripten#27547]) and async DNS ([emscripten#27742]), not yet in a
-release. The `6.0.10-cf.emscripten` tag of [guybedford/emscripten] is
-Emscripten 6.0.10 plus those changes; with `emcc` 6.0.10 (emsdk, Homebrew,
-...) already on `PATH`, use its checkout as the frontend over that toolchain:
+The event loop is hosted by the JS event loop: it registers its reactor's
+readiness and its timer deadlines with the host and runs its tasks from those
+callbacks. An export called from JS also runs one batch on the caller's
+stack, so the future's first poll is synchronous, as it is for a plain
+`async` export.
+
+This needs Emscripten 6.0.12 or later, for its epoll readiness listeners
+([emscripten#27547]). Resolving hostnames additionally needs async DNS
+([emscripten#27742]), not yet in a release, and a multiplexed host needs the
+listener callbacks delivered as a microtask of the task that made the reactor
+ready. The `7.0.0-cf.emscripten` tag of [guybedford/emscripten][emscripten-cf]
+is Emscripten 7.0.0 plus those two changes; with `emcc` 7.0.0 (emsdk,
+Homebrew, ...) already on `PATH`, use its checkout as the frontend over that
+toolchain:
 
 ```sh
-git clone --depth 1 --branch 6.0.10-cf.emscripten https://github.com/guybedford/emscripten
+git clone --depth 1 --branch 7.0.0-cf.emscripten https://github.com/guybedford/emscripten
 (cd emscripten && ./bootstrap.py)
 printf "LLVM_ROOT = '%s'\nBINARYEN_ROOT = '%s'\n" "$(em-config LLVM_ROOT)" "$(em-config BINARYEN_ROOT)" > emscripten/.emscripten
 export PATH=$PWD/emscripten:$PATH
 ```
 
-Timers, `tokio::spawn` and the sync primitives work on stock Emscripten
-6.0.10 too, where the missing listener intrinsics make linking with Tokio's
-`net` feature require `-Clink-arg=-sERROR_ON_UNDEFINED_SYMBOLS=0`.
+On an Emscripten older than 6.0.12, timers, `tokio::spawn` and the sync
+primitives still work when linked with
+`-Clink-arg=-sERROR_ON_UNDEFINED_SYMBOLS=0`.
 
 [tokio#8484]: https://github.com/tokio-rs/tokio/pull/8484
-[mio#1969]: https://github.com/tokio-rs/mio/pull/1969
 [emscripten#27547]: https://github.com/emscripten-core/emscripten/pull/27547
 [emscripten#27742]: https://github.com/emscripten-core/emscripten/pull/27742
+[emscripten-cf]: https://github.com/guybedford/emscripten/tree/7.0.0-cf.emscripten
 [guybedford/emscripten]: https://github.com/guybedford/emscripten/tree/6.0.10-cf.emscripten
 
 ## JSPI
@@ -304,10 +314,7 @@ with `block_on` on a current-thread Tokio runtime, and every wait of that
 runtime (timers, I/O readiness, an idle scheduler) is a JSPI suspension of the
 activation. To JS it is a sync `jspi` export: a `Promise` of the value.
 `jspi_block_on_promise` and suspending imports work anywhere inside, in the
-root or in spawned tasks. Invocations interleave at every wait: Tokio's
-fiber-owned runtime context (`--cfg tokio_unstable_jspi_hooks`, in the tagged
-Tokio) lets a sibling invocation enter while another is parked, whether the
-park is Tokio's own or a suspension issued from task code.
+root or in spawned tasks.
 
 ```rust
 #[wasm_bindgen(jspi, experimental_tokio)]
@@ -321,22 +328,28 @@ pub async fn handle(req: Request) -> Response {
 By default all such exports share the thread's ambient runtime; with
 `experimental_tokio = "isolated"` each invocation owns a fresh runtime,
 dropped once the root settles (tasks still in flight are dropped, the reactor
-closed). The shared runtime has one scheduler core: while an activation is
-suspended from inside a task (a suspending import or `jspi_block_on_promise`
-in task code, rather than a Tokio wait), it holds that core, and a sibling
-invocation's timers and I/O only advance once it resumes. Isolated runtimes
-park independently.
+closed).
+
+The runtime stays entered on the thread while its activation is parked, so
+only one such invocation can be in flight: a second `jspi, experimental_tokio`
+export called before the first settles panics as a nested runtime, in either
+mode. An `experimental_tokio` export without `jspi` called meanwhile is
+queued, and runs once the parked invocation returns.
 
 The complete configuration for the combination is the union of the Tokio and
-JSPI ones above: the JSPI toolchain setup (the tag carries the Tokio changes
-too), and Node 25 or newer (Node 24 with `--experimental-wasm-jspi`) to run.
+JSPI ones above: the JSPI toolchain setup, and Node 25 or newer (Node 24 with
+`--experimental-wasm-jspi`) to run. That toolchain is Emscripten 6.0.10, so
+it predates the readiness listeners: link with
+`-Clink-arg=-sERROR_ON_UNDEFINED_SYMBOLS=0`, and Tokio I/O is unavailable.
 Crates:
 
 ```toml
 # Cargo.toml
 [patch.crates-io]
-mio = { git = "https://github.com/guybedford/mio", tag = "1.2.3-cf.emscripten" }
-tokio = { git = "https://github.com/guybedford/tokio", tag = "1.53.1-cf.emscripten" }
+tokio = { git = "https://github.com/guybedford/tokio", tag = "1.54.1-cf.emscripten" }
+tokio-macros = { git = "https://github.com/guybedford/tokio", tag = "1.54.1-cf.emscripten" }
+# With Tokio's `net` feature, until tokio-rs/mio#1969 is in a mio release:
+mio = { git = "https://github.com/tokio-rs/mio" }
 ```
 
 ```toml
@@ -349,8 +362,8 @@ rustflags = [
   "--cfg=wasm_bindgen_unstable_tokio",
   "--cfg=wasm_bindgen_unstable_jspi",
   "--cfg=tokio_unstable",
-  "--cfg=tokio_unstable_jspi_hooks",
   "-Clink-arg=-sWASM_BINDGEN",
+  "-Clink-arg=-sERROR_ON_UNDEFINED_SYMBOLS=0",
   "-Clink-arg=-sJSPI",
   "-Clink-arg=-sREENTRANT_JSPI",
 ]
