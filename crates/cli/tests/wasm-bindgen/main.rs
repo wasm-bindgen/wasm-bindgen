@@ -3871,6 +3871,66 @@ fn emscripten_end_to_end() {
                 3
             }
 
+            use wasm_bindgen_futures::tokio::EventLoop;
+
+            // Settles while a task it spawned still sleeps, which holds the
+            // isolated loop until it calls `done`.
+            #[wasm_bindgen(experimental_tokio = "isolated")]
+            pub async fn tokio_isolated_extending(ms: u32, done: js_sys::Function) -> u32 {
+                EventLoop::current().spawn(async move {
+                    tokio::time::sleep(std::time::Duration::from_millis(ms as u64)).await;
+                    done.call1(&JsValue::NULL, &ms.into()).unwrap();
+                });
+                4
+            }
+
+            fn current_is_task_loop() -> impl std::future::Future<Output = bool> {
+                let here = tokio::runtime::Handle::current().id();
+                let there = EventLoop::current().spawn(async { tokio::runtime::Handle::current().id() });
+                async move { there.await.unwrap() == here }
+            }
+
+            // `EventLoop::current()` in its first poll, which may be inside
+            // an `enter`, is its own loop.
+            #[wasm_bindgen(experimental_tokio = "isolated")]
+            pub async fn tokio_isolated_current() -> bool {
+                current_is_task_loop().await
+            }
+
+            // Calls `first` in its first poll, then settles on a timer with
+            // the id of the runtime it ran on, after checking that
+            // `EventLoop::current()` there is that loop.
+            #[wasm_bindgen(experimental_tokio)]
+            pub async fn tokio_runtime_id(first: js_sys::Function) -> String {
+                first.call0(&JsValue::NULL).unwrap();
+                tokio::time::sleep(std::time::Duration::from_millis(1)).await;
+                if !current_is_task_loop().await {
+                    return "current() is not the task's loop".into();
+                }
+                tokio::runtime::Handle::current().id().to_string()
+            }
+
+            thread_local! {
+                static LOOPS: std::cell::RefCell<Vec<EventLoop>> = Default::default();
+            }
+
+            // A host-owned loop, as one per Durable Object instance.
+            #[wasm_bindgen]
+            pub fn event_loop_new() -> usize {
+                LOOPS.with(|loops| {
+                    let mut loops = loops.borrow_mut();
+                    loops.push(EventLoop::new());
+                    loops.len() - 1
+                })
+            }
+
+            // Calls `f`, rooting the exports it calls on loop `i`.
+            #[wasm_bindgen]
+            pub fn under_event_loop(i: usize, f: &js_sys::Function) -> JsValue {
+                let rt = LOOPS.with(|loops| loops.borrow()[i].clone());
+                rt.enter(|| f.call0(&JsValue::NULL).unwrap())
+            }
+
             fn main() {
                 println!("main ran");
             }
@@ -3934,6 +3994,36 @@ fn emscripten_end_to_end() {
             assert([1, 2].includes(await p), 'first poll result');
         }
         assert(await m.tokio_isolated_ready() === 3, 'isolated root settling in its first poll');
+
+        // A loop-extending task outlives its isolated root.
+        {
+            let extended = 0, extensionDone;
+            const extension = new Promise((resolve) => { extensionDone = resolve; });
+            const t0 = Date.now();
+            const r = await m.tokio_isolated_extending(20, (ms) => { extended = ms; extensionDone(); });
+            assert(r === 4 && extended === 0, 'isolated root settles before its extension');
+            await extension;
+            assert(extended === 20 && Date.now() - t0 >= 15, 'extension ran on its timer');
+        }
+        assert(await m.tokio_isolated_current(), 'current() in an isolated task');
+
+        // Host-owned loops: each its own runtime, shared by its roots, and
+        // the ambient loop again outside them.
+        {
+            const ambient = await m.tokio_runtime_id(() => {});
+            const loops = [m.event_loop_new(), m.event_loop_new()];
+            const under = (i, first = () => {}) =>
+                m.under_event_loop(loops[i], () => m.tokio_runtime_id(first));
+            let polled = false;
+            const p = under(0, () => { polled = true; });
+            assert(polled, 'synchronous first poll on a host loop');
+            const [a0, b0, a1, amb] = await Promise.all([p, under(1), under(0), m.tokio_runtime_id(() => {})]);
+            assert(a0 === a1, `roots under one handle share a runtime: ${a0} ${a1}`);
+            assert(new Set([a0, b0, ambient]).size === 3, `distinct runtimes: ${a0} ${b0} ${ambient}`);
+            assert(amb === ambient, 'the ambient loop outside enter');
+            assert(await m.under_event_loop(loops[0], () => m.tokio_isolated_current()),
+                'current() in a task is its loop, not the entered one');
+        }
 
         // An export invoked from a task's first poll, where no tick can
         // nest, is queued: on the loop being ticked, or on a fresh one.

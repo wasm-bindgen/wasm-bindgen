@@ -1296,9 +1296,10 @@ impl TryToTokens for ast::Export {
                 // Drive the exported future on a tokio event-loop
                 // runtime (so `tokio::spawn`, timers, and IO inside it
                 // work), bridging its outcome to the returned `Promise`:
-                // the thread's shared ambient runtime, or with
-                // `experimental_tokio = "isolated"` a fresh runtime owned by
-                // this invocation. `schedule` ticks the loop before returning
+                // the current event loop (the calling task's, the entered
+                // one, or the thread's ambient one), or with
+                // `experimental_tokio = "isolated"` a fresh one held by this
+                // invocation. `schedule` ticks the loop before returning
                 // when safe. Off emscripten (or without the unstable cfg)
                 // `wasm_bindgen_futures::tokio` is a stub whose bound
                 // reports the unsupported target at the attribute.
@@ -1307,9 +1308,9 @@ impl TryToTokens for ast::Export {
                 } else {
                     quote! { #wasm_bindgen_futures::js_sys::Promise }
                 };
-                let schedule = match tokio_mode {
-                    ast::TokioMode::Ambient => quote! { schedule },
-                    ast::TokioMode::Isolated => quote! { schedule_isolated },
+                let event_loop = match tokio_mode {
+                    ast::TokioMode::Ambient => quote! { current },
+                    ast::TokioMode::Isolated => quote! { new },
                 };
                 call = quote! {
                     {
@@ -1327,7 +1328,7 @@ impl TryToTokens for ast::Export {
                             let __wbg_fut = __wbg_fut
                                 .take()
                                 .expect("Promise executor invoked more than once");
-                            #wasm_bindgen_futures::tokio::#schedule(__wbg_fut, move |__wbg_out| {
+                            #wasm_bindgen_futures::tokio::EventLoop::#event_loop().schedule(__wbg_fut, move |__wbg_out| {
                                 match __wbg_out {
                                     ::core::result::Result::Ok(::core::result::Result::Ok(__wbg_val)) => {
                                         let _ = resolve.call(&#wasm_bindgen::JsValue::UNDEFINED, (&__wbg_val,));

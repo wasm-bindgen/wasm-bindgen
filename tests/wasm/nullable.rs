@@ -99,9 +99,8 @@ fn test_from_option_none() {
 
 #[wasm_bindgen_test]
 fn test_is_empty_null() {
-    // Strict semantics: `null` is a present value, not empty.
     let val = return_null();
-    assert!(!val.is_empty());
+    assert!(val.is_empty());
 }
 
 #[wasm_bindgen_test]
@@ -129,6 +128,13 @@ fn test_as_option_none() {
     let val = return_undefined();
     let opt = val.as_option();
     assert!(opt.is_none());
+}
+
+#[wasm_bindgen_test]
+fn test_as_option_null() {
+    assert!(return_null().as_option().is_none());
+    assert!(return_null().into_option().is_none());
+    assert_eq!(return_null().unwrap_or_default().value_of(), 0.0);
 }
 
 #[wasm_bindgen_test]
@@ -199,9 +205,8 @@ fn test_unwrap_or_else() {
 
 #[wasm_bindgen_test]
 fn test_import_null() {
-    // Strict semantics: JS `null` is a present value, not empty.
     let val = return_null();
-    assert!(!val.is_empty());
+    assert!(val.is_empty());
 }
 
 #[wasm_bindgen_test]

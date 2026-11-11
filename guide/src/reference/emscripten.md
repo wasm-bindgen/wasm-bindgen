@@ -250,11 +250,14 @@ in the same module.
 An exported `async fn` marked `#[wasm_bindgen(experimental_tokio)]` is driven
 as a root on a Tokio event-loop runtime instead of the `wasm-bindgen-futures`
 executor, with its outcome bridged to the returned `Promise`. `tokio::spawn`,
-timers and Tokio I/O then work inside the export without JSPI. All such
-exports share the thread's ambient runtime; `experimental_tokio = "isolated"`
-gives each invocation its own runtime, torn down once the root future
-settles, for multiplexed hosts where one invocation's I/O must not cross
-into another's context.
+timers and Tokio I/O then work inside the export without JSPI. By default
+an export roots on the current runtime: the calling task's, else the one a
+host entered, else the thread's ambient runtime.
+`experimental_tokio = "isolated"` gives each invocation its own runtime,
+which lives until the root and every task it started with `EventLoop::spawn`
+have finished, for
+multiplexed hosts where one invocation's I/O must not cross into another's
+context.
 
 ```rust
 #[wasm_bindgen(experimental_tokio)]
@@ -262,6 +265,14 @@ pub async fn fetch(req: Request) -> Response {
     // tokio::net, tokio::time, tokio::spawn are all usable here
 }
 ```
+
+Runtimes are `wasm_bindgen_futures::tokio::EventLoop`s, and every root and
+every `EventLoop::spawn` task holds its loop; a plain `tokio::spawn` task does
+not. `EventLoop::current().spawn(fut)` keeps an isolated
+runtime alive until `fut` finishes, for work that outlives the response,
+such as a Workers `ctx.waitUntil`. A host that wants one runtime per
+long-lived context, such as a Durable Object instance, holds an `EventLoop`
+and calls that context's exports inside `rt.enter(|| ..)`.
 
 The support is unstable and gated behind `--cfg wasm_bindgen_unstable_tokio`.
 The cfg makes `wasm-bindgen-futures` depend on Tokio and expose the runtime

@@ -36,12 +36,21 @@ pub mod tokio {
     )]
     pub trait ExperimentalTokioSupported {}
 
-    pub fn schedule<F: ExperimentalTokioSupported, C>(_future: F, _on_complete: C) {
-        unreachable!()
-    }
+    pub struct EventLoop;
 
-    pub fn schedule_isolated<F: ExperimentalTokioSupported, C>(_future: F, _on_complete: C) {
-        unreachable!()
+    #[allow(clippy::new_without_default)]
+    impl EventLoop {
+        pub fn new() -> EventLoop {
+            EventLoop
+        }
+
+        pub fn current() -> EventLoop {
+            EventLoop
+        }
+
+        pub fn schedule<F: ExperimentalTokioSupported, C>(&self, _future: F, _on_complete: C) {
+            unreachable!()
+        }
     }
 
     pub fn block_on<F: ExperimentalTokioSupported + core::future::Future>(_future: F) -> F::Output {
