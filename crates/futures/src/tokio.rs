@@ -57,15 +57,25 @@ fn ambient<R>(f: impl FnOnce(&RefCell<LocalEventLoop>) -> R) -> R {
 }
 
 /// Runs `f` with this thread's ambient event loop, building a default one
-/// (`enable_all`) on first touch.
+/// (`enable_all`) on first touch. For use outside the loop's own tasks,
+/// which reach it through `tokio::spawn` and `tokio::task::spawn_local`.
 ///
 /// # Panics
 ///
-/// Panics if called from a task which [`schedule`] is polling on its
-/// caller's stack: the loop is exclusively borrowed for that tick. A task
-/// reaches its own loop through `tokio::spawn` and `tokio::task::spawn_local`.
+/// Panics if called from a task of the ambient event loop: [`schedule`]
+/// borrows the loop exclusively while it ticks it on its caller's stack.
 pub fn with_ambient<R>(f: impl FnOnce(&LocalEventLoop) -> R) -> R {
-    ambient(|rt| f(&rt.borrow()))
+    ambient(|cell| {
+        let rt = cell
+            .try_borrow()
+            .ok()
+            .filter(|rt| {
+                ::tokio::runtime::Handle::try_current()
+                    .map_or(true, |current| current.id() != rt.handle().id())
+            })
+            .expect("`with_ambient` called from a task of the ambient event loop");
+        f(&rt)
+    })
 }
 
 /// Installs `rt` as this thread's ambient event loop, for callers needing

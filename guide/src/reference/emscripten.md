@@ -218,7 +218,9 @@ export PATH=$PWD/emscripten:$PATH
 
 On an Emscripten older than 6.0.12, timers, `tokio::spawn` and the sync
 primitives still work when linked with
-`-Clink-arg=-sERROR_ON_UNDEFINED_SYMBOLS=0`.
+`-Clink-arg=-sERROR_ON_UNDEFINED_SYMBOLS=0`, as long as Tokio's `net` feature
+is not enabled anywhere in the build: with it the event loop has a reactor to
+register, and building it aborts.
 
 [tokio#8484]: https://github.com/tokio-rs/tokio/pull/8484
 [emscripten#27547]: https://github.com/emscripten-core/emscripten/pull/27547
@@ -340,7 +342,8 @@ The complete configuration for the combination is the union of the Tokio and
 JSPI ones above: the JSPI toolchain setup, and Node 25 or newer (Node 24 with
 `--experimental-wasm-jspi`) to run. That toolchain is Emscripten 6.0.10, so
 it predates the readiness listeners: link with
-`-Clink-arg=-sERROR_ON_UNDEFINED_SYMBOLS=0`, and Tokio I/O is unavailable.
+`-Clink-arg=-sERROR_ON_UNDEFINED_SYMBOLS=0`, and leave Tokio's `net` feature
+off, as an `experimental_tokio` export without `jspi` aborts with it.
 Crates:
 
 ```toml
