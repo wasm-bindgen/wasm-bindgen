@@ -133,10 +133,26 @@ self-initialize on import so no `init()` call is needed.
 
 When the crate imports JavaScript modules (`#[wasm_bindgen(module = "...")]`
 or [JS snippets](js-snippets.md)), the imports are emitted to a sidecar
-`library_bindgen.extern-pre.js` that `emcc` prepends to its output, and the
-`snippets/` directory is copied next to the output. Cargo only copies the
-primary `.js` and `.wasm` out of `deps/`, so consume from — or copy from —
-`target/wasm32-unknown-emscripten/<profile>/deps/` in that case.
+`library_bindgen.extern-pre.js` that `emcc` prepends to its output.
+
+[Standalone](js-snippets.md#caveats) snippets are embedded in the output as
+`data:` URLs, so they travel with the `.js`. This is all or nothing: if any
+imported snippet, in any crate, looks like it depends on another file, every
+snippet stays in `snippets/`. The word `import` counts, even in a comment or
+string, as does a `from` followed by a quote, `/` or non-ASCII character.
+Property accesses such as `Array.from` don't.
+
+Without embedding, the output needs the `snippets/` directory beside it. `emcc`
+copies it to the link output directory,
+`target/wasm32-unknown-emscripten/<profile>/build/<package>/<hash>/out/` on Cargo
+1.100 and later and `.../<profile>/deps/` on older versions, and Cargo doesn't
+uplift it, so consume from there or copy it next to the `.js`.
+
+A strict `script-src` Content Security Policy must allow `data:`. workerd can't
+load `data:` modules directly, so bundle first: esbuild inlines them. Bun 1.3.4
+can't load `data:` URLs over about 1.5 KB, which is a snippet over about 1.1 KB.
+If output can't use `data:` URLs and `snippets/` is served beside it, set
+`WASM_BINDGEN_NO_EMBED_SNIPPETS` for the build to turn embedding off.
 
 ### Linking as a static library
 

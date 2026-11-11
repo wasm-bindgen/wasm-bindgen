@@ -3757,6 +3757,18 @@ fn emscripten_end_to_end() {
                 a + b
             }
 
+            // Only the `.js` and `.wasm` are copied into `pkg/`, as cargo
+            // uplifts them, so the snippet must not live in a side file.
+            #[wasm_bindgen(inline_js = "export function snippet_seven() { return Array.from([7])[0]; }")]
+            extern "C" {
+                fn snippet_seven() -> u32;
+            }
+
+            #[wasm_bindgen]
+            pub fn add_snippet(a: u32) -> u32 {
+                a + snippet_seven()
+            }
+
             #[wasm_bindgen]
             pub fn greet(name: &str) -> String {
                 format!("Hello, {name}!")
@@ -3886,6 +3898,7 @@ fn emscripten_end_to_end() {
         const assert = (c, msg) => { if (!c) throw new Error('assertion failed: ' + msg); };
 
         assert(m.add(2, 3) === 5, 'add');
+        assert(m.add_snippet(35) === 42, 'inline_js snippet');
         assert(m.greet('world') === 'Hello, world!', 'greet');
         const c = new m.Counter(41);
         assert(c.incr() === 42, 'Counter.incr');
@@ -4439,6 +4452,187 @@ fn emscripten_user_imports_are_prefixed() {
     assert!(
         lib.contains("$run: function run("),
         "the public export `run` must stay unprefixed:\n{lib}"
+    );
+}
+
+#[test]
+fn emscripten_snippets_embedded_all_or_nothing() {
+    // Import-free snippets travel inside the output as `data:` URLs, so they
+    // still work when only the `.js` and `.wasm` move. One snippet that imports
+    // keeps every snippet in `snippets/`: one file left behind fails startup
+    // anyway. Every file is written either way.
+    fn build(name: &str, importing: bool) -> (Project, Vec<String>, usize) {
+        fn count_files(dir: &Path) -> usize {
+            let files = fs::read_dir(dir)
+                .unwrap()
+                .map(|entry| entry.unwrap().path());
+            files
+                .map(|p| if p.is_dir() { count_files(&p) } else { 1 })
+                .sum()
+        }
+
+        const BUMP: &str = r#"#[wasm_bindgen(inline_js = "let n = 0; export function bump_a() { return ++n; } export function bump_b() { return ++n; }")]"#;
+        let mut project = Project::new(name);
+        project
+            .dep("snippet_dep = { path = 'snippet_dep' }")
+            .file(
+                "snippet_dep/Cargo.toml",
+                &format!(
+                    "
+                        [package]
+                        name = \"snippet_dep\"
+                        authors = []
+                        version = \"1.0.0\"
+                        edition = '2021'
+
+                        [dependencies]
+                        wasm-bindgen = {{ path = '{repo}' }}
+                    ",
+                    repo = REPO_ROOT.display(),
+                ),
+            )
+            .file(
+                "snippet_dep/src/lib.rs",
+                &format!(
+                    r#"
+                        use wasm_bindgen::prelude::*;
+
+                        {BUMP}
+                        extern "C" {{
+                            pub fn bump_a() -> u32;
+                        }}
+                    "#
+                ),
+            )
+            .file(
+                "js/plain.js",
+                "export function module_plain() { return 'é'.length; }\n",
+            )
+            .file(
+                "js/importing.js",
+                "export { module_importing } from './other.js';\n",
+            )
+            .file(
+                "src/lib.rs",
+                &format!(
+                    r#"
+                        use wasm_bindgen::prelude::*;
+
+                        #[wasm_bindgen(inline_js = "export function inline_plain(from, to) {{ return Array.from([from, to]).length; }}")]
+                        extern "C" {{
+                            fn inline_plain(from: u32, to: u32) -> u32;
+                        }}
+
+                        #[wasm_bindgen(module = "/js/plain.js")]
+                        extern "C" {{
+                            fn module_plain() -> u32;
+                        }}
+
+                        {BUMP}
+                        extern "C" {{
+                            fn bump_a() -> u32;
+                        }}
+
+                        {BUMP}
+                        extern "C" {{
+                            fn bump_b() -> u32;
+                        }}
+
+                        #[wasm_bindgen(inline_js = "// import nothing\nexport function unused() {{}}")]
+                        extern "C" {{
+                            pub fn unused();
+                        }}
+
+                        #[wasm_bindgen]
+                        pub fn run() -> u32 {{
+                            inline_plain(1, 2) + module_plain() + bump_a() + bump_b() + snippet_dep::bump_a()
+                        }}
+
+                        {extra}
+                    "#,
+                    extra = if importing {
+                        r#"
+                        #[wasm_bindgen(module = "/js/importing.js")]
+                        extern "C" {
+                            fn module_importing() -> u32;
+                        }
+
+                        #[wasm_bindgen]
+                        pub fn run_importing() -> u32 {
+                            module_importing()
+                        }
+                        "#
+                    } else {
+                        ""
+                    },
+                ),
+            );
+
+        let built = project.build();
+        let mut module = ModuleConfig::new().parse_file(&built).unwrap();
+        module.customs.add(RawCustomSection {
+            name: "__wasm_bindgen_emscripten_marker".into(),
+            data: vec![1],
+        });
+        let emscripten_wasm = project.root.join("emscripten_input.wasm");
+        module.emit_wasm_file(&emscripten_wasm).unwrap();
+
+        let out_dir = project.root.join("pkg-emscripten");
+        fs::create_dir_all(&out_dir).unwrap();
+        wasm_bindgen_cli::wasm_bindgen::run_cli_with_args([
+            "wasm-bindgen".as_ref(),
+            "--out-dir".as_ref(),
+            out_dir.as_os_str(),
+            emscripten_wasm.as_os_str(),
+        ])
+        .unwrap();
+
+        let extern_pre = fs::read_to_string(out_dir.join("library_bindgen.extern-pre.js")).unwrap();
+        let specifiers = extern_pre
+            .lines()
+            .filter_map(|line| line.split('\'').nth(1).map(String::from))
+            .collect();
+        let files = count_files(&out_dir.join("snippets"));
+        (project, specifiers, files)
+    }
+
+    let (mut project, urls, files) = build("emscripten_snippets_embedded", false);
+    assert_eq!(files, 6, "every file is still written");
+    assert_eq!(urls.len(), 5, "{urls:?}");
+    assert!(
+        urls.iter()
+            .all(|url| url.starts_with("data:text/javascript;base64,")),
+        "{urls:?}"
+    );
+    // Identical sources stay separate modules, in one crate and across crates.
+    assert_eq!(urls.iter().collect::<HashSet<_>>().len(), 5, "{urls:?}");
+
+    // The opt-out keeps plain relative imports. A separate process, since the
+    // variable is process-wide and other tests run alongside this one.
+    let opted_out = project.root.join("pkg-no-embed");
+    Command::new(env!("CARGO_BIN_EXE_wasm-bindgen"))
+        .env("WASM_BINDGEN_NO_EMBED_SNIPPETS", "1")
+        .arg("--out-dir")
+        .arg(&opted_out)
+        .arg(project.root.join("emscripten_input.wasm"))
+        .assert()
+        .success();
+    let extern_pre = fs::read_to_string(opted_out.join("library_bindgen.extern-pre.js")).unwrap();
+    assert!(extern_pre.contains("./snippets/"), "{extern_pre}");
+    assert!(!extern_pre.contains("data:text/javascript"), "{extern_pre}");
+
+    // Other targets keep plain relative imports.
+    let web = project.wasm_bindgen("--target web").unwrap();
+    let js = fs::read_to_string(web.join("emscripten_snippets_embedded.js")).unwrap();
+    assert!(js.contains("./snippets/"), "{js}");
+    assert!(!js.contains("data:text/javascript"), "{js}");
+
+    let (_, names, files) = build("emscripten_snippets_not_embedded", true);
+    assert_eq!(files, 7, "every file is still written");
+    assert_eq!(names.len(), 6, "{names:?}");
+    assert!(
+        names.iter().all(|name| name.starts_with("./snippets/")),
+        "{names:?}"
     );
 }
 

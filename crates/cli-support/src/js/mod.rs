@@ -15,10 +15,12 @@ use crate::{
     Bindgen, EncodeInto, OutputMode, INITIAL_HEAP_OFFSET, INITIAL_HEAP_VALUES, PLACEHOLDER_MODULE,
 };
 use anyhow::{anyhow, bail, Context as _, Error};
+use base64::{prelude::BASE64_STANDARD, Engine as _};
 use binding::TsReference;
 use std::borrow::Cow;
 use std::collections::btree_map::Entry;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::env;
 use std::fmt::Write;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -1265,7 +1267,9 @@ impl<'a> Context<'a> {
                 // wrapper. The library functions inside the wrapper close over
                 // these top-level bindings lexically, so `__wbg_foo` can call
                 // an imported `bar()` directly.
+                let embedded = self.emscripten_embedded_snippets();
                 for (module, items) in crate::sorted_iter(&self.js_imports) {
+                    let module = embedded.get(module).unwrap_or(module);
                     write_es_import(&mut self.emscripten_extern_pre_js, module, items);
                 }
             }
@@ -4717,6 +4721,44 @@ if (require('worker_threads').isMainThread) {{
         self.require_class_reference(name)
     }
 
+    /// Emscripten-only: each snippet's `./snippets/` name and the `data:` URL
+    /// that embeds it. emcc can't bundle the imports it prepends, and its link
+    /// output directory isn't always where the `.js` ends up, so the files may
+    /// not be reachable from there.
+    ///
+    /// All or nothing, so empty if any used snippet may import: one file left behind
+    /// fails startup anyway, and a module reached both through a `data:` URL
+    /// and through a sibling's relative import would load twice.
+    ///
+    /// `WASM_BINDGEN_NO_EMBED_SNIPPETS` turns it off, as an environment variable
+    /// because `emcc` runs wasm-bindgen with a fixed command. Output that serves
+    /// `snippets/` itself may need that under a CSP that forbids `data:`.
+    fn emscripten_embedded_snippets(&self) -> HashMap<String, String> {
+        if env::var_os("WASM_BINDGEN_NO_EMBED_SNIPPETS").is_some() {
+            return HashMap::new();
+        }
+        let inline = self.aux.snippets.iter().flat_map(|(id, list)| {
+            let names = (0..).map(|i| self.config.inline_js_module_name(id, i));
+            names.zip(list)
+        });
+        let local = self.aux.local_modules.iter();
+        let local = local.map(|(module, js)| (self.config.local_module_name(module), js));
+        // An unused snippet can't be imported by a used one without the scan
+        // seeing that import, so it has no say.
+        let snippets = inline
+            .chain(local)
+            .filter(|(name, _)| self.js_imports.contains_key(name))
+            .collect::<Vec<_>>();
+        if snippets.iter().any(|(_, js)| mentions_import(js)) {
+            return HashMap::new();
+        }
+        let embed = |(name, js): (String, &String)| {
+            let url = snippet_data_url(&name, js);
+            (name, url)
+        };
+        snippets.into_iter().map(embed).collect()
+    }
+
     fn add_module_import(&mut self, module: String, name: &str, actual: &str) {
         let rename = if name == actual {
             None
@@ -8093,9 +8135,41 @@ fn write_es_import(dest: &mut String, module: &str, items: &[(String, Option<Str
     dest.push_str("';\n");
 }
 
+/// Whether `source` may depend on a file or package, which a `data:` module
+/// can't resolve. Not a parse: a match in a comment or string counts too, and one
+/// match anywhere stops all embedding, so only spellings that can't be the
+/// keyword are skipped. A miss would embed a snippet that can't load.
+///
+/// Every `import` form has the word `import`, so `from` only matters in
+/// `export ... from`, where a specifier or comment comes next. Non-ASCII there
+/// counts because `trim_start` doesn't skip all of JS's whitespace.
+fn mentions_import(source: &str) -> bool {
+    let is_ident = |c: char| c.is_alphanumeric() || c == '_' || c == '$';
+    let is_specifier = |c: char| matches!(c, '\'' | '"' | '/') || !c.is_ascii();
+    let words = source.match_indices("import");
+    words.chain(source.match_indices("from")).any(|(i, word)| {
+        let before = &source[..i];
+        let after = &source[i + word.len()..];
+        let property = before.ends_with('.') && !before.ends_with("...");
+        !property
+            && !before.ends_with(is_ident)
+            && !after.starts_with(is_ident)
+            && (word == "import" || after.trim_start().starts_with(is_specifier))
+    })
+}
+
+/// The `data:` URL for a snippet. Runtimes key modules by URL, so the comment
+/// naming its file is what keeps identical snippets, and their state, apart. It
+/// goes last so a hashbang stays first and stack-trace lines don't shift.
+fn snippet_data_url(name: &str, source: &str) -> String {
+    let source = BASE64_STANDARD.encode(format!("{source}\n// {name}\n"));
+    format!("data:text/javascript;base64,{source}")
+}
+
 #[cfg(test)]
 mod tests {
-    use super::IdentScope;
+    use super::{mentions_import, snippet_data_url, IdentScope};
+    use base64::{prelude::BASE64_STANDARD, Engine as _};
 
     #[test]
     fn ident_scope_suffixes_taken_names() {
@@ -8109,5 +8183,93 @@ mod tests {
         assert_eq!(scope.generate("ptr"), "ptr");
         assert_eq!(scope.generate("ptr"), "ptr3");
         assert_eq!(scope.generate("class"), "_class");
+    }
+
+    #[test]
+    fn mentions_import_skips_other_identifiers_and_properties() {
+        for source in [
+            "export function f(x) { return Array.from(x); }",
+            "export const s = String.fromCharCode(65);",
+            "export const f = fromCharCode;",
+            "export const important = 1, reimport = 2, imports = 3;",
+            "export const from_x = 1, x_from = 2, from$ = 3, $from = 4, from1 = 5;",
+            "export const importé = 1, éfrom = 2;",
+            "export const y = x?.from(z);",
+            "export function f() { return 7; }",
+            // `from` not followed by a specifier.
+            "export function range(from, to) { return to - from; }",
+            "// the value comes from the config\nexport const a = 1;",
+            "export const a = from;",
+            "export const a = from",
+        ] {
+            assert!(!mentions_import(source), "{source}");
+        }
+    }
+
+    #[test]
+    fn mentions_import_finds_every_import_form() {
+        for source in [
+            "import x from './x.js';",
+            "import './x.js';",
+            "import'x'",
+            "import\"x\"",
+            "import{a}from'x'",
+            "import*as x from'x'",
+            "export{a}from'x'",
+            "export*from'x'",
+            "export * as x from 'x';",
+            "export const u = import.meta.url;",
+            "export const p = import('./x.js');",
+            "export const p = import ('./x.js');",
+            "import\n  x\n  from 'x';",
+            // Later occurrences count even after a skipped one.
+            "const a = Array.from(b);\nimport c from 'c';",
+            "const important = 1; export*from'x'",
+            // A spread is not a property access.
+            "export const e = { ...import.meta.env };",
+            "export const p = g(...import('./x.js'));",
+            // Non-ASCII whitespace is not part of an identifier.
+            "\u{FEFF}import './x.js';",
+            "\u{A0}import './x.js';",
+            // `from` followed by a specifier, however it's spaced.
+            "export * from 'x'",
+            "export * from \"x\"",
+            "export * from\n  'x'",
+            "export * from /*c*/ 'x'",
+            "export * from // c\n'x'",
+            "export * from\u{FEFF}'x'",
+            "export * from \u{FEFF}'x'",
+        ] {
+            assert!(mentions_import(source), "{source}");
+        }
+    }
+
+    #[test]
+    fn mentions_import_counts_comments_and_strings() {
+        // Keeping the snippet in its file is the safe direction.
+        assert!(mentions_import("// import nothing\nexport const a = 1;"));
+        assert!(mentions_import("export const a = \"from 'here'\";"));
+        assert!(mentions_import("export const a = 'from';"));
+    }
+
+    #[test]
+    fn snippet_data_url_is_base64_tagged_at_the_end() {
+        let source = "#!/usr/bin/env node\nexport const s = 'é';";
+        let url = snippet_data_url("./snippets/a/inline0.js", source);
+        let encoded = url.strip_prefix("data:text/javascript;base64,").unwrap();
+        let decoded = BASE64_STANDARD.decode(encoded).unwrap();
+        assert_eq!(
+            String::from_utf8(decoded).unwrap(),
+            format!("{source}\n// ./snippets/a/inline0.js\n"),
+        );
+    }
+
+    #[test]
+    fn snippet_data_url_differs_for_identical_sources() {
+        let source = "let n = 0; export const bump = () => ++n;";
+        assert_ne!(
+            snippet_data_url("./snippets/a-1/inline0.js", source),
+            snippet_data_url("./snippets/b-2/inline0.js", source),
+        );
     }
 }
