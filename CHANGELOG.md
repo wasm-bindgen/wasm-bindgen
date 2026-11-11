@@ -366,12 +366,16 @@
   [#5402](https://github.com/wasm-bindgen/wasm-bindgen/pull/5402)
 
 * **Breaking (experimental):** under `js_sys_unstable_apis`, small built-in
-  string results return `String` rather than `JsString`, as
-  `Symbol::to_string` already did: `Error::message`, `name` and
-  `to_string`, the `Date` string formatters, `Number::to_fixed`,
-  `to_precision`, `to_exponential` and `to_string_with_radix`,
-  `RegExp::source`, `flags` and `to_string`, `Function::name`, and the
-  string fields of the `Intl` resolved options and format parts.
+  string results return `String` rather than `JsString`: `Error::message`,
+  `name` and `to_string`, `Date::to_iso_string`, `to_string`,
+  `to_date_string`, `to_time_string` and `to_utc_string`,
+  `Number::to_fixed`, `to_precision`, `to_exponential` and
+  `to_string_with_radix`, `RegExp::source`, `flags` and `to_string`,
+  `Function::name`, `Symbol::to_string`, the `format` methods of
+  `Intl.DateTimeFormat`, `NumberFormat`, `ListFormat`, `RelativeTimeFormat`
+  and `DurationFormat`, the `format_range` methods of `Intl.DateTimeFormat`
+  and `NumberFormat`, and the string fields of the `Intl` resolved options and format parts.
+  `Date::to_json` returns `Option<String>`, `None` for an invalid date.
   `JSON::stringify` and `JSON::stringify_with_replacer` return
   `Result<Option<String>, JsValue>`, `None` for a value with no JSON form
   such as `undefined`, and the replacer receives the key as a `String`.

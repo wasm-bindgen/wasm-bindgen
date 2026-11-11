@@ -2360,7 +2360,15 @@ impl UpcastFrom<&[u8]> for ArrayBuffer {}
 #[cfg(js_sys_unstable_apis)]
 impl ArrayBuffer {
     /// Copies the buffer's bytes into a `Vec`.
+    ///
+    /// A detached buffer has no bytes, so this returns an empty `Vec`.
     pub fn to_vec(&self) -> Vec<u8> {
+        // A detached buffer's `byteLength` is 0, and `new Uint8Array` throws
+        // on it. `byteLength` is checked rather than `detached`, which is
+        // newer.
+        if self.byte_length() == 0 {
+            return Vec::new();
+        }
         Uint8Array::new(self).to_vec()
     }
 }
@@ -7148,12 +7156,13 @@ extern "C" {
     #[wasm_bindgen(method, js_name = toJSON)]
     pub fn to_json(this: &Date) -> JsString;
 
-    /// The `toJSON()` method returns a string representation of the Date object.
+    /// The `toJSON()` method returns a string representation of the Date object,
+    /// or `None` for an invalid date, for which JS returns `null`.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toJSON)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, js_name = toJSON)]
-    pub fn to_json(this: &Date) -> String;
+    pub fn to_json(this: &Date) -> Option<String>;
 
     /// The `toLocaleDateString()` method returns a string with a language sensitive
     /// representation of the date portion of this date. The new locales and options
@@ -13609,14 +13618,8 @@ pub mod Intl {
         pub fn index(this: &SegmentData) -> u32;
 
         /// The original input string.
-        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(method, getter)]
         pub fn input(this: &SegmentData) -> JsString;
-
-        /// The original input string.
-        #[cfg(js_sys_unstable_apis)]
-        #[wasm_bindgen(method, getter)]
-        pub fn input(this: &SegmentData) -> String;
 
         /// Whether the segment is word-like (only for word granularity).
         #[wasm_bindgen(method, getter = isWordLike)]

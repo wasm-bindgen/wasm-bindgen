@@ -563,3 +563,13 @@ fn new_with_value() {
         "1970-01-02T00:00:00.000Z"
     );
 }
+
+#[cfg(js_sys_unstable_apis)]
+#[wasm_bindgen_test]
+fn to_json_invalid() {
+    assert_eq!(
+        Date::new_with_value(0.0).to_json().as_deref(),
+        Some("1970-01-01T00:00:00.000Z")
+    );
+    assert_eq!(Date::new_with_value(f64::NAN).to_json(), None);
+}

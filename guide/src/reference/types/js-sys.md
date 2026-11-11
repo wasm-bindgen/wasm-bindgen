@@ -406,9 +406,12 @@ let from_opt = JsNullable::from_option(Some(Number::from(42)));
 
 Under `--cfg=js_sys_unstable_apis`, small built-in string results are
 `String`, such as `Error::message`, `Date::to_iso_string`, `Number::to_fixed`,
-`RegExp::source`, `Function::name` and the `Intl` resolved options and parts,
-and `JSON::stringify` returns `Result<Option<String>, JsValue>`, with `None`
-for a value that has no JSON form. `Date::new_with_value` takes a time value
+`RegExp::source`, `Function::name`, `Symbol::to_string`, the `Intl` `format`
+and `format_range` methods and the `Intl` resolved options and parts.
+`Date::to_json` returns `Option<String>`, with `None` for an invalid date, and
+`JSON::stringify` returns `Result<Option<String>, JsValue>`, with `None` for a
+value that has no JSON form. A string that can be large, such as the input of
+an `Intl.Segmenter` segment, stays a `JsString`. `Date::new_with_value` takes a time value
 or a date string, and an `ArrayBuffer` converts to and from bytes:
 
 ```rust

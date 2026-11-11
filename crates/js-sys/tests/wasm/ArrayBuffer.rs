@@ -136,3 +136,16 @@ fn bytes() {
     let buf: ArrayBuffer = vec![1, 2].into();
     assert_eq!(Vec::from(&buf), [1, 2]);
 }
+
+#[cfg(js_sys_unstable_apis)]
+#[wasm_bindgen_test]
+fn bytes_detached() {
+    let buf = ArrayBuffer::from(&b"abc"[..]);
+    // `transfer` is missing in older environments, where the call throws.
+    if buf.transfer().is_err() {
+        return;
+    }
+    assert_eq!(buf.byte_length(), 0);
+    assert_eq!(buf.to_vec(), Vec::<u8>::new());
+    assert_eq!(Vec::from(&buf), Vec::<u8>::new());
+}
