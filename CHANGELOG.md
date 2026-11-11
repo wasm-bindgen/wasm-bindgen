@@ -31,6 +31,17 @@
   `--cfg tokio_unstable_jspi_hooks` is gone.
   [#5466](https://github.com/wasm-bindgen/wasm-bindgen/pull/5466)
 
+* **Breaking (experimental):** `wasm_bindgen_futures::tokio` is reduced to one
+  type, `EventLoop`, a hosted event loop held by every root and task on it.
+  `schedule` becomes `EventLoop::current().schedule`, `schedule_isolated`
+  becomes `EventLoop::new().schedule`, `try_set_ambient` becomes
+  `EventLoop::from_local(rt).set_ambient()`, and `with_ambient` is removed
+  (`EventLoop::ambient()` returns the ambient loop). `EventLoop::spawn` keeps
+  an isolated loop alive past its root, for work such as a `ctx.waitUntil`,
+  and `EventLoop::enter` roots the `experimental_tokio` exports it calls on a
+  host-owned loop, such as one per Durable Object instance.
+  [#5467](https://github.com/wasm-bindgen/wasm-bindgen/pull/5467)
+
 * Awaiting a `js_sys::Promise<T, E>` converts the rejection reason through
   `E: From<JsValue>` rather than `E: FromWasmAbi`, as a `catch` import's
   error does, since JS can reject with any value. JS types still convert

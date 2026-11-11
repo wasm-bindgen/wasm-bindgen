@@ -171,6 +171,13 @@ pub async fn fetch(req: Request) -> Response {
 }
 ```
 
+Runtimes are `wasm_bindgen_futures::tokio::EventLoop`s, and every root and
+task holds its loop. `EventLoop::current().spawn(fut)` keeps an isolated
+runtime alive until `fut` finishes, for work that outlives the response,
+such as a Workers `ctx.waitUntil`. A host that wants one runtime per
+long-lived context, such as a Durable Object instance, holds an `EventLoop`
+and calls that context's exports inside `rt.enter(|| ..)`.
+
 The support is unstable and gated behind `--cfg wasm_bindgen_unstable_tokio`.
 The cfg makes `wasm-bindgen-futures` depend on Tokio and expose the runtime
 glue; without it nothing Tokio-related is compiled or linked, and the
