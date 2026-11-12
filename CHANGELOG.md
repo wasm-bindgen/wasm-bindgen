@@ -5,6 +5,85 @@
 
 ### Added
 
+* Added `aarch64-pc-windows-msvc` release artifacts.
+  [#5439](https://github.com/wasm-bindgen/wasm-bindgen/pull/5439)
+
+* `catch` on an import returning `js_sys::Promise<T>` rather than a `Result`
+  returns a synchronous throw as a rejected promise, so the error surfaces at
+  `.await` instead of unwinding through Wasm. The conversion goes through the
+  new `wasm_bindgen::convert::FromCaughtException` trait, which js-sys
+  implements for `Promise<T, E>`.
+  [#5442](https://github.com/wasm-bindgen/wasm-bindgen/pull/5442)
+
+* Added `SafeInteger<u64>` and `SafeInteger<i64>` (aliased `SafeU64` and
+  `SafeI64`), which cross the boundary as a JS `number` instead of a
+  `BigInt`, in every position including `catch`, `Option`, `Vec`, closures,
+  `async` imports and `experimental_generic_mono` generics. The safe integer range is checked under debug assertions.
+  [#5455](https://github.com/wasm-bindgen/wasm-bindgen/pull/5455)
+
+* `panic=unwind` is now supported across the `wasm-bindgen` boundary on
+  Emscripten, including legacy eh and `exnref` eh. Panics reaching an export or
+  closure are thrown to JavaScript as `PanicError` with the shadow stack
+  restored and `#[wasm_bindgen(catch)]` imports work. If a trap escapes an
+  export, we call Emscripten's `abort()`; any other exception is rethrown to
+  the caller unchanged. The catch wrappers are emitted for every Emscripten
+  module containing exception-handling instructions, so existing
+  `-Cpanic=abort` builds get them too: `#[wasm_bindgen(catch)]` imports are
+  handled in wasm there, and traps now go through `abort()`.
+  [#5457](https://github.com/wasm-bindgen/wasm-bindgen/pull/5457)
+
+### Changed
+
+* The experimental `#[wasm_bindgen(experimental_tokio)]` support targets the
+  hosted event loop of the current Tokio patchset (`1.54.1-cf.emscripten`),
+  which ticks itself from host callbacks and needs Emscripten 6.0.12 or
+  later. The mio patch is no longer needed. A `jspi, experimental_tokio`
+  export no longer admits a second invocation while one is parked, and
+  `--cfg tokio_unstable_jspi_hooks` is gone.
+  [#5466](https://github.com/wasm-bindgen/wasm-bindgen/pull/5466)
+
+* **Breaking (experimental):** `wasm_bindgen_futures::tokio` is reduced to one
+  type, `EventLoop`, a hosted event loop held by every root and task on it.
+  `schedule` becomes `EventLoop::current().schedule`, `schedule_isolated`
+  becomes `EventLoop::new().schedule`, `try_set_ambient` becomes
+  `EventLoop::from_local(rt).set_ambient()`, and `with_ambient` is removed
+  (`EventLoop::ambient()` returns the ambient loop). `EventLoop::spawn` keeps
+  an isolated loop alive past its root, for work such as a `ctx.waitUntil`,
+  and `EventLoop::enter` roots the `experimental_tokio` exports it calls on a
+  host-owned loop, such as one per Durable Object instance.
+  [#5467](https://github.com/wasm-bindgen/wasm-bindgen/pull/5467)
+
+* Awaiting a `js_sys::Promise<T, E>` converts the rejection reason through
+  `E: From<JsValue>` rather than `E: FromWasmAbi`, as a `catch` import's
+  error does, since JS can reject with any value. JS types still convert
+  unchecked, a Rust error type can inspect the reason, and a value type such
+  as `String` is no longer accepted as `E` there.
+  [#5442](https://github.com/wasm-bindgen/wasm-bindgen/pull/5442)
+
+* An `async` export resolves its promise with the value converted through
+  `IntoWasmAbi`, exactly as a sync return of the same type, rather than
+  through `Into<JsValue>`, so any returnable type such as `char` can be
+  returned from an `async` export. The rejection still converts through
+  `Into<JsValue>`, as a sync `Result` error does. A resolved type that only
+  implements `From<T> for JsValue` no longer compiles; return
+  `JsValue::from(value)` instead. Casts between externref types, and from
+  `()` to an externref, no longer call into JS.
+  [#5453](https://github.com/wasm-bindgen/wasm-bindgen/pull/5453)
+
+* `JsOption<T>` reads `null` as empty, as `Option<T>` does, in `is_empty`,
+  `as_option`, `into_option` and the `unwrap` family, so a JS `null` in a
+  `JsGeneric` position is `None` rather than a `T`. The empty value produced
+  from Rust is still `undefined`.
+  [#5463](https://github.com/wasm-bindgen/wasm-bindgen/pull/5463)
+
+### Fixed
+
+### Removed
+
+## [0.2.130](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.129...0.2.130)
+
+### Added
+
 * A borrowed number, `bool`, `char` or borrowed string crosses by copy, so
   `&f64`, `&Option<T>`, `&Nullable<T>`, `Option<&f64>` and
   `Option<&Nullable<T>>` are argument types, and an
@@ -139,6 +218,9 @@
 * Documented in the guide that passing an exported Rust type by value moves it
   out of the JavaScript object, which throws on any later use.
   [#5354](https://github.com/wasm-bindgen/wasm-bindgen/pull/5354)
+
+* Added Rolldown compatibility to the deployment docs in the guide.
+  [#5355](https://github.com/wasm-bindgen/wasm-bindgen/pull/5355)
 
 * Added `source` property to ToggleEvent.
   [#5353](https://github.com/wasm-bindgen/wasm-bindgen/pull/5353)
@@ -504,7 +586,9 @@
   numeric suffix in the JS, while the TypeScript definitions keep their name.
   [#3729](https://github.com/wasm-bindgen/wasm-bindgen/issues/3729)
 
-### Removed
+* Getters generated by `getter_with_clone` no longer trigger the
+  `clippy::clone_on_copy` lint.
+  [#5363](https://github.com/wasm-bindgen/wasm-bindgen/pull/5363)
 
 ## [0.2.129](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.128...0.2.129)
 

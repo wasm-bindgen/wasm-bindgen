@@ -16,6 +16,9 @@ and optionally recovering by reinitializing the module.
 > abort machinery is not emitted unless you pass `--force-enable-abort-handler`
 > to `wasm-bindgen`. `schedule_reinit()` works with both `panic=unwind` and
 > `panic=abort` regardless of the flag.
+>
+> None of this applies to [Emscripten](./emscripten.md#panics) output, where
+> hard aborts are handed to Emscripten's own `abort()` / `Module.onAbort`.
 
 ## Termination States
 

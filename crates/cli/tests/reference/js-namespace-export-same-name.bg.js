@@ -698,7 +698,7 @@ export function greet() {
         wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
     }
 }
-export function __wbg___wbindgen_throw_41e9ee4f547fc59a(arg0, arg1) {
+export function __wbg___wbindgen_throw_4c88d8bf264fd984(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbg_bar__point_new(arg0) {

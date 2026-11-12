@@ -51,3 +51,40 @@ exports.js_works = () => {
     assert.deepStrictEqual(wasm.i64_slice([i64_min]), new BigInt64Array([i64_min]));
     assert.deepStrictEqual(wasm.u64_slice([u64_max]), new BigUint64Array([u64_max]));
 };
+
+exports.safe_u64_js_identity = a => {
+    assert.strictEqual(typeof a, 'number');
+    return a;
+};
+exports.safe_i64_js_identity = a => {
+    assert.strictEqual(typeof a, 'number');
+    return a;
+};
+exports.safe_opt_js_identity = a => a;
+exports.safe_vec_js_identity = a => {
+    assert.ok(a instanceof Float64Array);
+    return a;
+};
+exports.safe_is_number = a => a === Number.MAX_SAFE_INTEGER;
+exports.safe_catch = ok => {
+    if (!ok) throw new Error('not ok');
+    return Number.MAX_SAFE_INTEGER;
+};
+exports.safe_call = f => f(-21);
+exports.safe_returns = n => n;
+
+exports.safe_js_works = () => {
+    for (const value of [0, 1, Number.MAX_SAFE_INTEGER]) {
+        assert.strictEqual(wasm.safe_u64_rust_identity(value), value);
+    }
+    for (const value of [0, -1, Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER]) {
+        assert.strictEqual(wasm.safe_i64_rust_identity(value), value);
+    }
+    assert.strictEqual(wasm.safe_opt_rust_identity(Number.MAX_SAFE_INTEGER), Number.MAX_SAFE_INTEGER);
+    assert.strictEqual(wasm.safe_opt_rust_identity(-7), -7);
+    assert.strictEqual(wasm.safe_opt_rust_identity(undefined), undefined);
+    assert.deepStrictEqual(wasm.safe_slice_doubled([1, 2, 2 ** 51]), new Float64Array([2, 4, 2 ** 52]));
+    assert.deepStrictEqual(wasm.safe_slice_doubled([]), new Float64Array());
+    assert.strictEqual(wasm.safe_catch_export(true), Number.MAX_SAFE_INTEGER);
+    assert.throws(() => wasm.safe_catch_export(false), /not ok/);
+};

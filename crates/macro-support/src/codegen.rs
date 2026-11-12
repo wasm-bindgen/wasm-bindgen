@@ -1296,10 +1296,11 @@ impl TryToTokens for ast::Export {
                 // Drive the exported future on a tokio event-loop
                 // runtime (so `tokio::spawn`, timers, and IO inside it
                 // work), bridging its outcome to the returned `Promise`:
-                // the thread's shared ambient runtime, or with
-                // `experimental_tokio = "isolated"` a fresh runtime owned by
-                // this invocation. `schedule` drives before returning when
-                // safe. Off emscripten (or without the unstable cfg)
+                // the current event loop (the calling task's, the entered
+                // one, or the thread's ambient one), or with
+                // `experimental_tokio = "isolated"` a fresh one held by this
+                // invocation. `schedule` ticks the loop before returning
+                // when safe. Off emscripten (or without the unstable cfg)
                 // `wasm_bindgen_futures::tokio` is a stub whose bound
                 // reports the unsupported target at the attribute.
                 let promise = if ast::use_js_sys_futures() {
@@ -1307,9 +1308,9 @@ impl TryToTokens for ast::Export {
                 } else {
                     quote! { #wasm_bindgen_futures::js_sys::Promise }
                 };
-                let schedule = match tokio_mode {
-                    ast::TokioMode::Ambient => quote! { schedule },
-                    ast::TokioMode::Isolated => quote! { schedule_isolated },
+                let event_loop = match tokio_mode {
+                    ast::TokioMode::Ambient => quote! { current },
+                    ast::TokioMode::Isolated => quote! { new },
                 };
                 call = quote! {
                     {
@@ -1327,7 +1328,7 @@ impl TryToTokens for ast::Export {
                             let __wbg_fut = __wbg_fut
                                 .take()
                                 .expect("Promise executor invoked more than once");
-                            #wasm_bindgen_futures::tokio::#schedule(__wbg_fut, move |__wbg_out| {
+                            #wasm_bindgen_futures::tokio::EventLoop::#event_loop().schedule(__wbg_fut, move |__wbg_out| {
                                 match __wbg_out {
                                     ::core::result::Result::Ok(::core::result::Result::Ok(__wbg_val)) => {
                                         let _ = resolve.call(&#wasm_bindgen::JsValue::UNDEFINED, (&__wbg_val,));
@@ -3187,7 +3188,15 @@ impl ast::ImportFunction {
         }
 
         let mut exceptional_ret = quote!();
-        if self.catch && !self.function.r#async && !self.suspending {
+        if self.catch_rejects {
+            if self.function.r#async || self.suspending {
+                bail_span!(
+                    self.rust_name,
+                    "`catch` on an `async` or `suspending` import needs a `Result` return"
+                );
+            }
+            exceptional_ret = catch_rejects_ret(wasm_bindgen, &self.function);
+        } else if self.catch && !self.function.r#async && !self.suspending {
             convert_ret = quote! { Ok(#convert_ret) };
             exceptional_ret = quote! {
                 #wasm_bindgen::__rt::take_last_exception()?;
@@ -4088,7 +4097,15 @@ impl ast::ImportFunction {
         }
 
         let mut exceptional_ret = quote!();
-        if self.catch && !self.function.r#async {
+        if self.catch_rejects {
+            if self.function.r#async {
+                bail_span!(
+                    self.rust_name,
+                    "`catch` on an `async` import needs a `Result` return"
+                );
+            }
+            exceptional_ret = catch_rejects_ret(wasm_bindgen, &self.function);
+        } else if self.catch && !self.function.r#async {
             convert_ret = quote! { Ok(#convert_ret) };
             exceptional_ret = quote! {
                 #wasm_bindgen::__rt::take_last_exception()?;
@@ -6184,6 +6201,17 @@ fn fn_trait_bound_sig(
         return Some((inputs, ret, tb.lifetimes.is_some()));
     }
     None
+}
+
+/// A `catch` import returning `Promise<..>` hands a synchronous throw to its
+/// return type, before the (then meaningless) return value is converted.
+fn catch_rejects_ret(wasm_bindgen: &syn::Path, function: &ast::Function) -> TokenStream {
+    let ret = &function.ret.as_ref().unwrap().r#type;
+    quote! {
+        if let Err(e) = #wasm_bindgen::__rt::take_last_exception() {
+            return <#ret as #wasm_bindgen::convert::FromCaughtException>::from_caught_exception(e);
+        }
+    }
 }
 
 #[cfg(test)]

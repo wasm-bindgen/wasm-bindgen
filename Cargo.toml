@@ -13,7 +13,7 @@ name = "wasm-bindgen"
 readme = "README.md"
 repository = "https://github.com/wasm-bindgen/wasm-bindgen"
 rust-version = "1.81"
-version = "0.2.129"
+version = "0.2.130"
 
 [package.metadata.docs.rs]
 features = ["serde-serialize"]
@@ -45,8 +45,8 @@ xxx_debug_only_print_generated_code = []
 cfg-if = "1.0.0"
 serde = { version = "1.0", optional = true }
 serde_json = { version = "1.0", optional = true }
-wasm-bindgen-macro = { path = "crates/macro", version = "=0.2.129" }
-wasm-bindgen-shared = { path = "crates/shared", version = "=0.2.129" }
+wasm-bindgen-macro = { path = "crates/macro", version = "=0.2.130" }
+wasm-bindgen-shared = { path = "crates/shared", version = "=0.2.130" }
 
 [build-dependencies]
 # In older MSRVs, dependencies and crate features can't have the same name.
@@ -64,7 +64,7 @@ wasm-bindgen-test-crate-a = { path = 'tests/crates/a' }
 wasm-bindgen-test-crate-b = { path = 'tests/crates/b' }
 
 [target.'cfg(all(target_os = "emscripten", wasm_bindgen_unstable_tokio))'.dev-dependencies]
-tokio = { version = "1", default-features = false, features = ["rt", "time", "sync"] }
+tokio = { version = "1.54", default-features = false, features = ["rt", "time", "sync"] }
 
 [target.'cfg(target_arch = "wasm64")'.dev-dependencies]
 js-sys = { path = 'crates/js-sys', features = ["unsafe-eval"] }
@@ -153,10 +153,9 @@ resolver = "2"
 
 [patch.crates-io]
 js-sys = { path = 'crates/js-sys' }
-# tokio-rs/mio#1969: wasm32-unknown-emscripten support, required by the tokio patch
-mio = { git = 'https://github.com/guybedford/mio', tag = '1.2.3-cf.emscripten' }
 # tokio-rs/tokio#8484: event loops for wasm32-unknown-emscripten
-tokio = { git = 'https://github.com/guybedford/tokio', tag = '1.53.1-cf.emscripten' }
+tokio = { git = 'https://github.com/guybedford/tokio', tag = '1.54.1-cf.emscripten' }
+tokio-macros = { git = 'https://github.com/guybedford/tokio', tag = '1.54.1-cf.emscripten' }
 wasm-bindgen = { path = '.' }
 wasm-bindgen-futures = { path = 'crates/futures' }
 wasm-bindgen-test = { path = 'crates/test' }

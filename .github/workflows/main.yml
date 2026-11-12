@@ -2,7 +2,7 @@ name: CI
 on:
   push:
     branches: [main]
-    tags-ignore: [dev]
+    tags: ['[0-9]+.[0-9]+.[0-9]+']
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -274,15 +274,21 @@ jobs:
       runs-on: ubuntu-latest
       steps:
       - uses: actions/checkout@v7
+      # Nightly for -Zbuild-std for the exnref eh build
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          targets: wasm32-unknown-emscripten
+          components: rust-src
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-emscripten
       - name: Setup Emscripten SDK
         uses: mymindstorm/setup-emsdk@v16
         with:
-          # Minimum for the `-sWASM_BINDGEN` post-link flow, where emcc runs
-          # `wasm-bindgen` itself at link time (emscripten-core/emscripten#27208).
-          version: 6.0.10
+          # The `-sWASM_BINDGEN` post-link flow, where emcc runs `wasm-bindgen`
+          # itself at link time, needs 6.0.10 (emscripten-core/emscripten#27208),
+          # and tokio's hosted event loop the epoll listeners of 6.0.12.
+          version: 7.0.0
       - uses: actions/setup-node@v7
         with:
           # JSPI (`WebAssembly.Suspending`) for the JSPI end-to-end builds.
@@ -291,6 +297,15 @@ jobs:
         run: cargo test --test wasm32-emscripten --target wasm32-unknown-emscripten
       - name: Run Emscripten end-to-end build
         run: cargo test -p wasm-bindgen-cli --test wasm-bindgen emscripten_end_to_end
+      # The patchset the guide's Tokio section describes: the release plus
+      # async DNS and microtask delivery of the epoll listener callbacks.
+      - name: Run Emscripten end-to-end build against the Tokio patchset
+        run: |
+          git clone --depth 1 --branch 7.0.0-cf.emscripten https://github.com/guybedford/emscripten "$RUNNER_TEMP/emscripten-tokio"
+          (cd "$RUNNER_TEMP/emscripten-tokio" && python3 bootstrap.py)
+          printf "LLVM_ROOT = '%s'\nBINARYEN_ROOT = '%s'\n" "$(em-config LLVM_ROOT)" "$(em-config BINARYEN_ROOT)" > "$RUNNER_TEMP/emscripten-tokio/.emscripten"
+          PATH="$RUNNER_TEMP/emscripten-tokio:$PATH" emcc --version | head -1
+          PATH="$RUNNER_TEMP/emscripten-tokio:$PATH" cargo test -p wasm-bindgen-cli --test wasm-bindgen emscripten_end_to_end
       # The patchset the guide's JSPI section describes, set up the way it
       # says: the guybedford/emscripten tag as the frontend over the emsdk
       # toolchain, and the binaryen release carrying the `--jspi-hooks` pass.
@@ -662,6 +677,20 @@ jobs:
         name: dist_windows
         path: "target/release/wasm*"
 
+  dist_windows_aarch64:
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+    runs-on: windows-11-arm
+    steps:
+    - uses: actions/checkout@v7
+    - uses: dtolnay/rust-toolchain@stable
+    - run: cargo build --manifest-path crates/cli/Cargo.toml --release
+      env:
+        RUSTFLAGS: -Ctarget-feature=+crt-static
+    - uses: actions/upload-artifact@v7
+      with:
+        name: dist_windows_aarch64
+        path: "target/release/wasm*"
+
   doc_book:
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
@@ -816,6 +845,7 @@ jobs:
       - dist_macos_x86_64
       - dist_macos_aarch64
       - dist_windows
+      - dist_windows_aarch64
       - build_examples
       - build_benchmarks
     runs-on: ubuntu-latest
@@ -854,6 +884,7 @@ jobs:
         mk x86_64-apple-darwin dist_macos_x86_64
         mk aarch64-apple-darwin dist_macos_aarch64
         mk x86_64-pc-windows-msvc dist_windows
+        mk aarch64-pc-windows-msvc dist_windows_aarch64
     - uses: actions/upload-artifact@v7
       with:
         name: gh-release
@@ -894,6 +925,35 @@ jobs:
         draft: true
         body_path: release-notes.md
         files: "gh-release/*.tar.gz*"
+
+  # GitHub's own notice of a pending approval is easy to miss, so the release
+  # PR, whose participants are notified, gets a comment while the publish job
+  # waits.
+  notify:
+    name: Request publish approval
+    if: github.repository == 'wasm-bindgen/wasm-bindgen' && startsWith(github.ref, 'refs/tags/')
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write #  to see the draft release
+      pull-requests: write
+    steps:
+    - env:
+        GH_TOKEN: ${{ github.token }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        pr=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls" --jq '.[0].number // empty')
+        if [ -z "$pr" ]; then
+          echo "No PR merged $GITHUB_SHA"
+          exit 0
+        fi
+        url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/$GITHUB_REF_NAME
+        # Drafts have their own URL until they're published.
+        url=$(gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --json url --jq .url 2>/dev/null || echo "$url")
+        gh pr comment "$pr" --repo "$GITHUB_REPOSITORY" --body "🚀 $GITHUB_REF_NAME is ready to publish, pending approval: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+
+        Release: $url"
 
   publish:
     environment:

@@ -46,7 +46,7 @@ jobs:
         (github.event.action == 'labeled' && startsWith(github.event.label.name, 'bot-')) ||
         (github.event.action == 'unlabeled' && startsWith(github.event.label.name, 'bot-') &&
           github.event.label.name != 'bot-review' && github.event.sender.type != 'Bot') ||
-        (github.event.label.name == 'merge-ready' &&
+        ((github.event.label.name == 'merge-ready' || github.event.label.name == 'author-ready') &&
           (github.event.action == 'labeled' || github.event.action == 'unlabeled')) ||
         (github.event.label.name == 'do not land' && github.event.action == 'unlabeled') ||
         (github.event.action != 'labeled' && github.event.action != 'unlabeled' &&

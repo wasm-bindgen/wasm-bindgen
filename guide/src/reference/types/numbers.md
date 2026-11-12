@@ -7,7 +7,7 @@
 [JavaScript `Number`s](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number#number_encoding) are 64-bit floating point value under the hood and cannot accurately represent all of Rust's numeric types. `wasm-bindgen` will automatically use either [`BigInt`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) or `Number` to accurately represent Rust's numeric types in JavaScript:
 
 - `u8`, `i8`, `u16`, `i16`, `u32`, `i32`, `isize`, `usize`, `f32`, and `f64` will be represented as `Number` in JavaScript.
-- `u64`, `i64`, `u128`, and `i128` will be represented as `BigInt` in JavaScript.
+- `u64`, `i64`, `u128`, and `i128` will be represented as `BigInt` in JavaScript. To pass a `u64` or `i64` as a `Number` instead, use [`SafeInteger<T>`](./safe-integer.md).
 
 > **Note**: Wasm is currently a 32-bit architecture, so `isize` and `usize` are 32-bit integers and "fit" into a JavaScript `Number`.
 
