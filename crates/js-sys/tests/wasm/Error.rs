@@ -1,4 +1,5 @@
 use js_sys::*;
+use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use wasm_bindgen::JsValue;
 use wasm_bindgen_test::*;
@@ -184,4 +185,31 @@ fn from_js_value_checks_the_error_shape() {
 
     let throws = eval("({ get message() { throw 1 }, name: 'Custom' })").unwrap();
     assert_eq!(Error::from(throws.clone()).cause(), throws);
+}
+
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_name = String)]
+    fn string_as_type_error(value: &str) -> TypeError;
+}
+
+#[wasm_bindgen(module = "tests/wasm/Error.js")]
+extern "C" {
+    fn call_with(f: &dyn Fn(&RangeError) -> bool, value: &JsValue) -> bool;
+}
+
+// The casts and the ABI glue of a subclass stay unchecked.
+#[wasm_bindgen_test]
+fn subclass_casts_are_unchecked() {
+    let value = JsValue::from_str("boom");
+    assert_eq!(
+        JsValue::from(value.clone().unchecked_into::<TypeError>()),
+        value
+    );
+    assert_eq!(JsValue::from(string_as_type_error("boom")), value);
+    assert!(call_with(
+        &|e: &RangeError| *AsRef::<JsValue>::as_ref(e) == "boom",
+        &value
+    ));
+    assert_eq!(value, "boom");
 }

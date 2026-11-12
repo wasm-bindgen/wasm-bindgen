@@ -26,4 +26,5 @@ impl From<JsValue> for MyError {
 }
 ```
 
-`JsCast::unchecked_into` remains available as the unchecked cast.
+`JsCast::unchecked_into` remains available as the unchecked cast. A type that
+extends `MyError` and keeps its generated impl converts through `MyError`'s.
