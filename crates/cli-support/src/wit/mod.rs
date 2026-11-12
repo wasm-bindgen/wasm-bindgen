@@ -2990,7 +2990,7 @@ pub fn extract_programs<'a>(
     let mut ret = Vec::new();
     for program in program_storage.iter() {
         let mut payload = &program[..];
-        while let Some(data) = get_remaining(&mut payload) {
+        while let Some(data) = get_remaining(&mut payload)? {
             // Historical versions of wasm-bindgen have used JSON as the custom
             // data section format. Newer versions, however, are using a custom
             // serialization protocol that looks much more like the Wasm spec.
@@ -3036,7 +3036,13 @@ to open an issue at https://github.com/wasm-bindgen/wasm-bindgen/issues!
 "
                 );
             }
-            let next = get_remaining(&mut payload).unwrap();
+            let next = match get_remaining(&mut payload)? {
+                Some(next) => next,
+                None => bail!(
+                    "the `__wasm_bindgen_unstable` custom section is truncated: it \
+                     ends after the version metadata with no program chunk"
+                ),
+            };
             log::debug!("found a program of length {}", next.len());
             ret.push(<decode::Program as decode::Decode>::decode_all(next));
         }
@@ -3075,14 +3081,23 @@ before any such stripping tool."
     Ok(ret)
 }
 
-fn get_remaining<'a>(data: &mut &'a [u8]) -> Option<&'a [u8]> {
+fn get_remaining<'a>(data: &mut &'a [u8]) -> Result<Option<&'a [u8]>, Error> {
     if data.is_empty() {
-        return None;
+        return Ok(None);
     }
-    let len = u32::from_le_bytes([data[0], data[1], data[2], data[3]]) as usize;
-    let (a, b) = data[4..].split_at(len);
+    let Some((len, rest)) = data.split_first_chunk::<4>() else {
+        bail!(
+            "the `__wasm_bindgen_unstable` custom section is truncated: a length prefix is cut off"
+        );
+    };
+    let len = u32::from_le_bytes(*len) as usize;
+    let Some((a, b)) = rest.split_at_checked(len) else {
+        bail!(
+            "the `__wasm_bindgen_unstable` custom section is truncated: a chunk runs past its end"
+        );
+    };
     *data = b;
-    Some(a)
+    Ok(Some(a))
 }
 
 fn verify_schema_matches(data: &[u8]) -> Result<Option<&str>, Error> {
@@ -3346,5 +3361,43 @@ mod tests {
             !run_discover_main(&mut module, mem),
             "on wasm64 a 32-bit-argv `main` must not be treated as the entry point"
         );
+    }
+
+    fn extract_truncated(data: Vec<u8>) -> Error {
+        let mut module = Module::default();
+        module.customs.add(walrus::RawCustomSection {
+            name: "__wasm_bindgen_unstable".into(),
+            data,
+        });
+        let mut storage = Vec::new();
+        match extract_programs(&mut module, &mut storage) {
+            Ok(_) => panic!("expected a truncated-section error"),
+            Err(e) => e,
+        }
+    }
+
+    fn version_chunk() -> Vec<u8> {
+        let version = format!(
+            "{{\"schema_version\":\"{}\",\"version\":\"0.2.130\"}}",
+            wasm_bindgen_shared::SCHEMA_VERSION
+        );
+        let mut data = (version.len() as u32).to_le_bytes().to_vec();
+        data.extend_from_slice(version.as_bytes());
+        data
+    }
+
+    #[test]
+    fn truncated_unstable_section_errors_instead_of_panicking() {
+        let err = extract_truncated(version_chunk());
+        assert!(err.to_string().contains("truncated"), "{err}");
+
+        let err = extract_truncated(vec![1, 0]);
+        assert!(err.to_string().contains("truncated"), "{err}");
+
+        let mut data = version_chunk();
+        data.extend_from_slice(&100u32.to_le_bytes());
+        data.extend_from_slice(&[0; 10]);
+        let err = extract_truncated(data);
+        assert!(err.to_string().contains("truncated"), "{err}");
     }
 }
