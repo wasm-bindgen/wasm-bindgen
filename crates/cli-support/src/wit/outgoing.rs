@@ -188,13 +188,13 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
 
-            Descriptor::Option(inner) => match &**inner {
-                Descriptor::Nullable(inner) => {
+            Descriptor::Option(inner) => self.outgoing_option(inner, OptionKind::Option)?,
+            Descriptor::Nullable(inner) => match &**inner {
+                Descriptor::Option(inner) => {
                     self.outgoing_option(inner, OptionKind::OptionNullable)?
                 }
-                inner => self.outgoing_option(inner, OptionKind::Option)?,
+                inner => self.outgoing_option(inner, OptionKind::Nullable)?,
             },
-            Descriptor::Nullable(inner) => self.outgoing_option(inner, OptionKind::Nullable)?,
             Descriptor::Result(d) => self.outgoing_result(d)?,
 
             Descriptor::Function(descriptor) => {
@@ -308,9 +308,12 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Option(inner) => {
                 self.outgoing_option_ref(mutable, inner, OptionKind::Option)?
             }
-            Descriptor::Nullable(inner) => {
-                self.outgoing_option_ref(mutable, inner, OptionKind::Nullable)?
-            }
+            Descriptor::Nullable(inner) => match &**inner {
+                Descriptor::Option(inner) => {
+                    self.outgoing_option_ref(mutable, inner, OptionKind::OptionNullable)?
+                }
+                inner => self.outgoing_option_ref(mutable, inner, OptionKind::Nullable)?,
+            },
 
             // &mut dyn FnMut(...) emits RefMut(Function(...)) to signal that
             // a reentrancy guard is needed in the JS wrapper.
@@ -563,7 +566,7 @@ impl InstructionBuilder<'_, '_> {
 
             Descriptor::Option(_) | Descriptor::Nullable(_) => bail!(
                 "unsupported nested optional return type for calling Rust function from JS: \
-                 {arg:?}; only `Option<Nullable<T>>` nests"
+                 {arg:?}; only `Nullable<Option<T>>` nests"
             ),
             _ => bail!(
                 "unsupported optional argument type for calling JS function from Rust: {arg:?}"
@@ -762,8 +765,8 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
             Descriptor::Ref(d) => self.outgoing_option_ref(_mutable, d, option_kind)?,
-            Descriptor::Nullable(d) => {
-                if option_kind != OptionKind::Option {
+            Descriptor::Option(d) => {
+                if option_kind != OptionKind::Nullable {
                     bail!("unsupported nested optional type for calling JS function from Rust: {arg:?}");
                 }
                 self.outgoing_option_ref(_mutable, d, OptionKind::OptionNullable)?

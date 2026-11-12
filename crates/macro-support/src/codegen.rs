@@ -5998,8 +5998,8 @@ pub(crate) struct SliceArg {
     pub elem_ty: syn::Type,
     /// Whether the slice was wrapped in an outer `Option` or `Nullable`.
     pub is_option: bool,
-    /// Whether the slice was wrapped in a `Nullable`, which an `Option` may
-    /// wrap in turn.
+    /// Whether the slice was wrapped in a `Nullable`, which may wrap an
+    /// `Option` in turn.
     pub is_nullable: bool,
     /// Whether the reference was `&mut` rather than `&`.
     ///
@@ -6014,7 +6014,7 @@ pub(crate) struct SliceArg {
 }
 
 /// Recognise `&[T]`, `&mut [T]`, either wrapped in `Clamped`, and any of those
-/// wrapped in `Option`, `Nullable` or `Option<Nullable<..>>`. Used by the
+/// wrapped in `Option`, `Nullable` or `Nullable<Option<..>>`. Used by the
 /// slice-mode codegen, and by the parser to reject the mutable form and
 /// resolve the generic-element one.
 pub(crate) fn detect_slice_or_option_slice(ty: &syn::Type) -> Option<SliceArg> {
@@ -6046,14 +6046,14 @@ pub(crate) fn detect_slice_or_option_slice(ty: &syn::Type) -> Option<SliceArg> {
                     (args.args.len(), args.args.first())
                 {
                     let inner = detect_slice_or_option_slice(inner)?;
-                    if seg.ident == "Nullable" && !inner.is_option {
+                    if seg.ident == "Nullable" && (!inner.is_option || !inner.is_nullable) {
                         return Some(SliceArg {
                             is_option: true,
                             is_nullable: true,
                             ..inner
                         });
                     }
-                    if seg.ident == "Option" && (!inner.is_option || inner.is_nullable) {
+                    if seg.ident == "Option" && !inner.is_option {
                         return Some(SliceArg {
                             is_option: true,
                             is_nullable: false,

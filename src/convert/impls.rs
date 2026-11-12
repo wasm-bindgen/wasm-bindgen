@@ -71,7 +71,7 @@ impl WasmAbi for u128 {
     }
 }
 
-/// The ABI of `Option<T>`, `Nullable<T>` and `Option<Nullable<T>>` for a `T`
+/// The ABI of `Option<T>`, `Nullable<T>` and `Nullable<Option<T>>` for a `T`
 /// whose own ABI has no spare value: `tag` is `0` for `None`, `1` for a value
 /// and `2` for `Null`.
 #[doc(hidden)]
@@ -571,6 +571,9 @@ unsafe impl<T: ErasableGeneric> ErasableGeneric for Option<T> {
 }
 
 impl<T, Target> UpcastFrom<Option<T>> for Option<Target> where Target: UpcastFrom<T> {}
+// `Nullable<T>` reaches `Nullable<Option<T>>` through the `Nullable` to
+// `Nullable` rule, and an `Option<T>` through this one.
+impl<T, Target> UpcastFrom<Option<T>> for Nullable<Target> where Target: UpcastFrom<Option<T>> {}
 impl<T, Target> UpcastFrom<Option<T>> for JsOption<Option<Target>> where Target: UpcastFrom<T> {}
 impl<T, Target> UpcastFrom<Option<T>> for JsNullable<Option<Target>> where Target: UpcastFrom<T> {}
 // `None` is `undefined`, a JS value, so an optional carrier upcasts to `JsValue`
@@ -837,11 +840,17 @@ impl<T: NullableIntoWasmAbi> IntoWasmAbi for Nullable<T> {
     }
 }
 
-/// `Option<Nullable<T>>` is `None` for `T`'s `undefined` ABI value.
-impl<T: NullableIntoWasmAbi> OptionIntoWasmAbi for Nullable<T> {
+/// `Nullable<Option<T>>` shares `T`'s ABI, `Null` and `None` being its two
+/// spare values.
+impl<T: NullableIntoWasmAbi> IntoWasmAbi for Nullable<Option<T>> {
+    type Abi = T::MaybeAbi;
+
     #[inline]
-    fn none() -> T::MaybeAbi {
-        T::none()
+    fn into_abi(self) -> T::MaybeAbi {
+        match self {
+            Nullable::Null => T::null(),
+            Nullable::Value(me) => me.into_abi(),
+        }
     }
 }
 
@@ -868,11 +877,27 @@ impl<T: NullableFromWasmAbi> FromWasmAbi for Nullable<T> {
 }
 
 /// `T`'s `undefined` test may cover its `null` sentinel too, as a slice's
-/// does with the null pointer, so `Null` is ruled out first.
-impl<T: NullableFromWasmAbi> OptionFromWasmAbi for Nullable<T> {
+/// does with the null pointer, so `Null` is ruled out before the `Option`
+/// reads the rest.
+impl<T: NullableFromWasmAbi> FromWasmAbi for Nullable<Option<T>> {
+    type Abi = T::MaybeAbi;
+
     #[inline]
-    fn is_none(js: &T::MaybeAbi) -> bool {
-        !T::is_null(js) && T::is_none(js)
+    unsafe fn from_abi(js: T::MaybeAbi) -> Self {
+        if T::is_null(&js) {
+            Nullable::Null
+        } else {
+            Nullable::Value(Option::from_abi(js))
+        }
+    }
+
+    #[inline]
+    unsafe fn try_from_abi(js: T::MaybeAbi) -> Result<Self, &'static str> {
+        if T::is_null(&js) {
+            Ok(Nullable::Null)
+        } else {
+            Option::try_from_abi(js).map(Nullable::Value)
+        }
     }
 }
 
@@ -882,9 +907,7 @@ unsafe impl<T: ErasableGeneric> ErasableGeneric for Nullable<T> {
 
 impl<T, Target> UpcastFrom<Nullable<T>> for Nullable<Target> where Target: UpcastFrom<T> {}
 // An `Option<T>` reads `null` as `None`, so every value of a `Nullable<T>` is one
-// of an `Option<T>`. This is the only `Nullable` to `Option` rule coherence
-// allows, so `Nullable<T>` reaches `Option<Nullable<T>>` through it once `T`
-// wraps into `Nullable`.
+// of an `Option<T>`.
 impl<T, Target> UpcastFrom<Nullable<T>> for Option<Target> where Target: UpcastFrom<T> {}
 impl<T, Target> UpcastFrom<Nullable<T>> for JsOption<Nullable<Target>> where Target: UpcastFrom<T> {}
 impl<T, Target> UpcastFrom<Nullable<T>> for JsNullable<Nullable<Target>> where Target: UpcastFrom<T> {}

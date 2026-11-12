@@ -1093,12 +1093,12 @@ fn null_and_undefined_elements_upcast_to_optional() {
     assert_eq!(first(&opts), None);
     let nullables: Array<Nullable<JsString>> = nulls.clone().upcast_into();
     assert_eq!(first(&nullables), Nullable::Null);
-    let exact: Array<Option<Nullable<JsString>>> = nulls.upcast_into();
-    assert_eq!(first(&exact), Some(Nullable::Null));
+    let exact: Array<Nullable<Option<JsString>>> = nulls.upcast_into();
+    assert_eq!(first(&exact), Nullable::Null);
 }
 
 // A value wraps into `Option` or `Nullable` whenever it upcasts to the payload,
-// and a `Nullable<T>` is an `Option<T>`, so it reaches `Option<Nullable<T>>`.
+// and both a `Nullable<T>` and an `Option<T>` reach `Nullable<Option<T>>`.
 #[wasm_bindgen_test]
 fn elements_wrap_into_optional() {
     use wasm_bindgen::prelude::Upcast;
@@ -1123,8 +1123,10 @@ fn elements_wrap_into_optional() {
     let nullables: Array<Nullable<JsString>> = strs.upcast_into();
     let opts: Array<Option<JsString>> = nullables.clone().upcast_into();
     assert_eq!(first(&opts), Some(JsString::from("a")));
-    let exact: Array<Option<Nullable<JsString>>> = nullables.upcast_into();
-    assert_eq!(first(&exact), Some(Nullable::Value(JsString::from("a"))));
+    let exact: Array<Nullable<Option<JsString>>> = nullables.upcast_into();
+    assert_eq!(first(&exact), Nullable::Value(Some(JsString::from("a"))));
+    let exact: Array<Nullable<Option<JsString>>> = opts.upcast_into();
+    assert_eq!(first(&exact), Nullable::Value(Some(JsString::from("a"))));
 
     let p: Promise<Array<JsString>> = Promise::resolve(&js_array![JsString; "b"]).unchecked_into();
     let _: Promise<Option<Array<JsValue>>> = p.upcast_into();

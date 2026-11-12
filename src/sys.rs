@@ -111,9 +111,9 @@ impl fmt::Display for Null {
 
 impl UpcastFrom<Null> for Null {}
 impl UpcastFrom<Null> for JsValue {}
-// `null` is `None` for an `Option<T>`, or `Some(Nullable::Null)` when `T` is a
-// `Nullable`, and `Nullable::Null` for a `Nullable<T>`. `undefined` is not a
-// `Nullable<T>`, as it goes to `T`'s own conversion.
+// `null` is `None` for an `Option<T>` and `Nullable::Null` for a
+// `Nullable<T>`. `undefined` is not a `Nullable<T>`, as it goes to `T`'s own
+// conversion.
 impl<T> UpcastFrom<Null> for Option<T> {}
 impl<T> UpcastFrom<Null> for crate::Nullable<T> {}
 
