@@ -110,6 +110,7 @@ macro_rules! attrgen {
             (no_upcast, false, NoUpcast(Span)),
             (no_promising, false, NoPromising(Span)),
             (no_into_js_generic, false, NoIntoJsGeneric(Span)),
+            (no_from_js_value, false, NoFromJsValue(Span)),
             (vendor_prefix, false, VendorPrefix(Span, Ident)),
             (variadic, false, Variadic(Span)),
             (typescript_custom_section, false, TypescriptCustomSection(Span)),
@@ -1401,6 +1402,7 @@ impl<'a>
         let no_upcast = attrs.no_upcast().is_some();
         let no_promising = attrs.no_promising().is_some();
         let no_into_js_generic = attrs.no_into_js_generic().is_some();
+        let no_from_js_value = attrs.no_from_js_value().is_some();
         for (used, attr) in attrs.attrs.iter() {
             match attr {
                 BindgenAttr::Extends(_, e) => {
@@ -1444,6 +1446,7 @@ impl<'a>
             no_upcast,
             no_promising,
             no_into_js_generic,
+            no_from_js_value,
             wasm_bindgen: program.wasm_bindgen.clone(),
             generics: generics.unwrap_or(self.generics),
         }))

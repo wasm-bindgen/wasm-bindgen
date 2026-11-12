@@ -17,7 +17,7 @@ fn has_disposable_stack() -> bool {
 }
 
 fn error_message(err: &JsValue) -> JsString {
-    err.unchecked_ref::<Error>().message()
+    err.unchecked_ref::<Error>().message().into()
 }
 
 #[wasm_bindgen_test]

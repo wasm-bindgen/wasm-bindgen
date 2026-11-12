@@ -93,6 +93,7 @@
       - [`no_deref`](./reference/attributes/on-js-imports/no_deref.md)
       - [`no_upcast`](./reference/attributes/on-js-imports/no_upcast.md)
       - [`no_promising`](./reference/attributes/on-js-imports/no_promising.md)
+      - [`no_from_js_value`](./reference/attributes/on-js-imports/no_from_js_value.md)
       - [`reexport`](./reference/attributes/on-js-imports/reexport.md)
       - [`slice` and `vec`](./reference/attributes/on-js-imports/slice.md)
       - [`static_method_of = Blah`](./reference/attributes/on-js-imports/static_method_of.md)

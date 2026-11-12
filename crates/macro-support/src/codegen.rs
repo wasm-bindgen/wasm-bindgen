@@ -1759,6 +1759,26 @@ impl TryToTokens for ast::ImportType {
             phantom_init = quote! {};
         }
 
+        // TODO: remove this on the next major version
+        // Only include lifetime params here; type params use their
+        // defaults so callers don't need turbofish annotations.
+        let from_js_value_impl = if self.no_from_js_value {
+            quote! {}
+        } else {
+            quote! {
+                #[automatically_derived]
+                impl #from_jsvalue_generics From<JsValue> for #rust_name #from_jsvalue_generics #from_jsvalue_where_clause {
+                    #[inline]
+                    fn from(obj: JsValue) -> Self {
+                        #rust_name {
+                            obj: obj.into(),
+                            #phantom_init
+                        }
+                    }
+                }
+            }
+        };
+
         // Identity implementation of `IntoJsGeneric`. Declaring this per-type,
         // rather than via a blanket over `T: JsGeneric`, preserves the option
         // for future wrapper types to pick a non-identity `JsCanon`.
@@ -1916,7 +1936,7 @@ impl TryToTokens for ast::ImportType {
                     #[inline]
                     unsafe fn from_abi(js: Self::Abi) -> Self {
                         #rust_name {
-                            obj: JsValue::from_abi(js).into(),
+                            obj: JsValue::from_abi(js).unchecked_into(),
                             #phantom_init
                         }
                     }
@@ -1966,7 +1986,7 @@ impl TryToTokens for ast::ImportType {
                     unsafe fn ref_from_abi(js: Self::Abi) -> Self::Anchor {
                         let tmp = <JsValue as RefFromWasmAbi>::ref_from_abi(js);
                         #wasm_bindgen::__rt::core::mem::ManuallyDrop::new(#rust_name {
-                            obj: #wasm_bindgen::__rt::core::mem::ManuallyDrop::into_inner(tmp).into(),
+                            obj: #wasm_bindgen::__rt::core::mem::ManuallyDrop::into_inner(tmp).unchecked_into(),
                             #phantom_init
                         })
                     }
@@ -1981,7 +2001,7 @@ impl TryToTokens for ast::ImportType {
                     unsafe fn long_ref_from_abi(js: Self::Abi) -> Self::Anchor {
                         let tmp = <JsValue as LongRefFromWasmAbi>::long_ref_from_abi(js);
                         #rust_name {
-                            obj: tmp.into(),
+                            obj: tmp.unchecked_into(),
                             #phantom_init
                         }
                     }
@@ -2001,19 +2021,7 @@ impl TryToTokens for ast::ImportType {
 
                 #into_js_generic_impl
 
-                // TODO: remove this on the next major version
-                // Only include lifetime params here; type params use their
-                // defaults so callers don't need turbofish annotations.
-                #[automatically_derived]
-                impl #from_jsvalue_generics From<JsValue> for #rust_name #from_jsvalue_generics #from_jsvalue_where_clause {
-                    #[inline]
-                    fn from(obj: JsValue) -> Self {
-                        #rust_name {
-                            obj: obj.into(),
-                            #phantom_init
-                        }
-                    }
-                }
+                #from_js_value_impl
 
                 #[automatically_derived]
                 impl #impl_generics From<#rust_name #ty_generics> for JsValue #where_clause {
@@ -2046,7 +2054,7 @@ impl TryToTokens for ast::ImportType {
                     #[inline]
                     fn unchecked_from_js(val: JsValue) -> Self {
                         #rust_name {
-                            obj: val.into(),
+                            obj: val.unchecked_into(),
                             #phantom_init
                         }
                     }

@@ -291,7 +291,7 @@ function __wbg_get_imports() {
         __wbg_log_d4d40eabd852060b: function(arg0, arg1) {
             console.log(getStringFromWasm0(arg0, arg1));
         },
-        __wbg_message_43d8c8f1d543a349: function(arg0) {
+        __wbg_message_f2ae48bd0e25bee9: function(arg0) {
             const ret = arg0.message;
             return ret;
         },
@@ -302,7 +302,7 @@ function __wbg_get_imports() {
             getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 1, len1, true);
             getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 0, ptr1, true);
         },
-        __wbg_name_d1fa514fdca6a975: function(arg0) {
+        __wbg_name_d89a83bfb104a27b: function(arg0) {
             const ret = arg0.name;
             return ret;
         },
