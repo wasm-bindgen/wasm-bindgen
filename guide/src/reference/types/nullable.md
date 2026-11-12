@@ -92,9 +92,10 @@ the null pointer itself is `Null`. A JS `0` passed for either a
 
 `Option<T>` and `Nullable<T>` are also accepted as the element of a borrowed
 slice, for the same `T` a `&[T]` accepts. `&[Option<T>]`, `&[Nullable<T>]`
-and `&[Option<Nullable<T>>]` are encoded per element, numbers copied and
-strings and JS handles borrowed, into a fresh `Array`, typed
-`(T | undefined)[]` or `(T | null)[]`.
+and `&[Nullable<Option<T>>]` are encoded per element, numbers copied and
+strings and JS handles borrowed, into a fresh `Array` whose empty elements
+are `undefined` or `null`. In a `&[Option<JsValue>]`, `Some(JsValue::UNDEFINED)`
+and `None` both arrive as `undefined`.
 
 ```rust
 #[wasm_bindgen]

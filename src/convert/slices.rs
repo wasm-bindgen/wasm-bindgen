@@ -871,7 +871,7 @@ where
 // `Option<T>` and `Nullable<T>` as a borrowed sequence element: `&[Option<T>]`
 // is an encoded sequence whose cell is `Option<&T>`'s ABI, which is
 // `Option<T>`'s, so numbers copy and strings and handles borrow, as `&[T]`
-// does. `Option<Nullable<T>>` nests as it does for a single value.
+// does. `Nullable<Option<T>>` nests as it does for a single value.
 impl<T> crate::__rt::marker::VectorRefIntoWasmAbiSealed for Option<T>
 where
     Option<T>: IntoWasmAbi,

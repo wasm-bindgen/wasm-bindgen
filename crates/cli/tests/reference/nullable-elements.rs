@@ -13,7 +13,7 @@ extern "C" {
     fn nullable_strings(v: &[Nullable<String>]);
     fn nullable_js_strings(v: &[Nullable<JsString>]);
     fn call_nullable(f: &Function<fn(Nullable<JsString>) -> Undefined>);
-    fn opt_ref_nullable_string(v: Option<&Nullable<String>>);
+    fn ref_nullable_opt_string(v: &Nullable<Option<String>>);
     fn ref_f64(v: &f64);
     fn ref_ref_str(v: &&str);
 }
@@ -24,7 +24,7 @@ pub fn use_imports(f: &Function<fn(Nullable<JsString>) -> Undefined>) {
     nullable_strings(&[Nullable::Null]);
     nullable_js_strings(&[Nullable::Null]);
     call_nullable(f);
-    opt_ref_nullable_string(Some(&Nullable::Null));
+    ref_nullable_opt_string(&Nullable::Null);
     ref_f64(&1.0);
     ref_ref_str(&"a");
 }

@@ -2404,12 +2404,35 @@ impl ToTokens for ast::StringEnum {
                 }
             }
 
+            // A borrowed enum crosses by copy, as a borrowed number does.
+            #[automatically_derived]
+            impl #wasm_bindgen::convert::IntoWasmAbi for &#enum_name {
+                type Abi = u32;
+
+                #[inline]
+                fn into_abi(self) -> u32 {
+                    match self {
+                        #(#variant_paths_ref => #variant_indices,)*
+                        #enum_name::__Invalid => #invalid,
+                    }
+                }
+            }
+
+            #[automatically_derived]
+            impl #wasm_bindgen::convert::OptionIntoWasmAbi for &#enum_name {
+                #[inline]
+                fn none() -> Self::Abi { #hole }
+            }
+
+            #[automatically_derived]
+            impl #wasm_bindgen::convert::NullableIntoWasmAbi for &#enum_name {
+                #[inline]
+                fn null() -> Self::MaybeAbi { #null_hole }
+            }
+
             #wasm_bindgen::__wbindgen_encoded_sequence!(
                 #enum_name,
-                |e| match e {
-                    #(#variant_paths_ref => #variant_indices,)*
-                    #enum_name::__Invalid => #invalid,
-                },
+                |e| #wasm_bindgen::convert::IntoWasmAbi::into_abi(e),
                 [ref_into, into, from]
             );
 
@@ -5529,11 +5552,34 @@ impl ToTokens for ast::Enum {
                 }
             }
 
+            // A borrowed enum crosses by copy, as a borrowed number does.
+            #[automatically_derived]
+            impl #wasm_bindgen::convert::IntoWasmAbi for &#enum_name {
+                type Abi = f64;
+
+                #[inline]
+                fn into_abi(self) -> f64 {
+                    match self {
+                        #(#enum_name::#variant_names => #enum_name::#variant_names as #underlying as f64,)*
+                    }
+                }
+            }
+
+            #[automatically_derived]
+            impl #wasm_bindgen::convert::OptionIntoWasmAbi for &#enum_name {
+                #[inline]
+                fn none() -> Self::Abi { #hole as f64 }
+            }
+
+            #[automatically_derived]
+            impl #wasm_bindgen::convert::NullableIntoWasmAbi for &#enum_name {
+                #[inline]
+                fn null() -> Self::MaybeAbi { #wasm_bindgen::convert::F64_ABI_NULL_SENTINEL }
+            }
+
             #wasm_bindgen::__wbindgen_encoded_sequence!(
                 #enum_name,
-                |e| match e {
-                    #(#enum_name::#variant_names => #enum_name::#variant_names as #underlying as f64,)*
-                },
+                |e| #wasm_bindgen::convert::IntoWasmAbi::into_abi(e),
                 [ref_into, into, from]
             );
 

@@ -32,6 +32,14 @@
   handled in wasm there, and traps now go through `abort()`.
   [#5457](https://github.com/wasm-bindgen/wasm-bindgen/pull/5457)
 
+* `Option<T>` and `Nullable<T>` are now borrowed sequence elements:
+  `&[Option<T>]`, `&[Nullable<T>]` and `&[Nullable<Option<T>>]` cross as
+  encoded slices for every `T` a `&[T]` takes, reaching JS as an `Array` with
+  `undefined` or `null` for an empty element. A borrowed enum, `&E`,
+  `&Option<E>` or `&Nullable<E>`, now crosses by copy as a borrowed number
+  does.
+  [#5434](https://github.com/wasm-bindgen/wasm-bindgen/pull/5434)
+
 ### Changed
 
 * Stabilized the `js_sys::Temporal` bindings and `Date::to_temporal_instant`,
@@ -198,12 +206,6 @@
   stands in for a `Function<fn(T) -> R>`.
   [#5427](https://github.com/wasm-bindgen/wasm-bindgen/pull/5427)
   [#5437](https://github.com/wasm-bindgen/wasm-bindgen/pull/5437)
-
-* `Option<T>` and `Nullable<T>` are now borrowed sequence elements:
-  `&[Option<T>]`, `&[Nullable<T>]` and `&[Option<Nullable<T>>]` cross as
-  encoded slices for every `T` a `&[T]` takes, typed `(T | null)[]` and the
-  like.
-  [#5434](https://github.com/wasm-bindgen/wasm-bindgen/pull/5434)
 
 * Added `MaybeIntoWasmAbi` / `MaybeFromWasmAbi`, the ABI of `Option<T>` for
   every `T`, with an associated `MaybeAbi` that lets a type without a spare

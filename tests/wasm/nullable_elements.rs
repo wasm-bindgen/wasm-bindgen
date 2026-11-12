@@ -13,14 +13,40 @@ use wasm_bindgen::convert::{IntoWasmAbi, RefIntoWasmAbi, VectorRefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
+#[wasm_bindgen]
+pub enum ElementLevel {
+    Low = 1,
+    High = 2,
+}
+
+#[wasm_bindgen]
+pub enum ElementName {
+    A = "a",
+    B = "b",
+}
+
 #[wasm_bindgen(module = "tests/wasm/nullable_elements.js")]
 extern "C" {
+    #[wasm_bindgen(js_name = describe)]
+    fn opt_levels(v: &[Option<ElementLevel>]) -> String;
+    #[wasm_bindgen(js_name = describe)]
+    fn nullable_levels(v: &[Nullable<ElementLevel>]) -> String;
+    #[wasm_bindgen(js_name = describe)]
+    fn opt_names(v: &[Option<ElementName>]) -> String;
+    #[wasm_bindgen(js_name = describe)]
+    fn nullable_opt_names(v: &[Nullable<Option<ElementName>>]) -> String;
+    #[wasm_bindgen(js_name = echo)]
+    fn echo_ref_level(v: &ElementLevel) -> JsValue;
+    #[wasm_bindgen(js_name = echo)]
+    fn echo_ref_opt_name(v: &Option<ElementName>) -> JsValue;
+    #[wasm_bindgen(js_name = echo)]
+    fn echo_ref_nullable_level(v: &Nullable<ElementLevel>) -> JsValue;
     #[wasm_bindgen(js_name = describe)]
     fn opt_f64s(v: &[Option<f64>]) -> String;
     #[wasm_bindgen(js_name = describe)]
     fn nullable_f64s(v: &[Nullable<f64>]) -> String;
     #[wasm_bindgen(js_name = describe)]
-    fn opt_nullable_u8s(v: &[Option<Nullable<u8>>]) -> String;
+    fn nullable_opt_u8s(v: &[Nullable<Option<u8>>]) -> String;
     #[wasm_bindgen(js_name = describe)]
     fn opt_js_strings(v: &[Option<JsString>]) -> String;
     #[wasm_bindgen(js_name = describe)]
@@ -37,7 +63,7 @@ extern "C" {
     fn mono_slice<T: VectorRefIntoWasmAbi>(v: &[T]) -> String;
 
     #[wasm_bindgen(js_name = echo)]
-    fn echo_opt_ref_nullable_string(v: Option<&Nullable<String>>) -> JsValue;
+    fn echo_ref_nullable_opt_string(v: &Nullable<Option<String>>) -> JsValue;
     #[wasm_bindgen(js_name = echo)]
     fn echo_ref_f64(v: &f64) -> f64;
     #[wasm_bindgen(js_name = echo)]
@@ -85,7 +111,11 @@ fn slices() {
         "Array:[1.5,null]"
     );
     assert_eq!(
-        opt_nullable_u8s(&[Some(Nullable::Value(7)), Some(Nullable::Null), None]),
+        nullable_opt_u8s(&[
+            Nullable::Value(Some(7)),
+            Nullable::Null,
+            Nullable::Value(None)
+        ]),
         "Array:[7,null,\"undefined\"]"
     );
     assert_eq!(
@@ -107,6 +137,26 @@ fn slices() {
     assert_eq!(
         nullable_strs(&[Nullable::Value("a"), Nullable::Null]),
         "Array:[\"a\",null]"
+    );
+    assert_eq!(
+        opt_levels(&[Some(ElementLevel::High), None, Some(ElementLevel::Low)]),
+        "Array:[2,\"undefined\",1]"
+    );
+    assert_eq!(
+        nullable_levels(&[Nullable::Value(ElementLevel::Low), Nullable::Null]),
+        "Array:[1,null]"
+    );
+    assert_eq!(
+        opt_names(&[Some(ElementName::B), None]),
+        "Array:[\"b\",\"undefined\"]"
+    );
+    assert_eq!(
+        nullable_opt_names(&[
+            Nullable::Value(Some(ElementName::A)),
+            Nullable::Null,
+            Nullable::Value(None)
+        ]),
+        "Array:[\"a\",null,\"undefined\"]"
     );
     assert_eq!(nullable_strings(&[]), "Array:[]");
     assert_eq!(opt_nullable_strings_slice(None), "undefined");
@@ -130,18 +180,27 @@ fn mono_slices() {
 }
 
 // A borrowed scalar crosses by copy, so `&T` and `Option<&T>` have `T`'s
-// ABIs, and `Option<&Nullable<T>>` is `Option<Nullable<&T>>`'s.
+// ABIs, and `&Nullable<Option<T>>` is `Nullable<Option<&T>>`'s.
 #[wasm_bindgen_test]
 fn borrowed() {
-    assert!(echo_opt_ref_nullable_string(None).is_undefined());
-    assert!(echo_opt_ref_nullable_string(Some(&Nullable::Null)).is_null());
+    assert!(echo_ref_nullable_opt_string(&Nullable::Value(None)).is_undefined());
+    assert!(echo_ref_nullable_opt_string(&Nullable::Null).is_null());
     assert_eq!(
-        echo_opt_ref_nullable_string(Some(&Nullable::Value("a".to_string()))),
+        echo_ref_nullable_opt_string(&Nullable::Value(Some("a".to_string()))),
         "a"
     );
     assert_eq!(echo_ref_f64(&1.5), 1.5);
     assert_eq!(echo_ref_opt_f64(&Some(1.5)), 1.5);
     assert!(echo_ref_opt_f64(&None).is_undefined());
+    assert_eq!(echo_ref_level(&ElementLevel::High), 2);
+    assert_eq!(echo_ref_opt_name(&Some(ElementName::B)), "b");
+    assert!(echo_ref_opt_name(&None).is_undefined());
+    assert!(echo_ref_nullable_level(&Nullable::Null).is_null());
+    assert_eq!(
+        echo_ref_nullable_level(&Nullable::Value(ElementLevel::Low)),
+        1
+    );
+    assert_eq!(mono_ref(&ElementLevel::Low), 1);
     assert_eq!(mono_ref(&1.5), 1.5);
     assert!(mono_ref(&Nullable::<f64>::Null).is_null());
     assert_eq!(mono_ref(&"a"), "a");
