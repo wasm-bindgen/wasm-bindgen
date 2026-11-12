@@ -635,7 +635,7 @@ global.TestSingleIterable = class {
   }
 
   entries() {
-    return this.items.values();
+    return this.items.entries();
   }
 
   keys() {
@@ -675,6 +675,55 @@ global.TestDoubleIterable = class {
   forEach(callback, thisArg) {
     return this.data.forEach(callback, thisArg);
   }
+};
+
+global.TestSingleAsyncIterable = class {
+  constructor() {
+    this.items = ['item0', 'item1', 'item2'];
+  }
+
+  async *values(options = {}, skip = 0) {
+    const items = options.reverse ? [...this.items].reverse() : this.items;
+    yield* items.slice(skip);
+  }
+
+  [Symbol.asyncIterator](options, skip) {
+    return this.values(options, skip);
+  }
+};
+
+global.TestDoubleAsyncIterable = class {
+  constructor() {
+    this.data = new Map([
+      ['key1', 10],
+      ['key2', 20],
+      ['key3', 30]
+    ]);
+  }
+
+  async *entries() {
+    yield* this.data.entries();
+  }
+
+  async *keys() {
+    yield* this.data.keys();
+  }
+
+  async *values() {
+    yield* this.data.values();
+  }
+
+  [Symbol.asyncIterator]() {
+    return this.entries();
+  }
+};
+
+exports.collectAsyncIterator = async function (iterator) {
+  const result = [];
+  for await (const value of { [Symbol.asyncIterator]: () => iterator }) {
+    result.push(value);
+  }
+  return result;
 };
 
 global.TestRecord = class {

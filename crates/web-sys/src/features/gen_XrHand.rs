@@ -44,6 +44,20 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn get(this: &XrHand, key: XrHandJoint) -> XrJointSpace;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "XrJointSpace")]
+    #[wasm_bindgen(method, js_class = "XRHand")]
+    #[doc = "The `entries()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRHand/entries)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `XrHand`, `XrJointSpace`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn entries(
+        this: &XrHand,
+    ) -> ::js_sys::Iterator<::js_sys::ArrayTuple<(::js_sys::JsString, XrJointSpace)>>;
+    #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(method, js_class = "XRHand")]
     #[doc = "The `keys()` method."]
     #[doc = ""]
@@ -54,4 +68,16 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn keys(this: &XrHand) -> ::js_sys::Iterator<::js_sys::JsString>;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "XrJointSpace")]
+    #[wasm_bindgen(method, js_class = "XRHand")]
+    #[doc = "The `values()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRHand/values)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `XrHand`, `XrJointSpace`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn values(this: &XrHand) -> ::js_sys::Iterator<XrJointSpace>;
 }

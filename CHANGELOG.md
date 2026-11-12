@@ -92,6 +92,26 @@
 
 ### Fixed
 
+* Value async iterables in WebIDL (`async iterable<V>`) now only generate a
+  `values()` method, matching the WebIDL spec. Previously, they also generated
+  `entries()` and `keys()` methods, which do not exist at runtime
+  (e.g. `ReadableStream::entries()` and `ReadableStream::keys()` in web-sys).
+  Optional arguments of async iterable declarations are now also supported,
+  adding e.g. `ReadableStream::values_with_options()`.
+  [#5458](https://github.com/wasm-bindgen/wasm-bindgen/pull/5458)
+
+* The `entries()`, `keys()` and `values()` methods of WebIDL iterable, maplike
+  and setlike declarations are no longer skipped when their key or value type
+  is defined later. This adds the missing `XrHand::entries()` and
+  `XrHand::values()` in web-sys.
+  [#5458](https://github.com/wasm-bindgen/wasm-bindgen/pull/5458)
+
+* The `entries()` method of WebIDL value iterables (`iterable<V>`) now returns
+  an iterator over `[index, value]` pairs, matching the WebIDL spec, instead of
+  an iterator over values. This changes the typed return type of e.g.
+  `XrInputSourceArray::entries()` in web-sys.
+  [#5458](https://github.com/wasm-bindgen/wasm-bindgen/pull/5458)
+
 ### Removed
 
 ## [0.2.130](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.129...0.2.130)
