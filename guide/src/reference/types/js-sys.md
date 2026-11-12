@@ -411,12 +411,24 @@ and `format_range` methods and the `Intl` resolved options and parts.
 `Date::to_json` returns `Option<String>`, with `None` for an invalid date, and
 `JSON::stringify` returns `Result<Option<String>, JsValue>`, with `None` for a
 value that has no JSON form. A string that can be large, such as the input of
-an `Intl.Segmenter` segment, stays a `JsString`. `Date::new_with_value` takes a time value
-or a date string, and an `ArrayBuffer` converts to and from bytes:
+an `Intl.Segmenter` segment, stays a `JsString`. `Date::new_with_value` takes a
+time value or a date string, and an `ArrayBuffer` converts to and from bytes:
 
 ```rust
 let message: String = err.message();
 let date = Date::new_with_value("2020-01-01");
 let buf = ArrayBuffer::from(&bytes[..]);
 let copy: Vec<u8> = buf.to_vec();
+```
+
+`Error::message` and `Error::name` rely on the value being an error. A caught
+exception or a promise rejection can be any JS value, and reaches a
+`Result<T, Error>` or a `Promise<T, Error>` through `From<JsValue>`, so that
+conversion, for `Error` and its subclasses, wraps a value that has no string
+`message` and `name` in a new error of that type with the value as its `cause`:
+
+```rust
+let err = Error::from(JsValue::from_str("boom"));
+assert_eq!(err.message(), "boom");
+assert_eq!(err.cause(), "boom");
 ```

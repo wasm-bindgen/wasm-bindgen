@@ -385,6 +385,8 @@ pub struct ImportType {
     pub no_promising: bool,
     /// If present, don't generate an `IntoJsGeneric` impl
     pub no_into_js_generic: bool,
+    /// If present, don't generate a `From<JsValue>` impl
+    pub no_from_js_value: bool,
     /// Path to wasm_bindgen
     pub wasm_bindgen: Path,
     /// Validated generics

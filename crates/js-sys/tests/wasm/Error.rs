@@ -124,3 +124,64 @@ fn string_returns() {
     assert_eq!(e.name(), "Error");
     assert_eq!(e.to_string(), "Error: boom");
 }
+
+#[cfg(js_sys_unstable_apis)]
+#[wasm_bindgen_test]
+fn from_js_value_keeps_errors() {
+    let original = Error::new("boom");
+    assert_eq!(Error::from(JsValue::from(original.clone())), original);
+
+    // Only the error shape is checked, not the class.
+    let type_error = JsValue::from(TypeError::new("boom"));
+    assert_eq!(
+        JsValue::from(RangeError::from(type_error.clone())),
+        type_error
+    );
+}
+
+#[cfg(js_sys_unstable_apis)]
+#[wasm_bindgen_test]
+fn from_js_value_wraps_non_errors() {
+    let e = Error::from(JsValue::from_str("boom"));
+    assert_eq!(e.message(), "boom");
+    assert_eq!(e.name(), "Error");
+    assert_eq!(e.cause(), JsValue::from_str("boom"));
+
+    assert_eq!(Error::from(JsValue::from_f64(42.0)).message(), "42");
+    assert_eq!(Error::from(JsValue::UNDEFINED).message(), "undefined");
+
+    let e = RangeError::from(JsValue::NULL);
+    assert!(e.is_instance_of::<RangeError>());
+    assert_eq!(e.message(), "null");
+    assert_eq!(e.name(), "RangeError");
+    assert_eq!(e.cause(), JsValue::NULL);
+
+    let e = AggregateError::from(JsValue::from_str("boom"));
+    assert!(e.is_instance_of::<AggregateError>());
+    assert_eq!(e.message(), "boom");
+
+    let e = WebAssembly::RuntimeError::from(JsValue::from_str("boom"));
+    assert!(e.is_instance_of::<WebAssembly::RuntimeError>());
+    assert_eq!(e.message(), "boom");
+}
+
+#[cfg(all(js_sys_unstable_apis, feature = "unsafe-eval"))]
+#[wasm_bindgen_test]
+fn from_js_value_checks_the_error_shape() {
+    let like = eval("({ name: 'Custom', message: 'boom' })").unwrap();
+    let e = Error::from(like.clone());
+    assert_eq!(JsValue::from(e.clone()), like);
+    assert_eq!(e.message(), "boom");
+
+    let broken = eval("const e = new Error('boom'); e.message = undefined; e").unwrap();
+    let e = Error::from(broken.clone());
+    assert_ne!(JsValue::from(e.clone()), broken);
+    assert_eq!(e.cause(), broken);
+    let _: String = e.message();
+
+    let object = eval("({ code: 1 })").unwrap();
+    assert_eq!(Error::from(object).message(), r#"Object({"code":1})"#);
+
+    let throws = eval("({ get message() { throw 1 }, name: 'Custom' })").unwrap();
+    assert_eq!(Error::from(throws.clone()).cause(), throws);
+}

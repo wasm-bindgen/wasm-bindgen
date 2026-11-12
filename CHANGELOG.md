@@ -5,6 +5,18 @@
 
 ### Added
 
+* Under `js_sys_unstable_apis`, `Date::new_with_value` creates a `Date`
+  from a time value or a date string (`impl JsNumberOrStringLike`), and
+  `ArrayBuffer` converts to and from bytes: `ArrayBuffer::to_vec`,
+  `From<&[u8]>` and `From<Vec<u8>>` for `ArrayBuffer`, and
+  `From<ArrayBuffer>` / `From<&ArrayBuffer>` for `Vec<u8>`.
+  [#5446](https://github.com/wasm-bindgen/wasm-bindgen/pull/5446)
+
+* Added the `#[wasm_bindgen(no_from_js_value)]` attribute for imported types,
+  which omits the generated unchecked `From<JsValue>` impl so that a type can
+  provide its own.
+  [#5446](https://github.com/wasm-bindgen/wasm-bindgen/pull/5446)
+
 * Added `aarch64-pc-windows-msvc` release artifacts.
   [#5439](https://github.com/wasm-bindgen/wasm-bindgen/pull/5439)
 
@@ -39,6 +51,30 @@
   ships unflagged in Firefox 139, Chrome 144 and Node 26. They stay behind the
   `temporal` feature.
   [#5417](https://github.com/wasm-bindgen/wasm-bindgen/pull/5417)
+
+* **Breaking (experimental):** under `js_sys_unstable_apis`, small built-in
+  string results return `String` rather than `JsString`: `Error::message`,
+  `name` and `to_string`, `Date::to_iso_string`, `to_string`,
+  `to_date_string`, `to_time_string` and `to_utc_string`,
+  `Number::to_fixed`, `to_precision`, `to_exponential` and
+  `to_string_with_radix`, `RegExp::source`, `flags` and `to_string`,
+  `Function::name`, `Symbol::to_string`, the `format` methods of
+  `Intl.DateTimeFormat`, `NumberFormat`, `ListFormat`, `RelativeTimeFormat`
+  and `DurationFormat`, the `format_range` methods of `Intl.DateTimeFormat`
+  and `NumberFormat`, and the string fields of the `Intl` resolved options
+  and format parts. `Date::to_json` returns `Option<String>`, `None` for an
+  invalid date. `JSON::stringify` and `JSON::stringify_with_replacer` return
+  `Result<Option<String>, JsValue>`, `None` for a value with no JSON form
+  such as `undefined`, and the replacer receives the key as a `String`.
+  [#5446](https://github.com/wasm-bindgen/wasm-bindgen/pull/5446)
+
+* **Breaking (experimental):** under `js_sys_unstable_apis`, `From<JsValue>`
+  for `Error` and its subclasses (`TypeError`, `RangeError`,
+  `WebAssembly::RuntimeError`, …) is no longer an unchecked cast. A caught
+  exception or a promise rejection can be any JS value, so a value without a
+  string `message` and `name` is wrapped in a new error of that type, with
+  the value as its `cause`. `unchecked_into` remains the unchecked cast.
+  [#5446](https://github.com/wasm-bindgen/wasm-bindgen/pull/5446)
 
 * The experimental `#[wasm_bindgen(experimental_tokio)]` support targets the
   hosted event loop of the current Tokio patchset (`1.54.1-cf.emscripten`),
@@ -130,13 +166,6 @@
   `experimental_generic_mono` import taking `&T` accepts `T = f64`,
   `Option<f64>` or `Nullable<String>`, as std's `contains(&T)` does.
   [#5436](https://github.com/wasm-bindgen/wasm-bindgen/pull/5436)
-
-* Under `js_sys_unstable_apis`, `Date::new_with_value` creates a `Date`
-  from a time value or a date string (`impl JsNumberOrStringLike`), and
-  `ArrayBuffer` converts to and from bytes: `ArrayBuffer::to_vec`,
-  `From<&[u8]>` and `From<Vec<u8>>` for `ArrayBuffer`, and
-  `From<ArrayBuffer>` / `From<&ArrayBuffer>` for `Vec<u8>`.
-  [#5446](https://github.com/wasm-bindgen/wasm-bindgen/pull/5446)
 
 * Added a rejection type parameter to `js_sys::Promise<T, E = JsValue>`,
   mirrored on `JsFuture<T, E>`, `PromiseState<T, E>` and
@@ -364,22 +393,6 @@
   date-time types compare by the spec `equals()`, and `Instant` and `PlainTime`
   are `Ord` through `compare()`.
   [#5402](https://github.com/wasm-bindgen/wasm-bindgen/pull/5402)
-
-* **Breaking (experimental):** under `js_sys_unstable_apis`, small built-in
-  string results return `String` rather than `JsString`: `Error::message`,
-  `name` and `to_string`, `Date::to_iso_string`, `to_string`,
-  `to_date_string`, `to_time_string` and `to_utc_string`,
-  `Number::to_fixed`, `to_precision`, `to_exponential` and
-  `to_string_with_radix`, `RegExp::source`, `flags` and `to_string`,
-  `Function::name`, `Symbol::to_string`, the `format` methods of
-  `Intl.DateTimeFormat`, `NumberFormat`, `ListFormat`, `RelativeTimeFormat`
-  and `DurationFormat`, the `format_range` methods of `Intl.DateTimeFormat`
-  and `NumberFormat`, and the string fields of the `Intl` resolved options and format parts.
-  `Date::to_json` returns `Option<String>`, `None` for an invalid date.
-  `JSON::stringify` and `JSON::stringify_with_replacer` return
-  `Result<Option<String>, JsValue>`, `None` for a value with no JSON form
-  such as `undefined`, and the replacer receives the key as a `String`.
-  [#5446](https://github.com/wasm-bindgen/wasm-bindgen/pull/5446)
 
 * The js-sys `JsFunction*` traits' associated types (`Ret`, `ArgN`, `BindN`)
   no longer carry a `JsGeneric` bound, so a `Function<fn(..)>` signature may

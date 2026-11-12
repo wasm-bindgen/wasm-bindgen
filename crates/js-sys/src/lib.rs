@@ -452,7 +452,7 @@ extern "C" {
     /// `AggregateError` is a subclass of [`Error`].
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AggregateError)
-    #[wasm_bindgen(extends = Error, extends = Object, typescript_type = "AggregateError")]
+    #[wasm_bindgen(extends = Error, extends = Object, typescript_type = "AggregateError", no_from_js_value)]
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub type AggregateError;
 
@@ -3868,7 +3868,7 @@ impl Default for AsyncDisposableStack {
 // Error
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object, typescript_type = "Error")]
+    #[wasm_bindgen(extends = Object, typescript_type = "Error", no_from_js_value)]
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub type Error;
 
@@ -3980,12 +3980,104 @@ extern "C" {
     pub fn is_error(value: &JsValue) -> bool;
 }
 
+#[cfg(js_sys_unstable_apis)]
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(method, getter = message, catch)]
+    fn message_value(this: &Error) -> Result<JsValue, JsValue>;
+
+    #[wasm_bindgen(method, getter = name, catch)]
+    fn name_value(this: &Error) -> Result<JsValue, JsValue>;
+}
+
+/// Whether `value` has the string `message` and `name` that the `Error`
+/// getters read.
+#[cfg(js_sys_unstable_apis)]
+fn is_error_like(value: &JsValue) -> bool {
+    let error: &Error = value.unchecked_ref();
+    error
+        .message_value()
+        .is_ok_and(|message| message.is_string())
+        && error.name_value().is_ok_and(|name| name.is_string())
+}
+
+#[cfg(js_sys_unstable_apis)]
+fn non_error_message(value: &JsValue) -> String {
+    value.as_string().unwrap_or_else(|| {
+        let debug = alloc::format!("{value:?}");
+        match debug
+            .strip_prefix("JsValue(")
+            .and_then(|s| s.strip_suffix(')'))
+        {
+            Some(inner) => inner.into(),
+            None => debug,
+        }
+    })
+}
+
+// A caught exception or a promise rejection can be any JS value and reaches an
+// error type through `From<JsValue>`, so under `js_sys_unstable_apis` a value
+// that is not error-like is wrapped in a new error, with the value as its
+// `cause`.
+macro_rules! error_from_js_value {
+    ($ty:ident) => {
+        error_from_js_value!($ty, |message, options, _value| $ty::new_with_options(
+            message, options
+        ));
+    };
+    ($ty:ty, |$message:ident, $options:ident, $value:ident| $wrap:expr) => {
+        impl From<JsValue> for $ty {
+            #[inline]
+            fn from(value: JsValue) -> Self {
+                #[cfg(js_sys_unstable_apis)]
+                if !is_error_like(&value) {
+                    let $message = &non_error_message(&value);
+                    let $options = &ErrorOptions::new(&value);
+                    let $value = &value;
+                    return $wrap;
+                }
+                value.unchecked_into()
+            }
+        }
+    };
+}
+
+error_from_js_value!(Error, |message, options, _value| {
+    Error::new_with_error_options(message, options)
+});
+error_from_js_value!(AggregateError, |message, options, _value| {
+    AggregateError::new_with_options(&[], message, options)
+});
+error_from_js_value!(SuppressedError, |message, options, value| {
+    SuppressedError::new_with_message_and_error_options(
+        value,
+        &JsValue::UNDEFINED,
+        message,
+        options,
+    )
+});
+error_from_js_value!(EvalError);
+error_from_js_value!(RangeError);
+error_from_js_value!(ReferenceError);
+error_from_js_value!(SyntaxError);
+error_from_js_value!(TypeError);
+error_from_js_value!(UriError);
+error_from_js_value!(WebAssembly::CompileError, |message, options, _value| {
+    WebAssembly::CompileError::new_with_options(message, options)
+});
+error_from_js_value!(WebAssembly::LinkError, |message, options, _value| {
+    WebAssembly::LinkError::new_with_options(message, options)
+});
+error_from_js_value!(WebAssembly::RuntimeError, |message, options, _value| {
+    WebAssembly::RuntimeError::new_with_options(message, options)
+});
+
 partialord_ord!(JsString);
 
 // EvalError
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(extends = Object, extends = Error, typescript_type = "EvalError")]
+    #[wasm_bindgen(extends = Object, extends = Error, typescript_type = "EvalError", no_from_js_value)]
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub type EvalError;
 
@@ -8067,7 +8159,7 @@ extern "C" {
     /// or range of allowed values.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RangeError)
-    #[wasm_bindgen(extends = Error, extends = Object, typescript_type = "RangeError")]
+    #[wasm_bindgen(extends = Error, extends = Object, typescript_type = "RangeError", no_from_js_value)]
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub type RangeError;
 
@@ -8094,7 +8186,7 @@ extern "C" {
     /// variable is referenced.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ReferenceError)
-    #[wasm_bindgen(extends = Error, extends = Object, typescript_type = "ReferenceError")]
+    #[wasm_bindgen(extends = Error, extends = Object, typescript_type = "ReferenceError", no_from_js_value)]
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub type ReferenceError;
 
@@ -9021,7 +9113,7 @@ extern "C" {
     /// and `suppressed` the one it hid.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SuppressedError)
-    #[wasm_bindgen(extends = Error, extends = Object, typescript_type = "SuppressedError")]
+    #[wasm_bindgen(extends = Error, extends = Object, typescript_type = "SuppressedError", no_from_js_value)]
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub type SuppressedError;
 
@@ -9069,7 +9161,7 @@ extern "C" {
     /// parsing code.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SyntaxError)
-    #[wasm_bindgen(extends = Error, extends = Object, typescript_type = "SyntaxError")]
+    #[wasm_bindgen(extends = Error, extends = Object, typescript_type = "SyntaxError", no_from_js_value)]
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub type SyntaxError;
 
@@ -9097,7 +9189,7 @@ extern "C" {
     /// expected type.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypeError)
-    #[wasm_bindgen(extends = Error, extends = Object, typescript_type = "TypeError")]
+    #[wasm_bindgen(extends = Error, extends = Object, typescript_type = "TypeError", no_from_js_value)]
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub type TypeError;
 
@@ -9124,7 +9216,7 @@ extern "C" {
     /// function was used in a wrong way.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/URIError)
-    #[wasm_bindgen(extends = Error, extends = Object, js_name = URIError, typescript_type = "URIError")]
+    #[wasm_bindgen(extends = Error, extends = Object, js_name = URIError, typescript_type = "URIError", no_from_js_value)]
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub type UriError;
 
@@ -9581,7 +9673,7 @@ pub mod WebAssembly {
         /// WebAssembly decoding or validation.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/CompileError)
-        #[wasm_bindgen(extends = Error, js_namespace = WebAssembly, typescript_type = "WebAssembly.CompileError")]
+        #[wasm_bindgen(extends = Error, js_namespace = WebAssembly, typescript_type = "WebAssembly.CompileError", no_from_js_value)]
         #[derive(Clone, Debug, PartialEq, Eq)]
         pub type CompileError;
 
@@ -9642,7 +9734,7 @@ pub mod WebAssembly {
         /// instantiation (besides traps from the start function).
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/LinkError)
-        #[wasm_bindgen(extends = Error, js_namespace = WebAssembly, typescript_type = "WebAssembly.LinkError")]
+        #[wasm_bindgen(extends = Error, js_namespace = WebAssembly, typescript_type = "WebAssembly.LinkError", no_from_js_value)]
         #[derive(Clone, Debug, PartialEq, Eq)]
         pub type LinkError;
 
@@ -9671,7 +9763,7 @@ pub mod WebAssembly {
         /// specifies a trap.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/RuntimeError)
-        #[wasm_bindgen(extends = Error, js_namespace = WebAssembly, typescript_type = "WebAssembly.RuntimeError")]
+        #[wasm_bindgen(extends = Error, js_namespace = WebAssembly, typescript_type = "WebAssembly.RuntimeError", no_from_js_value)]
         #[derive(Clone, Debug, PartialEq, Eq)]
         pub type RuntimeError;
 
