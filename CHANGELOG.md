@@ -78,6 +78,11 @@
 
 ### Fixed
 
+* Exports that return through a stack slot (`retptr`) no longer throw
+  `Cannot convert <n> to a BigInt` on `wasm64-unknown-unknown`. The slot
+  pointer is now passed as a `BigInt`, matching the export's `i64` parameter.
+  [#5452](https://github.com/wasm-bindgen/wasm-bindgen/pull/5452)
+
 ### Removed
 
 ## [0.2.130](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.129...0.2.130)

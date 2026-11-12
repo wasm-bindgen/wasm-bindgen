@@ -2005,7 +2005,14 @@ fn instruction(
             let coerce = js.cx.coerce_ptr_suffix();
             let retptr = js.declare("const", "retptr".into(), format!("{sp}(-{size}){coerce}"));
             js.finally(&format!("{sp}({size});"));
-            js.push(retptr);
+            // On wasm64 the export takes the return pointer as an
+            // LLVM-synthesized `i64` sret, but the shim returns a number
+            // (`WasmWord`), so pass it as a BigInt. Loads keep the number.
+            if js.cx.memory64 {
+                js.push_safe(format!("BigInt({retptr})"));
+            } else {
+                js.push(retptr);
+            }
         }
 
         Instruction::StoreRetptr { ty, offset, mem } => {
