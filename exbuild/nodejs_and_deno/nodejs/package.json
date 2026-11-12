@@ -1,0 +1,14 @@
+{
+  "name": "node_and_deno",
+  "collaborators": [
+    "The wasm-bindgen Developers"
+  ],
+  "version": "0.0.0",
+  "files": [
+    "node_and_deno_bg.wasm",
+    "node_and_deno.js",
+    "node_and_deno.d.ts"
+  ],
+  "main": "node_and_deno.js",
+  "types": "node_and_deno.d.ts"
+}
