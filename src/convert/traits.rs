@@ -246,12 +246,6 @@ pub trait RefMutFromWasmAbi: WasmDescribe {
 /// This is part of the internal [`convert`](crate::convert) module, **no
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
-#[cfg_attr(
-    wbg_diagnostic,
-    diagnostic::on_unimplemented(
-        note = "an `Option` cannot wrap a `Nullable`: use `Nullable<Option<T>>` for `T | null | undefined`"
-    )
-)]
 pub trait OptionIntoWasmAbi: IntoWasmAbi {
     /// Returns an ABI instance indicating "none", which JS will interpret as
     /// the `None` branch of this option.
@@ -269,12 +263,6 @@ pub trait OptionIntoWasmAbi: IntoWasmAbi {
 /// This is part of the internal [`convert`](crate::convert) module, **no
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
-#[cfg_attr(
-    wbg_diagnostic,
-    diagnostic::on_unimplemented(
-        note = "an `Option` cannot wrap a `Nullable`: use `Nullable<Option<T>>` for `T | null | undefined`"
-    )
-)]
 pub trait OptionFromWasmAbi: FromWasmAbi {
     /// Tests whether the argument is a "none" instance. If so it will be
     /// deserialized as `None`, and otherwise it will be passed to

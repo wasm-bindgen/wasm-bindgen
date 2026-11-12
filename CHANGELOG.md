@@ -65,7 +65,7 @@
   from Rust is still `undefined`.
   [#5463](https://github.com/wasm-bindgen/wasm-bindgen/pull/5463)
 
-* `T | null | undefined` is now `Nullable<Option<T>>` rather than
+* **Breaking:** `T | null | undefined` is now `Nullable<Option<T>>` rather than
   `Option<Nullable<T>>`, which no longer crosses the boundary. The outer
   `Nullable` claims `null` and the `Option` inside reads the rest, so
   `Option<T>` reads `null` and `undefined` as `None` wherever it appears
@@ -73,7 +73,10 @@
   `Nullable::Null`, `undefined` is `Nullable::Value(None)`, and the generated
   JS and TypeScript are unchanged. `JsNullable<T>` converts from and into
   `Nullable<Option<T>>`, `Option<T>` upcasts to it, and
-  `TryFromJsValue::NULLABLE` is removed.
+  `TryFromJsValue::NULLABLE` is removed. `Option<Nullable<T>>` still compiles
+  in `JsValue` conversions and as a generic argument such as an `Array`
+  element, where `null` now reads as `None` instead of `Some(Nullable::Null)`,
+  so those uses need updating by hand.
   [#5468](https://github.com/wasm-bindgen/wasm-bindgen/pull/5468)
 
 ### Fixed

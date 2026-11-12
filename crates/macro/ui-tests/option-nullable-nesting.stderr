@@ -4,7 +4,6 @@ error[E0277]: the trait bound `Nullable<u32>: OptionFromWasmAbi` is not satisfie
 4 | #[wasm_bindgen]
   | ^^^^^^^^^^^^^^^ the trait `OptionFromWasmAbi` is not implemented for `Nullable<u32>`
   |
-  = note: an `Option` cannot wrap a `Nullable`: use `Nullable<Option<T>>` for `T | null | undefined`
   = help: the following other types implement trait `OptionFromWasmAbi`:
             Box<[T]>
             JsNullable<T>
@@ -25,7 +24,6 @@ error[E0277]: the trait bound `Nullable<u32>: OptionIntoWasmAbi` is not satisfie
 4 | #[wasm_bindgen]
   | ^^^^^^^^^^^^^^^ the trait `OptionIntoWasmAbi` is not implemented for `Nullable<u32>`
   |
-  = note: an `Option` cannot wrap a `Nullable`: use `Nullable<Option<T>>` for `T | null | undefined`
   = help: the following other types implement trait `OptionIntoWasmAbi`:
             &'__wbg_ref JsNullable<T>
             &'__wbg_ref JsOption<T>
@@ -47,7 +45,6 @@ error[E0277]: the trait bound `Nullable<u32>: OptionFromWasmAbi` is not satisfie
 4 | #[wasm_bindgen]
   | ^^^^^^^^^^^^^^^ the trait `OptionFromWasmAbi` is not implemented for `Nullable<u32>`
   |
-  = note: an `Option` cannot wrap a `Nullable`: use `Nullable<Option<T>>` for `T | null | undefined`
   = help: the following other types implement trait `OptionFromWasmAbi`:
             Box<[T]>
             JsNullable<T>
@@ -67,7 +64,6 @@ error[E0277]: the trait bound `Nullable<u32>: OptionIntoWasmAbi` is not satisfie
 4 | #[wasm_bindgen]
   | ^^^^^^^^^^^^^^^ the trait `OptionIntoWasmAbi` is not implemented for `Nullable<u32>`
   |
-  = note: an `Option` cannot wrap a `Nullable`: use `Nullable<Option<T>>` for `T | null | undefined`
   = help: the following other types implement trait `OptionIntoWasmAbi`:
             &'__wbg_ref JsNullable<T>
             &'__wbg_ref JsOption<T>
