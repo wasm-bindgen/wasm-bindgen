@@ -22,9 +22,8 @@ use weedle::types::*;
 use weedle::{DictionaryDefinition, PartialDictionaryDefinition};
 
 use super::Result;
-use crate::generator::{InterfaceMethod, InterfaceMethodKind};
 use crate::{
-    util::{self, camel_case_ident, rust_ident},
+    util::{self, camel_case_ident},
     wbg_type::{ToWbgType, WbgType},
     ApiStability,
 };
@@ -78,35 +77,59 @@ pub(crate) struct FirstPassRecord<'src> {
 }
 
 impl<'src> FirstPassRecord<'src> {
-    /// Helper function to add a custom method to an interface with a properly typed return value.
-    /// Used for iterable/maplike/setlike methods in non-compat mode.
-    fn add_custom_method(
+    /// Adds an iterator method (`entries()`, `keys()` or `values()`) of an
+    /// iterable, maplike or setlike declaration to an interface.
+    ///
+    /// The method is generated in `append_interface`, since the iterated types
+    /// may refer to definitions that have not been seen yet.
+    fn add_iterator_method(
         &mut self,
         interface_name: &'src str,
         method_name: &'src str,
-        ret_wbg_ty: WbgType<'src>,
+        item: IteratorItem<'src>,
         stability: ApiStability,
     ) {
         let interface_data = self.interfaces.get_mut(interface_name).unwrap();
-        let wbg_generic = crate::util::is_wbg_generic(interface_data.definition_attributes);
-        interface_data.custom_methods.insert(
-            method_name.to_string().leak(),
-            InterfaceMethod {
-                name: rust_ident(method_name),
-                js_name: method_name.to_string(),
-                deprecated: None,
-                arguments: vec![],
-                variadic_type: None,
-                ret_wbg_ty: Some(ret_wbg_ty),
-                kind: InterfaceMethodKind::Regular,
-                is_static: false,
-                catch: false,
-                variadic: false,
-                unstable: stability.is_unstable(),
-                has_unstable_override: false,
-                wbg_generic,
-            },
-        );
+        interface_data
+            .iterator_methods
+            .insert(method_name, IteratorMethodData { item, stability });
+    }
+}
+
+/// An iterator method of an iterable, maplike or setlike declaration,
+/// returning an `Iterator` over `item`.
+pub(crate) struct IteratorMethodData<'src> {
+    pub(crate) item: IteratorItem<'src>,
+    pub(crate) stability: ApiStability,
+}
+
+/// The type of the items of an iterator.
+#[derive(Clone, Copy)]
+pub(crate) enum IteratorItem<'src> {
+    /// The index of a value iterator (`unsigned long`).
+    Index,
+    /// A single value.
+    Value(&'src Type<'src>),
+    /// A pair of values, as a `[K, V]` array.
+    Pair(&'src Type<'src>, &'src Type<'src>),
+    /// An index and a value of a value iterator, as an `[index, V]` array.
+    IndexedValue(&'src Type<'src>),
+}
+
+impl<'src> IteratorItem<'src> {
+    pub(crate) fn to_wbg_type(self, record: &FirstPassRecord<'src>) -> WbgType<'src> {
+        match self {
+            IteratorItem::Index => WbgType::UnsignedLong,
+            IteratorItem::Value(ty) => ty.to_wbg_type(record),
+            IteratorItem::Pair(key, value) => WbgType::ArrayTuple(
+                Box::new(key.to_wbg_type(record)),
+                Box::new(value.to_wbg_type(record)),
+            ),
+            IteratorItem::IndexedValue(value) => WbgType::ArrayTuple(
+                Box::new(WbgType::UnsignedLong),
+                Box::new(value.to_wbg_type(record)),
+            ),
+        }
     }
 }
 
@@ -139,7 +162,16 @@ pub(crate) struct InterfaceData<'src> {
     pub(crate) superclass: Option<&'src str>,
     pub(crate) definition_attributes: Option<&'src ExtendedAttributeList<'src>>,
     pub(crate) stability: ApiStability,
-    pub(crate) custom_methods: BTreeMap<&'src str, InterfaceMethod<'src>>,
+    pub(crate) iterator_methods: BTreeMap<&'src str, IteratorMethodData<'src>>,
+    pub(crate) async_iterables: Vec<AsyncIterableData<'src>>,
+}
+
+pub(crate) struct AsyncIterableData<'src> {
+    pub(crate) definition: &'src AsyncIterableInterfaceMember<'src>,
+    /// The `async iterable` declaration as an operation with a single signature,
+    /// so that its `entries()`, `keys()` and `values()` methods can be generated
+    /// like regular operations.
+    pub(crate) operation: OperationData<'src>,
 }
 
 pub(crate) struct AttributeMixinData<'src> {
@@ -844,20 +876,17 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)>
         // Always store typed iterators - generator will produce both compat and non-compat output
         record.iterators.insert("Iterator");
 
-        let key_wbg = key_ty.type_.to_wbg_type(record);
-        let value_wbg = value_ty.type_.to_wbg_type(record);
-
-        // Store WbgTypes - conversion to syn::Type happens during code generation
-        let entries_wbg = WbgType::Iterator(Box::new(WbgType::ArrayTuple(
-            Box::new(key_wbg.clone()),
-            Box::new(value_wbg.clone()),
-        )));
-        let keys_wbg = WbgType::Iterator(Box::new(key_wbg));
-        let values_wbg = WbgType::Iterator(Box::new(value_wbg));
-
-        record.add_custom_method(self_name, "entries", entries_wbg, stability);
-        record.add_custom_method(self_name, "keys", keys_wbg, stability);
-        record.add_custom_method(self_name, "values", values_wbg, stability);
+        let key_ty = &key_ty.type_;
+        let value_ty = &value_ty.type_;
+        let entries_item = IteratorItem::Pair(key_ty, value_ty);
+        record.add_iterator_method(self_name, "entries", entries_item, stability);
+        record.add_iterator_method(self_name, "keys", IteratorItem::Value(key_ty), stability);
+        record.add_iterator_method(
+            self_name,
+            "values",
+            IteratorItem::Value(value_ty),
+            stability,
+        );
 
         // add writeable interface if *not* readonly
         if self.readonly.is_none() {
@@ -1020,19 +1049,11 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)>
         // Always store typed iterators - generator will produce both compat and non-compat output
         record.iterators.insert("Iterator");
 
-        let value_wbg = value_ty.type_.to_wbg_type(record);
-
-        // Store WbgTypes - conversion to syn::Type happens during code generation
-        let entries_wbg = WbgType::Iterator(Box::new(WbgType::ArrayTuple(
-            Box::new(value_wbg.clone()),
-            Box::new(value_wbg.clone()),
-        )));
-        let keys_wbg = WbgType::Iterator(Box::new(value_wbg.clone()));
-        let values_wbg = WbgType::Iterator(Box::new(value_wbg));
-
-        record.add_custom_method(ctx.0, "entries", entries_wbg, ctx.1);
-        record.add_custom_method(ctx.0, "keys", keys_wbg, ctx.1);
-        record.add_custom_method(ctx.0, "values", values_wbg, ctx.1);
+        let value_ty = &value_ty.type_;
+        let entries_item = IteratorItem::Pair(value_ty, value_ty);
+        record.add_iterator_method(ctx.0, "entries", entries_item, ctx.1);
+        record.add_iterator_method(ctx.0, "keys", IteratorItem::Value(value_ty), ctx.1);
+        record.add_iterator_method(ctx.0, "values", IteratorItem::Value(value_ty), ctx.1);
 
         // add writeable interface if *not* readonly
         if self.readonly.is_none() {
@@ -1110,21 +1131,17 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)>
                 // Always store typed iterators - generator will produce both compat and non-compat output
                 record.iterators.insert("Iterator");
 
-                let value_wbg = value_ty.type_.to_wbg_type(record);
-
                 // For single-typed iterable (value iterator):
-                // - entries() returns Iterator<V>
+                // - entries() returns Iterator<ArrayTuple<u32, V>> (index and value)
                 // - keys() returns Iterator<u32> (index)
                 // - values() returns Iterator<V>
-
-                // Store WbgTypes - conversion to syn::Type happens during code generation
-                let entries_wbg = WbgType::Iterator(Box::new(value_wbg.clone()));
-                let keys_wbg = WbgType::Iterator(Box::new(WbgType::UnsignedLong));
-                let values_wbg = WbgType::Iterator(Box::new(value_wbg));
-
-                record.add_custom_method(self_name, "entries", entries_wbg, stability);
-                record.add_custom_method(self_name, "keys", keys_wbg, stability);
-                record.add_custom_method(self_name, "values", values_wbg, stability);
+                // https://webidl.spec.whatwg.org/#es-iterable
+                let value_ty = &value_ty.type_;
+                let entries = IteratorItem::IndexedValue(value_ty);
+                record.add_iterator_method(self_name, "entries", entries, stability);
+                record.add_iterator_method(self_name, "keys", IteratorItem::Index, stability);
+                let values = IteratorItem::Value(value_ty);
+                record.add_iterator_method(self_name, "values", values, stability);
 
                 // forEach callback - single-value iterable: (value, index)
                 // Use interface-specific callback name to avoid collisions between iterables
@@ -1178,25 +1195,16 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)>
                 // Always store typed iterators - generator will produce both compat and non-compat output
                 record.iterators.insert("Iterator");
 
-                let key_wbg = key_ty.type_.to_wbg_type(record);
-                let value_wbg = value_ty.type_.to_wbg_type(record);
-
                 // For double-typed iterable (pair iterator):
                 // - entries() returns Iterator<ArrayTuple<K, V>>
                 // - keys() returns Iterator<K>
                 // - values() returns Iterator<V>
-
-                // Store WbgTypes - conversion to syn::Type happens during code generation
-                let entries_wbg = WbgType::Iterator(Box::new(WbgType::ArrayTuple(
-                    Box::new(key_wbg.clone()),
-                    Box::new(value_wbg.clone()),
-                )));
-                let keys_wbg = WbgType::Iterator(Box::new(key_wbg));
-                let values_wbg = WbgType::Iterator(Box::new(value_wbg));
-
-                record.add_custom_method(self_name, "entries", entries_wbg, stability);
-                record.add_custom_method(self_name, "keys", keys_wbg, stability);
-                record.add_custom_method(self_name, "values", values_wbg, stability);
+                let entries = IteratorItem::Pair(&key_ty.type_, &value_ty.type_);
+                record.add_iterator_method(self_name, "entries", entries, stability);
+                let keys = IteratorItem::Value(&key_ty.type_);
+                record.add_iterator_method(self_name, "keys", keys, stability);
+                let values = IteratorItem::Value(&value_ty.type_);
+                record.add_iterator_method(self_name, "values", values, stability);
 
                 // forEach callback - double iterable: (value, key)
                 // Use interface-specific callback name to avoid collisions between iterables
@@ -1252,64 +1260,59 @@ impl<'src> FirstPass<'src, (&'src str, ApiStability)>
         record: &mut FirstPassRecord<'src>,
         ctx: (&'src str, ApiStability),
     ) -> Result<()> {
-        let self_name = ctx.0;
-        let stability = ctx.1;
+        // Always store typed iterators - generator will produce both compat and non-compat output
+        record.async_iterators.insert("AsyncIterator");
 
-        match self {
-            AsyncIterableInterfaceMember::Single(single) => {
-                // async iterable<V>; - async value iterator
-                let value_ty = &single.generics.body;
-
-                // Always store typed iterators - generator will produce both compat and non-compat output
-                record.async_iterators.insert("AsyncIterator");
-
-                let value_wbg = value_ty.type_.to_wbg_type(record);
-
-                // For single-typed async iterable:
-                // - entries() returns AsyncIterator<V>
-                // - keys() returns AsyncIterator<u32> (index)
-                // - values() returns AsyncIterator<V>
-
-                // Store WbgTypes - conversion to syn::Type happens during code generation
-                let entries_wbg = WbgType::AsyncIterator(Box::new(value_wbg.clone()));
-                let keys_wbg = WbgType::AsyncIterator(Box::new(WbgType::UnsignedLong));
-                let values_wbg = WbgType::AsyncIterator(Box::new(value_wbg));
-
-                record.add_custom_method(self_name, "entries", entries_wbg, stability);
-                record.add_custom_method(self_name, "keys", keys_wbg, stability);
-                record.add_custom_method(self_name, "values", values_wbg, stability);
-            }
-            AsyncIterableInterfaceMember::Double(double) => {
-                // async iterable<K, V>; - async pair iterator
-                let key_ty = &double.generics.body.0;
-                let value_ty = &double.generics.body.2;
-
-                // Always store typed iterators - generator will produce both compat and non-compat output
-                record.async_iterators.insert("AsyncIterator");
-
-                let key_wbg = key_ty.type_.to_wbg_type(record);
-                let value_wbg = value_ty.type_.to_wbg_type(record);
-
-                // For double-typed async iterable:
-                // - entries() returns AsyncIterator<ArrayTuple<K, V>>
-                // - keys() returns AsyncIterator<K>
-                // - values() returns AsyncIterator<V>
-
-                // Store WbgTypes - conversion to syn::Type happens during code generation
-                let entries_wbg = WbgType::AsyncIterator(Box::new(WbgType::ArrayTuple(
-                    Box::new(key_wbg.clone()),
-                    Box::new(value_wbg.clone()),
-                )));
-                let keys_wbg = WbgType::AsyncIterator(Box::new(key_wbg));
-                let values_wbg = WbgType::AsyncIterator(Box::new(value_wbg));
-
-                record.add_custom_method(self_name, "entries", entries_wbg, stability);
-                record.add_custom_method(self_name, "keys", keys_wbg, stability);
-                record.add_custom_method(self_name, "values", values_wbg, stability);
-            }
-        }
-
+        // The methods are generated in `append_interface`, since the iterated
+        // types and the arguments may refer to definitions (such as
+        // dictionaries) that have not been seen yet.
+        record
+            .interfaces
+            .get_mut(ctx.0)
+            .unwrap()
+            .async_iterables
+            .push(AsyncIterableData {
+                definition: self,
+                operation: async_iterable_operation(ctx.0, self, ctx.1),
+            });
         Ok(())
+    }
+}
+
+/// Creates an operation with the arguments of an `async iterable` declaration.
+///
+/// Per WebIDL, all arguments of an `async iterable` declaration are optional.
+/// A trailing variadic argument is not supported (no spec uses one, and the
+/// JS binding converts at most one value per declared argument), so it is
+/// left out.
+fn async_iterable_operation<'src>(
+    self_name: &str,
+    member: &'src AsyncIterableInterfaceMember<'src>,
+    stability: ApiStability,
+) -> OperationData<'src> {
+    let (attrs, args) = match member {
+        AsyncIterableInterfaceMember::Single(value) => (&value.attributes, &value.args),
+        AsyncIterableInterfaceMember::Double(pair) => (&pair.attributes, &pair.args),
+    };
+    let mut signature_args = Vec::new();
+    for arg in args.iter().flat_map(|args| &args.body.list) {
+        if let Argument::Variadic(_) = arg {
+            log::warn!("Unsupported variadic argument on async iterable of {self_name}");
+            break;
+        }
+        signature_args.push(Arg::from(arg));
+    }
+    OperationData {
+        signatures: vec![Signature {
+            args: signature_args,
+            // The return type is determined by the caller,
+            // depending on which method is generated.
+            ret: ReturnType::Undefined(term!(undefined)),
+            attrs,
+            stability,
+        }],
+        is_static: false,
+        stability,
     }
 }
 

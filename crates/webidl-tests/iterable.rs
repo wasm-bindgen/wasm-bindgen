@@ -9,31 +9,35 @@ fn single_iterable() {
     // Single-typed iterable - value iterator for indexed properties
     let iterable = TestSingleIterable::new().unwrap();
 
-    // Test entries() - Iterator<V>
+    // Test entries() - Iterator<ArrayTuple<u32, V>> (index and value)
     let mut entries_vec = vec![];
 
     #[cfg(not(wbg_next_unstable))]
     {
         for entry in iterable.entries().into_iter() {
             let entry = entry.unwrap();
-            entries_vec.push(entry.as_string().unwrap());
+            let pair = entry.dyn_into::<js_sys::Array>().unwrap();
+            let index = pair.get(0).as_f64().unwrap() as u32;
+            let value = pair.get(1).as_string().unwrap();
+            entries_vec.push((index, value));
         }
     }
 
     #[cfg(wbg_next_unstable)]
     {
         for entry in iterable.entries().into_iter() {
-            let value = entry.unwrap();
-            entries_vec.push(value);
+            let pair = entry.unwrap();
+            let index = pair.first().value_of() as u32;
+            entries_vec.push((index, String::from(pair.last())));
         }
     }
 
     assert_eq!(
         &entries_vec,
         &[
-            "item0".to_string(),
-            "item1".to_string(),
-            "item2".to_string()
+            (0, "item0".to_string()),
+            (1, "item1".to_string()),
+            (2, "item2".to_string())
         ]
     );
 
@@ -192,4 +196,73 @@ fn double_iterable() {
     }) as Box<dyn Fn(i32)>);
 
     iterable.for_each(cb.as_ref().unchecked_ref()).unwrap();
+}
+
+#[wasm_bindgen(module = "/globals.js")]
+extern "C" {
+    #[wasm_bindgen(js_name = collectAsyncIterator)]
+    fn collect_async_iterator(iterator: &JsValue) -> js_sys::Promise;
+}
+
+async fn collect(iterator: &JsValue) -> Vec<JsValue> {
+    let array = wasm_bindgen_futures::JsFuture::from(collect_async_iterator(iterator))
+        .await
+        .unwrap();
+    js_sys::Array::from(&array).iter().collect()
+}
+
+#[wasm_bindgen_test]
+async fn single_async_iterable() {
+    // Value async iterable - only has values()
+    let iterable = TestSingleAsyncIterable::new().unwrap();
+
+    let values = collect(iterable.values().as_ref()).await;
+    let values: Vec<String> = values.iter().map(|v| v.as_string().unwrap()).collect();
+    assert_eq!(values, ["item0", "item1", "item2"]);
+
+    // Test values() with the optional arguments of the async iterable declaration
+    let options = TestAsyncIterableOptions::new();
+    options.set_reverse(true);
+    let values = collect(iterable.values_with_options(&options).as_ref()).await;
+    let values: Vec<String> = values.iter().map(|v| v.as_string().unwrap()).collect();
+    assert_eq!(values, ["item2", "item1", "item0"]);
+
+    // Every optional argument gets its own overload
+    let values = collect(iterable.values_with_options_and_skip(&options, 1).as_ref()).await;
+    let values: Vec<String> = values.iter().map(|v| v.as_string().unwrap()).collect();
+    assert_eq!(values, ["item1", "item0"]);
+}
+
+#[wasm_bindgen_test]
+async fn double_async_iterable() {
+    // Pair async iterable - has entries(), keys() and values()
+    let iterable = TestDoubleAsyncIterable::new().unwrap();
+
+    let entries = collect(iterable.entries().as_ref()).await;
+    let entries: Vec<(String, i32)> = entries
+        .iter()
+        .map(|entry| {
+            let entry = js_sys::Array::from(entry);
+            (
+                entry.get(0).as_string().unwrap(),
+                entry.get(1).as_f64().unwrap() as i32,
+            )
+        })
+        .collect();
+    assert_eq!(
+        entries,
+        [
+            ("key1".to_string(), 10),
+            ("key2".to_string(), 20),
+            ("key3".to_string(), 30)
+        ]
+    );
+
+    let keys = collect(iterable.keys().as_ref()).await;
+    let keys: Vec<String> = keys.iter().map(|v| v.as_string().unwrap()).collect();
+    assert_eq!(keys, ["key1", "key2", "key3"]);
+
+    let values = collect(iterable.values().as_ref()).await;
+    let values: Vec<i32> = values.iter().map(|v| v.as_f64().unwrap() as i32).collect();
+    assert_eq!(values, [10, 20, 30]);
 }

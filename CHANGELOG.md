@@ -5,6 +5,125 @@
 
 ### Added
 
+* Added `aarch64-pc-windows-msvc` release artifacts.
+  [#5439](https://github.com/wasm-bindgen/wasm-bindgen/pull/5439)
+
+* `catch` on an import returning `js_sys::Promise<T>` rather than a `Result`
+  returns a synchronous throw as a rejected promise, so the error surfaces at
+  `.await` instead of unwinding through Wasm. The conversion goes through the
+  new `wasm_bindgen::convert::FromCaughtException` trait, which js-sys
+  implements for `Promise<T, E>`.
+  [#5442](https://github.com/wasm-bindgen/wasm-bindgen/pull/5442)
+
+* Added `SafeInteger<u64>` and `SafeInteger<i64>` (aliased `SafeU64` and
+  `SafeI64`), which cross the boundary as a JS `number` instead of a
+  `BigInt`, in every position including `catch`, `Option`, `Vec`, closures,
+  `async` imports and `experimental_generic_mono` generics. The safe integer range is checked under debug assertions.
+  [#5455](https://github.com/wasm-bindgen/wasm-bindgen/pull/5455)
+
+* `panic=unwind` is now supported across the `wasm-bindgen` boundary on
+  Emscripten, including legacy eh and `exnref` eh. Panics reaching an export or
+  closure are thrown to JavaScript as `PanicError` with the shadow stack
+  restored and `#[wasm_bindgen(catch)]` imports work. If a trap escapes an
+  export, we call Emscripten's `abort()`; any other exception is rethrown to
+  the caller unchanged. The catch wrappers are emitted for every Emscripten
+  module containing exception-handling instructions, so existing
+  `-Cpanic=abort` builds get them too: `#[wasm_bindgen(catch)]` imports are
+  handled in wasm there, and traps now go through `abort()`.
+  [#5457](https://github.com/wasm-bindgen/wasm-bindgen/pull/5457)
+
+### Changed
+
+* Stabilized the `js_sys::Temporal` bindings and `Date::to_temporal_instant`,
+  previously behind `js_sys_unstable_apis`, now that Temporal is Stage 4 and
+  ships unflagged in Firefox 139, Chrome 144 and Node 26. They stay behind the
+  `temporal` feature.
+  [#5417](https://github.com/wasm-bindgen/wasm-bindgen/pull/5417)
+
+* The experimental `#[wasm_bindgen(experimental_tokio)]` support targets the
+  hosted event loop of the current Tokio patchset (`1.54.1-cf.emscripten`),
+  which ticks itself from host callbacks and needs Emscripten 6.0.12 or
+  later. The mio patch is no longer needed. A `jspi, experimental_tokio`
+  export no longer admits a second invocation while one is parked, and
+  `--cfg tokio_unstable_jspi_hooks` is gone.
+  [#5466](https://github.com/wasm-bindgen/wasm-bindgen/pull/5466)
+
+* **Breaking (experimental):** `wasm_bindgen_futures::tokio` is reduced to one
+  type, `EventLoop`, a hosted event loop held by every root and task on it.
+  `schedule` becomes `EventLoop::current().schedule`, `schedule_isolated`
+  becomes `EventLoop::new().schedule`, `try_set_ambient` becomes
+  `EventLoop::from_local(rt).set_ambient()`, and `with_ambient` is removed
+  (`EventLoop::ambient()` returns the ambient loop). `EventLoop::spawn` keeps
+  an isolated loop alive past its root, for work such as a `ctx.waitUntil`,
+  and `EventLoop::enter` roots the `experimental_tokio` exports it calls on a
+  host-owned loop, such as one per Durable Object instance.
+  [#5467](https://github.com/wasm-bindgen/wasm-bindgen/pull/5467)
+
+* Awaiting a `js_sys::Promise<T, E>` converts the rejection reason through
+  `E: From<JsValue>` rather than `E: FromWasmAbi`, as a `catch` import's
+  error does, since JS can reject with any value. JS types still convert
+  unchecked, a Rust error type can inspect the reason, and a value type such
+  as `String` is no longer accepted as `E` there.
+  [#5442](https://github.com/wasm-bindgen/wasm-bindgen/pull/5442)
+
+* An `async` export resolves its promise with the value converted through
+  `IntoWasmAbi`, exactly as a sync return of the same type, rather than
+  through `Into<JsValue>`, so any returnable type such as `char` can be
+  returned from an `async` export. The rejection still converts through
+  `Into<JsValue>`, as a sync `Result` error does. A resolved type that only
+  implements `From<T> for JsValue` no longer compiles; return
+  `JsValue::from(value)` instead. Casts between externref types, and from
+  `()` to an externref, no longer call into JS.
+  [#5453](https://github.com/wasm-bindgen/wasm-bindgen/pull/5453)
+
+* `JsOption<T>` reads `null` as empty, as `Option<T>` does, in `is_empty`,
+  `as_option`, `into_option` and the `unwrap` family, so a JS `null` in a
+  `JsGeneric` position is `None` rather than a `T`. The empty value produced
+  from Rust is still `undefined`.
+  [#5463](https://github.com/wasm-bindgen/wasm-bindgen/pull/5463)
+
+* **Breaking:** `T | null | undefined` is now `Nullable<Option<T>>` rather than
+  `Option<Nullable<T>>`, which no longer crosses the boundary. The outer
+  `Nullable` claims `null` and the `Option` inside reads the rest, so
+  `Option<T>` reads `null` and `undefined` as `None` wherever it appears
+  instead of only `undefined` when wrapping a `Nullable`. `null` is
+  `Nullable::Null`, `undefined` is `Nullable::Value(None)`, and the generated
+  JS and TypeScript are unchanged. `JsNullable<T>` converts from and into
+  `Nullable<Option<T>>`, `Option<T>` upcasts to it, and
+  `TryFromJsValue::NULLABLE` is removed. `Option<Nullable<T>>` still compiles
+  in `JsValue` conversions and as a generic argument such as an `Array`
+  element, where `null` now reads as `None` instead of `Some(Nullable::Null)`,
+  so those uses need updating by hand.
+  [#5468](https://github.com/wasm-bindgen/wasm-bindgen/pull/5468)
+
+### Fixed
+
+* Value async iterables in WebIDL (`async iterable<V>`) now only generate a
+  `values()` method, matching the WebIDL spec. Previously, they also generated
+  `entries()` and `keys()` methods, which do not exist at runtime
+  (e.g. `ReadableStream::entries()` and `ReadableStream::keys()` in web-sys).
+  Optional arguments of async iterable declarations are now also supported,
+  adding e.g. `ReadableStream::values_with_options()`.
+  [#5458](https://github.com/wasm-bindgen/wasm-bindgen/pull/5458)
+
+* The `entries()`, `keys()` and `values()` methods of WebIDL iterable, maplike
+  and setlike declarations are no longer skipped when their key or value type
+  is defined later. This adds the missing `XrHand::entries()` and
+  `XrHand::values()` in web-sys.
+  [#5458](https://github.com/wasm-bindgen/wasm-bindgen/pull/5458)
+
+* The `entries()` method of WebIDL value iterables (`iterable<V>`) now returns
+  an iterator over `[index, value]` pairs, matching the WebIDL spec, instead of
+  an iterator over values. This changes the typed return type of e.g.
+  `XrInputSourceArray::entries()` in web-sys.
+  [#5458](https://github.com/wasm-bindgen/wasm-bindgen/pull/5458)
+
+### Removed
+
+## [0.2.130](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.129...0.2.130)
+
+### Added
+
 * A borrowed number, `bool`, `char` or borrowed string crosses by copy, so
   `&f64`, `&Option<T>`, `&Nullable<T>`, `Option<&f64>` and
   `Option<&Nullable<T>>` are argument types, and an
@@ -150,6 +269,9 @@
   out of the JavaScript object, which throws on any later use.
   [#5354](https://github.com/wasm-bindgen/wasm-bindgen/pull/5354)
 
+* Added Rolldown compatibility to the deployment docs in the guide.
+  [#5355](https://github.com/wasm-bindgen/wasm-bindgen/pull/5355)
+
 * Added `source` property to ToggleEvent.
   [#5353](https://github.com/wasm-bindgen/wasm-bindgen/pull/5353)
 
@@ -203,6 +325,48 @@
   [#5421](https://github.com/wasm-bindgen/wasm-bindgen/pull/5421)
 
 ### Changed
+
+* Reworked the `js_sys::Temporal` bindings and `Date::to_temporal_instant`,
+  which stay behind `js_sys_unstable_apis` and now also need the new `temporal`
+  feature, against the final Stage 4
+  specification and reshaped them to the web-sys conventions. Inputs are
+  typed: `*Like` dictionaries such as `PlainDateLike` for `from`, calendar-free
+  `*Fields` dictionaries for `with`, and the bare form of a method takes the
+  type its argument converts to (`&str` time zones and calendars, `&PlainTime`,
+  `&Duration`, `&Self` for `until`/`since`/`equals`), while every other member
+  of a specification union gets a `_with_<type>` variant, so
+  `with_calendar_with_plain_date`, `add_with_duration_like`, `add_with_str`,
+  `equals_with_zoned_date_time`, `with_plain_time_with_str`,
+  `PlainYearMonth::from_with_plain_date` and the typed `relativeTo`, `calendar`,
+  `timeZone` and `plainTime` dictionary setters all exist; `compare` keeps
+  taking `&Self` only. Optional arguments expand to the plain method plus
+  `_with_options`/`_and_options`, `to_locale_string` takes no locale, a
+  `_with_str`/`_with_str_sequence` one or an `Option<&str>` with options, and `round`,
+  `total` and `get_time_zone_transition` take their options dictionary, with
+  `round_with_unit`, `total_with_unit` and
+  `get_time_zone_transition_with_direction` shortcuts. The option dictionaries
+  are `OverflowOptions`, `DifferenceOptions`, `RoundToOptions::new(unit)`,
+  `DurationTotalOptions::new(unit)`, `TimeZoneTransitionOptions::new(direction)`
+  and friends, the enums drop their `Temporal` prefix (`Overflow`, `Unit`,
+  `LargestUnit`, `TransitionDirection`, …). Bindings for the removed
+  `toPlainYearMonth`/`toPlainMonthDay` on `PlainDateTime` and `ZonedDateTime`,
+  `ZonedDateTime::with_plain_date` and `PlainTime::to_plain_date_time` are gone,
+  `offset_nanoseconds` returns `f64`, `era`, `era_year`, `week_of_year` and
+  `year_of_week` return `Option`s, `fractionalSecondDigits` is a `u8`,
+  `get_time_zone_transition` returns `Nullable<ZonedDateTime>`,
+  `to_js_string_with_options` and `to_locale_string` are fallible, constructors
+  expand their optional trailing fields (`PlainTime::new()`, `new_with_hour`, …,
+  `PlainDate::new_with_calendar`), and `catch` follows the specification:
+  `equals`, `compare`, the typed `from` forms (except `PlainYearMonth`'s date
+  conversions, which can leave the range) and the option-less
+  `Instant`/`PlainTime` arithmetic are infallible, while
+  `ZonedDateTime::start_of_day`, `hours_in_day` and
+  `PlainDate::to_plain_year_month` are fallible. Fallible bindings return
+  `Result<T, RangeError>`, or `Result<T, Error>` where a property bag, a
+  `relativeTo`/`plainTime` union or `Intl` options can also throw a `TypeError`. `PartialEq`/`Eq` on the
+  date-time types compare by the spec `equals()`, and `Instant` and `PlainTime`
+  are `Ord` through `compare()`.
+  [#5402](https://github.com/wasm-bindgen/wasm-bindgen/pull/5402)
 
 * The js-sys `JsFunction*` traits' associated types (`Ret`, `ArgN`, `BindN`)
   no longer carry a `JsGeneric` bound, so a `Function<fn(..)>` signature may
@@ -467,7 +631,9 @@
   numeric suffix in the JS, while the TypeScript definitions keep their name.
   [#3729](https://github.com/wasm-bindgen/wasm-bindgen/issues/3729)
 
-### Removed
+* Getters generated by `getter_with_clone` no longer trigger the
+  `clippy::clone_on_copy` lint.
+  [#5363](https://github.com/wasm-bindgen/wasm-bindgen/pull/5363)
 
 ## [0.2.129](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.128...0.2.129)
 

@@ -51,8 +51,9 @@ struct CatchContext {
     exn_store: Option<FunctionId>,
     idx_local: LocalId,
     exn_local: LocalId,
-    /// Address in linear memory of the `__instance_terminated` flag (u32).
-    terminated_addr: i32,
+    /// Address in linear memory of the `__instance_terminated` flag (u32), or
+    /// `None` on Emscripten.
+    terminated_addr: Option<i32>,
     memory: MemoryId,
 }
 
@@ -62,11 +63,15 @@ struct CatchContext {
 /// functions that catch JavaScript exceptions using the appropriate EH mechanism.
 ///
 /// Sets `aux.js_tag` when wrappers are generated.
+///
+/// `emscripten` selects Emscripten's termination model: if a trap escapes an
+/// export we call Emscripten's `abort()`.
 pub fn run(
     module: &mut Module,
     aux: &mut WasmBindgenAux,
     wit: &NonstandardWitSection,
     eh_version: ExceptionHandlingVersion,
+    emscripten: bool,
 ) -> Result<(), Error> {
     // These intrinsics are required when there are catch imports
     let externref_table = aux.externref_table;
@@ -91,12 +96,15 @@ pub fn run(
         }
     }
 
-    let terminated_addr = match get_terminated_addr(module) {
-        Ok(addr) => addr,
-        // __instance_terminated is only emitted with panic=unwind.
-        // If it's missing (e.g. panic=abort with C++ exception handling
-        // instructions from embind/libcxx), skip catch wrapper generation.
-        Err(_) => return Ok(()),
+    let terminated_addr = if emscripten {
+        None
+    } else {
+        match get_terminated_addr(module) {
+            Some(addr) => Some(addr),
+            // The termination flag comes from the wasm-bindgen runtime. If
+            // it's missing, skip catch wrapper generation.
+            None => return Ok(()),
+        }
     };
     let memory = crate::wasm_conventions::get_memory(module)?;
 
@@ -200,7 +208,7 @@ pub(crate) fn get_or_import_js_tag(module: &mut Module) -> TagId {
 
 /// Look up the `__instance_terminated` exported global and return its i32
 /// constant value (the address of the termination flag in linear memory).
-fn get_terminated_addr(module: &Module) -> Result<i32, Error> {
+fn get_terminated_addr(module: &Module) -> Option<i32> {
     let global_id = module
         .exports
         .iter()
@@ -208,13 +216,10 @@ fn get_terminated_addr(module: &Module) -> Result<i32, Error> {
         .and_then(|e| match e.item {
             walrus::ExportItem::Global(g) => Some(g),
             _ => None,
-        })
-        .ok_or_else(|| {
-            anyhow::anyhow!("__instance_terminated global required for catch wrappers")
         })?;
     match &module.globals.get(global_id).kind {
-        walrus::GlobalKind::Local(walrus::ConstExpr::Value(walrus::ir::Value::I32(v))) => Ok(*v),
-        _ => anyhow::bail!("__instance_terminated must be a local i32 constant global"),
+        walrus::GlobalKind::Local(walrus::ConstExpr::Value(walrus::ir::Value::I32(v))) => Some(*v),
+        _ => None,
     }
 }
 
@@ -227,7 +232,7 @@ fn generate_catch_wrapper(
     externref_table: Option<TableId>,
     table_alloc: Option<FunctionId>,
     exn_store: Option<FunctionId>,
-    terminated_addr: i32,
+    terminated_addr: Option<i32>,
     memory: MemoryId,
     eh_version: ExceptionHandlingVersion,
 ) -> FunctionId {
@@ -528,13 +533,18 @@ fn emit_catch_handler(
 ///
 /// This checks if `__instance_terminated` is nonzero and traps if so, ensuring
 /// that instance termination is never swallowed by an outer catch handler.
+///
+/// Emits nothing on Emscripten, where we don't need to handle termination.
 fn emit_termination_guard(builder: &mut walrus::InstrSeqBuilder, ctx: CatchContext) {
+    let Some(terminated_addr) = ctx.terminated_addr else {
+        return;
+    };
     let mem_arg: MemArg = MemArg {
         align: 4,
         offset: 0,
     };
     builder
-        .i32_const(ctx.terminated_addr)
+        .i32_const(terminated_addr)
         .load(ctx.memory, LoadKind::I32 { atomic: false }, mem_arg)
         .if_else(
             None,
@@ -762,7 +772,7 @@ mod tests {
             Some(table),
             Some(table_alloc),
             Some(exn_store),
-            TERMINATED_ADDR,
+            Some(TERMINATED_ADDR),
             memory,
             super::super::ExceptionHandlingVersion::Modern,
         );
@@ -864,7 +874,7 @@ mod tests {
             Some(table),
             Some(table_alloc),
             Some(exn_store),
-            TERMINATED_ADDR,
+            Some(TERMINATED_ADDR),
             memory,
             super::super::ExceptionHandlingVersion::Legacy,
         );
@@ -983,7 +993,7 @@ mod tests {
         assert_eq!(eh_version, super::super::ExceptionHandlingVersion::Legacy);
 
         // Run the transform
-        run(&mut module, &mut aux, &wit, eh_version).unwrap();
+        run(&mut module, &mut aux, &wit, eh_version, false).unwrap();
 
         // JSTag should be set in aux
         assert!(aux.js_tag.is_some());
@@ -1065,7 +1075,7 @@ mod tests {
             Some(table),
             Some(table_alloc),
             Some(exn_store),
-            TERMINATED_ADDR,
+            Some(TERMINATED_ADDR),
             memory,
             super::super::ExceptionHandlingVersion::Legacy,
         );
@@ -1162,7 +1172,7 @@ mod tests {
             Some(table),
             Some(table_alloc),
             Some(exn_store),
-            TERMINATED_ADDR,
+            Some(TERMINATED_ADDR),
             memory,
             super::super::ExceptionHandlingVersion::Modern,
         );
@@ -1260,7 +1270,7 @@ mod tests {
             Some(table),
             Some(table_alloc),
             Some(exn_store),
-            TERMINATED_ADDR,
+            Some(TERMINATED_ADDR),
             memory,
             eh_version,
         );
@@ -1290,6 +1300,74 @@ mod tests {
             expected.trim(),
             "Modern wrapper WAT mismatch.\n\
              If intentional, update crates/cli-support/src/transforms/test-data/catch_handler_modern.wat"
+        );
+    }
+
+    #[test]
+    fn test_get_terminated_addr() {
+        let module = parse_wat(&format!("(module {TERMINATED_WAT})"));
+        assert_eq!(get_terminated_addr(&module), Some(TERMINATED_ADDR));
+        let module = parse_wat("(module (memory 1))");
+        assert_eq!(get_terminated_addr(&module), None);
+    }
+
+    /// Emscripten wrappers carry no termination guard.
+    #[test]
+    fn test_emscripten_wrapper_has_no_termination_guard() {
+        let wat = r#"
+            (module
+                (import "env" "my_import" (func $my_import (param i32) (result i32)))
+                (memory 1)
+                (export "my_import" (func $my_import))
+            )
+        "#;
+        let mut module = parse_wat(wat);
+        let import_func = module
+            .exports
+            .iter()
+            .find(|e| e.name == "my_import")
+            .and_then(|e| match e.item {
+                walrus::ExportItem::Function(f) => Some(f),
+                _ => None,
+            })
+            .unwrap();
+        let js_tag = import_js_tag(&mut module);
+        let wrapped = import_externref_tag(&mut module, "__wbindgen_wrapped_jstag");
+        let memory = get_test_memory(&module);
+
+        generate_catch_wrapper(
+            &mut module,
+            import_func,
+            js_tag,
+            WrapperKind::NonAbortingWrapper {
+                wrapped_js_tag: wrapped,
+            },
+            None,
+            None,
+            None,
+            None,
+            memory,
+            super::super::ExceptionHandlingVersion::Legacy,
+        );
+
+        let wasm = module.emit_wasm();
+        let mut validator = wasmparser::Validator::new_with_features(
+            wasmparser::WasmFeatures::default()
+                | wasmparser::WasmFeatures::EXCEPTIONS
+                | wasmparser::WasmFeatures::LEGACY_EXCEPTIONS,
+        );
+        validator.validate_all(&wasm).unwrap();
+
+        let text = wasmprinter::print_bytes(&wasm).unwrap();
+        assert!(!text.contains("i32.load"), "no flag load:\n{text}");
+        assert!(!text.contains("unreachable"), "no guard trap:\n{text}");
+        assert!(
+            text.contains("throw 1"),
+            "JS exceptions still rewrapped:\n{text}"
+        );
+        assert!(
+            text.contains("rethrow 0"),
+            "other exceptions still rethrown:\n{text}"
         );
     }
 

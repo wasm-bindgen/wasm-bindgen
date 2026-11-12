@@ -10,4 +10,4 @@ Each page's table says whether the type is accepted inside `Option`. How
 `None`, `undefined` and `null` then map across the boundary is described on
 the [`Option<T>`](./types/option.md) page, and
 [`Nullable<T>`](./types/nullable.md) is accepted wherever `Option<T>` is for a
-`T | null` value, with `Option<Nullable<T>>` for `T | null | undefined`.
+`T | null` value, with `Nullable<Option<T>>` for `T | null | undefined`.

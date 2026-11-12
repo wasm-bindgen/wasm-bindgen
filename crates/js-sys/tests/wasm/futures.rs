@@ -372,6 +372,32 @@ async fn typed_promise_await_reject() {
     assert_eq!(e.message(), "t");
 }
 
+// A rejection converts through `From<JsValue>`, so a Rust error type can
+// inspect the arbitrary value JS rejected with.
+#[derive(Debug, PartialEq)]
+struct Rejected(String);
+
+impl From<JsValue> for Rejected {
+    fn from(value: JsValue) -> Self {
+        use wasm_bindgen::JsCast;
+        match value.dyn_into::<js_sys::Error>() {
+            Ok(e) => Rejected(e.message().into()),
+            Err(other) => Rejected(format!("{other:?}")),
+        }
+    }
+}
+
+#[wasm_bindgen_test]
+async fn typed_promise_await_reject_from_js_value() {
+    use js_sys::{Number, TypeError};
+    use wasm_bindgen::JsCast;
+    let p: Promise<Number, Rejected> =
+        Promise::<JsValue>::reject(&TypeError::new("t").into()).unchecked_into();
+    assert_eq!(p.await.unwrap_err(), Rejected("t".into()));
+    let p: Promise<Number, Rejected> = Promise::<JsValue>::reject(&5.into()).unchecked_into();
+    assert_eq!(p.await.unwrap_err(), Rejected("JsValue(5)".into()));
+}
+
 // A typed `JsFuture` is `UnwindSafe`, as `future_to_promise` requires under
 // panic=unwind.
 #[allow(dead_code)]

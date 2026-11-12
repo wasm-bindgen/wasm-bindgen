@@ -133,24 +133,21 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ReadableStream`*"]
     pub fn tee(this: &ReadableStream) -> ::js_sys::Array;
     #[wasm_bindgen(method, js_class = "ReadableStream")]
-    #[doc = "The `entries()` method."]
-    #[doc = ""]
-    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream/entries)"]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ReadableStream`*"]
-    pub fn entries(this: &ReadableStream) -> ::js_sys::AsyncIterator;
-    #[wasm_bindgen(method, js_class = "ReadableStream")]
-    #[doc = "The `keys()` method."]
-    #[doc = ""]
-    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream/keys)"]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `ReadableStream`*"]
-    pub fn keys(this: &ReadableStream) -> ::js_sys::AsyncIterator;
-    #[wasm_bindgen(method, js_class = "ReadableStream")]
     #[doc = "The `values()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream/values)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ReadableStream`*"]
     pub fn values(this: &ReadableStream) -> ::js_sys::AsyncIterator;
+    #[cfg(feature = "ReadableStreamIteratorOptions")]
+    #[wasm_bindgen(method, js_class = "ReadableStream", js_name = "values")]
+    #[doc = "The `values()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream/values)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ReadableStream`, `ReadableStreamIteratorOptions`*"]
+    pub fn values_with_options(
+        this: &ReadableStream,
+        options: &ReadableStreamIteratorOptions,
+    ) -> ::js_sys::AsyncIterator;
 }

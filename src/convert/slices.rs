@@ -859,12 +859,14 @@ where
     }
 }
 
-impl<'a, T: WasmDescribe> OptionIntoWasmAbi for &'a Nullable<T>
+impl<'a, T: WasmDescribe> IntoWasmAbi for Nullable<&'a Option<T>>
 where
-    Nullable<&'a T>: OptionIntoWasmAbi,
+    Nullable<Option<&'a T>>: IntoWasmAbi,
 {
+    type Abi = <Nullable<Option<&'a T>> as IntoWasmAbi>::Abi;
+
     #[inline]
-    fn none() -> Self::Abi {
-        <Nullable<&'a T> as OptionIntoWasmAbi>::none()
+    fn into_abi(self) -> Self::Abi {
+        self.map(Option::as_ref).into_abi()
     }
 }

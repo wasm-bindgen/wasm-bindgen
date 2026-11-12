@@ -506,6 +506,8 @@ extern "C" {
     /// The `cause` property indicates the underlying cause of an error.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/cause)
+    // Next major: dictionary getters throughout js-sys become `foo()` alongside
+    // `set_foo()`, matching web-sys interface attributes.
     #[wasm_bindgen(method, getter = "cause")]
     pub fn get_cause(this: &ErrorOptions) -> JsValue;
 
@@ -7134,16 +7136,16 @@ extern "C" {
     #[wasm_bindgen(method, js_name = valueOf)]
     pub fn value_of(this: &Date) -> f64;
 
-    /// The `toTemporalInstant()` method converts a legacy `Date` object to a
-    /// `Temporal.Instant` object representing the same moment in time.
+    /// The `toTemporalInstant()` method converts this `Date` to a
+    /// `Temporal.Instant` representing the same moment in time.
     ///
-    /// This method is added by the Temporal proposal to facilitate migration
-    /// from legacy `Date` to the new Temporal API.
+    /// # Errors
+    /// Throws a `RangeError` if this is an invalid date.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toTemporalInstant)
-    #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method, js_name = toTemporalInstant)]
-    pub fn to_temporal_instant(this: &Date) -> Temporal::Instant;
+    #[cfg(feature = "temporal")]
+    #[wasm_bindgen(method, js_name = toTemporalInstant, catch)]
+    pub fn to_temporal_instant(this: &Date) -> Result<Temporal::Instant, RangeError>;
 }
 
 // Property Descriptor.
@@ -9139,7 +9141,7 @@ extern "C" {
     pub fn deref<T>(this: &WeakRef<T>) -> Option<T>;
 }
 
-#[cfg(js_sys_unstable_apis)]
+#[cfg(feature = "temporal")]
 #[allow(non_snake_case)]
 pub mod Temporal;
 
@@ -14586,6 +14588,14 @@ extern "C" {
 
 impl<T, E> Promising for Promise<T, E> {
     type Resolution = T;
+}
+
+/// A `catch` import returning `Promise<T, E>` returns a synchronous throw as
+/// a rejected promise.
+impl<T, E> wasm_bindgen::convert::FromCaughtException for Promise<T, E> {
+    fn from_caught_exception(e: JsValue) -> Self {
+        Promise::<T>::reject_typed(&e).unchecked_into()
+    }
 }
 
 /// Internal: maps a tuple of `Promise<T_i, E>` to the result shapes of

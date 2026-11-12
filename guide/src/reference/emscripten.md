@@ -58,8 +58,6 @@ target = "wasm32-unknown-emscripten"
 
 [target.wasm32-unknown-emscripten]
 rustflags = [
-  "-Cpanic=abort",
-  "-Cllvm-args=-enable-emscripten-cxx-exceptions=0",
   "-Crelocation-model=static",
   "-Clink-arg=-sWASM_BINDGEN",
   "-Clink-arg=-Wno-experimental",
@@ -104,17 +102,111 @@ Emscripten's dynamic linking rather than a usable package.
 
 The codegen flags in the configuration above:
 
-- `-Cpanic=abort` — `panic=unwind` is not yet supported across the
-  `wasm-bindgen` boundary on Emscripten
-  ([#5165](https://github.com/wasm-bindgen/wasm-bindgen/issues/5165)).
-- `-Cllvm-args=-enable-emscripten-cxx-exceptions=0` — avoids pulling in a
-  C++ exception runtime that `panic=abort` never uses.
 - `-Crelocation-model=static` — PIC is not needed for a statically linked
   main module.
 
 `-Wno-experimental` silences `emcc`'s warning that `-sWASM_BINDGEN` is an
 experimental setting. Any other `emcc` setting is passed the same way, e.g.
 `"-Clink-arg=-sSTACK_SIZE=8MB"` or `"-Clink-arg=-sALLOW_MEMORY_GROWTH"`.
+
+### Panics
+
+`panic=unwind` is the default strategy on `wasm32-unknown-emscripten` and the
+prebuilt `std` ships with it, so unlike `wasm32-unknown-unknown` no nightly
+toolchain or `-Zbuild-std` is needed. rustc links with `-fwasm-exceptions`:
+panics are thrown as native Wasm exceptions (as C++ exceptions, through
+Emscripten's libunwind) in the legacy `try`/`catch` instruction dialect that
+Emscripten emits by default. `wasm-bindgen` detects that dialect and emits its
+own exception-handling code in the same form, so what
+[Catching panics](catch-unwind.md) describes applies:
+
+- A panic that reaches a `#[wasm_bindgen]` export or closure is caught and
+  rethrown to JavaScript as a `PanicError`; the instance stays usable and the
+  shadow stack is restored.
+- `#[wasm_bindgen(catch)]` imports hand JavaScript exceptions to Rust as
+  `Err`, and exceptions from other imports propagate through Rust frames
+  (running destructors) unchanged.
+
+Fatal errors, on the other hand, are Emscripten's business rather than
+`wasm-bindgen`'s: a trap (`WebAssembly.RuntimeError`: `unreachable`, stack
+overflow, out-of-bounds access) escaping an export is passed to Emscripten's
+`abort()`, which calls `Module.onAbort`, sets `ABORT` and re-traps so the
+error reaches the caller as a `RuntimeError`. None of the machinery in
+[Handling aborts](handling-aborts.md) is generated for Emscripten output:
+`set_on_abort` callbacks never fire (use `Module.onAbort`), later export
+calls are not refused, and `schedule_reinit()` is a no-op since Emscripten
+owns instantiation.
+
+Anything else that escapes an export is rethrown to the caller untouched.
+Unlike `wasm32-unknown-unknown`, most imports in an Emscripten module aren't
+`wasm-bindgen`'s and aren't wrapped by it, so that covers JavaScript errors
+thrown by `EM_JS` / JS library / embind imports, C++ exceptions from linked
+C++ code, and Emscripten's own control-flow exceptions (`ExitStatus` from
+`exit()`, `'unwind'` from `emscripten_set_main_loop(.., true)` or
+`emscripten_exit_with_live_runtime`), the way Emscripten's `handleException`
+passes them through. Note that these *unwind* through Rust frames, so such
+functions must be bound as `extern "C-unwind"` (e.g. `emscripten_force_exit`
+or `emscripten_throw_string`); through an `extern "C"` binding rustc's
+cannot-unwind guard aborts first. That includes `std::process::exit`: it goes
+through `libc::exit`, which std declares `extern "C"` and rustc won't let you
+redeclare with another ABI.
+
+All of the above covers Rust entered through `wasm-bindgen`'s glue: exports,
+methods, and closures handed to JavaScript. Rust callbacks that Emscripten
+itself invokes through the function table — `emscripten_async_call`,
+`emscripten_set_main_loop`, `emscripten_set_*_callback` and the like, via its
+`callUserCallback` — don't pass through that glue, so a panic inside one is
+*not* converted to a `PanicError` and the shadow stack is not restored: bound
+as `extern "C-unwind"` the raw `WebAssembly.Exception` escapes to Emscripten's
+`handleException`, and bound as `extern "C"` rustc aborts on the unwind.
+Catch panics inside such callbacks yourself (`std::panic::catch_unwind`) if
+they must not take the runtime down.
+
+This needs an engine with the legacy exception-handling instructions and
+`WebAssembly.JSTag` (Node.js 22+ or a current browser). Unlike
+`wasm32-unknown-unknown`, `JSTag` is not polyfilled on Emscripten, so Node.js
+20 is not supported.
+
+#### Standardized (`exnref`) exception handling
+
+Emscripten selects the standardized exception-handling instructions with
+`-sWASM_LEGACY_EXCEPTIONS=0`, which switches its own system libraries. The
+Rust side has to match: user code via `-Cllvm-args=-wasm-use-legacy-eh=0`, and
+`std` by rebuilding it, since the prebuilt one uses the legacy instructions.
+That makes this a nightly + `-Zbuild-std` configuration:
+
+```toml
+[target.wasm32-unknown-emscripten]
+rustflags = [
+  "-Cllvm-args=-wasm-use-legacy-eh=0",
+  "-Clink-arg=-sWASM_LEGACY_EXCEPTIONS=0",
+  "-Crelocation-model=static",
+  "-Clink-arg=-sWASM_BINDGEN",
+  "-Clink-arg=-Wno-experimental",
+  "-Clink-arg=-sMODULARIZE",
+  "-Clink-arg=-sEXPORT_ES6",
+]
+
+[unstable]
+build-std = ["std", "panic_unwind"]
+```
+
+`wasm-bindgen` detects the dialect from the linked module and emits its
+wrappers as `try_table`. The output needs an engine with `exnref` support
+(Node.js 22.22.3+ / 24.15.0+ or a recent browser), as on
+`wasm32-unknown-unknown`.
+
+#### `panic=abort`
+
+To opt out of unwinding, build with `-Cpanic=abort`. Panics then trap, and
+the trap goes to Emscripten's `abort()` as described above. Since the
+prebuilt `std` still carries exception-handling instructions (and so does any
+linked C++), `wasm-bindgen` detects the dialect and emits the same catch
+wrappers and shadow-stack wrappers it does for `panic=unwind`; they're
+inert for panics in this configuration but do route JavaScript exceptions
+from `#[wasm_bindgen(catch)]` imports and `WebAssembly.RuntimeError`s the
+same way. Adding `-Cllvm-args=-enable-emscripten-cxx-exceptions=0` avoids
+linking the unused C++ exception runtime.
 
 ### Output modes
 
@@ -158,11 +250,14 @@ in the same module.
 An exported `async fn` marked `#[wasm_bindgen(experimental_tokio)]` is driven
 as a root on a Tokio event-loop runtime instead of the `wasm-bindgen-futures`
 executor, with its outcome bridged to the returned `Promise`. `tokio::spawn`,
-timers and Tokio I/O then work inside the export without JSPI. All such
-exports share the thread's ambient runtime; `experimental_tokio = "isolated"`
-gives each invocation its own runtime, torn down once the root future
-settles, for multiplexed hosts where one invocation's I/O must not cross
-into another's context.
+timers and Tokio I/O then work inside the export without JSPI. By default
+an export roots on the current runtime: the calling task's, else the one a
+host entered, else the thread's ambient runtime.
+`experimental_tokio = "isolated"` gives each invocation its own runtime,
+which lives until the root and every task it started with `EventLoop::spawn`
+have finished, for
+multiplexed hosts where one invocation's I/O must not cross into another's
+context.
 
 ```rust
 #[wasm_bindgen(experimental_tokio)]
@@ -171,20 +266,29 @@ pub async fn fetch(req: Request) -> Response {
 }
 ```
 
+Runtimes are `wasm_bindgen_futures::tokio::EventLoop`s, and every root and
+every `EventLoop::spawn` task holds its loop; a plain `tokio::spawn` task does
+not. `EventLoop::current().spawn(fut)` keeps an isolated
+runtime alive until `fut` finishes, for work that outlives the response,
+such as a Workers `ctx.waitUntil`. A host that wants one runtime per
+long-lived context, such as a Durable Object instance, holds an `EventLoop`
+and calls that context's exports inside `rt.enter(|| ..)`.
+
 The support is unstable and gated behind `--cfg wasm_bindgen_unstable_tokio`.
 The cfg makes `wasm-bindgen-futures` depend on Tokio and expose the runtime
 glue; without it nothing Tokio-related is compiled or linked, and the
 attribute is a compile error (as it is on any other target).
 
-Until the Tokio side lands upstream ([tokio#8484], with [mio#1969] for the
-reactor), both crates come from a tagged patchset, together with Tokio's own
-`--cfg tokio_unstable`:
+Until the Tokio side lands upstream ([tokio#8484]), Tokio comes from a tagged
+patchset, together with its own `--cfg tokio_unstable`:
 
 ```toml
 # Cargo.toml
 [patch.crates-io]
-mio = { git = "https://github.com/guybedford/mio", tag = "1.2.3-cf.emscripten" }
-tokio = { git = "https://github.com/guybedford/tokio", tag = "1.53.1-cf.emscripten" }
+tokio = { git = "https://github.com/guybedford/tokio", tag = "1.54.1-cf.emscripten" }
+tokio-macros = { git = "https://github.com/guybedford/tokio", tag = "1.54.1-cf.emscripten" }
+# With Tokio's `net` feature, until tokio-rs/mio#1969 is in a mio release:
+mio = { git = "https://github.com/tokio-rs/mio" }
 ```
 
 ```toml
@@ -193,27 +297,38 @@ tokio = { git = "https://github.com/guybedford/tokio", tag = "1.53.1-cf.emscript
 rustflags = ["--cfg=wasm_bindgen_unstable_tokio", "--cfg=tokio_unstable", ...]
 ```
 
-The reactor also needs Emscripten's epoll readiness listeners
-([emscripten#27547]) and async DNS ([emscripten#27742]), not yet in a
-release. The `6.0.10-cf.emscripten` tag of [guybedford/emscripten] is
-Emscripten 6.0.10 plus those changes; with `emcc` 6.0.10 (emsdk, Homebrew,
-...) already on `PATH`, use its checkout as the frontend over that toolchain:
+The event loop is hosted by the JS event loop: it registers its reactor's
+readiness and its timer deadlines with the host and runs its tasks from those
+callbacks. An export called from JS also runs one batch on the caller's
+stack, so the future's first poll is synchronous, as it is for a plain
+`async` export.
+
+This needs Emscripten 6.0.12 or later, for its epoll readiness listeners
+([emscripten#27547]). Resolving hostnames additionally needs async DNS
+([emscripten#27742]), not yet in a release, and a multiplexed host needs the
+listener callbacks delivered as a microtask of the task that made the reactor
+ready. The `7.0.0-cf.emscripten` tag of [guybedford/emscripten][emscripten-cf]
+is Emscripten 7.0.0 plus those two changes; with `emcc` 7.0.0 (emsdk,
+Homebrew, ...) already on `PATH`, use its checkout as the frontend over that
+toolchain:
 
 ```sh
-git clone --depth 1 --branch 6.0.10-cf.emscripten https://github.com/guybedford/emscripten
+git clone --depth 1 --branch 7.0.0-cf.emscripten https://github.com/guybedford/emscripten
 (cd emscripten && ./bootstrap.py)
 printf "LLVM_ROOT = '%s'\nBINARYEN_ROOT = '%s'\n" "$(em-config LLVM_ROOT)" "$(em-config BINARYEN_ROOT)" > emscripten/.emscripten
 export PATH=$PWD/emscripten:$PATH
 ```
 
-Timers, `tokio::spawn` and the sync primitives work on stock Emscripten
-6.0.10 too, where the missing listener intrinsics make linking with Tokio's
-`net` feature require `-Clink-arg=-sERROR_ON_UNDEFINED_SYMBOLS=0`.
+On an Emscripten older than 6.0.12, timers, `tokio::spawn` and the sync
+primitives still work when linked with
+`-Clink-arg=-sERROR_ON_UNDEFINED_SYMBOLS=0`, as long as Tokio's `net` feature
+is not enabled anywhere in the build: with it the event loop has a reactor to
+register, and building it aborts.
 
 [tokio#8484]: https://github.com/tokio-rs/tokio/pull/8484
-[mio#1969]: https://github.com/tokio-rs/mio/pull/1969
 [emscripten#27547]: https://github.com/emscripten-core/emscripten/pull/27547
 [emscripten#27742]: https://github.com/emscripten-core/emscripten/pull/27742
+[emscripten-cf]: https://github.com/guybedford/emscripten/tree/7.0.0-cf.emscripten
 [guybedford/emscripten]: https://github.com/guybedford/emscripten/tree/6.0.10-cf.emscripten
 
 ## JSPI
@@ -276,6 +391,14 @@ Timers, `tokio::spawn` and the sync primitives work on stock Emscripten
 4. Run under a JSPI-capable engine (Node 25+, or Node 24 with
    `--experimental-wasm-jspi`). `jspi` exports return a `Promise`.
 
+The JSPI configurations here keep `-Cpanic=abort` deliberately: the
+combination of [panic unwinding](#panics) with Emscripten's JSPI lifecycle
+hooks is not yet exercised by wasm-bindgen's test suite, so it is not
+documented as supported. The catch wrappers described under
+[`panic=abort`](#panicabort) are still emitted; what is untested is panics
+unwinding across a suspended activation. Panics in a `jspi` export trap and
+go to Emscripten's `abort()`.
+
 ### How it works
 
 On this target the fibers belong to Emscripten's JSPI runtime, so instead of
@@ -304,10 +427,7 @@ with `block_on` on a current-thread Tokio runtime, and every wait of that
 runtime (timers, I/O readiness, an idle scheduler) is a JSPI suspension of the
 activation. To JS it is a sync `jspi` export: a `Promise` of the value.
 `jspi_block_on_promise` and suspending imports work anywhere inside, in the
-root or in spawned tasks. Invocations interleave at every wait: Tokio's
-fiber-owned runtime context (`--cfg tokio_unstable_jspi_hooks`, in the tagged
-Tokio) lets a sibling invocation enter while another is parked, whether the
-park is Tokio's own or a suspension issued from task code.
+root or in spawned tasks.
 
 ```rust
 #[wasm_bindgen(jspi, experimental_tokio)]
@@ -321,22 +441,29 @@ pub async fn handle(req: Request) -> Response {
 By default all such exports share the thread's ambient runtime; with
 `experimental_tokio = "isolated"` each invocation owns a fresh runtime,
 dropped once the root settles (tasks still in flight are dropped, the reactor
-closed). The shared runtime has one scheduler core: while an activation is
-suspended from inside a task (a suspending import or `jspi_block_on_promise`
-in task code, rather than a Tokio wait), it holds that core, and a sibling
-invocation's timers and I/O only advance once it resumes. Isolated runtimes
-park independently.
+closed).
+
+The runtime stays entered on the thread while its activation is parked, so
+only one such invocation can be in flight: a second `jspi, experimental_tokio`
+export called before the first settles panics as a nested runtime, in either
+mode. An `experimental_tokio` export without `jspi` called meanwhile is
+queued, and runs once the parked invocation returns.
 
 The complete configuration for the combination is the union of the Tokio and
-JSPI ones above: the JSPI toolchain setup (the tag carries the Tokio changes
-too), and Node 25 or newer (Node 24 with `--experimental-wasm-jspi`) to run.
+JSPI ones above: the JSPI toolchain setup, and Node 25 or newer (Node 24 with
+`--experimental-wasm-jspi`) to run. That toolchain is Emscripten 6.0.10, so
+it predates the readiness listeners: link with
+`-Clink-arg=-sERROR_ON_UNDEFINED_SYMBOLS=0`, and leave Tokio's `net` feature
+off, as an `experimental_tokio` export without `jspi` aborts with it.
 Crates:
 
 ```toml
 # Cargo.toml
 [patch.crates-io]
-mio = { git = "https://github.com/guybedford/mio", tag = "1.2.3-cf.emscripten" }
-tokio = { git = "https://github.com/guybedford/tokio", tag = "1.53.1-cf.emscripten" }
+tokio = { git = "https://github.com/guybedford/tokio", tag = "1.54.1-cf.emscripten" }
+tokio-macros = { git = "https://github.com/guybedford/tokio", tag = "1.54.1-cf.emscripten" }
+# With Tokio's `net` feature, until tokio-rs/mio#1969 is in a mio release:
+mio = { git = "https://github.com/tokio-rs/mio" }
 ```
 
 ```toml
@@ -349,15 +476,16 @@ rustflags = [
   "--cfg=wasm_bindgen_unstable_tokio",
   "--cfg=wasm_bindgen_unstable_jspi",
   "--cfg=tokio_unstable",
-  "--cfg=tokio_unstable_jspi_hooks",
   "-Clink-arg=-sWASM_BINDGEN",
+  "-Clink-arg=-sERROR_ON_UNDEFINED_SYMBOLS=0",
   "-Clink-arg=-sJSPI",
   "-Clink-arg=-sREENTRANT_JSPI",
 ]
 ```
 
 `-sREENTRANT_JSPI` (which implies `-sJSPI_HOOKS`) is required: every parked
-activation keeps its own shadow stack.
+activation keeps its own shadow stack. As in the [JSPI
+configuration](#getting-started), `-Cpanic=abort` stays in place.
 
 [emscripten#27698]: https://github.com/emscripten-core/emscripten/pull/27698
 [emscripten#27699]: https://github.com/emscripten-core/emscripten/pull/27699
@@ -365,8 +493,6 @@ activation keeps its own shadow stack.
 
 ## Limitations
 
-- `-Cpanic=unwind` is not yet supported
-  ([#5165](https://github.com/wasm-bindgen/wasm-bindgen/issues/5165)).
 - `wasm-bindgen-test` supports the target via
   `wasm_bindgen_test_configure!(run_in_emscripten)`, but the harness
   currently only verifies the generated bindings; test bodies are compiled,

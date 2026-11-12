@@ -77,7 +77,7 @@ fn every_primitive_union_admits_option_and_nullable_positions() {
         fn into_abi<U: wasm_bindgen::convert::IntoWasmAbi>() {}
         into_abi::<Option<T>>();
         into_abi::<js_sys::Nullable<T>>();
-        into_abi::<Option<js_sys::Nullable<T>>>();
+        into_abi::<js_sys::Nullable<Option<T>>>();
     }
     assert_wrappers::<i32>();
     assert_wrappers::<f64>();

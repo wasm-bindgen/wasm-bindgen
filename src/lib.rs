@@ -150,9 +150,11 @@ pub mod convert;
 pub mod describe;
 mod link;
 mod nullable;
+mod safe_integer;
 pub mod sys;
 
 pub use crate::nullable::Nullable;
+pub use crate::safe_integer::{SafeI64, SafeInteger, SafeIntegerPrimitive, SafeU64};
 
 #[cfg(wbg_reference_types)]
 mod externref;
@@ -1174,15 +1176,8 @@ impl TryFromJsValue for () {
 }
 
 impl<T: TryFromJsValue> TryFromJsValue for Option<T> {
-    const NULLABLE: bool = !T::NULLABLE;
-
     fn try_from_js_value_ref(value: &JsValue) -> Option<Self> {
-        let none = if T::NULLABLE {
-            value.is_undefined()
-        } else {
-            value.is_null_or_undefined()
-        };
-        if none {
+        if value.is_null_or_undefined() {
             Some(None)
         } else {
             T::try_from_js_value_ref(value).map(Some)
@@ -1191,8 +1186,6 @@ impl<T: TryFromJsValue> TryFromJsValue for Option<T> {
 }
 
 impl<T: TryFromJsValue> TryFromJsValue for Nullable<T> {
-    const NULLABLE: bool = true;
-
     fn try_from_js_value_ref(value: &JsValue) -> Option<Self> {
         if value.is_null() {
             Some(Nullable::Null)

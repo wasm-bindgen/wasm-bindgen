@@ -17,6 +17,6 @@ and an optional return value `T | undefined`.
 
 When a slot has to carry `null` out, or when both empties come in and the
 caller has to tell them apart, use [`Nullable<T>`](./nullable.md) for
-`T | null` and `Option<Nullable<T>>` for `T | null | undefined`. The `Option`
-layer of `Option<Nullable<T>>` treats only `undefined` as `None`, since `null`
-has to reach the `Nullable` layer.
+`T | null` and `Nullable<Option<T>>` for `T | null | undefined`. The outer
+`Nullable` claims `null` first, so the `Option` inside is `None` only for
+`undefined`.

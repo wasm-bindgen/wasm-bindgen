@@ -107,7 +107,7 @@ pub enum OptionKind {
     /// `Nullable<T>`: only `null` is empty, crossing as its own sentinel, so
     /// `undefined` goes to the inner type's conversion.
     Nullable,
-    /// `Option<Nullable<T>>`: `undefined` and `null` cross as distinct empty
+    /// `Nullable<Option<T>>`: `undefined` and `null` cross as distinct empty
     /// values, `undefined` as `Option`'s and `null` as `Nullable`'s.
     OptionNullable,
 }

@@ -77,13 +77,13 @@ pub async fn tokio_sleep_ms(ms: u32) -> u32 {
 async fn tokio_ambient_runtime_is_shared() {
     use std::time::Duration;
     use tokio::sync::oneshot;
-    use wasm_bindgen_futures::tokio::schedule;
+    use wasm_bindgen_futures::tokio::EventLoop;
 
     let (cross_tx, cross_rx) = oneshot::channel::<u32>();
     let (a_tx, a_rx) = oneshot::channel::<u32>();
     let (b_tx, b_rx) = oneshot::channel::<u32>();
 
-    schedule(
+    EventLoop::ambient().schedule(
         async move {
             tokio::time::sleep(Duration::from_millis(10)).await;
             cross_tx.send(7).unwrap();
@@ -94,7 +94,7 @@ async fn tokio_ambient_runtime_is_shared() {
         },
     );
 
-    schedule(
+    EventLoop::ambient().schedule(
         async move {
             let v = cross_rx.await.unwrap();
             tokio::spawn(async move { v + 1 }).await.unwrap()

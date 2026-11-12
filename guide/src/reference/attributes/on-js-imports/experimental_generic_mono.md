@@ -203,7 +203,7 @@ by `JsBooleanOrNumberOrStringLike`, just as `number | string` is assignable to
 `boolean | number | string` in TypeScript. `JsNumberOrStringLike` also widens
 to `PropertyKey`.
 
-`Option<T>`, `Nullable<T>` and `Option<Nullable<T>>` positions work under the
+`Option<T>`, `Nullable<T>` and `Nullable<Option<T>>` positions work under the
 union bound alone: the traits carry `NullableIntoWasmAbi`, whose
 `MaybeIntoWasmAbi` supertrait is what `Option<T>` converts through, so each
 member crosses at its own optional ABI.

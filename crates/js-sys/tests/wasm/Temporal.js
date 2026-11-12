@@ -34,11 +34,8 @@ exports.get_test_duration = function () {
     return Temporal.Duration.from('P1Y2M3DT4H5M6.007008009S');
 };
 
-// Helper to create objects for with() methods
-exports.create_day_object = function (day) {
-    return { day: day };
-};
-
-exports.create_year_object = function (year) {
-    return { year: year };
+// Node 26 ships Temporal, so a missing global there means the tests are
+// being skipped rather than Temporal being unavailable.
+exports.is_temporal_required = function () {
+    return typeof process === 'object' && parseInt(process.versions.node) >= 26;
 };

@@ -423,16 +423,16 @@ fn vec_nested_try_from_js_value() {
     );
 }
 
-// `null` is `None` for every `T` but a `Nullable<T>`, which keeps it.
+// An outer `Nullable` claims `null` before the `Option` reads the rest.
 #[wasm_bindgen_test]
 fn option_null_try_from_js_value() {
     assert_eq!(
-        Option::<Nullable<String>>::try_from_js_value(JsValue::NULL),
-        Ok(Some(Nullable::Null))
+        Nullable::<Option<String>>::try_from_js_value(JsValue::NULL),
+        Ok(Nullable::Null)
     );
     assert_eq!(
-        Option::<Nullable<String>>::try_from_js_value(JsValue::UNDEFINED),
-        Ok(None)
+        Nullable::<Option<String>>::try_from_js_value(JsValue::UNDEFINED),
+        Ok(Nullable::Value(None))
     );
     assert_eq!(
         Nullable::<String>::try_from_js_value(JsValue::UNDEFINED).map_err(|_| ()),

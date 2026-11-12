@@ -29,7 +29,7 @@ extern "C" {
     #[wasm_bindgen(js_name = js_nullable_echo)]
     fn js_echo_ref_opt_f64(v: &Option<f64>) -> JsValue;
     #[wasm_bindgen(js_name = js_nullable_echo)]
-    fn js_echo_opt_ref_nullable_string(v: Option<&Nullable<String>>) -> JsValue;
+    fn js_echo_opt_ref_nullable_string(v: Nullable<&Option<String>>) -> JsValue;
     #[wasm_bindgen(experimental_generic_mono, js_name = js_nullable_echo)]
     fn js_echo_mono_ref<T: RefIntoWasmAbi>(v: &T) -> JsValue;
 
@@ -99,9 +99,8 @@ fn test_from_option_none() {
 
 #[wasm_bindgen_test]
 fn test_is_empty_null() {
-    // Strict semantics: `null` is a present value, not empty.
     let val = return_null();
-    assert!(!val.is_empty());
+    assert!(val.is_empty());
 }
 
 #[wasm_bindgen_test]
@@ -129,6 +128,13 @@ fn test_as_option_none() {
     let val = return_undefined();
     let opt = val.as_option();
     assert!(opt.is_none());
+}
+
+#[wasm_bindgen_test]
+fn test_as_option_null() {
+    assert!(return_null().as_option().is_none());
+    assert!(return_null().into_option().is_none());
+    assert_eq!(return_null().unwrap_or_default().value_of(), 0.0);
 }
 
 #[wasm_bindgen_test]
@@ -199,9 +205,8 @@ fn test_unwrap_or_else() {
 
 #[wasm_bindgen_test]
 fn test_import_null() {
-    // Strict semantics: JS `null` is a present value, not empty.
     let val = return_null();
-    assert!(!val.is_empty());
+    assert!(val.is_empty());
 }
 
 #[wasm_bindgen_test]
@@ -671,10 +676,10 @@ fn borrowed_by_copy() {
     assert_eq!(js_echo_ref_f64(&1.5), 1.5);
     assert_eq!(js_echo_ref_opt_f64(&Some(1.5)), 1.5);
     assert!(js_echo_ref_opt_f64(&None).is_undefined());
-    assert!(js_echo_opt_ref_nullable_string(None).is_undefined());
-    assert!(js_echo_opt_ref_nullable_string(Some(&Nullable::Null)).is_null());
+    assert!(js_echo_opt_ref_nullable_string(Nullable::Value(&None)).is_undefined());
+    assert!(js_echo_opt_ref_nullable_string(Nullable::Null).is_null());
     assert_eq!(
-        js_echo_opt_ref_nullable_string(Some(&Nullable::Value("a".to_string()))),
+        js_echo_opt_ref_nullable_string(Nullable::Value(&Some("a".to_string()))),
         "a"
     );
     assert_eq!(js_echo_mono_ref(&1.5), 1.5);

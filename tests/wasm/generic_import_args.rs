@@ -26,6 +26,7 @@ use std::borrow::Cow;
 use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, RefIntoWasmAbi, VectorRefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsStringLike;
+use wasm_bindgen::SafeInteger;
 use wasm_bindgen_test::*;
 
 #[wasm_bindgen(module = "tests/wasm/generic_import_args.js")]
@@ -229,6 +230,12 @@ fn experimental_generic_mono_callback_signature() {
 
     let mut label = |value: f64| format!("value:{value}");
     assert_eq!(transform(2.5f64, &mut label), "value:2.5");
+
+    let mut negate = |value: SafeInteger<i64>| -value;
+    assert_eq!(
+        transform(SafeInteger::<i64>::MAX, &mut negate),
+        SafeInteger::MIN
+    );
 
     let increment = |value: u32| value + 1;
     assert_eq!(transform_shared(3u32, &increment), 4);
@@ -438,6 +445,10 @@ fn experimental_generic_mono_option_in_signature() {
     assert_eq!(opt_echo(Some(2.5f64)), Some(2.5f64));
     assert_eq!(opt_echo::<f64>(None), None);
 
+    let max = SafeInteger::<u64>::MAX;
+    assert_eq!(opt_echo(Some(max)), Some(max));
+    assert_eq!(opt_echo::<SafeInteger<u64>>(None), None);
+
     // Confirm the JS side really saw a present/absent value rather than a
     // sentinel that happened to round-trip.
     assert_eq!(opt_describe(Some(7u32)), "some:7");
@@ -481,6 +492,8 @@ fn experimental_generic_mono_string_and_number_wire_shapes() {
     assert_eq!(describe_any(String::from("owned")), "string:owned");
     assert_eq!(describe_any(13u32), "number:13");
     assert_eq!(describe_any(14.0f64), "number:14");
+    assert_eq!(describe_any(SafeInteger::from(15u64)), "number:15");
+    assert_eq!(describe_any(15u64), "bigint:15");
 }
 
 #[wasm_bindgen_test]

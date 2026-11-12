@@ -68,7 +68,9 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn entries(this: &XrInputSourceArray) -> ::js_sys::Iterator<XrInputSource>;
+    pub fn entries(
+        this: &XrInputSourceArray,
+    ) -> ::js_sys::Iterator<::js_sys::ArrayTuple<(::js_sys::Number, XrInputSource)>>;
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(method, js_class = "XRInputSourceArray")]
     #[doc = "The `keys()` method."]

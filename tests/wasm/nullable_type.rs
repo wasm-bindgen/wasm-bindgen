@@ -1,4 +1,4 @@
-//! `Nullable<T>` is `T | null` and `Option<Nullable<T>>` is
+//! `Nullable<T>` is `T | null` and `Nullable<Option<T>>` is
 //! `T | null | undefined`: every state crosses the boundary intact in both
 //! directions, for every `T` category and in every position. `undefined` into
 //! a plain `Nullable<T>` goes to `T`'s own conversion, as any other non-`T`
@@ -20,35 +20,35 @@ extern "C" {
     fn nullable_type_js_exports();
     fn nullable_type_js_debug() -> bool;
     fn nullable_type_closure_driver(
-        f: &Closure<dyn FnMut(Nullable<u32>, Option<Nullable<String>>) -> String>,
+        f: &Closure<dyn FnMut(Nullable<u32>, Nullable<Option<String>>) -> String>,
     );
     fn nullable_type_nullable_closure_driver(
         f: &Closure<dyn FnMut(Nullable<String>) -> Nullable<String>>,
     );
     fn nullable_type_optional_closure_driver(
-        f: &Closure<dyn FnMut(Option<Nullable<u32>>) -> Option<Nullable<u32>>>,
+        f: &Closure<dyn FnMut(Nullable<Option<u32>>) -> Nullable<Option<u32>>>,
     );
 
     #[wasm_bindgen(js_name = nullable_type_describe)]
     fn describe_str_ref(v: Nullable<&str>) -> String;
     #[wasm_bindgen(js_name = nullable_type_describe)]
-    fn describe_opt_str_ref(v: Option<Nullable<&str>>) -> String;
+    fn describe_opt_str_ref(v: Nullable<Option<&str>>) -> String;
     #[wasm_bindgen(js_name = nullable_type_describe)]
     fn describe_slice_ref(v: Nullable<&[u8]>) -> String;
     #[wasm_bindgen(js_name = nullable_type_describe)]
-    fn describe_opt_slice_ref(v: Option<Nullable<&[u8]>>) -> String;
+    fn describe_opt_slice_ref(v: Nullable<Option<&[u8]>>) -> String;
     #[wasm_bindgen(js_name = nullable_type_describe)]
     fn describe_string_slice_ref(v: Nullable<&[String]>) -> String;
     #[wasm_bindgen(js_name = nullable_type_describe)]
-    fn describe_opt_string_slice_ref(v: Option<Nullable<&[String]>>) -> String;
+    fn describe_opt_string_slice_ref(v: Nullable<Option<&[String]>>) -> String;
     #[wasm_bindgen(js_name = nullable_type_describe)]
     fn describe_jsvalue_ref(v: Nullable<&JsValue>) -> String;
     #[wasm_bindgen(js_name = nullable_type_describe)]
-    fn describe_opt_jsvalue_ref(v: Option<Nullable<&JsValue>>) -> String;
+    fn describe_opt_jsvalue_ref(v: Nullable<Option<&JsValue>>) -> String;
     #[wasm_bindgen(js_name = nullable_type_describe)]
     fn describe_closure_ref(v: Nullable<&Closure<dyn Fn()>>) -> String;
     #[wasm_bindgen(js_name = nullable_type_describe)]
-    fn describe_opt_closure_ref(v: Option<Nullable<&Closure<dyn Fn()>>>) -> String;
+    fn describe_opt_closure_ref(v: Nullable<Option<&Closure<dyn Fn()>>>) -> String;
 }
 
 /// The imports for one `T`: `describe` reports which state JS received, and
@@ -64,19 +64,19 @@ macro_rules! imports {
                 #[wasm_bindgen(js_name = nullable_type_describe)]
                 pub fn describe(v: Nullable<$ty>) -> String;
                 #[wasm_bindgen(js_name = nullable_type_describe)]
-                pub fn describe_opt(v: Option<Nullable<$ty>>) -> String;
+                pub fn describe_opt(v: Nullable<Option<$ty>>) -> String;
                 #[wasm_bindgen(js_name = nullable_type_js_null)]
                 pub fn js_null() -> Nullable<$ty>;
                 #[wasm_bindgen(js_name = nullable_type_js_null)]
-                pub fn js_null_opt() -> Option<Nullable<$ty>>;
+                pub fn js_null_opt() -> Nullable<Option<$ty>>;
                 #[wasm_bindgen(js_name = nullable_type_js_undefined)]
-                pub fn js_undefined_opt() -> Option<Nullable<$ty>>;
+                pub fn js_undefined_opt() -> Nullable<Option<$ty>>;
                 #[wasm_bindgen(js_name = nullable_type_js_undefined, catch)]
                 pub fn js_undefined() -> Result<Nullable<$ty>, JsValue>;
                 #[wasm_bindgen(js_name = $value)]
                 pub fn js_value() -> Nullable<$ty>;
                 #[wasm_bindgen(js_name = $value)]
-                pub fn js_value_opt() -> Option<Nullable<$ty>>;
+                pub fn js_value_opt() -> Nullable<Option<$ty>>;
             }
         }
     )*};
@@ -137,26 +137,30 @@ impl NullableThing {
 }
 
 #[wasm_bindgen]
-#[derive(Default)]
 pub struct NullableFields {
     pub n: Nullable<u32>,
-    pub o: Option<Nullable<u32>>,
+    pub o: Nullable<Option<u32>>,
     #[wasm_bindgen(getter_with_clone)]
     pub s: Nullable<String>,
     #[wasm_bindgen(getter_with_clone)]
-    pub t: Option<Nullable<String>>,
+    pub t: Nullable<Option<String>>,
 }
 
 #[wasm_bindgen]
 impl NullableFields {
     #[wasm_bindgen(constructor)]
     pub fn new() -> NullableFields {
-        NullableFields::default()
+        NullableFields {
+            n: Nullable::Null,
+            o: Nullable::Value(None),
+            s: Nullable::Null,
+            t: Nullable::Value(None),
+        }
     }
 }
 
 /// Exported identity functions per `T`, covering the export argument and
-/// return positions for `Nullable<T>` and `Option<Nullable<T>>`.
+/// return positions for `Nullable<T>` and `Nullable<Option<T>>`.
 macro_rules! exports {
     ($($name:ident / $opt_name:ident: $ty:ty),* $(,)?) => {$(
         #[wasm_bindgen]
@@ -165,7 +169,7 @@ macro_rules! exports {
         }
 
         #[wasm_bindgen]
-        pub fn $opt_name(a: Option<Nullable<$ty>>) -> Option<Nullable<$ty>> {
+        pub fn $opt_name(a: Nullable<Option<$ty>>) -> Nullable<Option<$ty>> {
             a
         }
     )*};
@@ -211,9 +215,9 @@ macro_rules! result_exports {
 
         #[wasm_bindgen]
         pub fn $opt_name(
-            a: Option<Nullable<$ty>>,
+            a: Nullable<Option<$ty>>,
             fail: bool,
-        ) -> Result<Option<Nullable<$ty>>, JsValue> {
+        ) -> Result<Nullable<Option<$ty>>, JsValue> {
             fallible(a, fail)
         }
     )*};
@@ -239,10 +243,11 @@ pub fn nullable_type_string_enum_name(a: Nullable<NullableName>) -> String {
 }
 
 #[wasm_bindgen]
-pub fn nullable_type_opt_string_enum_name(a: Option<Nullable<NullableName>>) -> String {
+pub fn nullable_type_opt_string_enum_name(a: Nullable<Option<NullableName>>) -> String {
     match a {
-        None => "undefined".into(),
-        Some(a) => nullable_type_string_enum_name(a),
+        Nullable::Value(None) => "undefined".into(),
+        Nullable::Null => nullable_type_string_enum_name(Nullable::Null),
+        Nullable::Value(Some(a)) => nullable_type_string_enum_name(Nullable::Value(a)),
     }
 }
 
@@ -256,7 +261,7 @@ fn closure_args_and_returns() {
     let calls = Rc::new(Cell::new(0));
     let f = {
         let calls = AssertUnwindSafe(calls.clone());
-        Closure::new(move |n: Nullable<u32>, s: Option<Nullable<String>>| {
+        Closure::new(move |n: Nullable<u32>, s: Nullable<Option<String>>| {
             calls.set(calls.get() + 1);
             format!("{n:?} {s:?}")
         })
@@ -265,7 +270,7 @@ fn closure_args_and_returns() {
     assert!(calls.get() >= 3);
     let g = Closure::new(|s: Nullable<String>| s);
     nullable_type_nullable_closure_driver(&g);
-    let h = Closure::new(|n: Option<Nullable<u32>>| n);
+    let h = Closure::new(|n: Nullable<Option<u32>>| n);
     nullable_type_optional_closure_driver(&h);
 }
 
@@ -274,14 +279,14 @@ macro_rules! states {
     ($m:ident, $value:expr) => {{
         assert_eq!($m::describe(Nullable::Null), "null");
         assert_eq!($m::describe(Nullable::Value($value)), "value");
-        assert_eq!($m::describe_opt(None), "undefined");
-        assert_eq!($m::describe_opt(Some(Nullable::Null)), "null");
-        assert_eq!($m::describe_opt(Some(Nullable::Value($value))), "value");
+        assert_eq!($m::describe_opt(Nullable::Value(None)), "undefined");
+        assert_eq!($m::describe_opt(Nullable::Null), "null");
+        assert_eq!($m::describe_opt(Nullable::Value(Some($value))), "value");
         assert!($m::js_null().is_null());
-        assert!($m::js_null_opt().is_some_and(|v| v.is_null()));
-        assert!($m::js_undefined_opt().is_none());
+        assert!($m::js_null_opt().is_null());
+        assert!(matches!($m::js_undefined_opt(), Nullable::Value(None)));
         assert!($m::js_value().is_value());
-        assert!($m::js_value_opt().is_some_and(|v| v.is_value()));
+        assert!(matches!($m::js_value_opt(), Nullable::Value(Some(_))));
     }};
 }
 
@@ -403,16 +408,16 @@ fn import_args_and_returns() {
 fn import_ref_args() {
     assert_eq!(describe_str_ref(Nullable::Null), "null");
     assert_eq!(describe_str_ref(Nullable::Value("hi")), "value");
-    assert_eq!(describe_opt_str_ref(None), "undefined");
-    assert_eq!(describe_opt_str_ref(Some(Nullable::Null)), "null");
-    assert_eq!(describe_opt_str_ref(Some(Nullable::Value("hi"))), "value");
+    assert_eq!(describe_opt_str_ref(Nullable::Value(None)), "undefined");
+    assert_eq!(describe_opt_str_ref(Nullable::Null), "null");
+    assert_eq!(describe_opt_str_ref(Nullable::Value(Some("hi"))), "value");
 
     assert_eq!(describe_slice_ref(Nullable::Null), "null");
     assert_eq!(describe_slice_ref(Nullable::Value(&[1, 2])), "value");
-    assert_eq!(describe_opt_slice_ref(None), "undefined");
-    assert_eq!(describe_opt_slice_ref(Some(Nullable::Null)), "null");
+    assert_eq!(describe_opt_slice_ref(Nullable::Value(None)), "undefined");
+    assert_eq!(describe_opt_slice_ref(Nullable::Null), "null");
     assert_eq!(
-        describe_opt_slice_ref(Some(Nullable::Value(&[1, 2]))),
+        describe_opt_slice_ref(Nullable::Value(Some(&[1, 2]))),
         "value"
     );
 
@@ -422,29 +427,32 @@ fn import_ref_args() {
         describe_string_slice_ref(Nullable::Value(&strings)),
         "value"
     );
-    assert_eq!(describe_opt_string_slice_ref(None), "undefined");
-    assert_eq!(describe_opt_string_slice_ref(Some(Nullable::Null)), "null");
     assert_eq!(
-        describe_opt_string_slice_ref(Some(Nullable::Value(&strings))),
+        describe_opt_string_slice_ref(Nullable::Value(None)),
+        "undefined"
+    );
+    assert_eq!(describe_opt_string_slice_ref(Nullable::Null), "null");
+    assert_eq!(
+        describe_opt_string_slice_ref(Nullable::Value(Some(&strings))),
         "value"
     );
 
     let one = JsValue::from(1);
     assert_eq!(describe_jsvalue_ref(Nullable::Null), "null");
     assert_eq!(describe_jsvalue_ref(Nullable::Value(&one)), "value");
-    assert_eq!(describe_opt_jsvalue_ref(None), "undefined");
-    assert_eq!(describe_opt_jsvalue_ref(Some(Nullable::Null)), "null");
+    assert_eq!(describe_opt_jsvalue_ref(Nullable::Value(None)), "undefined");
+    assert_eq!(describe_opt_jsvalue_ref(Nullable::Null), "null");
     assert_eq!(
-        describe_opt_jsvalue_ref(Some(Nullable::Value(&one))),
+        describe_opt_jsvalue_ref(Nullable::Value(Some(&one))),
         "value"
     );
 
     let f = Closure::new(|| ());
     assert_eq!(describe_closure_ref(Nullable::Null), "null");
     assert_eq!(describe_closure_ref(Nullable::Value(&f)), "value");
-    assert_eq!(describe_opt_closure_ref(None), "undefined");
-    assert_eq!(describe_opt_closure_ref(Some(Nullable::Null)), "null");
-    assert_eq!(describe_opt_closure_ref(Some(Nullable::Value(&f))), "value");
+    assert_eq!(describe_opt_closure_ref(Nullable::Value(None)), "undefined");
+    assert_eq!(describe_opt_closure_ref(Nullable::Null), "null");
+    assert_eq!(describe_opt_closure_ref(Nullable::Value(Some(&f))), "value");
 }
 
 #[wasm_bindgen_test]
@@ -453,24 +461,21 @@ fn js_nullable_conversions() {
     assert!(JsValue::is_null(&null));
     let value: JsNullable<Number> = Nullable::Value(Number::from(3)).into();
     assert_eq!(value.as_option().unwrap().value_of(), 3.0);
-    let undefined: JsNullable<Number> = None::<Nullable<Number>>.into();
+    let undefined: JsNullable<Number> = Nullable::Value(None::<Number>).into();
     assert!(JsValue::is_undefined(&undefined));
-    let some_null: JsNullable<Number> = Some(Nullable::<Number>::Null).into();
+    let some_null: JsNullable<Number> = Nullable::<Option<Number>>::Null.into();
     assert!(JsValue::is_null(&some_null));
 
+    assert!(Nullable::<Option<Number>>::from(null).is_null());
     assert!(matches!(
-        Option::<Nullable<Number>>::from(null),
-        Some(Nullable::Null)
+        Nullable::<Option<Number>>::from(undefined),
+        Nullable::Value(None)
     ));
-    assert!(Option::<Nullable<Number>>::from(undefined).is_none());
-    match Option::<Nullable<Number>>::from(value) {
-        Some(Nullable::Value(n)) => assert_eq!(n.value_of(), 3.0),
+    match Nullable::<Option<Number>>::from(value) {
+        Nullable::Value(Some(n)) => assert_eq!(n.value_of(), 3.0),
         other => panic!("{other:?}"),
     }
-    assert!(matches!(
-        Option::<Nullable<Number>>::from(JsNullable::<Number>::new()),
-        Some(Nullable::Null)
-    ));
+    assert!(Nullable::<Option<Number>>::from(JsNullable::<Number>::new()).is_null());
 }
 
 #[wasm_bindgen_test]
@@ -484,9 +489,9 @@ fn api() {
     assert_eq!(Nullable::Value(3).value(), Some(3));
     assert_eq!(Nullable::<u32>::Null.into_option(), None);
     // The union collapses to `Option<T>`.
-    assert_eq!(Some(Nullable::Value(3)).and_then(Nullable::value), Some(3));
-    assert_eq!(Some(Nullable::<u32>::Null).and_then(Nullable::value), None);
-    assert_eq!(None::<Nullable<u32>>.and_then(Nullable::value), None);
+    assert_eq!(Nullable::Value(Some(3)).value().flatten(), Some(3));
+    assert_eq!(Nullable::<Option<u32>>::Null.value().flatten(), None);
+    assert_eq!(Nullable::Value(None::<u32>).value().flatten(), None);
 
     let mut v = Nullable::Value(3);
     assert!(v.is_value() && !v.is_null());

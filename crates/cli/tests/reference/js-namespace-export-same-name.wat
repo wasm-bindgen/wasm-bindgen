@@ -17,7 +17,7 @@
   (type (;15;) (func (result i32 i32)))
   (type (;16;) (func (result i32)))
   (type (;17;) (func))
-  (import "./reference_test_bg.js" "__wbg___wbindgen_throw_41e9ee4f547fc59a" (func (;0;) (type 10)))
+  (import "./reference_test_bg.js" "__wbg___wbindgen_throw_4c88d8bf264fd984" (func (;0;) (type 10)))
   (import "./reference_test_bg.js" "__wbg_bar__point_new" (func (;1;) (type 11)))
   (import "./reference_test_bg.js" "__wbg_bar__point_unwrap" (func (;2;) (type 0)))
   (import "./reference_test_bg.js" "__wbg_foo__point_new" (func (;3;) (type 11)))

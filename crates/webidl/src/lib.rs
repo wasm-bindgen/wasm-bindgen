@@ -17,11 +17,13 @@ mod util;
 mod wbg_type;
 
 use crate::first_pass::OperationData;
-use crate::first_pass::{FirstPass, FirstPassRecord, InterfaceData, OperationId};
+use crate::first_pass::{
+    AsyncIterableData, FirstPass, FirstPassRecord, InterfaceData, OperationId,
+};
 use crate::generator::{
     Const, Dictionary, DictionaryField, DictionaryFieldSetter, Enum, EnumVariant, Function,
-    Interface, InterfaceAttribute, InterfaceAttributeKind, InterfaceMethod, Namespace,
-    NamespaceAttribute, NamespaceAttributeKind,
+    Interface, InterfaceAttribute, InterfaceAttributeKind, InterfaceMethod, InterfaceMethodKind,
+    Namespace, NamespaceAttribute, NamespaceAttributeKind,
 };
 use crate::traverse::TraverseType;
 use crate::util::{
@@ -29,7 +31,7 @@ use crate::util::{
     optional_return_ty, read_dir, rust_ident, setter_throws, shouty_snake_case_ident,
     snake_case_ident, throws, webidl_const_v_to_backend_const_v, TypePosition,
 };
-use crate::wbg_type::ToWbgType;
+use crate::wbg_type::{ToWbgType, WbgType};
 use anyhow::Context;
 use anyhow::Result;
 use constants::UNFLATTENED_ATTRIBUTES;
@@ -46,6 +48,7 @@ use std::{fmt, iter};
 use weedle::attribute::ExtendedAttributeList;
 use weedle::common::Identifier;
 use weedle::dictionary::DictionaryMember;
+use weedle::interface::AsyncIterableInterfaceMember;
 use weedle::Parse;
 
 /// Mark stable attributes that have unstable overrides with the same name.
@@ -914,6 +917,83 @@ impl<'src> FirstPassRecord<'src> {
         });
     }
 
+    /// Generates the methods of an `async iterable` declaration.
+    ///
+    /// A value async iterable (`async iterable<V>`) only has `values()`,
+    /// while a pair async iterable (`async iterable<K, V>`) has `entries()`,
+    /// `keys()` and `values()`.
+    ///
+    /// Each method takes the arguments of the `async iterable` declaration,
+    /// so its overloads are generated like those of a regular operation,
+    /// e.g. `values()` and `values_with_options(options)`.
+    fn append_async_iterable_methods(
+        &'src self,
+        type_name: &str,
+        methods: &mut Vec<InterfaceMethod<'src>>,
+        data: &InterfaceData<'src>,
+        member: &'src AsyncIterableData<'src>,
+        unstable_types: &HashSet<Identifier>,
+        wbg_generic: bool,
+        wbg_generic_types: &HashSet<Identifier>,
+    ) {
+        const ENTRIES: OperationId<'static> = OperationId::Operation(Some("entries"));
+        const KEYS: OperationId<'static> = OperationId::Operation(Some("keys"));
+        const VALUES: OperationId<'static> = OperationId::Operation(Some("values"));
+
+        let to_wbg_type =
+            |ty: &'src weedle::types::AttributedType<'src>| ty.type_.to_wbg_type(self);
+        let iterators = match member.definition {
+            AsyncIterableInterfaceMember::Single(value) => {
+                // async iterable<V>; - value async iterator
+                let value_wbg = to_wbg_type(&value.generics.body);
+
+                // For value async iterables, only values() is defined:
+                // - values() returns AsyncIterator<V>
+                // Unlike sync value iterables, async value iterables do not
+                // have entries() or keys() methods.
+                // https://webidl.spec.whatwg.org/#es-asynchronous-iterable
+                vec![(&VALUES, WbgType::AsyncIterator(Box::new(value_wbg)))]
+            }
+            AsyncIterableInterfaceMember::Double(pair) => {
+                // async iterable<K, V>; - pair async iterator
+                let key_wbg = to_wbg_type(&pair.generics.body.0);
+                let value_wbg = to_wbg_type(&pair.generics.body.2);
+
+                // For pair async iterables:
+                // - entries() returns AsyncIterator<ArrayTuple<K, V>>
+                // - keys() returns AsyncIterator<K>
+                // - values() returns AsyncIterator<V>
+                let entries_wbg = WbgType::AsyncIterator(Box::new(WbgType::ArrayTuple(
+                    Box::new(key_wbg.clone()),
+                    Box::new(value_wbg.clone()),
+                )));
+                vec![
+                    (&ENTRIES, entries_wbg),
+                    (&KEYS, WbgType::AsyncIterator(Box::new(key_wbg))),
+                    (&VALUES, WbgType::AsyncIterator(Box::new(value_wbg))),
+                ]
+            }
+        };
+
+        let unstable = data.stability.is_unstable();
+        for (id, ret_wbg_ty) in iterators {
+            for mut method in self.create_imports(
+                Some(type_name),
+                data.definition_attributes,
+                id,
+                &member.operation,
+                unstable,
+                unstable_types,
+                wbg_generic,
+                wbg_generic_types,
+            ) {
+                // Store WbgTypes - conversion to syn::Type happens during code generation
+                method.ret_wbg_ty = Some(ret_wbg_ty.clone());
+                methods.push(method);
+            }
+        }
+    }
+
     fn append_interface(
         &self,
         program: &mut Program,
@@ -1026,10 +1106,37 @@ impl<'src> FirstPassRecord<'src> {
         // changing `undefined` to `PerformanceMark` for Performance.mark).
         mark_stable_methods_with_unstable_overrides(&mut methods);
 
-        // Add custom methods (e.g., maplike/setlike iterators)
+        // Add iterator methods of iterable/maplike/setlike declarations
         // Generator will produce both compat and non-compat output
-        for method in data.custom_methods.values() {
-            methods.push(method.clone());
+        for (name, method) in data.iterator_methods.iter() {
+            methods.push(InterfaceMethod {
+                name: rust_ident(name),
+                js_name: name.to_string(),
+                deprecated: None,
+                arguments: vec![],
+                variadic_type: None,
+                // Store WbgTypes - conversion to syn::Type happens during code generation
+                ret_wbg_ty: Some(WbgType::Iterator(Box::new(method.item.to_wbg_type(self)))),
+                kind: InterfaceMethodKind::Regular,
+                is_static: false,
+                catch: false,
+                variadic: false,
+                unstable: method.stability.is_unstable(),
+                has_unstable_override: false,
+                wbg_generic,
+            });
+        }
+
+        for member in data.async_iterables.iter() {
+            self.append_async_iterable_methods(
+                &name.to_string(),
+                &mut methods,
+                data,
+                member,
+                unstable_types,
+                wbg_generic,
+                wbg_generic_types,
+            );
         }
 
         Interface {

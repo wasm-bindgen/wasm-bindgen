@@ -1,0 +1,78 @@
+error[E0277]: the trait bound `Nullable<u32>: OptionFromWasmAbi` is not satisfied
+ --> ui-tests/option-nullable-nesting.rs:4:1
+  |
+4 | #[wasm_bindgen]
+  | ^^^^^^^^^^^^^^^ the trait `OptionFromWasmAbi` is not implemented for `Nullable<u32>`
+  |
+  = help: the following other types implement trait `OptionFromWasmAbi`:
+            Box<[T]>
+            JsNullable<T>
+            JsOption<T>
+            JsValue
+            NonNull<T>
+            String
+            Undefined
+            Vec<T>
+          and $N others
+  = note: required for `Nullable<u32>` to implement `MaybeFromWasmAbi`
+  = note: required for `Option<Nullable<u32>>` to implement `FromWasmAbi`
+  = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `Nullable<u32>: OptionIntoWasmAbi` is not satisfied
+ --> ui-tests/option-nullable-nesting.rs:4:1
+  |
+4 | #[wasm_bindgen]
+  | ^^^^^^^^^^^^^^^ the trait `OptionIntoWasmAbi` is not implemented for `Nullable<u32>`
+  |
+  = help: the following other types implement trait `OptionIntoWasmAbi`:
+            &'__wbg_ref JsNullable<T>
+            &'__wbg_ref JsOption<T>
+            &'__wbg_ref Undefined
+            &'__wbg_ref wasm_bindgen::sys::Null
+            &'a mut [MaybeUninit<f32>]
+            &'a mut [MaybeUninit<f64>]
+            &'a mut [MaybeUninit<i16>]
+            &'a mut [MaybeUninit<i32>]
+          and $N others
+  = note: required for `Nullable<u32>` to implement `MaybeIntoWasmAbi`
+  = note: required for `Option<Nullable<u32>>` to implement `IntoWasmAbi`
+  = note: required for `Option<Nullable<u32>>` to implement `ReturnWasmAbi`
+  = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `Nullable<u32>: OptionFromWasmAbi` is not satisfied
+ --> ui-tests/option-nullable-nesting.rs:4:1
+  |
+4 | #[wasm_bindgen]
+  | ^^^^^^^^^^^^^^^ the trait `OptionFromWasmAbi` is not implemented for `Nullable<u32>`
+  |
+  = help: the following other types implement trait `OptionFromWasmAbi`:
+            Box<[T]>
+            JsNullable<T>
+            JsOption<T>
+            JsValue
+            NonNull<T>
+            String
+            Undefined
+            Vec<T>
+          and $N others
+  = note: required for `Nullable<u32>` to implement `MaybeFromWasmAbi`
+  = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `Nullable<u32>: OptionIntoWasmAbi` is not satisfied
+ --> ui-tests/option-nullable-nesting.rs:4:1
+  |
+4 | #[wasm_bindgen]
+  | ^^^^^^^^^^^^^^^ the trait `OptionIntoWasmAbi` is not implemented for `Nullable<u32>`
+  |
+  = help: the following other types implement trait `OptionIntoWasmAbi`:
+            &'__wbg_ref JsNullable<T>
+            &'__wbg_ref JsOption<T>
+            &'__wbg_ref Undefined
+            &'__wbg_ref wasm_bindgen::sys::Null
+            &'a mut [MaybeUninit<f32>]
+            &'a mut [MaybeUninit<f64>]
+            &'a mut [MaybeUninit<i16>]
+            &'a mut [MaybeUninit<i32>]
+          and $N others
+  = note: required for `Nullable<u32>` to implement `MaybeIntoWasmAbi`
+  = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)

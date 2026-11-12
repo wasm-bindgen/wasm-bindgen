@@ -188,13 +188,13 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
 
-            Descriptor::Option(inner) => match &**inner {
-                Descriptor::Nullable(inner) => {
+            Descriptor::Option(inner) => self.outgoing_option(inner, OptionKind::Option)?,
+            Descriptor::Nullable(inner) => match &**inner {
+                Descriptor::Option(inner) => {
                     self.outgoing_option(inner, OptionKind::OptionNullable)?
                 }
-                inner => self.outgoing_option(inner, OptionKind::Option)?,
+                inner => self.outgoing_option(inner, OptionKind::Nullable)?,
             },
-            Descriptor::Nullable(inner) => self.outgoing_option(inner, OptionKind::Nullable)?,
             Descriptor::Result(d) => self.outgoing_result(d)?,
 
             Descriptor::Function(descriptor) => {
@@ -308,9 +308,12 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Option(inner) => {
                 self.outgoing_option_ref(mutable, inner, OptionKind::Option)?
             }
-            Descriptor::Nullable(inner) => {
-                self.outgoing_option_ref(mutable, inner, OptionKind::Nullable)?
-            }
+            Descriptor::Nullable(inner) => match &**inner {
+                Descriptor::Option(inner) => {
+                    self.outgoing_option_ref(mutable, inner, OptionKind::OptionNullable)?
+                }
+                inner => self.outgoing_option_ref(mutable, inner, OptionKind::Nullable)?,
+            },
 
             // &mut dyn FnMut(...) emits RefMut(Function(...)) to signal that
             // a reentrancy guard is needed in the JS wrapper.
@@ -342,10 +345,21 @@ impl InstructionBuilder<'_, '_> {
         {
             return export.id();
         }
-        let name = match &module.funcs.get(func_id).name {
+        let base = match &module.funcs.get(func_id).name {
             Some(name) => to_valid_ident(name),
             None => format!("__wasm_bindgen_func_elem_{}", func_id.index()),
         };
+        // Distinct functions can share a demangled name: e.g. the closure
+        // `invoke` shim for `dyn Fn(u32) -> u32` and for `dyn FnMut(u32) ->
+        // u32` are different instantiations whose symbol names differ only
+        // in a hash the demangler drops. Export names must be unique, so
+        // suffix on collision.
+        let mut name = base.clone();
+        let mut n = 1;
+        while module.exports.iter().any(|e| e.name == name) {
+            n += 1;
+            name = format!("{base}_{n}");
+        }
         module.exports.add(&name, func_id)
     }
 
@@ -552,7 +566,7 @@ impl InstructionBuilder<'_, '_> {
 
             Descriptor::Option(_) | Descriptor::Nullable(_) => bail!(
                 "unsupported nested optional return type for calling Rust function from JS: \
-                 {arg:?}; only `Option<Nullable<T>>` nests"
+                 {arg:?}; only `Nullable<Option<T>>` nests"
             ),
             _ => bail!(
                 "unsupported optional argument type for calling JS function from Rust: {arg:?}"
@@ -751,8 +765,8 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
             Descriptor::Ref(d) => self.outgoing_option_ref(_mutable, d, option_kind)?,
-            Descriptor::Nullable(d) => {
-                if option_kind != OptionKind::Option {
+            Descriptor::Option(d) => {
+                if option_kind != OptionKind::Nullable {
                     bail!("unsupported nested optional type for calling JS function from Rust: {arg:?}");
                 }
                 self.outgoing_option_ref(_mutable, d, OptionKind::OptionNullable)?
