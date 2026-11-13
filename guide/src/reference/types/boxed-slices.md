@@ -13,6 +13,7 @@ passed on its own, including:
 - C-style exported enums and string enums.
 - `String`s.
 - `bool`s and `char`s.
+- `&str`s, to JS only.
 - `Option<T>` and `Nullable<T>` of any of these, and of numbers.
 - Other `Vec`s.
 
@@ -23,7 +24,7 @@ the wrong type throws.
 
 Borrowed slices (`&[T]`) can be passed to imported JS functions for every
 element type that can be passed by reference on its own, which exported Rust
-types can't be, and of `&str`s; see
+types can't be; see
 [`slice` and `vec`](../attributes/on-js-imports/slice.md).
 
 [You can also pass boxed slices of numbers to JS](boxed-number-slices.html),

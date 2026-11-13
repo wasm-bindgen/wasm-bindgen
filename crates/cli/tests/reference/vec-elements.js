@@ -5,5 +5,5 @@ import { __wbg_set_wasm } from "./reference_test_bg.js";
 __wbg_set_wasm(wasm);
 wasm.__wbindgen_start();
 export {
-    bools, driver, modes, opt_chars
+    bools, driver, modes, opt_chars, strs
 } from "./reference_test_bg.js";

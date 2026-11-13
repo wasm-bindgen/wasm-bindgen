@@ -179,12 +179,6 @@
   `T: RefIntoWasmAbi`, which is the bound to declare on an
   `experimental_generic_mono` import in its place.
 
-* `Vec<&str>` and `Box<[&str]>` no longer cross by value, to JS as an argument
-  or a return, which 0.2.130 added in
-  [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384). A vector
-  given to JS owns its elements, which a borrowed string is not. Pass
-  `&[&str]` instead.
-
 ## [0.2.130](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.129...0.2.130)
 
 ### Added

@@ -240,6 +240,8 @@ matrix! {
     of_bool           [+  +  +  +  +  +  +]: bool                     = [true, false, false] => "[true,false,false]";
     of_char           [+  +  +  +  +  +  +]: char                     = ['a', '🌍', 'z'] => r#"["a","🌍","z"]"#;
     of_string         [+  +  +  +  +  +  +]: String                   = [s("a"), s(""), s("🌍")] => r#"["a","","🌍"]"#;
+    // A borrowed string is lent, so it only goes to JS.
+    of_str            [-  +  +  -  +  -  +]: &'static str             = ["a", "", "🌍"] => r#"["a","","🌍"]"#;
     of_js_value       [+  +  +  +  +  +  +]: JsValue                  = [1.into(), JsValue::NULL, "a".into(), JsValue::UNDEFINED] => r#"[1,null,"a",undefined]"#;
     of_imported       [+  +  +  +  +  +  +]: MatrixThing              = [thing(1), thing(2), thing(3)] => r#"[{"thing":1},{"thing":2},{"thing":3}]"#;
     of_js_string      [+  +  +  +  +  +  +]: JsString                 = [js("a"), js(""), js("c")] => r#"["a","","c"]"#;

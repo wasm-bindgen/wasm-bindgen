@@ -104,6 +104,24 @@ export function opt_chars(v) {
     }
     return v3;
 }
+
+/**
+ * @returns {string[]}
+ */
+export function strs() {
+    const ret = wasm.strs();
+    const v1 = [];
+    let p1 = ret[0];
+    p1 = p1 >>> 0;
+    const view1 = getDataViewMemory0();
+    for (const end1 = p1 + ret[1] * 8; p1 < end1; p1 += 8) {
+        const w1_0 = view1.getInt32(p1 + 0, true);
+        const w1_1 = view1.getInt32(p1 + 4, true);
+        v1.push(getStringFromWasm0(w1_0, w1_1));
+    }
+    wasm.__wbindgen_free(ret[0], ret[1] * 8, 4);
+    return v1;
+}
 export function __wbg___wbindgen_throw_4c88d8bf264fd984(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
@@ -134,6 +152,19 @@ export function __wbg_js_bools_30fc8a2bc11a9f84(arg0, arg1, arg2) {
         if (ptr2) wasm.__wbindgen_free(ptr2, len2 * 4, 4);
         throw e;
     }
+}
+export function __wbg_js_strs_d7bff571d595ef45(arg0, arg1) {
+    const v0 = [];
+    let p0 = arg0;
+    p0 = p0 >>> 0;
+    const view0 = getDataViewMemory0();
+    for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
+        const w0_0 = view0.getInt32(p0 + 0, true);
+        const w0_1 = view0.getInt32(p0 + 4, true);
+        v0.push(getStringFromWasm0(w0_0, w0_1));
+    }
+    wasm.__wbindgen_free(arg0, arg1 * 8, 4);
+    js_strs(v0);
 }
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_externrefs;

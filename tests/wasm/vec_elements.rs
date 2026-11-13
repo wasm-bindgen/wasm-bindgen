@@ -57,6 +57,8 @@ extern "C" {
     #[wasm_bindgen(js_name = describe)]
     fn describe_bools(v: Vec<bool>) -> String;
     #[wasm_bindgen(js_name = describe)]
+    fn describe_strs(v: Vec<&str>) -> String;
+    #[wasm_bindgen(js_name = describe)]
     fn describe_modes(v: Option<Vec<VecMode>>) -> String;
     #[wasm_bindgen(js_name = describe)]
     fn describe_levels(v: Vec<VecLevel>) -> String;
@@ -127,10 +129,16 @@ pub fn vec_elements_count_items(v: Vec<VecItem>) -> usize {
     v.len()
 }
 
+#[wasm_bindgen]
+pub fn vec_elements_strs() -> Vec<&'static str> {
+    vec!["a", "", "ü🌍"]
+}
+
 #[wasm_bindgen_test]
 fn rust_to_js() {
     assert_eq!(describe_bools(vec![true, false]), "Array:[true,false]");
     assert_eq!(describe_bools(vec![]), "Array:[]");
+    assert_eq!(describe_strs(vec!["x", "", "ü"]), r#"Array:["x","","ü"]"#);
     assert_eq!(
         describe_modes(Some(vec![VecMode::Write, VecMode::Read])),
         r#"Array:["write","read"]"#
@@ -207,5 +215,6 @@ fn into_js_value() {
     assert_eq!(describe(vec![true, false].into()), "Array:[true,false]");
     assert_eq!(describe(vec!['🌍'].into()), r#"Array:["🌍"]"#);
     assert_eq!(describe(vec![VecMode::Write].into()), r#"Array:["write"]"#);
+    assert_eq!(describe(vec!["x"].into()), r#"Array:["x"]"#);
     assert_eq!(describe(vec![VecLevel::Low].into()), "Array:[-1]");
 }
