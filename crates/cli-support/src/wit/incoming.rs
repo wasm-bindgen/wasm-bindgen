@@ -9,7 +9,7 @@
 
 use crate::descriptor::{Descriptor, SeqValue, SequenceCell};
 use crate::wit::{AdapterType, Instruction, InstructionBuilder, OptionKind, StackChange};
-use crate::wit::{CellLayout, InstructionData, StoredCheck};
+use crate::wit::{CellCount, CellLayout, InstructionData, StoredCheck};
 use anyhow::{bail, format_err, Error};
 use walrus::ValType;
 
@@ -681,17 +681,34 @@ impl InstructionBuilder<'_, '_> {
             self.instruction(&[ty], instr, &[ptr_ty.clone(), ptr_ty]);
             return Ok(());
         }
+        self.incoming_cells(elem, optional, option_kind, CellCount::Word)
+    }
+
+    /// The buffer of `count` cells that values of `elem` cross in.
+    fn incoming_cells(
+        &mut self,
+        elem: &Descriptor,
+        optional: bool,
+        option_kind: OptionKind,
+        count: CellCount,
+    ) -> Result<(), Error> {
         let (ty, layout, elem) = self.incoming_cell(elem)?;
-        let array = AdapterType::Array(Box::new(ty));
+        let ptr_ty = self.incoming_internal_word_ty();
+        let (ty, words) = match count {
+            CellCount::Word => (
+                AdapterType::Array(Box::new(ty)),
+                vec![ptr_ty.clone(), ptr_ty],
+            ),
+            CellCount::One => (ty, vec![ptr_ty]),
+        };
         let malloc = self.cx.malloc()?;
         let free = self.cx.free()?;
         let mem = self.cx.memory()?;
-        let ptr_ty = self.incoming_internal_word_ty();
         self.instruction(
             &[if optional {
-                array.option_kind(option_kind)
+                ty.option_kind(option_kind)
             } else {
-                array
+                ty
             }],
             Instruction::EncodedSliceStore {
                 layout,
@@ -701,8 +718,9 @@ impl InstructionBuilder<'_, '_> {
                 mem,
                 optional,
                 option_kind,
+                count,
             },
-            &[ptr_ty.clone(), ptr_ty],
+            &words,
         );
         Ok(())
     }

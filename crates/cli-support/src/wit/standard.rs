@@ -145,6 +145,18 @@ impl CellLayout {
     }
 }
 
+/// How many cells a buffer holds.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CellCount {
+    /// The word that follows the buffer's address: a sequence.
+    Word,
+    /// One, with no word for it: the cell a value wider than the primitives
+    /// spills to, which crosses as the value and not as an array of it.
+    // No value spills yet.
+    #[allow(dead_code)]
+    One,
+}
+
 /// What a value in stored position is checked to be.
 #[derive(Debug, Clone)]
 pub enum StoredCheck {
@@ -480,7 +492,7 @@ pub enum Instruction {
         mode: SeqValue,
         option_kind: OptionKind,
     },
-    /// pops ptr/length of a buffer holding `length` cells of `layout`, pushes
+    /// pops ptr/length of a buffer holding `count` cells of `layout`, pushes
     /// the array `elem` decodes them into (or `undefined` for a null
     /// `optional` buffer), frees the buffer
     EncodedSliceLoad {
@@ -489,6 +501,7 @@ pub enum Instruction {
         mem: walrus::MemoryId,
         free: walrus::FunctionId,
         optional: Option<OptionKind>,
+        count: CellCount,
     },
     /// pops an array (or, `optional`, `undefined`), encodes each element with
     /// `elem` into a cell of `layout` in a buffer allocated with `malloc`
@@ -502,6 +515,7 @@ pub enum Instruction {
         mem: walrus::MemoryId,
         optional: bool,
         option_kind: OptionKind,
+        count: CellCount,
     },
     /// pops a value in stored position, throws unless it's of the checked
     /// type, pushes it back

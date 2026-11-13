@@ -9,7 +9,7 @@ use crate::js::{Context, IdentScope, MemView};
 use crate::wit::{
     Adapter, AdapterId, AdapterKind, AdapterType, AuxFunctionArgumentData, ClosureDtor, Instruction,
 };
-use crate::wit::{CellLayout, InstructionData, OptionKind, StoredCheck};
+use crate::wit::{CellCount, CellLayout, InstructionData, OptionKind, StoredCheck};
 use crate::OutputMode;
 use anyhow::{bail, Error};
 use std::borrow::Cow;
@@ -228,7 +228,8 @@ enum Owner {
         mem: walrus::MemoryId,
         free: walrus::FunctionId,
     },
-    /// The address of a buffer of cells, followed by its length.
+    /// The address of a buffer of cells, followed by its length when that
+    /// is a word.
     Cells(Rc<Cells>),
     /// A pointer to an instance of an exported class, where 0 and, when
     /// `nullable`, 1 are no instance.
@@ -240,7 +241,11 @@ enum Owner {
 impl Owner {
     fn words(&self) -> usize {
         match self {
-            Owner::Vector { .. } | Owner::Cells(_) => 2,
+            Owner::Vector { .. } => 2,
+            Owner::Cells(cells) => match cells.count {
+                CellCount::Word => 2,
+                CellCount::One => 1,
+            },
             Owner::Class { .. } | Owner::Handle => 1,
         }
     }
@@ -254,6 +259,7 @@ struct Cells {
     mem: walrus::MemoryId,
     free: walrus::FunctionId,
     given: Vec<Given>,
+    count: CellCount,
 }
 
 /// An owner at its first word's index: on the stack, or in a cell.
@@ -1320,10 +1326,18 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
                     mem,
                     free,
                     given,
+                    count,
                 } = &**cells;
-                let len = &words[1];
+                let len = match count {
+                    CellCount::Word => Some(&words[1]),
+                    CellCount::One => None,
+                };
+                let size = match len {
+                    Some(len) => format!("{len} * {stride}"),
+                    None => stride.to_string(),
+                };
                 let free = self.cx.wasm_export_of(*free);
-                let free = format!("{free}({ptr}, {len} * {stride}, {align});");
+                let free = format!("{free}({ptr}, {size}, {align});");
                 if given.is_empty() {
                     return format!("if ({ptr}) {free}");
                 }
@@ -1351,15 +1365,18 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
                     elems.push_str(&self.release_stmt(owner, &words, None));
                     elems.push('\n');
                 }
-                let written = written.unwrap_or(len);
-                format!(
-                    "if ({ptr}) {{\n\
-                     for (let {k} = 0; {k} < {written}; {k}++) {{\n\
-                     const {cell} = {ptr} + {k} * {stride};\n\
-                     {elems}}}\n\
-                     {free}\n\
-                     }}"
-                )
+                let elems = match len {
+                    Some(len) => {
+                        let written = written.unwrap_or(len);
+                        format!(
+                            "for (let {k} = 0; {k} < {written}; {k}++) {{\n\
+                             const {cell} = {ptr} + {k} * {stride};\n\
+                             {elems}}}"
+                        )
+                    }
+                    None => format!("const {cell} = {ptr};\n{}", elems.trim_end()),
+                };
+                format!("if ({ptr}) {{\n{elems}\n{free}\n}}")
             }
         }
     }
@@ -3058,8 +3075,12 @@ fn instruction(
             mem,
             free,
             optional,
+            count,
         } => {
-            let len = js.pop();
+            let len = match count {
+                CellCount::Word => Some(js.pop()),
+                CellCount::One => None,
+            };
             let ptr = js.pop();
             let i = js.tmp();
             let p = js.local(format!("p{i}"));
@@ -3108,16 +3129,46 @@ fn instruction(
             let v = js.local(format!("v{i}"));
             let free = js.cx.wasm_export_of(*free);
             let coerce = js.cx.coerce_ptr_assign(&p);
-            if let Some(kind) = optional {
-                let init = empty_vector_init(&len, *kind);
-                js.prelude(&format!("let {v}{init};\nif ({ptr} !== 0) {{\n{v} = [];"));
-            } else {
-                js.prelude(&format!("const {v} = [];"));
-            }
+            // A sequence's cells decode into an array, and a single cell
+            // into its value.
+            let (take, size, open, close) = match &len {
+                Some(len) => {
+                    if let Some(kind) = optional {
+                        let init = empty_vector_init(len, *kind);
+                        js.prelude(&format!("let {v}{init};\nif ({ptr} !== 0) {{\n{v} = [];"));
+                    } else {
+                        js.prelude(&format!("const {v} = [];"));
+                    }
+                    (
+                        format!("{v}.push({value});"),
+                        format!("{len} * {stride}"),
+                        format!(
+                            "for (const {end} = {p} + {len} * {stride}; {p} < {end}; {p} += {stride}) {{"
+                        ),
+                        "}",
+                    )
+                }
+                None => {
+                    match optional {
+                        // A nullable `null` is told apart by the length.
+                        Some(kind) if kind.nullable() => {
+                            bail!("a single cell can't be nullable")
+                        }
+                        Some(_) => js.prelude(&format!("let {v};\nif ({ptr} !== 0) {{")),
+                        None => js.prelude(&format!("let {v};")),
+                    }
+                    (
+                        format!("{v} = {value};"),
+                        stride.to_string(),
+                        String::new(),
+                        "",
+                    )
+                }
+            };
             // What the element deferred runs at the end of its iteration.
             let body = with_deferred(
                 &element.pre_try,
-                &format!("{}{v}.push({value});\n", element.body),
+                &format!("{}{take}\n", element.body),
                 &element.finally,
             );
             let view = if effects {
@@ -3130,9 +3181,9 @@ fn instruction(
                 let {p} = {ptr};
                 {coerce}
                 {view}
-                for (const {end} = {p} + {len} * {stride}; {p} < {end}; {p} += {stride}) {{
-                {bind}{body}}}
-                {free}({ptr}, {len} * {stride}, {align});
+                {open}
+                {bind}{body}{close}
+                {free}({ptr}, {size}, {align});
                 "
             ));
             if optional.is_some() {
@@ -3149,21 +3200,24 @@ fn instruction(
             mem,
             optional,
             option_kind,
+            count,
         } => {
             let val = js.pop();
             let i = js.tmp();
             let ptr = js.local(format!("ptr{i}"));
-            let len = js.local(format!("len{i}"));
-            let j = js.local(format!("j{i}"));
-            let p = js.local(format!("p{i}"));
             let e = js.local(format!("e{i}"));
+            // A single cell is written at the buffer's address.
+            let p = match count {
+                CellCount::Word => js.local(format!("p{i}")),
+                CellCount::One => ptr.clone(),
+            };
             let memory = js.dataview(*mem);
             let view = js.local(format!("view{i}"));
             let (fields, stride, align) = encoded_slice_layout(layout)?;
-            // Encode one element into its words with its own instructions,
-            // into the loop body. The buffer takes the words as a call takes
-            // its arguments: what the element allocated is released should
-            // the rest of its glue throw, and the writes that follow can't.
+            // Encode one element into its words with its own instructions.
+            // The buffer takes the words as a call takes its arguments: what
+            // the element allocated is released should the rest of its glue
+            // throw, and the writes that follow can't.
             let scope = js.enter_scope();
             js.input(Value::Param(e.clone()));
             for instr in elem {
@@ -3205,32 +3259,7 @@ fn instruction(
             let effects = element.calls_wasm || !element.given.is_empty();
             let malloc = js.cx.wasm_export_of(*malloc);
             let coerce = js.cx.coerce_ptr_suffix();
-            let alloc = format!("{malloc}({len} * {stride}, {align}){coerce}");
-            // With elements that own something, how many the buffer holds so
-            // far is kept for releasing them.
-            if effects {
-                js.declare("let", j.clone(), "0".into());
-            }
-            if *optional {
-                js.declare("let", ptr.clone(), "0".into());
-                // A nullable `null` buffer is the null pointer with the
-                // `null` handle as its length.
-                let empty_len = if option_kind.nullable() {
-                    format!("{val} === null ? {NULL_HANDLE} : 0")
-                } else {
-                    "0".into()
-                };
-                js.declare("let", len.clone(), empty_len);
-                let some = js.is_some(&val, *option_kind);
-                js.prelude(&format!(
-                    "if ({some}) {{\n{len} = {val}.length;\n{ptr} = {alloc};"
-                ));
-            } else {
-                js.declare("const", len.clone(), format!("{val}.length"));
-                js.declare("const", ptr.clone(), alloc);
-            }
-            // An element encoder may throw (an invalid `char`, say), which
-            // the guard releases the buffer and the elements written for.
+            let body = element.body;
             let cells = Cells {
                 fields,
                 stride,
@@ -3238,36 +3267,96 @@ fn instruction(
                 mem: *mem,
                 free: *free,
                 given: element.given,
+                count: *count,
             };
-            js.give_written(
-                Owner::Cells(Rc::new(cells)),
-                &[ptr.clone(), len.clone()],
-                Some(&j),
-            );
-            let body = element.body;
-            if effects {
-                js.prelude(&format!(
-                    "
-                    for (; {j} < {len}; {j}++) {{
-                    const {e} = {val}[{j}];
-                    {body}const {view} = {memory};
-                    const {p} = {ptr} + {j} * {stride};
-                    {writes}}}
-                    "
-                ));
-            } else {
-                js.prelude(&format!(
-                    "
-                    const {view} = {memory};
-                    for (let {j} = 0; {j} < {len}; {j}++) {{
-                    const {e} = {val}[{j}];
-                    const {p} = {ptr} + {j} * {stride};
-                    {body}{writes}}}
-                    "
-                ));
-            }
-            if *optional {
-                js.prelude("}");
+            match count {
+                CellCount::Word => {
+                    let len = js.local(format!("len{i}"));
+                    let j = js.local(format!("j{i}"));
+                    let alloc = format!("{malloc}({len} * {stride}, {align}){coerce}");
+                    // With elements that own something, how many the buffer
+                    // holds so far is kept for releasing them.
+                    if effects {
+                        js.declare("let", j.clone(), "0".into());
+                    }
+                    if *optional {
+                        js.declare("let", ptr.clone(), "0".into());
+                        // A nullable `null` buffer is the null pointer with
+                        // the `null` handle as its length.
+                        let empty_len = if option_kind.nullable() {
+                            format!("{val} === null ? {NULL_HANDLE} : 0")
+                        } else {
+                            "0".into()
+                        };
+                        js.declare("let", len.clone(), empty_len);
+                        let some = js.is_some(&val, *option_kind);
+                        js.prelude(&format!(
+                            "if ({some}) {{\n{len} = {val}.length;\n{ptr} = {alloc};"
+                        ));
+                    } else {
+                        js.declare("const", len.clone(), format!("{val}.length"));
+                        js.declare("const", ptr.clone(), alloc);
+                    }
+                    // An element encoder may throw (an invalid `char`, say),
+                    // which the guard releases the buffer and the elements
+                    // written for.
+                    js.give_written(
+                        Owner::Cells(Rc::new(cells)),
+                        &[ptr.clone(), len.clone()],
+                        Some(&j),
+                    );
+                    if effects {
+                        js.prelude(&format!(
+                            "
+                            for (; {j} < {len}; {j}++) {{
+                            const {e} = {val}[{j}];
+                            {body}const {view} = {memory};
+                            const {p} = {ptr} + {j} * {stride};
+                            {writes}}}
+                            "
+                        ));
+                    } else {
+                        js.prelude(&format!(
+                            "
+                            const {view} = {memory};
+                            for (let {j} = 0; {j} < {len}; {j}++) {{
+                            const {e} = {val}[{j}];
+                            const {p} = {ptr} + {j} * {stride};
+                            {body}{writes}}}
+                            "
+                        ));
+                    }
+                    if *optional {
+                        js.prelude("}");
+                    }
+                }
+                // The cell is allocated once the value's glue is through, so
+                // it's never held half written.
+                CellCount::One => {
+                    let alloc = format!("{malloc}({stride}, {align}){coerce}");
+                    let write = format!("const {view} = {memory};\n{writes}");
+                    if *optional {
+                        if option_kind.nullable() {
+                            // A nullable `null` is told apart by the length.
+                            bail!("a single cell can't be nullable");
+                        }
+                        js.declare("let", ptr.clone(), "0".into());
+                        let some = js.is_some(&val, *option_kind);
+                        js.prelude(&format!(
+                            "
+                            if ({some}) {{
+                            const {e} = {val};
+                            {body}{ptr} = {alloc};
+                            {write}}}
+                            "
+                        ));
+                    } else {
+                        js.prelude(&format!("const {e} = {val};\n{body}"));
+                        js.declare("const", ptr.clone(), alloc);
+                        js.prelude(&write);
+                    }
+                    js.give(Owner::Cells(Rc::new(cells)), &[ptr]);
+                }
             }
         }
 

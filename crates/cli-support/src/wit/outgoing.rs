@@ -1,7 +1,7 @@
 use crate::descriptor::{Descriptor, Function, SeqValue, SequenceCell, VectorKind};
 use crate::wasm_conventions::get_function_table_entry;
 use crate::wit::{AdapterType, ClosureDtor, Instruction, InstructionBuilder, OptionKind};
-use crate::wit::{CellLayout, InstructionData, StackChange};
+use crate::wit::{CellCount, CellLayout, InstructionData, StackChange};
 use anyhow::{bail, Error};
 use walrus::{ExportId, ValType};
 use wasm_bindgen_shared::identifier::to_valid_ident;
@@ -844,23 +844,41 @@ impl InstructionBuilder<'_, '_> {
             self.instruction(&[ptr_ty.clone(), ptr_ty], instr, &[ty]);
             return Ok(());
         }
+        self.outgoing_cells(elem, owned, optional, CellCount::Word)
+    }
+
+    /// The buffer of `count` cells that values of `elem` cross in.
+    fn outgoing_cells(
+        &mut self,
+        elem: &Descriptor,
+        owned: bool,
+        optional: Option<OptionKind>,
+        count: CellCount,
+    ) -> Result<(), Error> {
         let (layout, elem, ty) = self.outgoing_cell(elem, owned)?;
-        let array = AdapterType::Array(Box::new(ty));
+        let ptr_ty = self.outgoing_internal_word_ty();
+        let (ty, words) = match count {
+            CellCount::Word => (
+                AdapterType::Array(Box::new(ty)),
+                vec![ptr_ty.clone(), ptr_ty],
+            ),
+            CellCount::One => (ty, vec![ptr_ty]),
+        };
         let mem = self.cx.memory()?;
         let free = self.cx.free()?;
-        let ptr_ty = self.outgoing_internal_word_ty();
         self.instruction(
-            &[ptr_ty.clone(), ptr_ty],
+            &words,
             Instruction::EncodedSliceLoad {
                 layout,
                 elem,
                 mem,
                 free,
                 optional,
+                count,
             },
             &[match optional {
-                Some(kind) => array.option_kind(kind),
-                None => array,
+                Some(kind) => ty.option_kind(kind),
+                None => ty,
             }],
         );
         Ok(())
