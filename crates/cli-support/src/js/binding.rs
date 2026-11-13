@@ -2257,15 +2257,14 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
 
     fn assert_not_moved(&mut self, arg: &str) {
         let assert = self.not_moved_assert(arg);
-        let again = self.moved_again(arg, None);
         self.check(&assert);
-        self.check_again(again);
     }
 
     /// A debug build's check that the instance `arg` wasn't moved, when
-    /// `some`, for where an argument ahead of it has been taken: the same
-    /// instance has no pointer from then. A stored instance's check is
-    /// already made where it's taken.
+    /// `some`, for where it's taken once an argument ahead of it has been:
+    /// the same instance has no pointer from then. A stored instance's
+    /// check is already made where it's taken, and a borrowed one reaches
+    /// Rust as null.
     fn moved_again(&self, arg: &str, some: Option<&str>) -> Option<String> {
         if !self.cx.config.debug || self.stored {
             return None;

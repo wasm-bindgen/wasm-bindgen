@@ -51,9 +51,6 @@ export class Item {
             if (!isLikeNone(third)) {
                 ptr1 = third.__destroy_into_raw();
             }
-            if (fourth.__wbg_ptr === 0) {
-                throw new Error('Attempt to use a moved value');
-            }
         } catch (e) {
             if (ptr1) wasm.__wbg_item_free(ptr1, 1);
             if (ptr0) wasm.__wbg_item_free(ptr0, 1);

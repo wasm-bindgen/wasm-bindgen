@@ -163,7 +163,7 @@ exports.rejectedKeepsTheStack = () => {
 };
 
 // A debug build's glue knows an instance that an argument ahead of it has
-// taken, where it comes to take or lend it again.
+// taken, where it comes to take it again.
 exports.rejectedMoved = () => {
     const before = live();
     const moved = /Attempt to use a moved value/;
@@ -192,9 +192,6 @@ exports.rejectedMoved = () => {
     a = new wasm.Kept(1);
     assert.throws(() => wasm.rejected_point_then_point(a, a), moved);
     assert.throws(() => wasm.rejected_point_then_maybe_point(a, a), moved);
-    assert.strictEqual(live(), before);
-    a = new wasm.Kept(1);
-    assert.throws(() => wasm.rejected_point_then_borrowed(a, a), moved);
     assert.strictEqual(live(), before);
     a = new wasm.Kept(1);
     assert.throws(() => wasm.rejected_points_then_point([a], a), moved);

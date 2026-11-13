@@ -88,9 +88,6 @@ pub fn rejected_point_then_point(_a: Kept, _b: Kept) {}
 pub fn rejected_point_then_maybe_point(_a: Kept, _b: Option<Kept>) {}
 
 #[wasm_bindgen]
-pub fn rejected_point_then_borrowed(_a: Kept, _b: &Kept) {}
-
-#[wasm_bindgen]
 pub fn rejected_point_then_nested(_a: Kept, _b: Vec<Vec<String>>) {}
 
 #[wasm_bindgen]
