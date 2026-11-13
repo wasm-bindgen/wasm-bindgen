@@ -69,6 +69,7 @@ export class NamespaceConsumer {
             ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
             for (; j0 < len0; j0++) {
                 const e0 = points[j0];
+                if (!(e0 instanceof bar__Point)) throw new Error('array contains a value of the wrong type');
                 _assertClass(e0, bar__Point);
                 if (e0.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
                 var ptr1 = e0.__destroy_into_raw();
@@ -129,6 +130,7 @@ export class NamespaceConsumer {
             ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
             for (; j0 < len0; j0++) {
                 const e0 = points[j0];
+                if (!(e0 instanceof foo__Point)) throw new Error('array contains a value of the wrong type');
                 _assertClass(e0, foo__Point);
                 if (e0.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
                 var ptr1 = e0.__destroy_into_raw();
@@ -300,6 +302,7 @@ export class NamespaceConsumer {
             ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
             for (; j0 < len0; j0++) {
                 const e0 = bar_points[j0];
+                if (!(e0 instanceof bar__Point)) throw new Error('array contains a value of the wrong type');
                 _assertClass(e0, bar__Point);
                 if (e0.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
                 var ptr1 = e0.__destroy_into_raw();
@@ -350,6 +353,7 @@ export class NamespaceConsumer {
             ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
             for (; j0 < len0; j0++) {
                 const e0 = foo_points[j0];
+                if (!(e0 instanceof foo__Point)) throw new Error('array contains a value of the wrong type');
                 _assertClass(e0, foo__Point);
                 if (e0.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
                 var ptr1 = e0.__destroy_into_raw();

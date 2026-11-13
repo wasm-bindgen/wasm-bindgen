@@ -60,6 +60,7 @@ export function readRenameds(renameds) {
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = renameds[j0];
+            if (!(e0 instanceof Renamed)) throw new Error('array contains a value of the wrong type');
             _assertClass(e0, Renamed);
             if (e0.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
             var ptr1 = e0.__destroy_into_raw();

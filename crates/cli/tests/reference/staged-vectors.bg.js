@@ -127,6 +127,7 @@ export function maybe_names(v) {
             ptr0 = wasm.__wbindgen_malloc(len0 * 8, 4) >>> 0;
             for (; j0 < len0; j0++) {
                 const e0 = v[j0];
+                if (!(isLikeNone(e0)) && typeof e0 !== 'string') throw new Error('array contains a value of the wrong type');
                 var ptr1 = isLikeNone(e0) ? 0 : passStringToWasm0(e0, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
                 var len1 = WASM_VECTOR_LEN;
                 const view0 = getDataViewMemory0();
@@ -325,6 +326,7 @@ export function names(v) {
         ptr0 = wasm.__wbindgen_malloc(len0 * 8, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = v[j0];
+            if (typeof e0 !== 'string') throw new Error('array contains a value of the wrong type');
             const ptr1 = passStringToWasm0(e0, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
             const len1 = WASM_VECTOR_LEN;
             const view0 = getDataViewMemory0();
@@ -385,6 +387,7 @@ export function nested_maybe_foos(v) {
         ptr0 = wasm.__wbindgen_malloc(len0 * 8, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = v[j0];
+            if (!isLikeNone(e0) && !Array.isArray(e0) && !ArrayBuffer.isView(e0)) throw new Error('array contains a value of the wrong type');
             let j1 = 0, ptr1 = 0, len1 = 0;
             try {
                 if (!isLikeNone(e0)) {
@@ -496,12 +499,14 @@ export function nested_names(v) {
         ptr0 = wasm.__wbindgen_malloc(len0 * 8, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = v[j0];
+            if (!Array.isArray(e0) && !ArrayBuffer.isView(e0)) throw new Error('array contains a value of the wrong type');
             let j1 = 0, len1, ptr1;
             try {
                 len1 = e0.length;
                 ptr1 = wasm.__wbindgen_malloc(len1 * 8, 4) >>> 0;
                 for (; j1 < len1; j1++) {
                     const e1 = e0[j1];
+                    if (typeof e1 !== 'string') throw new Error('array contains a value of the wrong type');
                     const ptr2 = passStringToWasm0(e1, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
                     const len2 = WASM_VECTOR_LEN;
                     const view1 = getDataViewMemory0();
@@ -849,6 +854,7 @@ export function __wbg_js_names_8202f1528d646c9a(arg0, arg1, arg2) {
         ptr3 = wasm.__wbindgen_malloc(len3 * 8, 4) >>> 0;
         for (; j3 < len3; j3++) {
             const e3 = ret[j3];
+            if (typeof e3 !== 'string') throw new Error('array contains a value of the wrong type');
             const ptr4 = passStringToWasm0(e3, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
             const len4 = WASM_VECTOR_LEN;
             const view3 = getDataViewMemory0();

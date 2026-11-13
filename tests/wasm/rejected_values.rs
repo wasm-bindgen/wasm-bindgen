@@ -102,6 +102,12 @@ pub fn rejected_nested_numbers(v: Vec<Vec<u32>>) -> usize {
 pub fn rejected_names_then_point(_a: Vec<String>, _b: Kept) {}
 
 #[wasm_bindgen]
+pub fn rejected_nested_names_then_point(_a: Vec<Vec<String>>, _b: Kept) {}
+
+#[wasm_bindgen]
+pub fn rejected_points_then_point(_a: Vec<Kept>, _b: Kept) {}
+
+#[wasm_bindgen]
 pub fn rejected_named(_a: Kept, _names: Vec<String>) -> String {
     String::new()
 }
@@ -160,6 +166,8 @@ extern "C" {
     fn rejected_by_rust();
     #[wasm_bindgen(js_name = rejectedKeepsTheStack)]
     fn rejected_keeps_the_stack();
+    #[wasm_bindgen(js_name = rejectedChangedValues)]
+    fn rejected_changed_values(memory: JsValue);
     #[wasm_bindgen(js_name = failedDecodes)]
     fn failed_decodes(memory: JsValue);
     #[wasm_bindgen(catch, js_name = jsBadPoints)]
@@ -189,6 +197,11 @@ fn arguments_rust_rejects() {
 #[wasm_bindgen_test]
 fn arguments_keep_the_stack() {
     rejected_keeps_the_stack();
+}
+
+#[wasm_bindgen_test]
+fn arguments_read_again() {
+    rejected_changed_values(wasm_bindgen::memory());
 }
 
 #[wasm_bindgen_test]

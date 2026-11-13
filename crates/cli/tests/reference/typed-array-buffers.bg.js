@@ -77,6 +77,7 @@ export function strings(input) {
         ptr0 = wasm.__wbindgen_malloc(len0 * 8, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = input[j0];
+            if (typeof e0 !== 'string') throw new Error('array contains a value of the wrong type');
             const ptr1 = passStringToWasm0(e0, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
             const len1 = WASM_VECTOR_LEN;
             const view0 = getDataViewMemory0();

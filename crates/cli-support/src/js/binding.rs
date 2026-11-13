@@ -116,11 +116,13 @@ struct Stmt {
 enum StmtKind {
     Raw(String),
     /// A statement that only throws unless a value is what Rust takes it
-    /// as. With `inputs_only` it reads nothing but its scope's inputs, so
-    /// it can run ahead of whatever holds them being taken.
+    /// as. Without `inputs_only` it reads what its instruction bound. One
+    /// that is `repeated` where its value is taken runs only ahead of what
+    /// holds the value being taken.
     Check {
         text: String,
         inputs_only: bool,
+        repeated: bool,
     },
     /// `keyword` declares the binding, or is `None` once lifted.
     Decl {
@@ -1228,9 +1230,17 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             ..
         } = self.instr;
         if reads_local || effects {
-            // A check was tagged by what it read when it was emitted.
+            // A check was tagged by what it read when it was emitted, unless
+            // that was a binding of the instruction's.
             for stmt in &mut self.prelude[start..] {
-                if !matches!(stmt.kind, StmtKind::Check { .. }) {
+                let inputs_only = matches!(
+                    stmt.kind,
+                    StmtKind::Check {
+                        inputs_only: true,
+                        ..
+                    }
+                );
+                if !inputs_only {
                     stmt.pure = false;
                 }
             }
@@ -1296,34 +1306,52 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     /// were.
     fn check(&mut self, check: &str) {
         let inputs_only = !self.instr.reads_local && !self.instr.binds_local;
-        self.check_of(check, inputs_only);
+        self.check_of(check, inputs_only, false);
     }
 
-    fn check_of(&mut self, check: &str, inputs_only: bool) {
+    fn check_of(&mut self, check: &str, inputs_only: bool, repeated: bool) {
         let text = lines(check);
         if !text.is_empty() {
             self.prelude.push(Stmt {
                 pure: !self.instr.reads_local,
-                kind: StmtKind::Check { text, inputs_only },
+                kind: StmtKind::Check {
+                    text,
+                    inputs_only,
+                    repeated,
+                },
             });
         }
     }
 
-    /// Takes the checks of the scope that read only its inputs, for what
-    /// holds the stored value to run ahead of taking any of it.
-    fn take_checks(&mut self) -> String {
-        let mut checks = String::new();
-        self.prelude.retain(|stmt| match &stmt.kind {
-            StmtKind::Check {
-                text,
-                inputs_only: true,
-            } => {
-                checks.push_str(text);
-                false
+    /// The scope's statements that read only its inputs, when any is a
+    /// check, for what holds the stored value to run ahead of taking any of
+    /// it. They stay in the value's glue as well: what holds the value is
+    /// read again where it's taken, and may hold another by then.
+    fn validation(&mut self) -> String {
+        let mut code = String::new();
+        let mut checks = false;
+        self.prelude.retain(|stmt| {
+            if !stmt.pure {
+                return true;
             }
-            _ => true,
+            match &stmt.kind {
+                StmtKind::Check {
+                    inputs_only: true,
+                    repeated,
+                    ..
+                } => {
+                    checks = true;
+                    code.push_str(&render(std::slice::from_ref(stmt)));
+                    !repeated
+                }
+                _ => true,
+            }
         });
-        checks
+        if checks {
+            code
+        } else {
+            String::new()
+        }
     }
 
     pub fn finally(&mut self, finally: &str) {
@@ -1713,9 +1741,14 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             close.push('\n');
         }
         close.push_str("throw e;\n}\n");
-        self.stmt(StmtKind::Raw(open));
+        // Neither half reads only the arguments, as a statement is taken to.
+        let raw = |text| Stmt {
+            pure: false,
+            kind: StmtKind::Raw(text),
+        };
+        self.prelude.push(raw(open));
         self.prelude.extend(rest);
-        self.stmt(StmtKind::Raw(close));
+        self.prelude.push(raw(close));
     }
 
     pub fn tmp(&mut self) -> usize {
@@ -1819,15 +1852,20 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     }
 
     /// Checks `arg`, when `some`, as an instance of `class` that Rust takes
-    /// by value. A stored value's check is returned to be repeated where the
-    /// instance is taken: what holds the value is read again there, and Rust
-    /// must never be handed another class's pointer.
+    /// by value. A stored optional's check is returned for the branch that
+    /// takes the instance to repeat.
     fn assert_owned_class(&mut self, arg: &str, class: &str, some: Option<&str>) -> String {
         let assert = self.owned_class_assert(arg, class);
-        match some {
-            Some(some) => self.check(&format!("if ({some}) {{\n{assert}}}")),
-            None => self.check(&assert),
-        }
+        let Some(some) = some else {
+            self.check(&assert);
+            return String::new();
+        };
+        let inputs_only = !self.instr.reads_local && !self.instr.binds_local;
+        self.check_of(
+            &format!("if ({some}) {{\n{assert}}}"),
+            inputs_only,
+            self.stored,
+        );
         if self.stored {
             assert
         } else {
@@ -2570,8 +2608,7 @@ fn instruction(
 
         Instruction::I32FromExternrefRustOwned { class } => {
             let val = js.pop();
-            let assert = js.assert_owned_class(&val, class, None);
-            js.prelude(&assert);
+            js.assert_owned_class(&val, class, None);
             let i = js.tmp();
             let ptr = js.declare(
                 "var",
@@ -3522,7 +3559,7 @@ fn instruction(
                 .collect::<Option<Vec<_>>>();
             let values = js.take_args(values, tys.as_deref());
             assert_eq!(values.len(), fields.len());
-            let checks = js.take_checks();
+            let checks = js.validation();
             let mut writes = String::new();
             for (n, (((offset, ty), value), alloc)) in
                 fields.iter().zip(values).zip(allocs).enumerate()
@@ -3562,7 +3599,7 @@ fn instruction(
                 } else {
                     checks
                 };
-                js.check_of(&checks, held_by_input);
+                js.check_of(&checks, held_by_input, true);
             }
             let malloc = js.cx.wasm_export_of(*malloc);
             let coerce = js.cx.coerce_ptr_suffix();

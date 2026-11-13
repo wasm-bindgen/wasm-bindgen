@@ -297,6 +297,7 @@ export function take_non_numbers(a, b, c) {
         ptr1 = wasm.__wbindgen_malloc(len1 * 8, 4) >>> 0;
         for (; j1 < len1; j1++) {
             const e1 = b[j1];
+            if (typeof e1 !== 'string') throw new Error('array contains a value of the wrong type');
             const ptr2 = passStringToWasm0(e1, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
             const len2 = WASM_VECTOR_LEN;
             const view1 = getDataViewMemory0();
@@ -308,6 +309,7 @@ export function take_non_numbers(a, b, c) {
         ptr4 = wasm.__wbindgen_malloc(len4 * 4, 4) >>> 0;
         for (; j4 < len4; j4++) {
             const e4 = c[j4];
+            if (!(e4 instanceof Point)) throw new Error('array contains a value of the wrong type');
             _assertClass(e4, Point);
             if (e4.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
             var ptr5 = e4.__destroy_into_raw();

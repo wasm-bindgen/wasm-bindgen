@@ -131,14 +131,57 @@ exports.rejectedKeepsTheStack = () => {
         assert.throws(() => wasm.Kept.join(a, ['x', 1]));
         assert.throws(() => wasm.rejected_named(a, [1]));
         assert.throws(() => wasm.rejected_named({}, ['x']));
-        assert.throws(() => freed.label(a));
-        assert.throws(() => freed.merge(b));
         assert.throws(() => wasm.Kept.prototype.merge.call({}, b));
+        // Only a debug build's glue knows the receiver was freed. Rust
+        // otherwise throws from its own frames, which keep their stack.
+        if (process.env.WASM_BINDGEN_NO_DEBUG == null) {
+            assert.throws(() => freed.label(a));
+            assert.throws(() => freed.merge(b));
+        }
     }
     assert.strictEqual(wasm.rejected_stack(), stack);
     assert.strictEqual(a.value, 1);
     assert.strictEqual(b.value, 2);
     a.free();
+    b.free();
+    assert.strictEqual(live(), before);
+};
+
+// What holds the values is read again to take them, and may answer
+// differently then: a value is checked where it's taken too.
+exports.rejectedChangedValues = (memory) => {
+    const before = live();
+    const b = new wasm.Kept(2);
+    const changed = (values, index, then) => {
+        let reads = 0;
+        return new Proxy(values, {
+            get: (target, key) =>
+                key === String(index) && reads++ > 0 ? then : target[key],
+        });
+    };
+    for (const then of [42, ['x'], undefined, {}]) {
+        assertFlat(memory, () => assert.throws(
+            () => wasm.rejected_names_then_point(changed([big, big, 'c'], 2, then), b),
+            wrongType,
+        ));
+        assertFlat(memory, () => assert.throws(
+            () => wasm.rejected_nested_names_then_point(
+                [[big], changed([big, 'c'], 1, then)], b),
+            wrongType,
+        ));
+    }
+    for (const then of [42, 'x', undefined]) {
+        assertFlat(memory, () => assert.throws(
+            () => wasm.rejected_nested_names_then_point(changed([[big], ['c']], 1, then), b),
+            wrongType,
+        ));
+    }
+    // An instance taken before the one that changed is Rust's by then, and
+    // is freed.
+    const a = new wasm.Kept(1);
+    assert.throws(() => wasm.rejected_points_then_point(changed([a, b], 1, {}), b), wrongType);
+    assert.strictEqual(a.__wbg_ptr, 0);
+    assert.strictEqual(b.value, 2);
     b.free();
     assert.strictEqual(live(), before);
 };
