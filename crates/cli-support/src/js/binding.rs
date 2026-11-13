@@ -3694,6 +3694,7 @@ fn instruction(
         Instruction::EncodedSliceStore {
             layout,
             elem,
+            array,
             malloc,
             free,
             mem,
@@ -3705,7 +3706,7 @@ fn instruction(
             // Whether the values are held by an input of this glue's scope.
             let held_by_input = !js.instr.reads_local;
             // A sequence that a sequence holds is checked as one in every build.
-            if js.cx.config.debug && !js.stored && matches!(count, CellCount::Word) {
+            if js.cx.config.debug && *array && !js.stored && matches!(count, CellCount::Word) {
                 js.cx.expose_assert_array_like();
                 let assert = format!("_assertArrayLike({val});");
                 if *optional {

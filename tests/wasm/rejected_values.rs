@@ -144,6 +144,45 @@ pub fn rejected_nested_maybe_strings(v: Vec<Vec<Option<String>>>) -> usize {
 }
 
 #[wasm_bindgen]
+#[derive(Clone, Copy)]
+pub enum RejectedLevel {
+    Low = 1,
+    High = 2,
+}
+
+#[wasm_bindgen]
+#[derive(Clone, Copy)]
+pub enum RejectedName {
+    A = "a",
+    B = "b",
+}
+
+#[wasm_bindgen]
+pub fn rejected_chars(v: Vec<char>) -> Vec<char> {
+    v
+}
+
+#[wasm_bindgen]
+pub fn rejected_maybe_chars(v: Option<Vec<char>>) -> Option<Vec<char>> {
+    v
+}
+
+#[wasm_bindgen]
+pub fn rejected_bools(v: Vec<bool>) -> Vec<bool> {
+    v
+}
+
+#[wasm_bindgen]
+pub fn rejected_levels(v: Vec<RejectedLevel>) -> Vec<RejectedLevel> {
+    v
+}
+
+#[wasm_bindgen]
+pub fn rejected_level_names(v: Option<Vec<RejectedName>>) -> Option<Vec<RejectedName>> {
+    v
+}
+
+#[wasm_bindgen]
 pub fn rejected_returned_names() -> bool {
     js_not_names().is_err()
 }
@@ -227,6 +266,8 @@ extern "C" {
     fn rejected_not_arrays();
     #[wasm_bindgen(js_name = rejectedSizes)]
     fn rejected_sizes();
+    #[wasm_bindgen(js_name = takenNotArrays)]
+    fn taken_not_arrays();
     #[wasm_bindgen(catch, js_name = jsNotNames)]
     fn js_not_names() -> Result<Vec<String>, JsValue>;
     #[wasm_bindgen(js_name = failedDecodes)]
@@ -279,6 +320,11 @@ fn arguments_read_again() {
 #[wasm_bindgen_test]
 fn arguments_not_arrays() {
     rejected_not_arrays();
+}
+
+#[wasm_bindgen_test]
+fn arguments_not_arrays_taken() {
+    taken_not_arrays();
 }
 
 // On wasm64 these are sizes that can be allocated.

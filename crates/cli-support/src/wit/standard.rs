@@ -506,10 +506,13 @@ pub enum Instruction {
     /// pops an array (or, `optional`, `undefined`), encodes each element with
     /// `elem` into a cell of `layout` in a buffer allocated with `malloc`
     /// (freed with `free`, after what its elements own, if an element
-    /// throws), pushes the buffer's ptr/length (ptr 0 for `undefined`)
+    /// throws), pushes the buffer's ptr/length (ptr 0 for `undefined`). A
+    /// debug build asserts the array when `array`, which it never has for a
+    /// sequence of `char`, `bool` or an enum.
     EncodedSliceStore {
         layout: CellLayout,
         elem: Vec<InstructionData>,
+        array: bool,
         malloc: walrus::FunctionId,
         free: walrus::FunctionId,
         mem: walrus::MemoryId,

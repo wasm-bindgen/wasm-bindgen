@@ -693,6 +693,13 @@ impl InstructionBuilder<'_, '_> {
         option_kind: OptionKind,
         count: CellCount,
     ) -> Result<(), Error> {
+        let array = !matches!(
+            elem,
+            Descriptor::Char
+                | Descriptor::Boolean
+                | Descriptor::Enum { .. }
+                | Descriptor::StringEnum { .. }
+        );
         let (ty, layout, elem) = self.incoming_cell(elem)?;
         let ptr_ty = self.incoming_internal_word_ty();
         let (ty, words) = match count {
@@ -714,6 +721,7 @@ impl InstructionBuilder<'_, '_> {
             Instruction::EncodedSliceStore {
                 layout,
                 elem,
+                array,
                 malloc,
                 free,
                 mem,
@@ -763,7 +771,8 @@ impl InstructionBuilder<'_, '_> {
     /// a `Vec<String>` and a `Vec` of exported structs have always rejected
     /// an element of the wrong type, and a string's glue would read anything
     /// else as a string's bytes.
-    // Next major: validate an argument in every build too, as an element is.
+    // Next major: validate an argument in every build too, as an element is,
+    // and assert an array for a sequence of any element.
     fn stored_check(&mut self, check: StoredCheck) {
         if self.stored {
             self.instructions.push(InstructionData {

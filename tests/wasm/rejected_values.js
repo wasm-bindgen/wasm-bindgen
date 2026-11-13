@@ -219,6 +219,21 @@ exports.rejectedNotArrays = () => {
     assert.strictEqual(wasm.rejected_returned_names(), true);
 };
 
+// A sequence of `char`, `bool` or an enum has never asserted an array: it
+// takes whatever has a `length` as its elements, and anything else as none.
+exports.takenNotArrays = () => {
+    assert.deepStrictEqual(wasm.rejected_chars('ab'), ['a', 'b']);
+    assert.deepStrictEqual(wasm.rejected_maybe_chars('ab'), ['a', 'b']);
+    assert.deepStrictEqual(wasm.rejected_chars({ length: 2, 0: 'a', 1: 'b' }), ['a', 'b']);
+    assert.deepStrictEqual(wasm.rejected_chars(new Set(['a'])), []);
+    assert.deepStrictEqual(wasm.rejected_bools({ length: 2, 0: true, 1: false }), [true, false]);
+    assert.deepStrictEqual(wasm.rejected_bools(new Set([true])), []);
+    assert.deepStrictEqual(wasm.rejected_levels({ length: 2, 0: 1, 1: 2 }), [1, 2]);
+    assert.deepStrictEqual(wasm.rejected_levels(new Set([1])), []);
+    assert.deepStrictEqual(wasm.rejected_level_names('ab'), ['a', 'b']);
+    assert.deepStrictEqual(wasm.rejected_level_names(new Set(['a'])), []);
+};
+
 // A sequence whose cells come to more bytes than can be allocated is
 // rejected before anything is taken, where the size would otherwise wrap to
 // one that can.
