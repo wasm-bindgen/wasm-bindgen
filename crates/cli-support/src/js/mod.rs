@@ -3054,6 +3054,22 @@ if (require('worker_threads').isMainThread) {{
         );
     }
 
+    fn expose_assert_undefined(&mut self) {
+        self.intrinsic(
+            "assert_undefined".into(),
+            "_assertUndefined".into(),
+            "
+            function _assertUndefined(n) {
+                if (n !== undefined) {
+                    throw new Error(`expected undefined, found ${n === null ? 'null' : typeof(n)}`);
+                }
+            }
+            "
+            .into(),
+            &[],
+        );
+    }
+
     fn expose_assert_array_like(&mut self) {
         self.intrinsic(
             "assert_array_like".into(),
@@ -6207,17 +6223,15 @@ if (require('worker_threads').isMainThread) {{
             AuxImport::Cast { sig_comment } => {
                 assert!(kind == AdapterJsImportKind::Normal);
                 assert!(!variadic);
-                assert!(args.len() <= 1);
+                assert!(args.len() == 1);
 
                 // Emitted through the shared generic-import pipeline as a
                 // `__wbindgen_generic_*` shim, but this particular one is an
                 // identity cast (returns its argument unchanged). A `()`
-                // source has no ABI argument, and casts to `undefined`.
+                // source has no ABI argument, and is the `undefined` it
+                // casts to.
                 writeln!(prelude, "// Cast intrinsic for `{sig_comment}`.")?;
-                Ok(args
-                    .first()
-                    .cloned()
-                    .unwrap_or_else(|| "undefined".to_owned()))
+                Ok(args[0].clone())
             }
 
             AuxImport::StructuralMethod(name) => {

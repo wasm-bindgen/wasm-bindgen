@@ -19,25 +19,23 @@ impl InstructionBuilder<'_, '_> {
     /// Processes one more `Descriptor` as an argument to a JS function that
     /// Wasm is calling.
     ///
-    /// This will internally skip `Unit` and otherwise build up the `bindings`
-    /// map and ensure that it's correctly mapped from Wasm to JS.
+    /// This will internally skip a returned `Unit` and otherwise build up the
+    /// `bindings` map and ensure that it's correctly mapped from Wasm to JS.
     pub fn outgoing(&mut self, arg: &Descriptor) -> Result<(), Error> {
-        if let Descriptor::Unit = arg {
-            return Ok(());
-        }
         // Similar rationale to `incoming.rs` around these sanity checks.
         let input_before = self.input.len();
         let output_before = self.output.len();
         self._outgoing(arg)?;
 
-        assert!(input_before < self.input.len());
-        if let Descriptor::Result(arg) = arg {
-            if let Descriptor::Unit = &**arg {
-                assert_eq!(output_before, self.output.len());
-                return Ok(());
-            }
+        // `()` has no words, and where it's returned it's nothing, behind a
+        // `Result` or a reference too.
+        let mut unit = arg;
+        while let Descriptor::Result(d) | Descriptor::Ref(d) = unit {
+            unit = d;
         }
-        assert_eq!(output_before + 1, self.output.len());
+        assert!(input_before < self.input.len() || matches!(unit, Descriptor::Unit));
+        let nothing = self.returns_nothing(unit);
+        assert_eq!(output_before + usize::from(!nothing), self.output.len());
         Ok(())
     }
 
@@ -209,10 +207,8 @@ impl InstructionBuilder<'_, '_> {
                 bail!("unsupported argument type for calling JS function from Rust: {arg:?}")
             }
 
-            // On its own `()` crosses as nothing. A sequence holds it as
-            // `undefined`, in no words.
             Descriptor::Unit => {
-                if self.stored {
+                if !self.returns_nothing(arg) {
                     self.instruction(
                         &[],
                         Instruction::UndefinedFromUnit,
@@ -323,9 +319,8 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::Boolean
             | Descriptor::Char
             | Descriptor::Enum { .. }
-            | Descriptor::StringEnum { .. } => self._outgoing(arg)?,
-            // Only a sequence holds `()`, so only one lends it.
-            Descriptor::Unit if self.stored => self._outgoing(arg)?,
+            | Descriptor::StringEnum { .. }
+            | Descriptor::Unit => self._outgoing(arg)?,
 
             Descriptor::Option(inner) => {
                 self.outgoing_option_ref(mutable, inner, OptionKind::Option)?
