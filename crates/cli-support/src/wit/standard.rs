@@ -164,6 +164,8 @@ pub enum StoredCheck {
     String(Option<OptionKind>),
     /// An array or a typed array, or with a kind none of that kind.
     Sequence(Option<OptionKind>),
+    /// `undefined`, which is all that `()` is.
+    Undefined,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -203,6 +205,8 @@ pub enum AdapterType {
     NamedExternref(String),
     Function,
     NonNull,
+    /// `()` in a sequence, which is `undefined` and no Wasm value.
+    Undefined,
 }
 
 /// Describes how a closure's lifetime is managed.
@@ -311,6 +315,9 @@ pub enum Instruction {
 
     /// Pops a `bool` from the stack and pushes an `i32` equivalent
     I32FromBool,
+    /// Pops the `undefined` that `()` is and pushes nothing, as `()` has no
+    /// words.
+    UnitFromUndefined,
     /// Pops a `string` from the stack and pushes the first character as `i32`
     I32FromStringFirstChar,
     /// Pops an `externref` from the stack, allocates space in the externref table,
@@ -450,6 +457,8 @@ pub enum Instruction {
 
     /// pops a `i32`, pushes `bool`
     BoolFromI32,
+    /// pops nothing, as `()` has no words, and pushes the `undefined` it is
+    UndefinedFromUnit,
     /// pops `i32`, loads externref at that slot, dealloates externref, pushes `externref`
     ExternrefLoadOwned {
         /// This is needed solely for `Result`, since it can contain externrefs,
@@ -494,7 +503,8 @@ pub enum Instruction {
     },
     /// pops ptr/length of a buffer holding `count` cells of `layout`, pushes
     /// the array `elem` decodes them into (or `undefined` for a null
-    /// `optional` buffer), frees the buffer
+    /// `optional` buffer), frees the buffer. Cells of no size are in no
+    /// buffer: the ptr is only non-null, and nothing is read or freed.
     EncodedSliceLoad {
         layout: CellLayout,
         elem: Vec<InstructionData>,
@@ -508,7 +518,8 @@ pub enum Instruction {
     /// (freed with `free`, after what its elements own, if an element
     /// throws), pushes the buffer's ptr/length (ptr 0 for `undefined`). A
     /// debug build asserts the array when `array`, which it never has for a
-    /// sequence of `char`, `bool` or an enum.
+    /// sequence of `char`, `bool` or an enum. Cells of no size are in no
+    /// buffer: nothing is allocated, and the ptr is the cell's alignment.
     EncodedSliceStore {
         layout: CellLayout,
         elem: Vec<InstructionData>,

@@ -209,8 +209,18 @@ impl InstructionBuilder<'_, '_> {
                 "unsupported argument type for calling Rust function from JS: {arg:?}"
             ),
 
-            // nothing to do
-            Descriptor::Unit => {}
+            // On its own `()` crosses as nothing. A sequence holds it as
+            // `undefined`, in no words.
+            Descriptor::Unit => {
+                if self.stored {
+                    self.stored_check(StoredCheck::Undefined);
+                    self.instruction(
+                        &[AdapterType::Undefined],
+                        Instruction::UnitFromUndefined,
+                        &[],
+                    );
+                }
+            }
 
             // Largely synthetic and can't show up
             Descriptor::ClampedU8 => unreachable!(),
@@ -754,8 +764,8 @@ impl InstructionBuilder<'_, '_> {
             seq_value: SeqValue::View,
         };
         encode._incoming(elem)?;
-        // A cell holds one value, in at least one word.
-        if encode.input.len() != 1 || encode.output.is_empty() {
+        // A cell holds one value, in as many words as it has: `()` has none.
+        if encode.input.len() != 1 {
             bail!("unsupported vector element type for calling Rust function from JS: {elem:?}")
         }
         let InstructionBuilder {
