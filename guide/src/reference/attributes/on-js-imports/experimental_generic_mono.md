@@ -81,12 +81,10 @@ higher-ranked bound, which generic callers could not otherwise rely on. A trait
 whose supertraits include the right ABI trait satisfies the bound too, as with
 [`JsStringLike`](#string-bounds).
 
-`()` satisfies these bounds. A `&[T]` or `Vec<T>` argument instantiated at
-`()` is an `Array` of `undefined`, as the concrete one is. A `T` argument
-instantiated at `()` is left out of the call, as a `()` argument is, and a
-`&T` argument instantiated at it is rejected when the bindings are generated.
-An `Option<T>` bound isn't satisfied at `()`, as `None` is `undefined`
-already.
+`()` satisfies these bounds, and is `undefined` at each instantiation: a `T`
+or `&T` argument instantiated at `()` passes `undefined` in its place, and a
+`&[T]` or `Vec<T>` an `Array` of `undefined`. An `Option<T>` bound isn't
+satisfied at `()`, as `None` is `undefined` already.
 
 The bound is on the type in that position, so a compound type is bounded as a
 whole, such as `Option<T>: IntoWasmAbi` or `Vec<T>: IntoWasmAbi`. A callback
@@ -572,8 +570,9 @@ different signatures.
 A bare `&T` argument is supported, declared with the bound
 `T: RefIntoWasmAbi`, which holds for `JsValue` and JS handle types, `String`,
 `str`, numbers, `bool`, `char`, and `Option<T>` or `Nullable<T>` of any of
-them; a borrowed number crosses by copy. It also holds for a `Vec<T>` or
-`Box<[T]>` of these, and for a reference to one (`T = &str`, `T = &[u8]`),
+them, and for `()`; a borrowed number crosses by copy. It also holds for a
+`Vec<T>` or `Box<[T]>` of these, and for a reference to one (`T = &str`,
+`T = &[u8]`),
 which is lent as itself; a sequence of numbers behind the `&T` reaches JS as
 a copy. Passing `&SomeStruct` for a plain Rust struct is rejected, since
 there is no `&T` ABI representation for it; take the value by value, or pass

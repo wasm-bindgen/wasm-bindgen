@@ -44,7 +44,7 @@
   coming into Rust is checked to be `undefined`, in every build.
   `Option<()>` still doesn't cross, as an element or on its own, since
   `None` is `undefined` already, and `Nullable<()>` isn't implemented.
-  A `()` argument is unchanged: it is left out of the JS signature.
+  As an argument `()` is `undefined` too; see "Changed" below.
   [#5476](https://github.com/wasm-bindgen/wasm-bindgen/pull/5476)
 
 * A dynamic-union enum is a `Vec<T>` / `Box<[T]>` element in both
@@ -80,6 +80,19 @@
   [#5457](https://github.com/wasm-bindgen/wasm-bindgen/pull/5457)
 
 ### Changed
+
+* A `()` argument is `undefined`, in its own place in the JS signature,
+  where it was left out of it. This moves the arguments after it: an
+  exported `fn f(a: u32, unit: (), b: u32)` was called as `f(a, b)` and is
+  now called as `f(a, undefined, b)`, a closure `dyn Fn(u32, (), u32)` the
+  same, and an imported function, method or constructor that was called
+  with `(a, b)` is now called with `(a, undefined, b)`. In TypeScript the
+  parameter is typed `undefined` and is required, so a caller passes it
+  explicitly. A debug build throws when an exported function or a closure
+  is passed anything else there. A `&()` argument of an imported function
+  is `undefined` as well, as is what a setter or a `pub` field of `()` is
+  set to, which failed to bind before. A function returning `()` returns
+  nothing, as before.
 
 * `VectorIntoWasmAbi`, `VectorFromWasmAbi` and `WasmDescribeVector` are
   soft-deprecated and no longer read: a vector crosses by its element's
