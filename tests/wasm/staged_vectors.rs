@@ -70,7 +70,7 @@ encoded! {
     NullableObj(Nullable<JsValue>);
     MaybePoint(Option<StagedPoint>);
     NullablePoint(Nullable<StagedPoint>);
-    MaybeNullablePoint(Option<Nullable<StagedPoint>>);
+    MaybeNullablePoint(Nullable<Option<StagedPoint>>);
     MaybeByte(Option<u8>);
 }
 

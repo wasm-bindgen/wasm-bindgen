@@ -67,7 +67,7 @@ encoded! {
     NullableFoo(Nullable<Foo>);
     MaybePoint(Option<Point>);
     NullablePoint(Nullable<Point>);
-    MaybeNullablePoint(Option<Nullable<Point>>);
+    MaybeNullablePoint(Nullable<Option<Point>>);
     MaybeByte(Option<u8>);
 }
 
