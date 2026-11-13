@@ -149,6 +149,9 @@ struct InstructionBuilder<'a, 'b> {
     instructions: Vec<InstructionData>,
     cx: &'a mut Context<'b>,
     return_position: bool,
+    /// Whether the value is held in a cell, where it's lowered and lifted
+    /// as it is across a call unless a type says otherwise.
+    stored: bool,
     /// The mode of the `Descriptor::SeqMode` being lowered, read where the
     /// typed sequence it wraps is materialised.
     seq_value: SeqValue,
@@ -2842,6 +2845,7 @@ impl<'a> Context<'a> {
             output: Vec::new(),
             instructions: Vec::new(),
             return_position,
+            stored: false,
             seq_value: SeqValue::View,
         }
     }

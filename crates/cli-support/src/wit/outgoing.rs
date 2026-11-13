@@ -844,16 +844,47 @@ impl InstructionBuilder<'_, '_> {
             self.instruction(&[ptr_ty.clone(), ptr_ty], instr, &[ty]);
             return Ok(());
         }
+        let (layout, elem, ty) = self.outgoing_cell(elem, owned)?;
+        let array = AdapterType::Array(Box::new(ty));
+        let mem = self.cx.memory()?;
+        let free = self.cx.free()?;
+        let ptr_ty = self.outgoing_internal_word_ty();
+        self.instruction(
+            &[ptr_ty.clone(), ptr_ty],
+            Instruction::EncodedSliceLoad {
+                layout,
+                elem,
+                mem,
+                free,
+                optional,
+            },
+            &[match optional {
+                Some(kind) => array.option_kind(kind),
+                None => array,
+            }],
+        );
+        Ok(())
+    }
+
+    /// A value in stored position: its cell, the instructions that lift the
+    /// cell's words to it, which are those of a value passed to JS, and the
+    /// JS type it's given as. An `owned` value is given, and otherwise lent.
+    fn outgoing_cell(
+        &mut self,
+        elem: &Descriptor,
+        owned: bool,
+    ) -> Result<(CellLayout, Vec<InstructionData>, AdapterType), Error> {
         let mut decode = InstructionBuilder {
             input: Vec::new(),
             output: Vec::new(),
             instructions: Vec::new(),
             cx: &mut *self.cx,
-            // The words are read from the buffer onto the stack, not fetched
+            // The words are read from the cell onto the stack, not fetched
             // as arguments. This also types a pointer word as the `f64` that
             // `WasmWord` is in memory on memory64, so the words' layout
-            // matches the Rust ABI types in the buffer.
+            // matches the Rust ABI type in the cell.
             return_position: true,
+            stored: true,
             seq_value: SeqValue::View,
         };
         if owned {
@@ -873,28 +904,10 @@ impl InstructionBuilder<'_, '_> {
         let InstructionBuilder {
             input: words,
             mut output,
-            instructions: elem,
+            instructions,
             ..
         } = decode;
-        let array = AdapterType::Array(Box::new(output.remove(0)));
-        let mem = self.cx.memory()?;
-        let free = self.cx.free()?;
-        let ptr_ty = self.outgoing_internal_word_ty();
-        self.instruction(
-            &[ptr_ty.clone(), ptr_ty],
-            Instruction::EncodedSliceLoad {
-                layout: CellLayout::Words(words),
-                elem,
-                mem,
-                free,
-                optional,
-            },
-            &[match optional {
-                Some(kind) => array.option_kind(kind),
-                None => array,
-            }],
-        );
-        Ok(())
+        Ok((CellLayout::Words(words), instructions, output.remove(0)))
     }
 
     fn outgoing_string_enum(&mut self, name: &str) {

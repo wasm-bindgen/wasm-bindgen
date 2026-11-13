@@ -9,7 +9,7 @@
 
 use crate::descriptor::{Descriptor, SeqValue, SequenceCell};
 use crate::wit::{AdapterType, Instruction, InstructionBuilder, OptionKind, StackChange};
-use crate::wit::{CellLayout, InstructionData};
+use crate::wit::{CellLayout, InstructionData, StoredCheck};
 use anyhow::{bail, format_err, Error};
 use walrus::ValType;
 
@@ -76,6 +76,7 @@ impl InstructionBuilder<'_, '_> {
                 } else {
                     self.ptr_ty()
                 };
+                self.stored_check(StoredCheck::Class(class.clone()));
                 self.instruction(
                     &[AdapterType::Struct(class.clone())],
                     Instruction::I32FromExternrefRustOwned {
@@ -161,6 +162,7 @@ impl InstructionBuilder<'_, '_> {
 
             Descriptor::String | Descriptor::CachedString => {
                 let ptr_ty = self.incoming_internal_word_ty();
+                self.stored_check(StoredCheck::String(None));
                 self.instruction(
                     &[AdapterType::String],
                     Instruction::StringToMemory {
@@ -446,6 +448,7 @@ impl InstructionBuilder<'_, '_> {
                 let mem = self.cx.memory()?;
                 let realloc = self.cx.realloc();
                 let ptr_ty = self.incoming_internal_word_ty();
+                self.stored_check(StoredCheck::String(Some(option_kind)));
                 self.instruction(
                     &[AdapterType::String.option_kind(option_kind)],
                     Instruction::OptionString {
@@ -678,28 +681,8 @@ impl InstructionBuilder<'_, '_> {
             self.instruction(&[ty], instr, &[ptr_ty.clone(), ptr_ty]);
             return Ok(());
         }
-        let mut encode = InstructionBuilder {
-            input: Vec::new(),
-            output: Vec::new(),
-            instructions: Vec::new(),
-            cx: &mut *self.cx,
-            // The element is pushed onto the stack by the loop, not fetched
-            // as an argument.
-            return_position: true,
-            seq_value: SeqValue::View,
-        };
-        encode._incoming(elem)?;
-        // A cell holds one value, in at least one word.
-        if encode.input.len() != 1 || encode.output.is_empty() {
-            bail!("unsupported vector element type for calling Rust function from JS: {elem:?}")
-        }
-        let InstructionBuilder {
-            mut input,
-            output: words,
-            instructions: elem,
-            ..
-        } = encode;
-        let array = AdapterType::Array(Box::new(input.remove(0)));
+        let (ty, layout, elem) = self.incoming_cell(elem)?;
+        let array = AdapterType::Array(Box::new(ty));
         let malloc = self.cx.malloc()?;
         let free = self.cx.free()?;
         let mem = self.cx.memory()?;
@@ -711,7 +694,7 @@ impl InstructionBuilder<'_, '_> {
                 array
             }],
             Instruction::EncodedSliceStore {
-                layout: CellLayout::Words(words),
+                layout,
                 elem,
                 malloc,
                 free,
@@ -722,6 +705,54 @@ impl InstructionBuilder<'_, '_> {
             &[ptr_ty.clone(), ptr_ty],
         );
         Ok(())
+    }
+
+    /// A value in stored position: the JS type it's taken as, its cell, and
+    /// the instructions that lower it to the cell's words, which are those
+    /// of a value passed to Rust.
+    fn incoming_cell(
+        &mut self,
+        elem: &Descriptor,
+    ) -> Result<(AdapterType, CellLayout, Vec<InstructionData>), Error> {
+        let mut encode = InstructionBuilder {
+            input: Vec::new(),
+            output: Vec::new(),
+            instructions: Vec::new(),
+            cx: &mut *self.cx,
+            // The value is pushed onto the stack by what holds the cell, not
+            // fetched as an argument.
+            return_position: true,
+            stored: true,
+            seq_value: SeqValue::View,
+        };
+        encode._incoming(elem)?;
+        // A cell holds one value, in at least one word.
+        if encode.input.len() != 1 || encode.output.is_empty() {
+            bail!("unsupported vector element type for calling Rust function from JS: {elem:?}")
+        }
+        let InstructionBuilder {
+            mut input,
+            output: words,
+            instructions,
+            ..
+        } = encode;
+        Ok((input.remove(0), CellLayout::Words(words), instructions))
+    }
+
+    /// A stored value is checked where an argument is only in a debug build:
+    /// a `Vec<String>` and a `Vec` of exported structs have always rejected
+    /// an element of the wrong type, and a string's glue would read anything
+    /// else as a string's bytes.
+    fn stored_check(&mut self, check: StoredCheck) {
+        if self.stored {
+            self.instructions.push(InstructionData {
+                instr: Instruction::StoredCheck(check),
+                stack_change: StackChange::Modified {
+                    popped: 1,
+                    pushed: 1,
+                },
+            });
+        }
     }
 
     fn incoming_internal_word_ty(&self) -> AdapterType {

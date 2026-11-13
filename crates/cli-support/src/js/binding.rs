@@ -9,7 +9,7 @@ use crate::js::{Context, IdentScope, MemView};
 use crate::wit::{
     Adapter, AdapterId, AdapterKind, AdapterType, AuxFunctionArgumentData, ClosureDtor, Instruction,
 };
-use crate::wit::{CellLayout, InstructionData, OptionKind};
+use crate::wit::{CellLayout, InstructionData, OptionKind, StoredCheck};
 use crate::OutputMode;
 use anyhow::{bail, Error};
 use std::borrow::Cow;
@@ -3151,29 +3151,6 @@ fn instruction(
             // its arguments: what the element allocated is released should
             // the rest of its glue throw, and the writes that follow can't.
             let scope = js.enter_scope(vec![Value::Local(e.clone())]);
-            // An element is checked where an argument is only in a debug
-            // build: a `Vec<String>` and a `Vec` of exported structs have
-            // always rejected one of the wrong type, and a string's glue
-            // would read anything else as a string's bytes.
-            let misplaced = match elem.first().map(|instr| &instr.instr) {
-                Some(Instruction::StringToMemory { .. }) => {
-                    Some(format!("typeof {e} !== 'string'"))
-                }
-                Some(Instruction::OptionString { kind, .. }) => {
-                    let none = js.is_none(&e, *kind);
-                    Some(format!("!({none}) && typeof {e} !== 'string'"))
-                }
-                Some(Instruction::I32FromExternrefRustOwned { class }) => {
-                    let class = js.cx.require_class_reference(class);
-                    Some(format!("!({e} instanceof {class})"))
-                }
-                _ => None,
-            };
-            if let Some(misplaced) = misplaced {
-                js.prelude(&format!(
-                    "if ({misplaced}) throw new Error('array contains a value of the wrong type');"
-                ));
-            }
             for instr in elem {
                 js.begin_instr();
                 instruction(js, &instr.instr, log_error, constructor)?;
@@ -3277,6 +3254,25 @@ fn instruction(
             if *optional {
                 js.prelude("}");
             }
+        }
+
+        Instruction::StoredCheck(check) => {
+            let val = js.pop();
+            let misplaced = match check {
+                StoredCheck::String(None) => format!("typeof {val} !== 'string'"),
+                StoredCheck::String(Some(kind)) => {
+                    let none = js.is_none(&val, *kind);
+                    format!("!({none}) && typeof {val} !== 'string'")
+                }
+                StoredCheck::Class(class) => {
+                    let class = js.cx.require_class_reference(class);
+                    format!("!({val} instanceof {class})")
+                }
+            };
+            js.prelude(&format!(
+                "if ({misplaced}) throw new Error('array contains a value of the wrong type');"
+            ));
+            js.push(val);
         }
 
         Instruction::View { kind, mem, mode } => {

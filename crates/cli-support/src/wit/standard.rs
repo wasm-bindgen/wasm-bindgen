@@ -145,6 +145,15 @@ impl CellLayout {
     }
 }
 
+/// What a value in stored position is checked to be.
+#[derive(Debug, Clone)]
+pub enum StoredCheck {
+    /// A string, or with a kind none of that kind.
+    String(Option<OptionKind>),
+    /// An instance of an exported class.
+    Class(String),
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AdapterType {
     S8,
@@ -494,6 +503,9 @@ pub enum Instruction {
         optional: bool,
         option_kind: OptionKind,
     },
+    /// pops a value in stored position, throws unless it's of the checked
+    /// type, pushes it back
+    StoredCheck(StoredCheck),
     /// pops i32, loads externref from externref table
     TableGet,
     /// pops two i32 data pointers, pushes an externref closure
