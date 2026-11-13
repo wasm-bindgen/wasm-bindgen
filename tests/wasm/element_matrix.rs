@@ -99,6 +99,12 @@ fn empty(view: &str) -> String {
     format!("{}]", &view[..=view.find('[').unwrap()])
 }
 
+/// A number that is lent crosses as itself, not as its place in a typed
+/// array.
+fn lent(view: &str) -> &str {
+    &view[view.find('[').unwrap()..]
+}
+
 macro_rules! cell {
     ($column:ident - $($row:tt)*) => {};
 
@@ -172,6 +178,26 @@ macro_rules! cell {
         }
     };
 
+    (import_refs + $name:ident, $ty:ty, $view:literal) => {
+        #[allow(clippy::ptr_arg)]
+        #[wasm_bindgen(module = "tests/wasm/element_matrix.js")]
+        extern "C" {
+            #[wasm_bindgen(js_name = show)]
+            fn show_refs(v: &[&$ty]) -> String;
+            #[wasm_bindgen(js_name = show)]
+            fn show_vec_of_refs(v: &Vec<&$ty>) -> String;
+        }
+
+        #[wasm_bindgen_test]
+        fn import_refs() {
+            let samples = samples();
+            let refs: Vec<&$ty> = samples.iter().collect();
+            assert_eq!(show_refs(&refs), lent($view));
+            assert_eq!(show_refs(&[]), "[]");
+            assert_eq!(show_vec_of_refs(&refs), lent($view));
+        }
+    };
+
     (option + $name:ident, $ty:ty, $view:literal) => {
         paste! {
             #[wasm_bindgen(module = "tests/wasm/element_matrix.js")]
@@ -220,7 +246,7 @@ macro_rules! cell {
 
 macro_rules! matrix {
     ($(
-        $name:ident [$ea:tt $er:tt $ia:tt $ir:tt $sl:tt $op:tt $jv:tt $bd:tt]:
+        $name:ident [$ea:tt $er:tt $ia:tt $ir:tt $sl:tt $rf:tt $op:tt $jv:tt $bd:tt]:
         $ty:ty = [$($sample:expr),*] => $view:literal;
     )*) => { $(
         pub mod $name {
@@ -235,6 +261,7 @@ macro_rules! matrix {
             cell!(import_arg $ia $name, $ty, $view);
             cell!(import_ret $ir $name, $ty, $view);
             cell!(import_slice $sl $name, $ty, $view);
+            cell!(import_refs $rf $name, $ty, $view);
             cell!(option $op $name, $ty, $view);
             cell!(js_value $jv $name, $ty, $view);
             cell!(bad $bd $name, $ty, $view);
@@ -244,77 +271,76 @@ macro_rules! matrix {
 
 // Columns, each over `Vec<E>` unless said otherwise:
 //   ea  export argument        ia  import argument     sl  import argument `&[E]`
-//   er  export return          ir  import return       op  `Option<Vec<E>>`, both ways
-//   jv  `JsValue::from`     bd  a value JS passes that is rejected, for an
-//                               element that is checked, leaves the rest with JS
+//   er  export return          ir  import return       rf  import argument `&[&E]`, `&Vec<&E>`
+//   jv  `JsValue::from`        op  `Option<Vec<E>>`, both ways
+//   bd  a value JS passes that is rejected, for an element that is checked,
+//       leaves the rest with JS
 //
 // `ea` is fed by `er`, and `ir` by `ia`: JS has no other source of a row's
 // values.
 #[rustfmt::skip]
 matrix! {
-//  row               ea er ia ir sl op jv bd   element                    samples => as JS sees them
-    of_u8             [+  +  +  +  +  +  +  -]: u8                       = [0, 128, 255] => "Uint8Array[0,128,255]";
-    of_u32            [+  +  +  +  +  +  +  -]: u32                      = [0, 7, u32::MAX] => "Uint32Array[0,7,4294967295]";
-    of_i64            [+  +  +  +  +  +  +  -]: i64                      = [-1, 0, i64::MAX] => "BigInt64Array[-1n,0n,9223372036854775807n]";
-    of_f64            [+  +  +  +  +  +  +  -]: f64                      = [0.5, -1.0, 1e100] => "Float64Array[0.5,-1,1e+100]";
-    of_bool           [+  +  +  +  +  +  +  -]: bool                     = [true, false, false] => "[true,false,false]";
-    of_char           [+  +  +  +  +  +  +  -]: char                     = ['a', '🌍', 'z'] => r#"["a","🌍","z"]"#;
-    of_string         [+  +  +  +  +  +  +  +]: String                   = [s("a"), s(""), s("🌍")] => r#"["a","","🌍"]"#;
+//  row               ea er ia ir sl rf op jv bd   element                    samples => as JS sees them
+    of_u8             [+  +  +  +  +  +  +  +  -]: u8                       = [0, 128, 255] => "Uint8Array[0,128,255]";
+    of_u32            [+  +  +  +  +  +  +  +  -]: u32                      = [0, 7, u32::MAX] => "Uint32Array[0,7,4294967295]";
+    of_i64            [+  +  +  +  +  +  +  +  -]: i64                      = [-1, 0, i64::MAX] => "BigInt64Array[-1n,0n,9223372036854775807n]";
+    of_f64            [+  +  +  +  +  +  +  +  -]: f64                      = [0.5, -1.0, 1e100] => "Float64Array[0.5,-1,1e+100]";
+    of_bool           [+  +  +  +  +  +  +  +  -]: bool                     = [true, false, false] => "[true,false,false]";
+    of_char           [+  +  +  +  +  +  +  +  -]: char                     = ['a', '🌍', 'z'] => r#"["a","🌍","z"]"#;
+    of_string         [+  +  +  +  +  +  +  +  +]: String                   = [s("a"), s(""), s("🌍")] => r#"["a","","🌍"]"#;
     // A borrowed string is lent, so it only goes to JS.
-    of_str            [-  +  +  -  +  -  +  -]: &'static str             = ["a", "", "🌍"] => r#"["a","","🌍"]"#;
+    of_str            [-  +  +  -  +  +  -  +  -]: &'static str             = ["a", "", "🌍"] => r#"["a","","🌍"]"#;
     // As is a borrowed slice of numbers, which each reach JS as a copy.
-    // hole: of_bytes sl, `&[u8]: RefIntoWasmAbi` is not satisfied
-    of_bytes          [-  +  +  -  -  -  +  -]: &'static [u8]            = [&[1, 2][..], &[], &[3]] => "[Uint8Array[1,2],Uint8Array[],Uint8Array[3]]";
-    // hole: of_floats sl, `&[f64]: RefIntoWasmAbi` is not satisfied
-    of_floats         [-  +  +  -  -  -  +  -]: &'static [f64]           = [&[0.5][..], &[], &[-1.0, 2.0]] => "[Float64Array[0.5],Float64Array[],Float64Array[-1,2]]";
-    of_js_value       [+  +  +  +  +  +  +  -]: JsValue                  = [1.into(), JsValue::NULL, "a".into(), JsValue::UNDEFINED] => r#"[1,null,"a",undefined]"#;
-    of_imported       [+  +  +  +  +  +  +  -]: MatrixThing              = [thing(1), thing(2), thing(3)] => r#"[{"thing":1},{"thing":2},{"thing":3}]"#;
-    of_js_string      [+  +  +  +  +  +  +  -]: JsString                 = [js("a"), js(""), js("c")] => r#"["a","","c"]"#;
-    // hole: of_exported sl, `MatrixItem: RefIntoWasmAbi` is not satisfied
-    of_exported       [+  +  +  +  -  +  +  +]: MatrixItem               = [item(1), item(2), item(3)] => "[Item(1),Item(2),Item(3)]";
-    of_c_enum         [+  +  +  +  +  +  +  -]: MatrixLevel              = [Low, High, High] => "[1,2,2]";
-    of_string_enum    [+  +  +  +  +  +  +  -]: MatrixName               = [A, B, B] => r#"["a","b","b"]"#;
-    // hole: of_union sl, `MatrixUnion: RefIntoWasmAbi` is not satisfied
-    of_union          [+  +  +  +  -  +  +  +]: MatrixUnion              = [MatrixUnion::Loading, MatrixUnion::Count(7), MatrixUnion::Name(A)] => r#"["loading",7,"a"]"#;
-    of_hand_written   [+  +  +  +  +  +  +  -]: Point                    = [point(1., 2.), point(3., 4.)] => r#"[{"x":1,"y":2},{"x":3,"y":4}]"#;
+    of_bytes          [-  +  +  -  +  +  -  +  -]: &'static [u8]            = [&[1, 2][..], &[], &[3]] => "[Uint8Array[1,2],Uint8Array[],Uint8Array[3]]";
+    of_floats         [-  +  +  -  +  +  -  +  -]: &'static [f64]           = [&[0.5][..], &[], &[-1.0, 2.0]] => "[Float64Array[0.5],Float64Array[],Float64Array[-1,2]]";
+    of_js_value       [+  +  +  +  +  +  +  +  -]: JsValue                  = [1.into(), JsValue::NULL, "a".into(), JsValue::UNDEFINED] => r#"[1,null,"a",undefined]"#;
+    of_imported       [+  +  +  +  +  +  +  +  -]: MatrixThing              = [thing(1), thing(2), thing(3)] => r#"[{"thing":1},{"thing":2},{"thing":3}]"#;
+    of_js_string      [+  +  +  +  +  +  +  +  -]: JsString                 = [js("a"), js(""), js("c")] => r#"["a","","c"]"#;
+    // hole: of_exported sl rf, `MatrixItem: RefIntoWasmAbi` is not satisfied
+    of_exported       [+  +  +  +  -  -  +  +  +]: MatrixItem               = [item(1), item(2), item(3)] => "[Item(1),Item(2),Item(3)]";
+    of_c_enum         [+  +  +  +  +  +  +  +  -]: MatrixLevel              = [Low, High, High] => "[1,2,2]";
+    of_string_enum    [+  +  +  +  +  +  +  +  -]: MatrixName               = [A, B, B] => r#"["a","b","b"]"#;
+    // hole: of_union sl rf, `MatrixUnion: RefIntoWasmAbi` is not satisfied
+    of_union          [+  +  +  +  -  -  +  +  +]: MatrixUnion              = [MatrixUnion::Loading, MatrixUnion::Count(7), MatrixUnion::Name(A)] => r#"["loading",7,"a"]"#;
+    of_hand_written   [+  +  +  +  +  +  +  +  -]: Point                    = [point(1., 2.), point(3., 4.)] => r#"[{"x":1,"y":2},{"x":3,"y":4}]"#;
 
-    opt_u32           [+  +  +  +  +  +  +  -]: Option<u32>              = [Some(1), None, Some(u32::MAX)] => "[1,undefined,4294967295]";
-    opt_i64           [+  +  +  +  +  +  +  -]: Option<i64>              = [Some(-1), None, Some(i64::MAX)] => "[-1n,undefined,9223372036854775807n]";
-    opt_f64           [+  +  +  +  +  +  +  -]: Option<f64>              = [Some(0.5), None, Some(-1.0)] => "[0.5,undefined,-1]";
-    opt_bool          [+  +  +  +  +  +  +  -]: Option<bool>             = [Some(true), None, Some(false)] => "[true,undefined,false]";
-    opt_char          [+  +  +  +  +  +  +  -]: Option<char>             = [Some('a'), None, Some('🌍')] => r#"["a",undefined,"🌍"]"#;
-    opt_string        [+  +  +  +  +  +  +  +]: Option<String>           = [Some(s("a")), None, Some(s(""))] => r#"["a",undefined,""]"#;
-    opt_imported      [+  +  +  +  +  +  +  -]: Option<MatrixThing>      = [Some(thing(1)), None, Some(thing(3))] => r#"[{"thing":1},undefined,{"thing":3}]"#;
-    opt_js_string     [+  +  +  +  +  +  +  -]: Option<JsString>         = [Some(js("a")), None, Some(js(""))] => r#"["a",undefined,""]"#;
-    // hole: opt_exported sl, `Option<MatrixItem>: RefIntoWasmAbi` is not satisfied
-    opt_exported      [+  +  +  +  -  +  +  +]: Option<MatrixItem>       = [Some(item(1)), None, Some(item(3))] => "[Item(1),undefined,Item(3)]";
-    opt_c_enum        [+  +  +  +  +  +  +  -]: Option<MatrixLevel>      = [Some(Low), None, Some(High)] => "[1,undefined,2]";
-    opt_string_enum   [+  +  +  +  +  +  +  -]: Option<MatrixName>       = [Some(A), None, Some(B)] => r#"["a",undefined,"b"]"#;
-    // hole: opt_union sl, `Option<MatrixUnion>: RefIntoWasmAbi` is not satisfied
-    opt_union         [+  +  +  +  -  +  +  +]: Option<MatrixUnion>      = [Some(MatrixUnion::Loading), None, Some(MatrixUnion::Count(7))] => r#"["loading",undefined,7]"#;
-    // hole: opt_hand_written sl, `Option<Point>: RefIntoWasmAbi` is not satisfied
-    opt_hand_written  [+  +  +  +  -  +  +  -]: Option<Point>            = [Some(point(1., 2.)), None, Some(point(3., 4.))] => r#"[{"x":1,"y":2},undefined,{"x":3,"y":4}]"#;
+    opt_u32           [+  +  +  +  +  +  +  +  -]: Option<u32>              = [Some(1), None, Some(u32::MAX)] => "[1,undefined,4294967295]";
+    opt_i64           [+  +  +  +  +  +  +  +  -]: Option<i64>              = [Some(-1), None, Some(i64::MAX)] => "[-1n,undefined,9223372036854775807n]";
+    opt_f64           [+  +  +  +  +  +  +  +  -]: Option<f64>              = [Some(0.5), None, Some(-1.0)] => "[0.5,undefined,-1]";
+    opt_bool          [+  +  +  +  +  +  +  +  -]: Option<bool>             = [Some(true), None, Some(false)] => "[true,undefined,false]";
+    opt_char          [+  +  +  +  +  +  +  +  -]: Option<char>             = [Some('a'), None, Some('🌍')] => r#"["a",undefined,"🌍"]"#;
+    opt_string        [+  +  +  +  +  +  +  +  +]: Option<String>           = [Some(s("a")), None, Some(s(""))] => r#"["a",undefined,""]"#;
+    opt_imported      [+  +  +  +  +  +  +  +  -]: Option<MatrixThing>      = [Some(thing(1)), None, Some(thing(3))] => r#"[{"thing":1},undefined,{"thing":3}]"#;
+    opt_js_string     [+  +  +  +  +  +  +  +  -]: Option<JsString>         = [Some(js("a")), None, Some(js(""))] => r#"["a",undefined,""]"#;
+    // hole: opt_exported sl rf, `Option<MatrixItem>: RefIntoWasmAbi` is not satisfied
+    opt_exported      [+  +  +  +  -  -  +  +  +]: Option<MatrixItem>       = [Some(item(1)), None, Some(item(3))] => "[Item(1),undefined,Item(3)]";
+    opt_c_enum        [+  +  +  +  +  +  +  +  -]: Option<MatrixLevel>      = [Some(Low), None, Some(High)] => "[1,undefined,2]";
+    opt_string_enum   [+  +  +  +  +  +  +  +  -]: Option<MatrixName>       = [Some(A), None, Some(B)] => r#"["a",undefined,"b"]"#;
+    // hole: opt_union sl rf, `Option<MatrixUnion>: RefIntoWasmAbi` is not satisfied
+    opt_union         [+  +  +  +  -  -  +  +  +]: Option<MatrixUnion>      = [Some(MatrixUnion::Loading), None, Some(MatrixUnion::Count(7))] => r#"["loading",undefined,7]"#;
+    // hole: opt_hand_written sl rf, `Option<Point>: RefIntoWasmAbi` is not satisfied
+    opt_hand_written  [+  +  +  +  -  -  +  +  -]: Option<Point>            = [Some(point(1., 2.)), None, Some(point(3., 4.))] => r#"[{"x":1,"y":2},undefined,{"x":3,"y":4}]"#;
 
-    null_u32          [+  +  +  +  +  +  +  -]: Nullable<u32>            = [Value(1), Null, Value(u32::MAX)] => "[1,null,4294967295]";
-    null_i64          [+  +  +  +  +  +  +  -]: Nullable<i64>            = [Value(-1), Null, Value(i64::MAX)] => "[-1n,null,9223372036854775807n]";
-    null_f64          [+  +  +  +  +  +  +  -]: Nullable<f64>            = [Value(0.5), Null, Value(-1.0)] => "[0.5,null,-1]";
-    null_bool         [+  +  +  +  +  +  +  -]: Nullable<bool>           = [Value(true), Null, Value(false)] => "[true,null,false]";
-    null_char         [+  +  +  +  +  +  +  -]: Nullable<char>           = [Value('a'), Null, Value('🌍')] => r#"["a",null,"🌍"]"#;
-    null_string       [+  +  +  +  +  +  +  +]: Nullable<String>         = [Value(s("a")), Null, Value(s(""))] => r#"["a",null,""]"#;
-    null_imported     [+  +  +  +  +  +  +  -]: Nullable<MatrixThing>    = [Value(thing(1)), Null, Value(thing(3))] => r#"[{"thing":1},null,{"thing":3}]"#;
-    null_js_string    [+  +  +  +  +  +  +  -]: Nullable<JsString>       = [Value(js("a")), Null, Value(js(""))] => r#"["a",null,""]"#;
-    // hole: null_exported sl, `Nullable<MatrixItem>: RefIntoWasmAbi` is not satisfied
-    null_exported     [+  +  +  +  -  +  +  +]: Nullable<MatrixItem>     = [Value(item(1)), Null, Value(item(3))] => "[Item(1),null,Item(3)]";
-    null_c_enum       [+  +  +  +  +  +  +  -]: Nullable<MatrixLevel>    = [Value(Low), Null, Value(High)] => "[1,null,2]";
-    null_string_enum  [+  +  +  +  +  +  +  -]: Nullable<MatrixName>     = [Value(A), Null, Value(B)] => r#"["a",null,"b"]"#;
-    // hole: null_union sl, `Nullable<MatrixUnion>: RefIntoWasmAbi` is not satisfied
-    null_union        [+  +  +  +  -  +  +  +]: Nullable<MatrixUnion>    = [Value(MatrixUnion::Loading), Null, Value(MatrixUnion::Count(7))] => r#"["loading",null,7]"#;
-    null_opt_string   [+  +  +  +  +  +  +  +]: Nullable<Option<String>> = [Value(Some(s("a"))), Null, Value(None)] => r#"["a",null,undefined]"#;
+    null_u32          [+  +  +  +  +  +  +  +  -]: Nullable<u32>            = [Value(1), Null, Value(u32::MAX)] => "[1,null,4294967295]";
+    null_i64          [+  +  +  +  +  +  +  +  -]: Nullable<i64>            = [Value(-1), Null, Value(i64::MAX)] => "[-1n,null,9223372036854775807n]";
+    null_f64          [+  +  +  +  +  +  +  +  -]: Nullable<f64>            = [Value(0.5), Null, Value(-1.0)] => "[0.5,null,-1]";
+    null_bool         [+  +  +  +  +  +  +  +  -]: Nullable<bool>           = [Value(true), Null, Value(false)] => "[true,null,false]";
+    null_char         [+  +  +  +  +  +  +  +  -]: Nullable<char>           = [Value('a'), Null, Value('🌍')] => r#"["a",null,"🌍"]"#;
+    null_string       [+  +  +  +  +  +  +  +  +]: Nullable<String>         = [Value(s("a")), Null, Value(s(""))] => r#"["a",null,""]"#;
+    null_imported     [+  +  +  +  +  +  +  +  -]: Nullable<MatrixThing>    = [Value(thing(1)), Null, Value(thing(3))] => r#"[{"thing":1},null,{"thing":3}]"#;
+    null_js_string    [+  +  +  +  +  +  +  +  -]: Nullable<JsString>       = [Value(js("a")), Null, Value(js(""))] => r#"["a",null,""]"#;
+    // hole: null_exported sl rf, `Nullable<MatrixItem>: RefIntoWasmAbi` is not satisfied
+    null_exported     [+  +  +  +  -  -  +  +  +]: Nullable<MatrixItem>     = [Value(item(1)), Null, Value(item(3))] => "[Item(1),null,Item(3)]";
+    null_c_enum       [+  +  +  +  +  +  +  +  -]: Nullable<MatrixLevel>    = [Value(Low), Null, Value(High)] => "[1,null,2]";
+    null_string_enum  [+  +  +  +  +  +  +  +  -]: Nullable<MatrixName>     = [Value(A), Null, Value(B)] => r#"["a",null,"b"]"#;
+    // hole: null_union sl rf, `Nullable<MatrixUnion>: RefIntoWasmAbi` is not satisfied
+    null_union        [+  +  +  +  -  -  +  +  +]: Nullable<MatrixUnion>    = [Value(MatrixUnion::Loading), Null, Value(MatrixUnion::Count(7))] => r#"["loading",null,7]"#;
+    null_opt_string   [+  +  +  +  +  +  +  +  +]: Nullable<Option<String>> = [Value(Some(s("a"))), Null, Value(None)] => r#"["a",null,undefined]"#;
 
-    vec_u32           [+  +  +  +  +  +  +  +]: Vec<u32>                 = [vec![1, 2], vec![], vec![3]] => "[Uint32Array[1,2],Uint32Array[],Uint32Array[3]]";
-    vec_string        [+  +  +  +  +  +  +  +]: Vec<String>              = [vec![s("a"), s("b")], vec![], vec![s("c")]] => r#"[["a","b"],[],["c"]]"#;
-    vec_js_string     [+  +  +  +  +  +  +  +]: Vec<JsString>            = [vec![js("a"), js("b")], vec![], vec![js("c")]] => r#"[["a","b"],[],["c"]]"#;
-    vec_opt_string    [+  +  +  +  +  +  +  +]: Vec<Option<String>>      = [vec![Some(s("a")), None], vec![], vec![None]] => r#"[["a",undefined],[],[undefined]]"#;
+    vec_u32           [+  +  +  +  +  +  +  +  +]: Vec<u32>                 = [vec![1, 2], vec![], vec![3]] => "[Uint32Array[1,2],Uint32Array[],Uint32Array[3]]";
+    vec_string        [+  +  +  +  +  +  +  +  +]: Vec<String>              = [vec![s("a"), s("b")], vec![], vec![s("c")]] => r#"[["a","b"],[],["c"]]"#;
+    vec_js_string     [+  +  +  +  +  +  +  +  +]: Vec<JsString>            = [vec![js("a"), js("b")], vec![], vec![js("c")]] => r#"[["a","b"],[],["c"]]"#;
+    vec_opt_string    [+  +  +  +  +  +  +  +  +]: Vec<Option<String>>      = [vec![Some(s("a")), None], vec![], vec![None]] => r#"[["a",undefined],[],[undefined]]"#;
 }
 
 #[allow(clippy::ptr_arg, clippy::borrowed_box)]

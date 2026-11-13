@@ -804,13 +804,40 @@ where
 
 impl<'a, T, Target> UpcastFrom<&'a [T]> for &'a [Target] where Target: UpcastFrom<T> {}
 
-// A borrowed number, `bool`, `char` or borrowed string crosses by copy, so
-// `&T`, `Option<&T>` and `Nullable<&T>` have `T`'s ABIs, as generic code
-// borrowing an element (`contains(&T)`) needs for every `T`.
+// A borrowed number, `bool` or `char` crosses by copy, so `&T`, `Option<&T>`
+// and `Nullable<&T>` have `T`'s ABIs, as generic code borrowing an element
+// (`contains(&T)`) needs for every `T`.
 macro_rules! ref_by_copy {
-    ($($t:ty => $base:ty,)*) => ($(
+    // The optional ABI of these is wider than their own, which is all that
+    // a reference to a reference forwards, so `&&T`'s is spelled out: a
+    // sequence that holds an `Option<&T>` lends an `Option<&&T>`.
+    (@optional $t:ty, $($r:ty),*) => ($(
+        impl MaybeIntoWasmAbi for $r {
+            type MaybeAbi = <$t as MaybeIntoWasmAbi>::MaybeAbi;
+
+            #[inline]
+            fn into_maybe_abi(self) -> Self::MaybeAbi {
+                let value: &$t = &self;
+                (*value).into_maybe_abi()
+            }
+
+            #[inline]
+            fn none() -> Self::MaybeAbi {
+                <$t as MaybeIntoWasmAbi>::none()
+            }
+        }
+
+        impl NullableIntoWasmAbi for $r {
+            #[inline]
+            fn null() -> Self::MaybeAbi {
+                <$t as NullableIntoWasmAbi>::null()
+            }
+        }
+    )*);
+
+    ($($t:ty)*) => ($(
         impl IntoWasmAbi for &$t {
-            type Abi = <$base as IntoWasmAbi>::Abi;
+            type Abi = <$t as IntoWasmAbi>::Abi;
 
             #[inline]
             fn into_abi(self) -> Self::Abi {
@@ -818,35 +845,46 @@ macro_rules! ref_by_copy {
             }
         }
 
-        impl MaybeIntoWasmAbi for &$t {
-            type MaybeAbi = <$base as MaybeIntoWasmAbi>::MaybeAbi;
-
-            #[inline]
-            fn into_maybe_abi(self) -> Self::MaybeAbi {
-                (*self).into_maybe_abi()
-            }
-
-            #[inline]
-            fn none() -> Self::MaybeAbi {
-                <$base as MaybeIntoWasmAbi>::none()
-            }
-        }
-
-        impl NullableIntoWasmAbi for &$t {
-            #[inline]
-            fn null() -> Self::MaybeAbi {
-                <$base as NullableIntoWasmAbi>::null()
-            }
-        }
-    )*)
+        ref_by_copy!(@optional $t, &$t, &&$t);
+    )*);
 }
 
 ref_by_copy! {
-    u8 => u8, i8 => i8, u16 => u16, i16 => i16, u32 => u32, i32 => i32,
-    u64 => u64, i64 => i64, u128 => u128, i128 => i128, usize => usize,
-    isize => isize, f32 => f32, f64 => f64, bool => bool, char => char,
-    &str => &'static str, &String => &'static String,
-    &Box<str> => &'static Box<str>, &Cow<'_, str> => &'static Cow<'static, str>,
+    u8 i8 u16 i16 u32 i32 u64 i64 u128 i128 usize isize f32 f64 bool char
+}
+
+// A reference to a reference crosses as the reference, so what lends its
+// elements (`&[&T]`, `&[Option<&T>]`, `&[&[T]]`) lends each as itself.
+impl<'a, T: ?Sized> IntoWasmAbi for &&'a T
+where
+    &'a T: IntoWasmAbi,
+{
+    type Abi = <&'a T as IntoWasmAbi>::Abi;
+
+    #[inline]
+    fn into_abi(self) -> Self::Abi {
+        (*self).into_abi()
+    }
+}
+
+impl<'a, T: ?Sized> OptionIntoWasmAbi for &&'a T
+where
+    &'a T: OptionIntoWasmAbi,
+{
+    #[inline]
+    fn none() -> Self::Abi {
+        <&'a T as OptionIntoWasmAbi>::none()
+    }
+}
+
+impl<'a, T: ?Sized> NullableIntoWasmAbi for &&'a T
+where
+    &'a T: OptionIntoWasmAbi + NullableIntoWasmAbi<MaybeAbi = <&'a T as IntoWasmAbi>::Abi>,
+{
+    #[inline]
+    fn null() -> Self::MaybeAbi {
+        <&'a T as NullableIntoWasmAbi>::null()
+    }
 }
 
 impl<'a, T: WasmDescribe> IntoWasmAbi for &'a Option<T>

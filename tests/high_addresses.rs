@@ -186,6 +186,20 @@ extern "C" {
     fn value_slice(v: &[JsValue]) -> String;
     #[wasm_bindgen(js_name = join)]
     fn byte_slices(v: Vec<&[u8]>) -> String;
+    #[wasm_bindgen(js_name = join)]
+    fn string_slices(v: &[&[String]]) -> String;
+    #[wasm_bindgen(catch, js_name = fail)]
+    fn string_slices_throw(v: &[&[String]]) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, js_name = join)]
+    fn string_slices_caught(v: &[&[String]]) -> Result<String, JsValue>;
+    #[wasm_bindgen(js_name = join)]
+    fn nested_byte_slices(v: &[&[u8]]) -> String;
+    #[wasm_bindgen(js_name = join)]
+    fn deep_byte_slices(v: &[&[&[u8]]]) -> String;
+    #[wasm_bindgen(js_name = join)]
+    fn value_refs(v: &[Option<&JsValue>]) -> String;
+    #[wasm_bindgen(js_name = sum)]
+    fn slice_ref(v: &&[u8]) -> u32;
     #[wasm_bindgen(js_name = sum)]
     fn opt_vec_ref(v: Option<&Vec<u32>>) -> u32;
     #[wasm_bindgen(js_name = joinOptional)]
@@ -294,6 +308,34 @@ fn an_import_is_given_instances() {
     }
 }
 
+// What a lent sequence lends in turn is still Rust's, and the buffers that
+// encode it are freed when the import returns, throws, or isn't reached.
+#[wasm_bindgen_test]
+fn an_import_is_lent_references() {
+    if !high() {
+        return;
+    }
+    let names = || vec![s("a"), s(""), s("cde")];
+    for _ in 0..3 {
+        balanced(|| {
+            let names = names();
+            assert_eq!(string_slices(&[&names, &[], &names[2..]]), "a,,cde,,cde");
+            assert!(string_slices_throw(&[&names, &[]]).is_err());
+        });
+        balanced(|| assert_eq!(nested_byte_slices(&[&[1, 2], &[], &[3]]), "1,2,,3"));
+        balanced(|| assert_eq!(deep_byte_slices(&[&[&[1, 2], &[3]], &[]]), "1,2,3,"));
+        balanced(|| {
+            let values = js_values();
+            assert_eq!(
+                value_refs(&[Some(&values[1]), None, Some(&values[0])]),
+                "two,undefined,1"
+            );
+            assert_eq!(values, js_values());
+        });
+        balanced(|| assert_eq!(slice_ref(&&[1, 2, 3][..]), 6));
+    }
+}
+
 // A borrowed vector that is absent crosses as nothing, and one that is there
 // is still Rust's: only the buffer that encodes it is freed, however the
 // import ends.
@@ -318,7 +360,8 @@ fn an_import_is_lent_an_optional_vector() {
 #[wasm_bindgen]
 pub fn high_lends_undecodable() -> bool {
     let names = vec![s("a"), s("undecodable")];
-    opt_string_vec_ref_caught(Some(&names)).is_err()
+    string_slices_caught(&[&names[..1], &[], &names]).is_err()
+        && opt_string_vec_ref_caught(Some(&names)).is_err()
         && null_string_vecs_caught(&[Nullable::Null, Nullable::Value(names)]).is_err()
 }
 

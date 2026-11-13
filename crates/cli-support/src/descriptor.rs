@@ -461,9 +461,20 @@ impl Descriptor {
             Descriptor::Option(inner) => inner,
             d => d,
         };
-        // A borrowed vector reaches JS as the vector does, under `vec`.
+        // A borrowed vector reaches JS as the vector does, under `vec`, and
+        // so does a slice behind a second reference.
         let d = match d {
-            Descriptor::Ref(v) if matches!(**v, Descriptor::Vector(_)) => v,
+            Descriptor::Ref(first) => {
+                let mut referent = &**first;
+                while let Descriptor::Ref(next) = referent {
+                    referent = next;
+                }
+                match referent {
+                    Descriptor::Vector(_) => referent,
+                    Descriptor::Slice(_) if matches!(**first, Descriptor::Ref(_)) => referent,
+                    _ => d,
+                }
+            }
             d => d,
         };
         let (borrowed, mutable) = match d {
@@ -479,7 +490,7 @@ impl Descriptor {
         }) || d.sequence_elem().is_some_and(|elem| {
             matches!(elem.sequence_cell(), SequenceCell::Encoded(cell) if cell.typed_cell().is_some())
         });
-        let owned = matches!(d, Descriptor::Vector(_));
+        let owned = matches!(d, Descriptor::Vector(_) | Descriptor::Slice(_));
         let misfit = if mode.vec && borrowed {
             "`vec` applies to owned vectors; for a borrowed `&[T]` use `slice = view | copy | array`"
         } else if mode.vec && !owned {
@@ -678,6 +689,14 @@ fn seq_modes_apply_by_shape() {
     assert_eq!(fit(array, &[CLAMPED, REF, SLICE, U8]), Ok(true));
     assert_eq!(fit(vec_array, &[OPTIONAL, VECTOR, U8]), Ok(true));
     assert_eq!(fit(vec_array, &[OPTIONAL, REF, VECTOR, U8]), Ok(true));
+    // A slice behind a second reference is copied as a borrowed vector is.
+    assert_eq!(fit(vec_array, &[REF, REF, SLICE, U8]), Ok(true));
+    assert_eq!(
+        fit(vec_array, &[NULLABLE, REF, REF, REF, SLICE, F64]),
+        Ok(true)
+    );
+    assert_eq!(fit(copy, &[REF, REF, SLICE, U8]), Ok(false));
+    assert!(fit(explicit | copy, &[REF, REF, SLICE, U8]).is_err());
     assert_eq!(fit(explicit, &[REFMUT, SLICE, U8]), Ok(true));
     // Inherited, it has nothing to do elsewhere, and is dropped.
     assert_eq!(fit(array, &[VECTOR, U8]), Ok(false));

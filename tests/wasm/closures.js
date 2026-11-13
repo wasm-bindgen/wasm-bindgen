@@ -294,7 +294,7 @@ exports.count_each = fs => fs.forEach(f => f());
 
 let keptEach = [];
 exports.keep_each = fs => { keptEach = fs; };
-exports.kept_each_are_dead = () => keptEach.length === 2 && keptEach.every(f => {
+exports.kept_each_are_dead = () => keptEach.flat().length === 2 && keptEach.flat().every(f => {
     try {
         f(3);
         return false;

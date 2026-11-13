@@ -25,6 +25,7 @@ error[E0277]: the trait bound `Nullable<u32>: OptionIntoWasmAbi` is not satisfie
   | ^^^^^^^^^^^^^^^ the trait `OptionIntoWasmAbi` is not implemented for `Nullable<u32>`
   |
   = help: the following other types implement trait `OptionIntoWasmAbi`:
+            &&'a T
             &'__wbg_ref JsNullable<T>
             &'__wbg_ref JsOption<T>
             &'__wbg_ref Undefined
@@ -32,7 +33,6 @@ error[E0277]: the trait bound `Nullable<u32>: OptionIntoWasmAbi` is not satisfie
             &'a Box<[T]>
             &'a Vec<T>
             &'a [T]
-            &'a mut [MaybeUninit<f32>]
           and $N others
   = note: required for `Nullable<u32>` to implement `MaybeIntoWasmAbi`
   = note: required for `Option<Nullable<u32>>` to implement `IntoWasmAbi`
@@ -65,6 +65,7 @@ error[E0277]: the trait bound `Nullable<u32>: OptionIntoWasmAbi` is not satisfie
   | ^^^^^^^^^^^^^^^ the trait `OptionIntoWasmAbi` is not implemented for `Nullable<u32>`
   |
   = help: the following other types implement trait `OptionIntoWasmAbi`:
+            &&'a T
             &'__wbg_ref JsNullable<T>
             &'__wbg_ref JsOption<T>
             &'__wbg_ref Undefined
@@ -72,7 +73,6 @@ error[E0277]: the trait bound `Nullable<u32>: OptionIntoWasmAbi` is not satisfie
             &'a Box<[T]>
             &'a Vec<T>
             &'a [T]
-            &'a mut [MaybeUninit<f32>]
           and $N others
   = note: required for `Nullable<u32>` to implement `MaybeIntoWasmAbi`
   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)

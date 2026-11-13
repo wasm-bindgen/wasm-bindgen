@@ -1277,6 +1277,16 @@ mod slices {
         fn count_each(fs: Vec<&mut dyn FnMut()>);
         fn keep_each(fs: Vec<&dyn Fn(u32) -> u32>);
         fn kept_each_are_dead() -> bool;
+        #[wasm_bindgen(js_name = map_each)]
+        fn map_each_lent(fs: &[&dyn Fn(u32) -> u32]) -> Vec<u32>;
+        #[wasm_bindgen(js_name = map_each_nested)]
+        fn map_each_nested_lent(fs: &[&[&dyn Fn(u32) -> u32]]) -> Vec<u32>;
+        #[wasm_bindgen(js_name = map_each)]
+        fn map_each_twice_lent(fs: Vec<&&dyn Fn(u32) -> u32>) -> Vec<u32>;
+        #[wasm_bindgen(js_name = keep_each)]
+        fn keep_each_lent(fs: &[&dyn Fn(u32) -> u32]);
+        #[wasm_bindgen(js_name = keep_each)]
+        fn keep_each_nested_lent(fs: &[&[&dyn Fn(u32) -> u32]]);
     }
 
     // Each lent closure is its own, and is JS's to call until the call that
@@ -1300,6 +1310,25 @@ mod slices {
 
         keep_each(vec![&add, &scale]);
         assert!(kept_each_are_dead());
+    }
+
+    // A sequence that is itself lent lends its closures for as long.
+    #[wasm_bindgen_test]
+    fn closures_lent_by_a_lent_sequence() {
+        let add = |x: u32| x + 1;
+        let scale = |x: u32| x * 10;
+        let fs: [&dyn Fn(u32) -> u32; 2] = [&add, &scale];
+        assert_eq!(map_each_lent(&fs), [4, 30]);
+        assert_eq!(map_each_nested_lent(&[&fs, &[], &fs[1..]]), [4, 30, 30]);
+        assert_eq!(map_each_twice_lent(vec![&fs[1], &fs[0]]), [30, 4]);
+        assert!(map_each_lent(&[]).is_empty());
+
+        keep_each_lent(&fs);
+        assert!(kept_each_are_dead());
+        keep_each_nested_lent(&[&fs]);
+        assert!(kept_each_are_dead());
+        // They were lent, so they are still Rust's to lend again.
+        assert_eq!(map_each_lent(&fs), [4, 30]);
     }
 
     #[wasm_bindgen_test]

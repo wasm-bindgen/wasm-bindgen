@@ -1,4 +1,4 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export function use_imports(): void;
+export function use_imports(value: any): void;

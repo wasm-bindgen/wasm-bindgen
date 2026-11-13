@@ -666,3 +666,104 @@ fn an_optional_borrowed_vector_lends_no_view() {
     );
     assert!(!is_opt_vec_view_under_slice_view(Some(&bytes)));
 }
+
+#[allow(clippy::ptr_arg)]
+#[wasm_bindgen(module = "tests/wasm/slice_modes.js")]
+extern "C" {
+    #[wasm_bindgen(js_name = js_keep)]
+    fn js_keep_ref(v: &&[u8]);
+    #[wasm_bindgen(js_name = js_keep)]
+    fn js_keep_opt_ref(v: Option<&&[u8]>);
+    #[wasm_bindgen(js_name = js_keep)]
+    fn js_keep_ref_opt(v: &Option<&[u8]>);
+    #[wasm_bindgen(js_name = js_keep)]
+    fn js_keep_null_ref_opt(v: Nullable<&Option<&[u8]>>);
+    #[wasm_bindgen(js_name = js_keep)]
+    fn js_keep_slices(v: &[&[u8]]);
+    #[wasm_bindgen(js_name = js_keep)]
+    fn js_keep_opt_slices(v: &[Option<&[u8]>]);
+    #[wasm_bindgen(js_name = js_keep)]
+    fn js_keep_vec_refs(v: &[&Vec<u8>]);
+    #[wasm_bindgen(js_name = js_keep)]
+    fn js_keep_deep(v: &[&[&[u8]]]);
+    #[wasm_bindgen(js_name = js_keep)]
+    fn js_keep_vec_of_slices(v: &Vec<&[u8]>);
+
+    #[wasm_bindgen(js_name = kindOf)]
+    fn kind_of_slice_ref(v: &&[u8]) -> String;
+    #[wasm_bindgen(vec = array, js_name = kindOf)]
+    fn kind_of_array_slice_ref(v: &&[u8]) -> String;
+    #[wasm_bindgen(js_name = kindOf)]
+    fn kind_of_array_opt_slice_ref_arg(#[wasm_bindgen(vec = array)] v: Option<&&[f64]>) -> String;
+    #[wasm_bindgen(slice = array, js_name = kindOf)]
+    fn kind_of_slice_ref_under_slice_array(v: &&[u8]) -> String;
+    #[wasm_bindgen(slice = view, js_name = isWasmMemoryView)]
+    fn is_ref_view_under_slice_view(v: &&[u8]) -> bool;
+}
+
+// A slice behind a second reference is a sized type as a borrowed vector is,
+// which a generic `&T` import may keep, and one that a lent sequence holds is
+// no more tied to its lender than one a given sequence holds. Each reaches JS
+// as a copy.
+#[wasm_bindgen_test]
+fn a_slice_behind_a_reference_lends_no_view() {
+    let mut bytes = vec![0x41u8; 64];
+    js_keep_ref(&&bytes[..]);
+    kept_is_a_copy(&mut bytes);
+
+    let mut bytes = vec![0x41u8; 64];
+    js_keep_opt_ref(Some(&&bytes[..]));
+    kept_is_a_copy(&mut bytes);
+
+    let mut bytes = vec![0x41u8; 64];
+    js_keep_generic(&&bytes[..]);
+    kept_is_a_copy(&mut bytes);
+    assert!(!is_view_under_generic_slice_view(&&bytes[..]));
+    assert_eq!(kind_of_array_generic_ref(&&bytes[..]), "Array");
+    assert_eq!(kind_of_array_generic_ref_arg(&&bytes[..]), "Array");
+
+    // An optional slice is the argument itself, and no longer once borrowed.
+    let mut bytes = vec![0x41u8; 64];
+    js_keep_ref_opt(&Some(&bytes));
+    kept_is_a_copy(&mut bytes);
+
+    let mut bytes = vec![0x41u8; 64];
+    js_keep_null_ref_opt(Nullable::Value(&Some(&bytes)));
+    kept_is_a_copy(&mut bytes);
+
+    let mut bytes = vec![0x41u8; 64];
+    js_keep_generic(&Some(&bytes[..]));
+    kept_is_a_copy(&mut bytes);
+
+    let mut bytes = vec![0x41u8; 64];
+    js_keep_slices(&[&bytes[..32], &bytes[32..]]);
+    kept_is_a_copy(&mut bytes);
+
+    let mut bytes = vec![0x41u8; 64];
+    js_keep_opt_slices(&[Some(&bytes), None]);
+    kept_is_a_copy(&mut bytes);
+
+    let mut bytes = vec![0x41u8; 64];
+    js_keep_vec_refs(&[&bytes, &bytes]);
+    kept_is_a_copy(&mut bytes);
+
+    let mut bytes = vec![0x41u8; 64];
+    js_keep_deep(&[&[&bytes[..8], &bytes[8..]], &[]]);
+    kept_is_a_copy(&mut bytes);
+
+    let mut bytes = vec![0x41u8; 64];
+    js_keep_vec_of_slices(&vec![&bytes[..]]);
+    kept_is_a_copy(&mut bytes);
+
+    // It takes the modes a borrowed vector does: `vec`, and no `slice`.
+    let bytes = [1u8, 2];
+    assert_eq!(kind_of_slice_ref(&&bytes[..]), "Uint8Array");
+    assert_eq!(kind_of_array_slice_ref(&&bytes[..]), "Array");
+    assert_eq!(kind_of_array_opt_slice_ref_arg(Some(&&[1.5][..])), "Array");
+    assert_eq!(kind_of_array_opt_slice_ref_arg(None), "undefined");
+    assert_eq!(
+        kind_of_slice_ref_under_slice_array(&&bytes[..]),
+        "Uint8Array"
+    );
+    assert!(!is_ref_view_under_slice_view(&&bytes[..]));
+}

@@ -21,14 +21,14 @@ error[E0277]: the trait bound `BadType: IntoJsResult` is not satisfied
    |                        ^^^^^^^ the trait `IntoWasmAbi` is not implemented for `BadType`
    |
    = help: the following other types implement trait `IntoWasmAbi`:
-             &&Box<str>
-             &&Cow<'_, str>
-             &&JsString
-             &&String
-             &&str
+             &&'a T
              &'__wbg_ref AggregateError
              &'__wbg_ref Array<T>
              &'__wbg_ref ArrayBuffer
+             &'__wbg_ref ArrayBufferOptions
+             &'__wbg_ref ArrayTuple<T>
+             &'__wbg_ref AsyncDisposableStack
+             &'__wbg_ref AsyncGenerator<T>
            and $N others
    = note: required for `BadType` to implement `IntoJsResult`
 

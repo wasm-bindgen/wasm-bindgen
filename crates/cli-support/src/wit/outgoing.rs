@@ -3,6 +3,7 @@ use crate::wasm_conventions::get_function_table_entry;
 use crate::wit::{AdapterType, ClosureDtor, Instruction, InstructionBuilder, OptionKind};
 use crate::wit::{CellCount, CellLayout, InstructionData, StackChange};
 use anyhow::{bail, Error};
+use std::borrow::Cow;
 use walrus::{ExportId, ValType};
 use wasm_bindgen_shared::identifier::to_valid_ident;
 
@@ -295,7 +296,7 @@ impl InstructionBuilder<'_, '_> {
             }
 
             // A borrowed borrow or scalar crosses as the value itself, by copy.
-            Descriptor::Ref(d) => self.outgoing_ref(mutable, d)?,
+            Descriptor::Ref(d) => self.outgoing_ref(mutable, &Self::behind_second_ref(d))?,
             Descriptor::I8
             | Descriptor::U8
             | Descriptor::I16
@@ -790,7 +791,9 @@ impl InstructionBuilder<'_, '_> {
                     &[AdapterType::Vector(kind).option_kind(option_kind)],
                 );
             }
-            Descriptor::Ref(d) => self.outgoing_option_ref(mutable, d, option_kind)?,
+            Descriptor::Ref(d) => {
+                self.outgoing_option_ref(mutable, &Self::behind_second_ref(d), option_kind)?
+            }
             Descriptor::Option(d) => {
                 if option_kind != OptionKind::Nullable {
                     bail!("unsupported nested optional type for calling JS function from Rust: {arg:?}");
@@ -1043,6 +1046,16 @@ impl InstructionBuilder<'_, '_> {
             SeqValue::View => SeqValue::Copy,
             mode => mode,
         })
+    }
+
+    /// What a reference behind another reference lends. A slice there is no
+    /// longer the argument itself: the reference to it is a sized type as a
+    /// borrowed vector is, so it's read as one.
+    fn behind_second_ref(arg: &Descriptor) -> Cow<'_, Descriptor> {
+        match arg {
+            Descriptor::Slice(elem) => Cow::Owned(Descriptor::Vector(elem.clone())),
+            arg => Cow::Borrowed(arg),
+        }
     }
 
     /// The mode a borrowed numeric vector reaches JS in. Only the unsized
