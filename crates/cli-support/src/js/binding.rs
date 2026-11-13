@@ -1805,6 +1805,15 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             )
             .unwrap();
         }
+        if self.stored {
+            // An instance that was freed or moved, which a sequence holding
+            // one twice makes of it where it's taken the second time.
+            writeln!(
+                assert,
+                "if ({arg}.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');"
+            )
+            .unwrap();
+        }
         assert.push_str(&self.not_moved_assert(arg));
         assert
     }

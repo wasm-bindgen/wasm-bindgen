@@ -66,6 +66,53 @@ exports.rejectedArguments = (memory) => {
     assert.strictEqual(live(), before);
 };
 
+exports.rejectedInstances = () => {
+    const before = live();
+    // An instance that was freed isn't one any more, which leaves the rest
+    // with JS.
+    const a = new wasm.Kept(1);
+    const c = new wasm.Kept(3);
+    a.free();
+    assert.throws(() => wasm.rejected_points([a, c]), wrongType);
+    assert.throws(() => wasm.rejected_maybe_points([c, a]), wrongType);
+    assert.throws(() => wasm.rejected_nested_points([[c], [a]]), wrongType);
+    assert.strictEqual(c.value, 3);
+
+    // The same instance twice is only seen where it's taken a second time,
+    // which frees the ones taken and leaves the rest with JS.
+    const b = new wasm.Kept(2);
+    assert.throws(() => wasm.rejected_points([b, b, c]), wrongType);
+    assert.strictEqual(b.__wbg_ptr, 0);
+    assert.strictEqual(c.value, 3);
+    assert.strictEqual(live(), before + 1);
+    const d = new wasm.Kept(4);
+    assert.throws(() => wasm.rejected_nested_points([[d], [c, d]]), wrongType);
+    assert.strictEqual(d.__wbg_ptr, 0);
+    assert.strictEqual(c.__wbg_ptr, 0);
+    assert.strictEqual(live(), before);
+};
+
+exports.rejectedByRust = () => {
+    const before = live();
+    // Only Rust knows an instance it has borrowed, and it's then handed
+    // every element, dropping them all.
+    for (const rejected of [
+        (a, c) => wasm.rejected_points([a, c]),
+        (a, c) => wasm.rejected_maybe_points([a, undefined, c]),
+        (a, c) => wasm.rejected_nested_points([[a], [c]]),
+    ]) {
+        const a = new wasm.Kept(1);
+        const c = new wasm.Kept(3);
+        assert.throws(
+            () => a.whileBorrowed(() => rejected(a, c)),
+            /while it was borrowed/,
+        );
+        assert.strictEqual(a.__wbg_ptr, 0);
+        assert.strictEqual(c.__wbg_ptr, 0);
+        assert.strictEqual(live(), before);
+    }
+};
+
 let returned = [];
 
 exports.jsBadPoints = () => {

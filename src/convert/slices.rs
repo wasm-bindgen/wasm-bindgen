@@ -435,8 +435,9 @@ impl WasmSlice {
     }
 
     /// Takes an encoded sequence from JS, converting each element from its
-    /// cell's ABI with `FromWasmAbi::try_from_abi`. A rejected element stops
-    /// the decode, dropping the buffer and every element converted so far.
+    /// cell's ABI with `FromWasmAbi::try_from_abi`. Every cell is received
+    /// whether or not one before it was rejected, as Rust owns them all, and
+    /// a rejected element drops the buffer and every other element.
     ///
     /// # Safety
     ///
@@ -448,9 +449,19 @@ impl WasmSlice {
             len: self.len.into_usize(),
             abi: PhantomData,
         };
-        (0..cells.len)
-            .map(|i| T::try_from_abi(T::Abi::read_cell(cells.ptr.add(i * T::Abi::CELL_SIZE))))
-            .collect()
+        let mut elems = Vec::with_capacity(cells.len);
+        let mut rejected = None;
+        for i in 0..cells.len {
+            match T::try_from_abi(T::Abi::read_cell(cells.ptr.add(i * T::Abi::CELL_SIZE))) {
+                Ok(elem) if rejected.is_none() => elems.push(elem),
+                Ok(_) => {}
+                Err(msg) => rejected = rejected.or(Some(msg)),
+            }
+        }
+        match rejected {
+            Some(msg) => Err(msg),
+            None => Ok(elems.into_boxed_slice()),
+        }
     }
 }
 

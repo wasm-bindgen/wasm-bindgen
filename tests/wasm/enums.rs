@@ -352,7 +352,12 @@ pub fn outer_union_vec_len(v: Vec<OuterUnion>) -> usize {
 #[wasm_bindgen_test]
 fn test_union_vec_rejects_an_element() {
     assert_eq!(js_outer_union_vec_len(false).unwrap(), 3);
-    assert!(js_outer_union_vec_len(true).is_err());
+    // The elements after the rejected one are dropped with those before it.
+    let live = wasm_bindgen::externref_heap_live_count();
+    let rejected = js_outer_union_vec_len(true);
+    assert!(rejected.is_err());
+    drop(rejected);
+    assert_eq!(wasm_bindgen::externref_heap_live_count(), live);
 }
 
 #[wasm_bindgen_test]

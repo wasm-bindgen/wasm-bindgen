@@ -83,7 +83,7 @@ exports.js_union_vec_roundtrip = v => {
 };
 exports.js_union_list = () => ['green', 'custom', 7];
 exports.js_outer_union_vec_len = withBadElement =>
-    wasm.outer_union_vec_len(withBadElement ? ['loading', true] : ['loading', 'foo', 3]);
+    wasm.outer_union_vec_len(withBadElement ? ['loading', true, 'foo', {}] : ['loading', 'foo', 3]);
 
 // Async round-trip: returning from an `async function` produces a
 // `Promise<Union>` on the JS side; awaiting it on the Rust import side

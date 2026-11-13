@@ -30,6 +30,11 @@ impl Kept {
         LIVE.load(Ordering::Relaxed)
     }
 
+    #[wasm_bindgen(js_name = whileBorrowed)]
+    pub fn while_borrowed(&self, f: &js_sys::Function) -> Result<JsValue, JsValue> {
+        f.call0(&JsValue::NULL)
+    }
+
     #[wasm_bindgen(js_name = consumeWith)]
     pub fn consume_with(self, _names: Vec<String>) {}
 }
@@ -115,6 +120,10 @@ pub fn given_maybe_values(n: u32) -> Vec<Option<JsValue>> {
 extern "C" {
     #[wasm_bindgen(js_name = rejectedArguments)]
     fn rejected_arguments(memory: JsValue);
+    #[wasm_bindgen(js_name = rejectedInstances)]
+    fn rejected_instances();
+    #[wasm_bindgen(js_name = rejectedByRust)]
+    fn rejected_by_rust();
     #[wasm_bindgen(js_name = failedDecodes)]
     fn failed_decodes(memory: JsValue);
     #[wasm_bindgen(catch, js_name = jsBadPoints)]
@@ -129,6 +138,16 @@ extern "C" {
 #[wasm_bindgen_test]
 fn arguments() {
     rejected_arguments(wasm_bindgen::memory());
+}
+
+#[wasm_bindgen_test]
+fn arguments_freed_or_repeated() {
+    rejected_instances();
+}
+
+#[wasm_bindgen_test]
+fn arguments_rust_rejects() {
+    rejected_by_rust();
 }
 
 #[wasm_bindgen_test]

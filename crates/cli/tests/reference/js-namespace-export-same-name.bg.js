@@ -61,6 +61,7 @@ export class NamespaceConsumer {
             const e0 = points[n0];
             if (!(e0 instanceof bar__Point)) throw new Error('array contains a value of the wrong type');
             _assertClass(e0, bar__Point);
+            if (e0.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
         }
         let j0 = 0, len0, ptr0;
         try {
@@ -69,6 +70,7 @@ export class NamespaceConsumer {
             for (; j0 < len0; j0++) {
                 const e0 = points[j0];
                 _assertClass(e0, bar__Point);
+                if (e0.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
                 var ptr1 = e0.__destroy_into_raw();
                 const view0 = getDataViewMemory0();
                 const p0 = ptr0 + j0 * 4;
@@ -119,6 +121,7 @@ export class NamespaceConsumer {
             const e0 = points[n0];
             if (!(e0 instanceof foo__Point)) throw new Error('array contains a value of the wrong type');
             _assertClass(e0, foo__Point);
+            if (e0.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
         }
         let j0 = 0, len0, ptr0;
         try {
@@ -127,6 +130,7 @@ export class NamespaceConsumer {
             for (; j0 < len0; j0++) {
                 const e0 = points[j0];
                 _assertClass(e0, foo__Point);
+                if (e0.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
                 var ptr1 = e0.__destroy_into_raw();
                 const view0 = getDataViewMemory0();
                 const p0 = ptr0 + j0 * 4;
@@ -288,6 +292,7 @@ export class NamespaceConsumer {
             const e0 = bar_points[n0];
             if (!(e0 instanceof bar__Point)) throw new Error('array contains a value of the wrong type');
             _assertClass(e0, bar__Point);
+            if (e0.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
         }
         let j0 = 0, len0, ptr0;
         try {
@@ -296,6 +301,7 @@ export class NamespaceConsumer {
             for (; j0 < len0; j0++) {
                 const e0 = bar_points[j0];
                 _assertClass(e0, bar__Point);
+                if (e0.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
                 var ptr1 = e0.__destroy_into_raw();
                 const view0 = getDataViewMemory0();
                 const p0 = ptr0 + j0 * 4;
@@ -336,6 +342,7 @@ export class NamespaceConsumer {
             const e0 = foo_points[n0];
             if (!(e0 instanceof foo__Point)) throw new Error('array contains a value of the wrong type');
             _assertClass(e0, foo__Point);
+            if (e0.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
         }
         let j0 = 0, len0, ptr0;
         try {
@@ -344,6 +351,7 @@ export class NamespaceConsumer {
             for (; j0 < len0; j0++) {
                 const e0 = foo_points[j0];
                 _assertClass(e0, foo__Point);
+                if (e0.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
                 var ptr1 = e0.__destroy_into_raw();
                 const view0 = getDataViewMemory0();
                 const p0 = ptr0 + j0 * 4;
