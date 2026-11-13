@@ -1335,16 +1335,17 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
                 return true;
             }
             match &stmt.kind {
-                StmtKind::Check {
-                    inputs_only: true,
-                    repeated,
-                    ..
-                } => {
+                StmtKind::Raw(_) => true,
+                StmtKind::Check { repeated, .. } => {
                     checks = true;
                     code.push_str(&render(std::slice::from_ref(stmt)));
                     !repeated
                 }
-                _ => true,
+                // What a check reads of its instruction's.
+                StmtKind::Decl { .. } => {
+                    code.push_str(&render(std::slice::from_ref(stmt)));
+                    true
+                }
             }
         });
         if checks {
@@ -2737,7 +2738,7 @@ fn instruction(
                 value.push(format!("{val} !== {U32_NULL_SENTINEL}"));
             }
             let value = value.join(" && ");
-            js.prelude(&format!("if ({value}) {{ _assertChar({val}); }}"));
+            js.check(&format!("if ({value}) {{ _assertChar({val}); }}"));
             js.push(val);
         }
 

@@ -79,6 +79,13 @@ export function modes(v) {
  * @returns {string[] | undefined}
  */
 export function opt_chars(v) {
+    if (!isLikeNone(v)) {
+        for (let n0 = 0; n0 < v.length; n0++) {
+            const e0 = v[n0];
+            const char1 = e0.codePointAt(0);
+            _assertChar(char1);
+        }
+    }
     let ptr0 = 0, len0 = 0;
     try {
         if (!isLikeNone(v)) {

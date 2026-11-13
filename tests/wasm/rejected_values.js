@@ -44,7 +44,15 @@ exports.rejectedArguments = (memory) => {
     assert.throws(() => a.consumeWith(['x', 1]), wrongType);
     kept();
 
-    // A sequence held in a sequence is one.
+    // A character is checked ahead of the points being taken.
+    for (const c of ['\uD800', 5, {}]) {
+        assert.throws(() => wasm.rejected_points_then_chars([a], b, ['x', c]));
+        assert.throws(() => wasm.rejected_points_then_maybe_chars([a], [undefined, c]));
+        kept();
+    }
+    assert.throws(() => wasm.rejected_points_then_chars([a], b, [undefined]));
+    kept();
+
     assert.throws(() => wasm.rejected_point_then_nested(a, [['x'], 5]), wrongType);
     assert.throws(() => wasm.rejected_point_then_nested(a, [['x'], 'yz']), wrongType);
     assert.throws(() => wasm.rejected_point_then_nested(a, [undefined]), wrongType);

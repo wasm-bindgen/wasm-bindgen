@@ -108,6 +108,12 @@ pub fn rejected_nested_names_then_point(_a: Vec<Vec<String>>, _b: Kept) {}
 pub fn rejected_points_then_point(_a: Vec<Kept>, _b: Kept) {}
 
 #[wasm_bindgen]
+pub fn rejected_points_then_chars(_a: Vec<Kept>, _b: &Kept, _c: Vec<char>) {}
+
+#[wasm_bindgen]
+pub fn rejected_points_then_maybe_chars(_a: Vec<Kept>, _b: Vec<Option<char>>) {}
+
+#[wasm_bindgen]
 pub fn rejected_named(_a: Kept, _names: Vec<String>) -> String {
     String::new()
 }
