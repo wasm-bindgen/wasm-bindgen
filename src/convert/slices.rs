@@ -441,7 +441,7 @@ impl WasmSlice {
     /// whether or not one before it was rejected or its conversion unwound,
     /// as Rust owns them all. A rejected element drops the buffer and every
     /// other element, and the first conversion to unwind goes on unwinding
-    /// once the rest are received.
+    /// once the rest are received and dropped, as does an element's drop.
     ///
     /// # Safety
     ///
@@ -458,15 +458,28 @@ impl WasmSlice {
         let mut unwound = None;
         for i in 0..cells.len {
             let cell = cells.ptr.add(i * T::Abi::CELL.size());
-            match catch_conversion(|| unsafe { T::try_from_abi(T::Abi::read_cell(cell)) }) {
-                Ok(Ok(elem)) if rejected.is_none() && unwound.is_none() => elems.push(elem),
-                Ok(Ok(_)) => {}
+            let failed = rejected.is_some() || unwound.is_some();
+            // Past a failure the element is dropped where it's converted.
+            let converted = catch_conversion(|| {
+                unsafe { T::try_from_abi(T::Abi::read_cell(cell)) }
+                    .map(|elem| (!failed).then_some(elem))
+            });
+            match converted {
+                Ok(Ok(Some(elem))) => elems.push(elem),
+                Ok(Ok(None)) => {}
                 Ok(Err(msg)) => rejected = rejected.or(Some(msg)),
                 Err(payload) => unwound = unwound.or(Some(payload)),
             }
         }
+        if rejected.is_some() || unwound.is_some() {
+            for elem in mem::take(&mut elems) {
+                if let Err(payload) = catch_conversion(|| drop(elem)) {
+                    unwound = unwound.or(Some(payload));
+                }
+            }
+        }
         if let Some(payload) = unwound {
-            drop((elems, cells));
+            drop(cells);
             resume_conversion(payload);
         }
         match rejected {
