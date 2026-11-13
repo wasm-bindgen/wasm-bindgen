@@ -528,6 +528,14 @@ extern "C" {
     fn kind_of_array_vec_ref_arg(#[wasm_bindgen(vec = array)] v: &Box<[f64]>) -> String;
     #[wasm_bindgen(slice = view, js_name = isWasmMemoryView)]
     fn is_view_under_slice_view(v: &Vec<u8>) -> bool;
+    #[wasm_bindgen(experimental_generic_mono, vec = array, js_name = kindOf)]
+    fn kind_of_array_generic_ref<T: RefIntoWasmAbi>(v: &T) -> String;
+    #[wasm_bindgen(experimental_generic_mono, js_name = kindOf)]
+    fn kind_of_array_generic_ref_arg<T: RefIntoWasmAbi>(
+        #[wasm_bindgen(vec = array)] v: &T,
+    ) -> String;
+    #[wasm_bindgen(experimental_generic_mono, slice = view, js_name = isWasmMemoryView)]
+    fn is_view_under_generic_slice_view<T: RefIntoWasmAbi>(v: &T) -> bool;
 }
 
 // A view is the unsized `&[T]` argument alone. A borrowed vector is a sized
@@ -580,4 +588,12 @@ fn a_borrowed_vector_lends_no_view() {
     assert_eq!(kind_of_array_vec_ref(&bytes), "Array");
     assert_eq!(kind_of_array_vec_ref_arg(&vec![1.5].into()), "Array");
     assert!(!is_view_under_slice_view(&bytes));
+
+    // A mode reaches a generic `&T` as it does the vector it stands for.
+    assert_eq!(kind_of_array_generic_ref(&bytes), "Array");
+    assert_eq!(kind_of_array_generic_ref_arg(&bytes), "Array");
+    let floats: Box<[f64]> = vec![1.5].into();
+    assert_eq!(kind_of_array_generic_ref(&floats), "Array");
+    assert_eq!(kind_of_array_generic_ref(&7u32), "Number");
+    assert!(!is_view_under_generic_slice_view(&bytes));
 }

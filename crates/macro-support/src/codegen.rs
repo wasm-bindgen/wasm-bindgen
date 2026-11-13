@@ -3879,17 +3879,26 @@ impl ast::ImportFunction {
             };
 
             let (abi, into_abi, describe) = match &ref_elem {
-                Some(elem) => (
-                    quote_spanned! { ty_span =>
-                        <#elem as #wasm_bindgen::convert::RefIntoWasmAbi>::Abi
-                    },
-                    quote_spanned! { ty_span =>
-                        <#elem as #wasm_bindgen::convert::RefIntoWasmAbi>::ref_into_abi
-                    },
-                    quote_spanned! { ty_span =>
-                        <#elem as #wasm_bindgen::convert::RefIntoWasmAbi>::describe_ref
-                    },
-                ),
+                Some(elem) => {
+                    // The words `seq_mode_describe_ty` wraps around a type,
+                    // ahead of a describe that isn't one's.
+                    let modes = seq_mode_words(ty, &arg.seq_modes).into_iter().rev();
+                    (
+                        quote_spanned! { ty_span =>
+                            <#elem as #wasm_bindgen::convert::RefIntoWasmAbi>::Abi
+                        },
+                        quote_spanned! { ty_span =>
+                            <#elem as #wasm_bindgen::convert::RefIntoWasmAbi>::ref_into_abi
+                        },
+                        quote_spanned! { ty_span =>
+                            #(
+                                #wasm_bindgen::describe::inform(#wasm_bindgen::describe::SEQ_MODE);
+                                #wasm_bindgen::describe::inform(#modes);
+                            )*
+                            <#elem as #wasm_bindgen::convert::RefIntoWasmAbi>::describe_ref()
+                        },
+                    )
+                }
                 None => {
                     let describe_ty = respan_all(
                         seq_mode_describe_ty(wasm_bindgen, ty, &arg.seq_modes).to_token_stream(),
@@ -3903,7 +3912,7 @@ impl ast::ImportFunction {
                             <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>::into_abi
                         },
                         quote_spanned! { ty_span =>
-                            <#describe_ty as #wasm_bindgen::describe::WasmDescribe>::describe
+                            <#describe_ty as #wasm_bindgen::describe::WasmDescribe>::describe()
                         },
                     )
                 }
@@ -3916,7 +3925,7 @@ impl ast::ImportFunction {
             });
             all_prim_names.extend(names);
             describe_args.push(quote_spanned! { ty_span =>
-                #describe();
+                #describe;
             });
         }
 
@@ -6085,7 +6094,15 @@ fn seq_mode_describe_ty(
     modes: &[ast::SeqMode],
 ) -> syn::Type {
     let mut describe = ty.clone();
-    for mode in modes {
+    for word in seq_mode_words(ty, modes) {
+        describe = parse_quote! { #wasm_bindgen::describe::WasmDescribeSeqMode<#describe, #word> };
+    }
+    describe
+}
+
+/// The word of each mode that reaches the argument, innermost first.
+fn seq_mode_words(ty: &syn::Type, modes: &[ast::SeqMode]) -> Vec<u32> {
+    let word = |mode: &ast::SeqMode| {
         let value = match mode.value {
             ast::SeqValue::View => shared::tys::SEQ_MODE_VIEW,
             ast::SeqValue::Copy => shared::tys::SEQ_MODE_COPY,
@@ -6095,7 +6112,7 @@ fn seq_mode_describe_ty(
             {
                 shared::tys::SEQ_MODE_ARRAY
             }
-            ast::SeqValue::SliceToArray => continue,
+            ast::SeqValue::SliceToArray => return None,
         };
         let key = match mode.key {
             ast::SeqKey::Slice => 0,
@@ -6106,10 +6123,9 @@ fn seq_mode_describe_ty(
         } else {
             0
         };
-        let word = value | key | explicit;
-        describe = parse_quote! { #wasm_bindgen::describe::WasmDescribeSeqMode<#describe, #word> };
-    }
-    describe
+        Some(value | key | explicit)
+    };
+    modes.iter().filter_map(word).collect()
 }
 
 /// Detects whether a type is a raw `&dyn Fn(...)` or `&mut dyn FnMut(...)` argument.

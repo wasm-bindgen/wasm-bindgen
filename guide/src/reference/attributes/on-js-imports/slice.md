@@ -134,7 +134,7 @@ log_items(&["a".to_string()]);             // fresh Array of strings
 ```
 
 A generic `Vec<T>` argument resolves its `vec` mode at each instantiation in
-the same way.
+the same way, as does a `&T` argument instantiated as a borrowed vector.
 
 Without `experimental_generic_mono`, a generic slice's elements must be JS
 types, so it always arrives as a fresh `Array`.
