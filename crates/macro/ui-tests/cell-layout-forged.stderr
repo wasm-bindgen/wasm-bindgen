@@ -1,26 +1,11 @@
 error[E0308]: mismatched types
   --> ui-tests/cell-layout-forged.rs:14:36
    |
-14 |     const CELL: CellLayout<Self> = <u8 as WasmAbi>::CELL;
-   |                                    ^^^^^^^^^^^^^^^^^^^^^ expected `CellLayout<Borrowed>`, found `CellLayout<u8>`
+14 |     const CELL: CellLayout<Self> = <u32 as WasmAbi>::CELL;
+   |                                    ^^^^^^^^^^^^^^^^^^^^^^ expected `CellLayout<Borrowed>`, found `CellLayout<u32>`
    |
    = note: expected struct `CellLayout<Borrowed>`
-              found struct `CellLayout<u8>`
-
-error[E0277]: the trait bound `u8: WasmAbi` is not satisfied
-  --> ui-tests/cell-layout-forged.rs:14:37
-   |
-14 |     const CELL: CellLayout<Self> = <u8 as WasmAbi>::CELL;
-   |                                     ^^ the trait `WasmPrimitive` is not implemented for `u8`
-   |
-   = help: the following other types implement trait `WasmPrimitive`:
-             f32
-             f64
-             i32
-             i64
-             u32
-             u64
-   = note: required for `u8` to implement `WasmAbi`
+              found struct `CellLayout<u32>`
 
 error[E0133]: call to unsafe function `CellLayout::<A>::new` is unsafe and requires unsafe function or block
   --> ui-tests/cell-layout-forged.rs:33:36

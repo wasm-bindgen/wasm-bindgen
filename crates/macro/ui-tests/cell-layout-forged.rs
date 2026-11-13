@@ -11,7 +11,7 @@ impl WasmAbi for Borrowed {
     type Prim3 = ();
     type Prim4 = ();
 
-    const CELL: CellLayout<Self> = <u8 as WasmAbi>::CELL;
+    const CELL: CellLayout<Self> = <u32 as WasmAbi>::CELL;
 
     fn split(self) -> (u64, (), (), ()) {
         (self.0, (), (), ())
