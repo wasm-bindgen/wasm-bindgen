@@ -91,6 +91,7 @@ pub mod static_string;
 pub mod string_vecs;
 pub mod struct_vecs;
 pub mod structural;
+pub mod third_party_abi;
 pub mod truthy_falsy;
 pub mod try_from_js_value;
 #[cfg(all(panic = "unwind", feature = "std"))]
