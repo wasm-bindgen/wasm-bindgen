@@ -31,8 +31,14 @@ the wrong type throws.
 Borrowed slices (`&[T]`) can be passed to imported JS functions for every
 element type that can be passed by reference on its own, which exported Rust
 types can't be, and so can a borrowed vector (`&Vec<T>`, `&Box<[T]>`), which
-reaches JS as a copy; see
+reaches JS as a copy and may be optional (`Option<&Vec<T>>`); see
 [`slice` and `vec`](../attributes/on-js-imports/slice.md).
+
+A reference inside a borrowed sequence is lent as itself, so its elements
+can be references (`&[&JsValue]`, `&[Option<&str>]`) and sequences in turn
+(`&[&[u8]]`, `&[&Vec<String>]`, `&[Option<Vec<u32>>]`), to any depth. Only
+the `&[T]` argument itself is a view of wasm memory: a slice of numbers that
+is nested, or behind a second reference (`&&[u8]`), reaches JS as a copy.
 
 [You can also pass boxed slices of numbers to JS](boxed-number-slices.html),
 except that they're converted to typed arrays (`Uint8Array`, `Int32Array`, etc.)

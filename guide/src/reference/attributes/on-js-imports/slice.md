@@ -8,7 +8,7 @@ receives:
 | key | shapes | values | default |
 |---|---|---|---|
 | `slice` | `&[T]`, `&mut [T]`, `Clamped<&[u8]>`, or an `Option` of one | `view`, `copy`, `array` | `view` |
-| `vec` | `Vec<T>`, `Box<[T]>`, `Clamped<Vec<u8>>`, or an `Option` of one, and `&Vec<T>`, `&Box<[T]>` | `copy`, `array` | `copy` |
+| `vec` | `Vec<T>`, `Box<[T]>`, `Clamped<Vec<u8>>`, `&Vec<T>`, `&Box<[T]>`, `&&[T]`, or an `Option` of one | `copy`, `array` | `copy` |
 
 * `view`: a live typed array over wasm memory.
 * `copy`: a fresh typed array.
@@ -17,8 +17,11 @@ receives:
 Owned data is freed once the call returns, so it is never a view. Nor is a
 borrowed vector (`&Vec<T>`, `&Box<[T]>`): a view is the `&[T]` argument
 alone, and a borrowed vector is copied as the vector is, with its storage
-left to Rust. Nor is a slice of numbers that another sequence holds, such as each `&[u8]` of a
-`Vec<&[u8]>`: only the argument itself is a view, and these are copied. A
+left to Rust, whether or not it is optional (`Option<&Vec<T>>`). Nor is a
+slice behind a second reference (`&&[T]`), which is a sized type as a
+borrowed vector is, and takes `vec` as one does. Nor is a slice of numbers
+that another sequence holds, such as each `&[u8]` of a `Vec<&[u8]>` or of a
+`&[&[u8]]`: only the argument itself is a view, and these are copied. A
 sequence can't hold a `&mut [T]`, whose copy JS's writes would never leave.
 
 Only numeric elements have a choice. A sequence of anything else
@@ -26,7 +29,9 @@ Only numeric elements have a choice. A sequence of anything else
 JS types) always arrives as a fresh `Array`, so `array` is the only mode
 that fits it. Every [`JsStringLike`](experimental_generic_mono.md#string-bounds)
 shape is a slice element, `&String`, `&Box<str>`, `&Cow<str>` and
-`&JsString` included.
+`&JsString` included, as is a reference to anything that can be passed by
+reference on its own: a `&[&JsValue]`, `&[Option<&str>]` or `&[&[String]]`
+lends each element as itself.
 
 Borrowed slices of exported structs aren't supported; pass a `Vec<T>`
 instead, which moves the elements to JS.
@@ -134,7 +139,8 @@ log_items(&["a".to_string()]);             // fresh Array of strings
 ```
 
 A generic `Vec<T>` argument resolves its `vec` mode at each instantiation in
-the same way, as does a `&T` argument instantiated as a borrowed vector.
+the same way, as does a `&T` argument instantiated as a borrowed vector or
+as a slice (`T = &[u8]`), which is the same copy.
 
 Without `experimental_generic_mono`, a generic slice's elements must be JS
 types, so it always arrives as a fresh `Array`.

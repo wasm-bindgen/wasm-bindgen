@@ -565,6 +565,9 @@ different signatures.
 A bare `&T` argument is supported, declared with the bound
 `T: RefIntoWasmAbi`, which holds for `JsValue` and JS handle types, `String`,
 `str`, numbers, `bool`, `char`, and `Option<T>` or `Nullable<T>` of any of
-them; a borrowed number crosses by copy. Passing `&SomeStruct` for a plain
-Rust struct is rejected, since there is no `&T` ABI representation for it;
-take the value by value, or pass a JS type.
+them; a borrowed number crosses by copy. It also holds for a `Vec<T>` or
+`Box<[T]>` of these, and for a reference to one (`T = &str`, `T = &[u8]`),
+which is lent as itself; a sequence of numbers behind the `&T` reaches JS as
+a copy. Passing `&SomeStruct` for a plain Rust struct is rejected, since
+there is no `&T` ABI representation for it; take the value by value, or pass
+a JS type.

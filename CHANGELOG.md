@@ -26,7 +26,11 @@
   sequence, such as each `&[u8]` of a `Vec<&[u8]>`, reaches JS as a copy
   and never as a view of wasm memory. A borrowed vector (`&Vec<T>`,
   `&Box<[T]>`) is an imported function's argument too, reaching JS as a
-  copy, as the vector does. Three elements don't cross: `()`, which crosses
+  copy, as the vector does, and may be optional (`Option<&Vec<T>>`). A
+  reference that a borrowed sequence holds is lent as itself, so `&[&T]`,
+  `&[Option<&T>]` and `&[&[T]]` cross wherever `&T` does, to any depth, and
+  a slice of numbers behind a second reference (`&&[u8]`) is a copy as a
+  nested one is. Three elements don't cross: `()`, which crosses
   as nothing, a `&mut [T]`, whose copy JS's writes would never leave, and a
   borrowed closure (`&dyn Fn()`) in a value Rust returns or converts with
   `JsValue::from`, which outlives the call it is lent for.
