@@ -447,6 +447,11 @@ impl WasmSlice {
     ///
     /// `self` must be `len` cells of `T::Abi` that JS allocated at the cell's
     /// alignment, for Rust to own.
+    // Where a panic aborts none is caught, so what keeps one can't be reached.
+    #[cfg_attr(
+        not(all(feature = "std", panic = "unwind")),
+        allow(unreachable_code, unused_assignments)
+    )]
     pub unsafe fn try_decode<T: FromWasmAbi>(self) -> Result<Box<[T]>, &'static str> {
         let cells = Cells::<T::Abi> {
             ptr: self.ptr.into_usize() as *mut u8,
