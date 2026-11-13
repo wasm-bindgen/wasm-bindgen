@@ -264,3 +264,99 @@ fn containers() {
     let map = nullable_map();
     assert_eq!(map.size(), 2);
 }
+
+// An owned vector crosses by its element's own ABI, as a slice does.
+mod owned {
+    use super::*;
+
+    #[wasm_bindgen(module = "tests/wasm/nullable_elements.js")]
+    extern "C" {
+        // No JS class backs it, so its values are whatever JS passes.
+        type Opaque;
+
+        #[wasm_bindgen(js_name = describe)]
+        fn opt_f64s(v: Vec<Option<f64>>) -> String;
+        #[wasm_bindgen(js_name = describe)]
+        fn nullable_strings(v: Vec<Nullable<String>>) -> String;
+        #[wasm_bindgen(js_name = describe)]
+        fn nullable_opt_u8s(v: Vec<Nullable<Option<u8>>>) -> String;
+        #[wasm_bindgen(js_name = echo)]
+        fn echo_opt_f64s(v: Vec<Option<f64>>) -> Vec<Option<f64>>;
+        #[wasm_bindgen(js_name = echo)]
+        fn echo_nullable_strings(v: Vec<Nullable<String>>) -> Vec<Nullable<String>>;
+        #[wasm_bindgen(js_name = echo)]
+        fn echo_opt_opaques(v: Vec<Option<Opaque>>) -> Vec<Option<Opaque>>;
+        #[wasm_bindgen(js_name = echo)]
+        fn echo_nullable_opaques(v: Vec<Nullable<Opaque>>) -> Vec<Nullable<Opaque>>;
+        #[wasm_bindgen(js_name = echo)]
+        fn echo_nullable_opt_opaques(
+            v: Vec<Nullable<Option<Opaque>>>,
+        ) -> Vec<Nullable<Option<Opaque>>>;
+        #[wasm_bindgen(js_name = describe)]
+        fn describe_nullable_opt_opaques(v: Vec<Nullable<Option<Opaque>>>) -> String;
+        #[wasm_bindgen(js_name = echo)]
+        fn echo_opt_byte_vecs(v: Vec<Option<Vec<u8>>>) -> Vec<Option<Vec<u8>>>;
+    }
+
+    fn opaque(v: &str) -> Opaque {
+        JsValue::from(v).unchecked_into()
+    }
+
+    fn text(v: &Opaque) -> String {
+        v.unchecked_ref::<JsValue>().as_string().unwrap()
+    }
+
+    #[wasm_bindgen_test]
+    fn vectors() {
+        assert_eq!(
+            opt_f64s(vec![Some(1.5), None, Some(-2.0)]),
+            "Array:[1.5,\"undefined\",-2]"
+        );
+        assert_eq!(
+            nullable_strings(vec![Nullable::Value("a".to_string()), Nullable::Null]),
+            "Array:[\"a\",null]"
+        );
+        assert_eq!(
+            nullable_opt_u8s(vec![
+                Nullable::Value(Some(7)),
+                Nullable::Null,
+                Nullable::Value(None)
+            ]),
+            "Array:[7,null,\"undefined\"]"
+        );
+        assert_eq!(echo_opt_f64s(vec![Some(1.5), None]), vec![Some(1.5), None]);
+        assert_eq!(
+            echo_nullable_strings(vec![Nullable::Null, Nullable::Value("a".to_string())]),
+            vec![Nullable::Null, Nullable::Value("a".to_string())]
+        );
+        assert_eq!(
+            echo_opt_byte_vecs(vec![Some(vec![1, 2]), None, Some(vec![])]),
+            vec![Some(vec![1, 2]), None, Some(vec![])]
+        );
+    }
+
+    #[wasm_bindgen_test]
+    fn opaque_vectors() {
+        let v = echo_opt_opaques(vec![Some(opaque("a")), None]);
+        assert_eq!(v.len(), 2);
+        assert_eq!(text(v[0].as_ref().unwrap()), "a");
+        assert!(v[1].is_none());
+
+        let v = echo_nullable_opaques(vec![Nullable::Null, Nullable::Value(opaque("b"))]);
+        assert!(matches!(v[0], Nullable::Null));
+        assert!(matches!(&v[1], Nullable::Value(o) if text(o) == "b"));
+
+        let v = echo_nullable_opt_opaques(vec![
+            Nullable::Value(Some(opaque("c"))),
+            Nullable::Null,
+            Nullable::Value(None),
+        ]);
+        assert!(matches!(&v[0], Nullable::Value(Some(o)) if text(o) == "c"));
+        assert!(matches!(v[1], Nullable::Null));
+        assert!(matches!(v[2], Nullable::Value(None)));
+        assert_eq!(
+            describe_nullable_opt_opaques(vec![Nullable::Null, Nullable::Value(None)]),
+            "Array:[null,\"undefined\"]"
+        );
+    }
+}
