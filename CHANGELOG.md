@@ -23,6 +23,10 @@
   `Vec<Vec<T>>`, `&[Closure<T>]` and vectors of types with hand-written
   conversions newly cross, in arguments, returns and `JsValue::from`.
 
+* A dynamic-union enum is a `Vec<T>` / `Box<[T]>` element in both
+  directions, crossing as a JS array whose elements are each converted as a
+  single value is, and typed as `Union[]`.
+
 * Added `aarch64-pc-windows-msvc` release artifacts.
   [#5439](https://github.com/wasm-bindgen/wasm-bindgen/pull/5439)
 
