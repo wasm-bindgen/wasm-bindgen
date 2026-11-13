@@ -1034,7 +1034,7 @@ pub trait FromCaughtException {
 
 #[cfg(test)]
 mod tests {
-    use super::WasmAbi;
+    use super::{CellLayout, WasmAbi};
     use crate::__rt::WasmWord;
     use crate::convert::WasmSlice;
     use alloc::alloc::{alloc, dealloc, Layout};
@@ -1062,8 +1062,10 @@ mod tests {
         type Prim3 = ();
         type Prim4 = ();
 
-        const CELL_ALIGN: usize = max(A::CELL_ALIGN, B::CELL_ALIGN);
-        const CELL_SIZE: usize = round_up(second::<A, B>() + B::CELL_SIZE, Self::CELL_ALIGN);
+        const CELL: CellLayout<Self> = {
+            let align = max(A::CELL.align(), B::CELL.align());
+            unsafe { CellLayout::new(round_up(second::<A, B>() + B::CELL.size(), align), align) }
+        };
 
         fn split(self) -> (Self::Prim1, (), (), ()) {
             unsafe {
@@ -1094,11 +1096,15 @@ mod tests {
 
     /// The offset of a pair's second part in its cell.
     const fn second<A: WasmAbi, B: WasmAbi>() -> usize {
-        round_up(A::CELL_SIZE, B::CELL_ALIGN)
+        round_up(A::CELL.size(), B::CELL.align())
+    }
+
+    fn cell<A: WasmAbi>() -> (usize, usize) {
+        (A::CELL.size(), A::CELL.align())
     }
 
     fn layout<A: WasmAbi>() -> Layout {
-        Layout::from_size_align(A::CELL_SIZE, A::CELL_ALIGN).unwrap()
+        Layout::from_size_align(A::CELL.size(), A::CELL.align()).unwrap()
     }
 
     // An ABI written against the trait before it had a cell.
@@ -1121,12 +1127,12 @@ mod tests {
 
     #[test]
     fn primitive_cells_are_their_primitives() {
-        assert_eq!((u32::CELL_SIZE, u32::CELL_ALIGN), (4, 4));
-        assert_eq!((f64::CELL_SIZE, f64::CELL_ALIGN), (8, 8));
-        assert_eq!(WasmSlice::CELL_SIZE, 2 * WasmWord::CELL_SIZE);
-        assert_eq!(u128::CELL_SIZE, 16);
-        assert_eq!(<()>::CELL_SIZE, 0);
-        assert_eq!((External::CELL_SIZE, External::CELL_ALIGN), (16, 8));
+        assert_eq!(cell::<u32>(), (4, 4));
+        assert_eq!(cell::<f64>(), (8, 8));
+        assert_eq!(cell::<WasmSlice>().0, 2 * cell::<WasmWord>().0);
+        assert_eq!(cell::<u128>().0, 16);
+        assert_eq!(cell::<()>().0, 0);
+        assert_eq!(cell::<External>(), (16, 8));
 
         let mut cell = [0u64; 2];
         let External(a, b) = unsafe {
@@ -1143,17 +1149,17 @@ mod tests {
     fn wide_cell_is_a_record_of_cells() {
         // `{ ptr, len, n }`
         type Named = (WasmSlice, u32);
-        assert_eq!((Named::CELL_SIZE, Named::CELL_ALIGN), (12, 4));
+        assert_eq!(cell::<Named>(), (12, 4));
         assert_eq!(second::<WasmSlice, u32>(), 8);
 
         // `{ { ptr, len, n }, pad, x }`: nested, not the flat run of words.
         type Nested = (Named, f64);
-        assert_eq!((Nested::CELL_SIZE, Nested::CELL_ALIGN), (24, 8));
+        assert_eq!(cell::<Nested>(), (24, 8));
         assert_eq!(second::<Named, f64>(), 16);
 
         // `{ n, pad, { x, m } }` keeps the inner record's padding.
         type Padded = (u32, (f64, u32));
-        assert_eq!(Padded::CELL_SIZE, 24);
+        assert_eq!(cell::<Padded>().0, 24);
         assert_eq!(second::<u32, (f64, u32)>(), 8);
 
         let abi: Nested = ((WasmSlice::from_usize(8, 2), 7), 1.5);
