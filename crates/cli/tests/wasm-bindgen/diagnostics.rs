@@ -825,6 +825,31 @@ fn returned_sequence_cannot_lend_a_closure() {
     );
 }
 
+/// As is the value `JsValue::from` makes of one.
+#[test]
+fn cast_sequence_cannot_lend_a_closure() {
+    let err = Project::new("cast_sequence_cannot_lend_a_closure")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen]
+                pub fn lent() -> JsValue {
+                    let f = || {};
+                    JsValue::from(vec![&f as &dyn Fn()])
+                }
+            "#,
+        )
+        .wasm_bindgen("")
+        .unwrap_err();
+
+    assert_contains!(
+        format!("{err:?}"),
+        "a closure can't be lent by a value that Rust returns"
+    );
+}
+
 /// Only the argument itself is a view of wasm memory, so a sequence would
 /// hold a copy of a `&mut [T]`, which JS's writes never leave.
 #[test]
