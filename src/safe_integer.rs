@@ -384,6 +384,29 @@ impl<T: SafeIntegerPrimitive> NullableIntoWasmAbi for &SafeInteger<T> {
     }
 }
 
+// Its optional ABI is wider than its own, so `&&T`'s is spelled out as the
+// numbers' is: a sequence that holds an `Option<&T>` lends an `Option<&&T>`.
+impl<T: SafeIntegerPrimitive> MaybeIntoWasmAbi for &&SafeInteger<T> {
+    type MaybeAbi = <f64 as MaybeIntoWasmAbi>::MaybeAbi;
+
+    #[inline]
+    fn into_maybe_abi(self) -> Self::MaybeAbi {
+        (**self).into_maybe_abi()
+    }
+
+    #[inline]
+    fn none() -> Self::MaybeAbi {
+        <f64 as MaybeIntoWasmAbi>::none()
+    }
+}
+
+impl<T: SafeIntegerPrimitive> NullableIntoWasmAbi for &&SafeInteger<T> {
+    #[inline]
+    fn null() -> Self::MaybeAbi {
+        <f64 as NullableIntoWasmAbi>::null()
+    }
+}
+
 impl<T: SafeIntegerPrimitive> RefFromWasmAbi for [SafeInteger<T>] {
     type Abi = WasmSlice;
     type Anchor = Box<[SafeInteger<T>]>;

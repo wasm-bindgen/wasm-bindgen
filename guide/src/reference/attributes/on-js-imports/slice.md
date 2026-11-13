@@ -19,7 +19,9 @@ borrowed vector (`&Vec<T>`, `&Box<[T]>`): a view is the `&[T]` argument
 alone, and a borrowed vector is copied as the vector is, with its storage
 left to Rust, whether or not it is optional (`Option<&Vec<T>>`). Nor is a
 slice behind a second reference (`&&[T]`), which is a sized type as a
-borrowed vector is, and takes `vec` as one does. Nor is a slice of numbers
+borrowed vector is, and takes `vec` as one does. No mode reaches a sequence
+behind a borrowed `Option` or `Nullable` (`&Option<Vec<u8>>`,
+`&Option<&[u8]>`), which is always a copy. Nor is a slice of numbers
 that another sequence holds, such as each `&[u8]` of a `Vec<&[u8]>` or of a
 `&[&[u8]]`: only the argument itself is a view, and these are copied. A
 sequence can't hold a `&mut [T]`, whose copy JS's writes would never leave.

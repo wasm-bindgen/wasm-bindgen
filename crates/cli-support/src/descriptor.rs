@@ -494,7 +494,7 @@ impl Descriptor {
         let misfit = if mode.vec && borrowed {
             "`vec` applies to owned vectors; for a borrowed `&[T]` use `slice = view | copy | array`"
         } else if mode.vec && !owned {
-            "`vec` applies to vector arguments (`Vec<T>`, `Box<[T]>`, `&Vec<T>`, `&Box<[T]>`)"
+            "`vec` applies to vector arguments (`Vec<T>`, `Box<[T]>`, `&Vec<T>`, `&Box<[T]>`, `&&[T]`)"
         } else if !mode.vec && owned {
             "`slice` applies to borrowed slices; for an owned `Vec<T>` use `vec = copy | array`"
         } else if !mode.vec && !borrowed {

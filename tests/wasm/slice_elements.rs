@@ -12,6 +12,7 @@ use js_sys::JsString;
 use wasm_bindgen::convert::RefIntoWasmAbi;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsStringLike;
+use wasm_bindgen::SafeInteger;
 use wasm_bindgen_test::*;
 
 #[wasm_bindgen]
@@ -330,6 +331,9 @@ shapes! {
     f64_refs(&[&f64]);
     opt_f64_refs(&[Option<&f64>]);
     null_i64_refs(&[Nullable<&i64>]);
+    safe_refs(&[&SafeInteger<i64>]);
+    opt_safe_refs(&[Option<&SafeInteger<i64>>]);
+    null_safe_refs(&[Nullable<&SafeInteger<i64>>]);
     opt_bool_refs(&[Option<&bool>]);
     null_char_refs(&[Nullable<&char>]);
     opt_str_refs(&[Option<&str>]);
@@ -370,6 +374,10 @@ fn elements_lent_by_reference() {
     assert_eq!(vec_u32_refs(&vec![&1, &2]), "[1,2]");
     assert_eq!(f64_refs(&[&0.5, &-1.0]), "[0.5,-1]");
     assert_eq!(opt_f64_refs(&[Some(&0.5), None]), "[0.5,undefined]");
+    let safe = SafeInteger::<i64>::from(-7);
+    assert_eq!(safe_refs(&[&safe]), "[-7]");
+    assert_eq!(opt_safe_refs(&[Some(&safe), None]), "[-7,undefined]");
+    assert_eq!(null_safe_refs(&[Value(&safe), Null]), "[-7,null]");
     assert_eq!(
         null_i64_refs(&[Value(&i64::MIN), Null]),
         "[-9223372036854775808n,null]"

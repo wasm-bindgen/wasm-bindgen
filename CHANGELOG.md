@@ -27,10 +27,10 @@
   and never as a view of wasm memory. A borrowed vector (`&Vec<T>`,
   `&Box<[T]>`) is an imported function's argument too, reaching JS as a
   copy, as the vector does, and may be optional (`Option<&Vec<T>>`). A
-  reference that a borrowed sequence holds is lent as itself, so `&[&T]`,
-  `&[Option<&T>]` and `&[&[T]]` cross wherever `&T` does, to any depth, and
-  a slice of numbers behind a second reference (`&&[u8]`) is a copy as a
-  nested one is. Three elements don't cross: `()`, which crosses
+  reference that a borrowed sequence holds is lent as itself, so `&[&T]`
+  and `&[&[T]]` cross wherever `&T` does, to any depth, and `&[Option<&T>]`
+  where `Option<&T>` does, and a slice of numbers behind a second reference
+  (`&&[u8]`) is a copy as a nested one is. Three elements don't cross: `()`, which crosses
   as nothing, a `&mut [T]`, whose copy JS's writes would never leave, and a
   borrowed closure (`&dyn Fn()`) in a value Rust returns or converts with
   `JsValue::from`, which outlives the call it is lent for.
@@ -78,6 +78,8 @@
   `T: FromWasmAbi` to pass a `Vec<T>`. `OptionIntoWasmAbi` and
   `OptionFromWasmAbi` are soft-deprecated in favour of `MaybeIntoWasmAbi` and
   `MaybeFromWasmAbi`. All five will be removed in the next major release.
+  A `&&T` crosses as its `&T` does, so a hand-written `IntoWasmAbi` for a
+  `&&T` whose `&T` also implements it now conflicts and can be removed.
   [#5471](https://github.com/wasm-bindgen/wasm-bindgen/pull/5471)
 
 * A `Vec<String>` and a `Vec` of an exported Rust type reach the generated JS
