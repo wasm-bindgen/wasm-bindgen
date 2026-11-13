@@ -83,7 +83,9 @@ pub struct JsBuilder<'a, 'b> {
     /// variables to ensure nothing clashes with anything else.
     tmp: usize,
 
-    /// The arguments to the adapter, which the `arg.get` instruction pushes.
+    /// The inputs of the function, or of the scope glue is running in: the
+    /// arguments to the adapter, which the `arg.get` instruction pushes, or
+    /// what a scope was given with [`JsBuilder::input`].
     args: Vec<Value>,
 
     /// Identifiers bound in the function body, which the arguments must not
@@ -261,9 +263,10 @@ struct Given {
     owner: Owner,
 }
 
-/// The builder's state around an encoded element's glue, which runs in a
-/// scope of its own.
+/// The builder's state around a stored value's glue, which runs in a scope
+/// of its own.
 struct Scope {
+    args: Vec<Value>,
     stack: Vec<Value>,
     prelude: Vec<Stmt>,
     pre_try: String,
@@ -1372,10 +1375,14 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         }
     }
 
-    /// Runs an encoded element's glue in a scope of its own, over `stack`.
-    fn enter_scope(&mut self, stack: Vec<Value>) -> Scope {
+    /// Enters a scope for a stored value's glue to run in. Its inputs are to
+    /// it what the JS arguments are to the function: what reads only them
+    /// runs ahead of what the glue allocates, and so does the conversion of
+    /// one that becomes a word as it is.
+    fn enter_scope(&mut self) -> Scope {
         Scope {
-            stack: std::mem::replace(&mut self.stack, stack),
+            args: std::mem::take(&mut self.args),
+            stack: std::mem::take(&mut self.stack),
             prelude: std::mem::take(&mut self.prelude),
             pre_try: std::mem::take(&mut self.pre_try),
             finally: std::mem::take(&mut self.finally),
@@ -1385,6 +1392,12 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             instr: std::mem::take(&mut self.instr),
             wasm_refs: self.cx.wasm_refs,
         }
+    }
+
+    /// Pushes `value` as an input of the scope.
+    fn input(&mut self, value: Value) {
+        self.args.push(value.clone());
+        self.stack.push(value);
     }
 
     /// Leaves the element's scope, whose values and guard its glue's caller
@@ -1401,6 +1414,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             given: std::mem::replace(&mut self.given, scope.given),
             calls_wasm: self.cx.wasm_refs != scope.wasm_refs,
         };
+        self.args = scope.args;
         self.stack = scope.stack;
         self.guard = scope.guard;
         self.moved = scope.moved;
@@ -3150,7 +3164,8 @@ fn instruction(
             // into the loop body. The buffer takes the words as a call takes
             // its arguments: what the element allocated is released should
             // the rest of its glue throw, and the writes that follow can't.
-            let scope = js.enter_scope(vec![Value::Local(e.clone())]);
+            let scope = js.enter_scope();
+            js.input(Value::Param(e.clone()));
             for instr in elem {
                 js.begin_instr();
                 instruction(js, &instr.instr, log_error, constructor)?;
@@ -3398,7 +3413,10 @@ fn encoded_element(
     log_error: &mut bool,
     constructor: &Option<String>,
 ) -> Result<(Element, String), Error> {
-    let scope = js.enter_scope(words);
+    let scope = js.enter_scope();
+    for word in words {
+        js.input(word);
+    }
     for instr in elem {
         js.begin_instr();
         instruction(js, &instr.instr, log_error, constructor)?;
