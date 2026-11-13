@@ -1308,7 +1308,7 @@ mod slices {
         let closures: Vec<Closure<dyn Fn(u32)>> = (1..=3)
             .map(|i| {
                 let sum = sum.clone();
-                Closure::new(move |x: u32| sum.set(sum.get() + i * x))
+                Closure::own_aborting(move |x: u32| sum.set(sum.get() + i * x))
             })
             .collect();
         assert_eq!(call_each(&closures), 3);
