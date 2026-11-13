@@ -519,9 +519,14 @@ impl<A: ?Sized> CellLayout<A> {
     /// # Safety
     ///
     /// This is a layout promise: `A::write_cell` and `A::read_cell` stay
-    /// within `size` bytes at `align`, a power of two, storing the words the
-    /// CLI lays out for the type's descriptor.
+    /// within `size` bytes at `align`, storing the words the CLI lays out
+    /// for the type's descriptor. `align` is a power of two and `size` a
+    /// multiple of it, as a sequence's cells are `size` apart.
     pub const unsafe fn new(size: usize, align: usize) -> Self {
+        assert!(
+            align.is_power_of_two() && size % align == 0,
+            "a cell's size is a multiple of its alignment, a power of two"
+        );
         Self {
             size,
             align,
@@ -1140,6 +1145,12 @@ mod tests {
             External::read_cell(cell.as_ptr().cast())
         };
         assert_eq!((a, b), (7, 1.5));
+    }
+
+    #[test]
+    #[should_panic(expected = "multiple of its alignment")]
+    fn cell_strides_by_its_size() {
+        unsafe { CellLayout::<f64>::new(12, 8) };
     }
 
     // Laid out for a 32-bit pointer word, which wasm32 and a native host
