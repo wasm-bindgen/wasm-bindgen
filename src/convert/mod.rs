@@ -40,5 +40,4 @@ mod traits;
 
 pub use self::impls::*;
 pub use self::slices::{VectorRefIntoWasmAbi, WasmSlice};
-pub(crate) use self::traits::abi_cell;
 pub use self::traits::*;

@@ -2,7 +2,7 @@
 //! sequence stores one of per element, while the value itself crosses as a
 //! pointer to that record.
 
-use core::mem::{align_of, offset_of, size_of};
+use std::alloc::{alloc, dealloc, Layout};
 
 use wasm_bindgen::__rt::WasmWord;
 use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, WasmAbi, WasmSlice};
@@ -17,33 +17,92 @@ struct Named {
 
 struct NamedAbi(WasmSlice, u32);
 
-/// `{ ptr, len, n }`
-#[repr(C)]
-struct NamedCell(<WasmSlice as WasmAbi>::Cell, <u32 as WasmAbi>::Cell);
+impl NamedAbi {
+    /// `{ ptr, len, n }`
+    const N: usize = WasmSlice::CELL_SIZE;
+    const LAYOUT: Layout = match Layout::from_size_align(Self::CELL_SIZE, Self::CELL_ALIGN) {
+        Ok(layout) => layout,
+        Err(_) => panic!(),
+    };
+}
 
 impl WasmAbi for NamedAbi {
     type Prim1 = <WasmWord as WasmAbi>::Prim1;
     type Prim2 = ();
     type Prim3 = ();
     type Prim4 = ();
-    type Cell = NamedCell;
+
+    const CELL_SIZE: usize = Self::N + u32::CELL_SIZE;
+    const CELL_ALIGN: usize = WasmSlice::CELL_ALIGN;
 
     fn split(self) -> (Self::Prim1, (), (), ()) {
-        let cell = Box::into_raw(Box::new(self.into_cell()));
-        WasmWord::from_usize(cell as usize).split()
+        unsafe {
+            let cell = alloc(Self::LAYOUT);
+            self.write_cell(cell);
+            WasmWord::from_usize(cell as usize).split()
+        }
     }
 
     fn join(ptr: Self::Prim1, _: (), _: (), _: ()) -> Self {
-        let cell = WasmWord::join(ptr, (), (), ()).into_usize() as *mut NamedCell;
-        Self::from_cell(*unsafe { Box::from_raw(cell) })
+        let cell = WasmWord::join(ptr, (), (), ()).into_usize() as *mut u8;
+        unsafe {
+            let abi = Self::read_cell(cell);
+            dealloc(cell, Self::LAYOUT);
+            abi
+        }
     }
 
-    fn into_cell(self) -> NamedCell {
-        NamedCell(self.0.into_cell(), self.1.into_cell())
+    unsafe fn write_cell(self, cell: *mut u8) {
+        self.0.write_cell(cell);
+        self.1.write_cell(cell.add(Self::N));
     }
 
-    fn from_cell(cell: NamedCell) -> Self {
-        NamedAbi(WasmSlice::from_cell(cell.0), u32::from_cell(cell.1))
+    unsafe fn read_cell(cell: *const u8) -> Self {
+        NamedAbi(
+            WasmSlice::read_cell(cell),
+            u32::read_cell(cell.add(Self::N)),
+        )
+    }
+}
+
+/// An ABI written against `WasmAbi` before it had a cell, whose cell is the
+/// record of its primitives.
+struct Flat(u32, f64);
+
+impl WasmAbi for Flat {
+    type Prim1 = u32;
+    type Prim2 = f64;
+    type Prim3 = ();
+    type Prim4 = ();
+
+    fn split(self) -> (u32, f64, (), ()) {
+        (self.0, self.1, (), ())
+    }
+
+    fn join(a: u32, b: f64, _: (), _: ()) -> Self {
+        Flat(a, b)
+    }
+}
+
+struct Sample(u32, f64);
+
+impl WasmDescribe for Sample {
+    fn describe() {}
+}
+
+impl IntoWasmAbi for Sample {
+    type Abi = Flat;
+
+    fn into_abi(self) -> Flat {
+        Flat(self.0, self.1)
+    }
+}
+
+impl FromWasmAbi for Sample {
+    type Abi = Flat;
+
+    unsafe fn from_abi(js: Flat) -> Self {
+        Sample(js.0, js.1)
     }
 }
 
@@ -89,10 +148,20 @@ fn items() -> Vec<Named> {
 
 #[wasm_bindgen_test]
 fn wide_cell_layout() {
-    assert_eq!(size_of::<NamedCell>(), 12);
-    assert_eq!(align_of::<NamedCell>(), 4);
-    assert_eq!(offset_of!(NamedCell, 0), 0);
-    assert_eq!(offset_of!(NamedCell, 1), 8);
+    assert_eq!((NamedAbi::CELL_SIZE, NamedAbi::CELL_ALIGN), (12, 4));
+    assert_eq!(NamedAbi::N, 8);
+}
+
+#[wasm_bindgen_test]
+fn default_cells_round_trip_as_a_sequence() {
+    assert_eq!((Flat::CELL_SIZE, Flat::CELL_ALIGN), (16, 8));
+    let slice = WasmSlice::encode_owned(
+        vec![Sample(1, 0.5), Sample(2, 1.5)].into_boxed_slice(),
+        Sample::into_abi,
+    );
+    let decoded = unsafe { slice.try_decode::<Sample>() }.unwrap();
+    let decoded: Vec<_> = decoded.iter().map(|s| (s.0, s.1)).collect();
+    assert_eq!(decoded, [(1, 0.5), (2, 1.5)]);
 }
 
 #[wasm_bindgen_test]

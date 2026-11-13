@@ -1,7 +1,9 @@
+use alloc::alloc::{alloc, dealloc, handle_alloc_error, Layout};
 use alloc::borrow::Cow;
 use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::vec::Vec;
+use core::marker::PhantomData;
 use core::mem::{self, MaybeUninit};
 use core::ops::{Deref, DerefMut};
 use core::str;
@@ -53,8 +55,6 @@ impl WasmAbi for WasmSlice {
     type Prim3 = ();
     type Prim4 = ();
 
-    crate::convert::abi_cell!();
-
     #[inline]
     fn split(self) -> (Self::Prim1, Self::Prim2, (), ()) {
         (self.ptr.split().0, self.len.split().0, (), ())
@@ -99,8 +99,6 @@ impl WasmAbi for WasmMutSlice {
     /// `self.idx`
     type Prim3 = u32;
     type Prim4 = ();
-
-    crate::convert::abi_cell!();
 
     #[inline]
     fn split(self) -> (Self::Prim1, Self::Prim2, u32, ()) {
@@ -369,17 +367,64 @@ impl<T: VectorRefIntoWasmAbi> OptionIntoWasmAbi for &[T] {
 
 impl_nullable_into_shared_abi!(null = js_null_slice(); [T: VectorRefIntoWasmAbi] &[T]);
 
-type Cell<A> = <A as WasmAbi>::Cell;
-
 // A `(ptr, len)` cell is two pointer words, which are `f64`s on memory64.
 #[cfg(target_arch = "wasm64")]
-const _: () = assert!(mem::size_of::<Cell<WasmSlice>>() == 16);
-#[cfg(target_arch = "wasm64")]
-const _: () = assert!(mem::align_of::<Cell<WasmSlice>>() == 8);
+const _: () = assert!(WasmSlice::CELL_SIZE == 16 && WasmSlice::CELL_ALIGN == 8);
 #[cfg(not(target_arch = "wasm64"))]
-const _: () = assert!(mem::size_of::<Cell<WasmSlice>>() == 8);
-#[cfg(not(target_arch = "wasm64"))]
-const _: () = assert!(mem::align_of::<Cell<WasmSlice>>() == 4);
+const _: () = assert!(WasmSlice::CELL_SIZE == 8 && WasmSlice::CELL_ALIGN == 4);
+
+/// A buffer of `len` cells of `A`, freed on drop.
+struct Cells<A: WasmAbi> {
+    ptr: *mut u8,
+    len: usize,
+    abi: PhantomData<A>,
+}
+
+impl<A: WasmAbi> Cells<A> {
+    fn layout(len: usize) -> Layout {
+        len.checked_mul(A::CELL_SIZE)
+            .and_then(|size| Layout::from_size_align(size, A::CELL_ALIGN).ok())
+            .expect("capacity overflow")
+    }
+
+    /// An empty buffer is dangling, as `__wbindgen_malloc` gives JS.
+    fn new(len: usize) -> Self {
+        let layout = Self::layout(len);
+        let ptr = if layout.size() == 0 {
+            layout.align() as *mut u8
+        } else {
+            let ptr = unsafe { alloc(layout) };
+            if ptr.is_null() {
+                handle_alloc_error(layout);
+            }
+            ptr
+        };
+        Self {
+            ptr,
+            len,
+            abi: PhantomData,
+        }
+    }
+
+    fn encode(elems: impl ExactSizeIterator<Item = A>) -> WasmSlice {
+        let cells = Self::new(elems.len());
+        for (i, elem) in elems.enumerate() {
+            unsafe { elem.write_cell(cells.ptr.add(i * A::CELL_SIZE)) }
+        }
+        let slice = WasmSlice::from_usize(cells.ptr as usize, cells.len);
+        mem::forget(cells);
+        slice
+    }
+}
+
+impl<A: WasmAbi> Drop for Cells<A> {
+    fn drop(&mut self) {
+        let layout = Self::layout(self.len);
+        if layout.size() != 0 {
+            unsafe { dealloc(self.ptr, layout) }
+        }
+    }
+}
 
 impl WasmSlice {
     /// An in-place sequence: `slice`'s own memory, borrowed.
@@ -390,24 +435,14 @@ impl WasmSlice {
 
     /// An encoded sequence: a fresh buffer of each element's cell, its ABI
     /// by `f`, which JS decodes and frees.
-    pub fn encode<'a, T: IntoWasmAbi + 'a>(
-        slice: &'a [T],
-        mut f: impl FnMut(&'a T) -> T::Abi,
-    ) -> Self {
-        let cells: Box<[Cell<T::Abi>]> = slice.iter().map(|elem| f(elem).into_cell()).collect();
-        let len = cells.len();
-        Self::from_usize(Box::into_raw(cells) as *mut Cell<T::Abi> as usize, len)
+    pub fn encode<'a, T: 'a, A: WasmAbi>(slice: &'a [T], f: impl FnMut(&'a T) -> A) -> Self {
+        Cells::encode(slice.iter().map(f))
     }
 
     /// An encoded sequence that gives its elements: a fresh buffer of each
     /// element's cell, its ABI by `f`, which JS decodes, takes and frees.
-    pub fn encode_owned<T: IntoWasmAbi>(vector: Box<[T]>, mut f: impl FnMut(T) -> T::Abi) -> Self {
-        let cells: Box<[Cell<T::Abi>]> = Vec::from(vector)
-            .into_iter()
-            .map(|elem| f(elem).into_cell())
-            .collect();
-        let len = cells.len();
-        Self::from_usize(Box::into_raw(cells) as *mut Cell<T::Abi> as usize, len)
+    pub fn encode_owned<T, A: WasmAbi>(vector: Box<[T]>, f: impl FnMut(T) -> A) -> Self {
+        Cells::encode(Vec::from(vector).into_iter().map(f))
     }
 
     /// Takes an encoded sequence from JS, converting each element from its
@@ -419,11 +454,13 @@ impl WasmSlice {
     /// `self` must be `len` cells of `T::Abi` that JS allocated at the cell's
     /// alignment, for Rust to own.
     pub unsafe fn try_decode<T: FromWasmAbi>(self) -> Result<Box<[T]>, &'static str> {
-        let ptr = self.ptr.into_usize() as *mut Cell<T::Abi>;
-        let len = self.len.into_usize();
-        Vec::from_raw_parts(ptr, len, len)
-            .into_iter()
-            .map(|cell| T::try_from_abi(T::Abi::from_cell(cell)))
+        let cells = Cells::<T::Abi> {
+            ptr: self.ptr.into_usize() as *mut u8,
+            len: self.len.into_usize(),
+            abi: PhantomData,
+        };
+        (0..cells.len)
+            .map(|i| T::try_from_abi(T::Abi::read_cell(cells.ptr.add(i * T::Abi::CELL_SIZE))))
             .collect()
     }
 }
