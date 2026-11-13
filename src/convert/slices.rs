@@ -53,6 +53,8 @@ impl WasmAbi for WasmSlice {
     type Prim3 = ();
     type Prim4 = ();
 
+    crate::convert::abi_cell!();
+
     #[inline]
     fn split(self) -> (Self::Prim1, Self::Prim2, (), ()) {
         (self.ptr.split().0, self.len.split().0, (), ())
@@ -97,6 +99,8 @@ impl WasmAbi for WasmMutSlice {
     /// `self.idx`
     type Prim3 = u32;
     type Prim4 = ();
+
+    crate::convert::abi_cell!();
 
     #[inline]
     fn split(self) -> (Self::Prim1, Self::Prim2, u32, ()) {
@@ -365,22 +369,17 @@ impl<T: VectorRefIntoWasmAbi> OptionIntoWasmAbi for &[T] {
 
 impl_nullable_into_shared_abi!(null = js_null_slice(); [T: VectorRefIntoWasmAbi] &[T]);
 
-/// An encoded sequence's cell: the `#[repr(C)]` record of a scalar ABI's
-/// primitives, with unused ones `()`. That is the same split as the wasm
-/// signature, which is how the CLI lays out the cell's words, so both sides
-/// agree on the layout by definition.
-#[repr(C)]
-struct AbiCell<A: WasmAbi>(A::Prim1, A::Prim2, A::Prim3, A::Prim4);
+type Cell<A> = <A as WasmAbi>::Cell;
 
 // A `(ptr, len)` cell is two pointer words, which are `f64`s on memory64.
 #[cfg(target_arch = "wasm64")]
-const _: () = assert!(mem::size_of::<AbiCell<WasmSlice>>() == 16);
+const _: () = assert!(mem::size_of::<Cell<WasmSlice>>() == 16);
 #[cfg(target_arch = "wasm64")]
-const _: () = assert!(mem::align_of::<AbiCell<WasmSlice>>() == 8);
+const _: () = assert!(mem::align_of::<Cell<WasmSlice>>() == 8);
 #[cfg(not(target_arch = "wasm64"))]
-const _: () = assert!(mem::size_of::<AbiCell<WasmSlice>>() == 8);
+const _: () = assert!(mem::size_of::<Cell<WasmSlice>>() == 8);
 #[cfg(not(target_arch = "wasm64"))]
-const _: () = assert!(mem::align_of::<AbiCell<WasmSlice>>() == 4);
+const _: () = assert!(mem::align_of::<Cell<WasmSlice>>() == 4);
 
 impl WasmSlice {
     /// An in-place sequence: `slice`'s own memory, borrowed.
@@ -389,21 +388,15 @@ impl WasmSlice {
         Self::from_usize(slice.as_ptr() as usize, slice.len())
     }
 
-    /// An encoded sequence: a fresh buffer of each element's cell, its scalar
-    /// ABI by `f`, which JS decodes and frees.
+    /// An encoded sequence: a fresh buffer of each element's cell, its ABI
+    /// by `f`, which JS decodes and frees.
     pub fn encode<'a, T: IntoWasmAbi + 'a>(
         slice: &'a [T],
         mut f: impl FnMut(&'a T) -> T::Abi,
     ) -> Self {
-        let cells: Box<[AbiCell<T::Abi>]> = slice
-            .iter()
-            .map(|elem| {
-                let (p1, p2, p3, p4) = f(elem).split();
-                AbiCell(p1, p2, p3, p4)
-            })
-            .collect();
+        let cells: Box<[Cell<T::Abi>]> = slice.iter().map(|elem| f(elem).into_cell()).collect();
         let len = cells.len();
-        Self::from_usize(Box::into_raw(cells) as *mut AbiCell<T::Abi> as usize, len)
+        Self::from_usize(Box::into_raw(cells) as *mut Cell<T::Abi> as usize, len)
     }
 
     /// Takes an encoded sequence from JS, converting each element from its
@@ -415,11 +408,11 @@ impl WasmSlice {
     /// `self` must be `len` cells of `T::Abi` that JS allocated at the cell's
     /// alignment, for Rust to own.
     pub unsafe fn try_decode<T: FromWasmAbi>(self) -> Result<Box<[T]>, &'static str> {
-        let ptr = self.ptr.into_usize() as *mut AbiCell<T::Abi>;
+        let ptr = self.ptr.into_usize() as *mut Cell<T::Abi>;
         let len = self.len.into_usize();
         Vec::from_raw_parts(ptr, len, len)
             .into_iter()
-            .map(|AbiCell(p1, p2, p3, p4)| T::try_from_abi(T::Abi::join(p1, p2, p3, p4)))
+            .map(|cell| T::try_from_abi(T::Abi::from_cell(cell)))
             .collect()
     }
 }
@@ -508,7 +501,7 @@ macro_rules! __wbindgen_encoded_sequence {
 
 crate::__wbindgen_encoded_sequence!(bool, |b| (*b).into_abi(), [ref_into, into, from]);
 crate::__wbindgen_encoded_sequence!(char, |c| (*c).into_abi(), [ref_into, into, from]);
-crate::__wbindgen_encoded_sequence!(&str, |s| (*s).into_abi(), [ref_into, into]);
+crate::__wbindgen_encoded_sequence!(&str, |s| (*s).into_abi(), [ref_into]);
 crate::__wbindgen_encoded_sequence!(&String, |s| (*s).into_abi(), [ref_into]);
 crate::__wbindgen_encoded_sequence!(&Box<str>, |s| (*s).into_abi(), [ref_into]);
 crate::__wbindgen_encoded_sequence!(&Cow<'_, str>, |s| (*s).into_abi(), [ref_into]);

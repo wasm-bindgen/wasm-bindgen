@@ -368,6 +368,8 @@ impl WasmAbi for WasmWord {
     type Prim3 = ();
     type Prim4 = ();
 
+    crate::convert::abi_cell!();
+
     #[inline]
     fn split(self) -> (Self::Prim1, (), (), ()) {
         (self.0, (), (), ())
@@ -446,6 +448,8 @@ impl<T> WasmAbi for WasmPtr<T> {
     type Prim2 = ();
     type Prim3 = ();
     type Prim4 = ();
+
+    crate::convert::abi_cell!();
 
     #[inline]
     fn split(self) -> (Self::Prim1, (), (), ()) {

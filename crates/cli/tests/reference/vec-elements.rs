@@ -28,18 +28,11 @@ pub fn modes(v: Vec<Mode>) -> Vec<Mode> {
 }
 
 #[wasm_bindgen]
-pub fn strs() -> Vec<&'static str> {
-    vec!["a"]
-}
-
-#[wasm_bindgen]
 extern "C" {
     fn js_bools(v: Vec<bool>) -> Vec<bool>;
-    fn js_strs(v: Vec<&str>);
 }
 
 #[wasm_bindgen]
 pub fn driver() {
     js_bools(js_bools(vec![true]));
-    js_strs(vec!["b"]);
 }

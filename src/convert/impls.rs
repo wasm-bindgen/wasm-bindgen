@@ -23,6 +23,8 @@ impl<T: WasmPrimitive> WasmAbi for T {
     type Prim3 = ();
     type Prim4 = ();
 
+    crate::convert::abi_cell!();
+
     #[inline]
     fn split(self) -> (Self, (), (), ()) {
         (self, (), (), ())
@@ -39,6 +41,8 @@ impl WasmAbi for i128 {
     type Prim2 = u64;
     type Prim3 = ();
     type Prim4 = ();
+
+    crate::convert::abi_cell!();
 
     #[inline]
     fn split(self) -> (u64, u64, (), ()) {
@@ -57,6 +61,8 @@ impl WasmAbi for u128 {
     type Prim2 = u64;
     type Prim3 = ();
     type Prim4 = ();
+
+    crate::convert::abi_cell!();
 
     #[inline]
     fn split(self) -> (u64, u64, (), ()) {
@@ -86,6 +92,8 @@ impl<T: WasmAbi<Prim4 = ()>> WasmAbi for MaybeAbi<T> {
     type Prim2 = T::Prim1;
     type Prim3 = T::Prim2;
     type Prim4 = T::Prim3;
+
+    crate::convert::abi_cell!();
 
     #[inline]
     fn split(self) -> (u32, T::Prim1, T::Prim2, T::Prim3) {
@@ -983,6 +991,8 @@ impl<T: WasmAbi<Prim3 = (), Prim4 = ()>> WasmAbi for Result<T, u32> {
     type Prim3 = u32;
     /// Whether this `Result` is an `Err`.
     type Prim4 = u32;
+
+    crate::convert::abi_cell!();
 
     #[inline]
     fn split(self) -> (T::Prim1, T::Prim2, u32, u32) {

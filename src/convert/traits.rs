@@ -419,12 +419,65 @@ pub trait WasmAbi {
     type Prim3: WasmPrimitive;
     type Prim4: WasmPrimitive;
 
+    /// This type as stored in memory: the `#[repr(C)]` record a sequence
+    /// holds one of per element. For an ABI that is its primitives, that is
+    /// [`AbiCell<Self>`]. One that is wider than its primitives stores a
+    /// record of the cells it is made of.
+    #[doc(hidden)]
+    type Cell;
+
     /// Splits this type up into primitives to be sent over the ABI.
     fn split(self) -> (Self::Prim1, Self::Prim2, Self::Prim3, Self::Prim4);
     /// Reconstructs this type from primitives received over the ABI.
     fn join(prim1: Self::Prim1, prim2: Self::Prim2, prim3: Self::Prim3, prim4: Self::Prim4)
         -> Self;
+
+    /// Converts this type into its cell.
+    #[doc(hidden)]
+    fn into_cell(self) -> Self::Cell;
+    /// Reconstructs this type from its cell.
+    #[doc(hidden)]
+    fn from_cell(cell: Self::Cell) -> Self;
 }
+
+/// The cell of an ABI that is its primitives: their `#[repr(C)]` record, with
+/// unused ones `()`. That is the same split as the wasm signature, which is
+/// how the CLI lays out the cell's words, so both sides agree on the layout
+/// by definition.
+#[doc(hidden)]
+#[repr(C)]
+pub struct AbiCell<A: WasmAbi>(A::Prim1, A::Prim2, A::Prim3, A::Prim4);
+
+impl<A: WasmAbi> AbiCell<A> {
+    #[inline]
+    pub fn new(abi: A) -> Self {
+        let (prim1, prim2, prim3, prim4) = abi.split();
+        Self(prim1, prim2, prim3, prim4)
+    }
+
+    #[inline]
+    pub fn into_abi(self) -> A {
+        A::join(self.0, self.1, self.2, self.3)
+    }
+}
+
+/// The `WasmAbi` items of an ABI whose cell is its primitives.
+macro_rules! abi_cell {
+    () => {
+        type Cell = $crate::convert::AbiCell<Self>;
+
+        #[inline]
+        fn into_cell(self) -> Self::Cell {
+            $crate::convert::AbiCell::new(self)
+        }
+
+        #[inline]
+        fn from_cell(cell: Self::Cell) -> Self {
+            cell.into_abi()
+        }
+    };
+}
+pub(crate) use abi_cell;
 
 /// A trait representing how to interpret the return value of a function for
 /// the Wasm ABI.
@@ -909,4 +962,91 @@ impl_js_string_like!(
 /// for `Promise<T>` as a rejected promise, so the throw arrives at `.await`.
 pub trait FromCaughtException {
     fn from_caught_exception(e: JsValue) -> Self;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{AbiCell, WasmAbi};
+    use crate::__rt::WasmWord;
+    use crate::convert::WasmSlice;
+    use alloc::boxed::Box;
+    use core::mem::{align_of, offset_of, size_of};
+
+    /// A pair's cell is the record of its parts' cells.
+    #[repr(C)]
+    pub struct PairCell<A: WasmAbi, B: WasmAbi>(A::Cell, B::Cell);
+
+    // A pair is wider than the primitives, so it crosses as a pointer to its
+    // cell. This is generic over both parts next to the blanket impl for
+    // primitives, which is what a tuple ABI needs to be.
+    impl<A: WasmAbi, B: WasmAbi> WasmAbi for (A, B) {
+        type Prim1 = <WasmWord as WasmAbi>::Prim1;
+        type Prim2 = ();
+        type Prim3 = ();
+        type Prim4 = ();
+        type Cell = PairCell<A, B>;
+
+        fn split(self) -> (Self::Prim1, (), (), ()) {
+            let cell = Box::into_raw(Box::new(self.into_cell()));
+            WasmWord::from_usize(cell as usize).split()
+        }
+
+        fn join(ptr: Self::Prim1, _: (), _: (), _: ()) -> Self {
+            let cell = WasmWord::join(ptr, (), (), ()).into_usize() as *mut PairCell<A, B>;
+            Self::from_cell(*unsafe { Box::from_raw(cell) })
+        }
+
+        fn into_cell(self) -> PairCell<A, B> {
+            PairCell(self.0.into_cell(), self.1.into_cell())
+        }
+
+        fn from_cell(cell: PairCell<A, B>) -> Self {
+            (A::from_cell(cell.0), B::from_cell(cell.1))
+        }
+    }
+
+    type Cell<A> = <A as WasmAbi>::Cell;
+
+    #[test]
+    fn primitive_cells_are_their_primitives() {
+        assert_eq!(size_of::<Cell<u32>>(), 4);
+        assert_eq!(size_of::<Cell<f64>>(), 8);
+        assert_eq!(
+            size_of::<Cell<WasmSlice>>(),
+            2 * size_of::<Cell<WasmWord>>()
+        );
+        assert_eq!(size_of::<Cell<u128>>(), 16);
+        assert_eq!(size_of::<AbiCell<()>>(), 0);
+    }
+
+    // Laid out for a 32-bit pointer word, which wasm32 and a native host
+    // both have.
+    #[cfg(not(target_arch = "wasm64"))]
+    #[test]
+    fn wide_cell_is_a_record_of_cells() {
+        // `{ ptr, len, n }`
+        type Named = (WasmSlice, u32);
+        assert_eq!(size_of::<Cell<Named>>(), 12);
+        assert_eq!(align_of::<Cell<Named>>(), 4);
+        assert_eq!(offset_of!(Cell<Named>, 0), 0);
+        assert_eq!(offset_of!(Cell<Named>, 1), 8);
+
+        // `{ { ptr, len, n }, pad, x }`: nested, not the flat run of words.
+        type Nested = (Named, f64);
+        assert_eq!(size_of::<Cell<Nested>>(), 24);
+        assert_eq!(align_of::<Cell<Nested>>(), 8);
+        assert_eq!(offset_of!(Cell<Nested>, 1), 16);
+
+        // `{ n, pad, { x, m } }` keeps the inner record's padding.
+        type Padded = (u32, (f64, u32));
+        assert_eq!(size_of::<Cell<Padded>>(), 24);
+        assert_eq!(offset_of!(Cell<Padded>, 1), 8);
+
+        let abi: Nested = ((WasmSlice::from_usize(8, 2), 7), 1.5);
+        let ((slice, n), x) = Nested::from_cell(abi.into_cell());
+        assert_eq!(
+            (slice.ptr.into_usize(), slice.len.into_usize(), n, x),
+            (8, 2, 7, 1.5)
+        );
+    }
 }

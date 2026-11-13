@@ -10,5 +10,3 @@ export function driver(): void;
 export function modes(v: Mode[]): Mode[];
 
 export function opt_chars(v?: string[] | null): string[] | undefined;
-
-export function strs(): string[];
