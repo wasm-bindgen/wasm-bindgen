@@ -42,6 +42,15 @@ pub enum MatrixName {
     B = "b",
 }
 
+/// A dynamic union: any of its variants' JS values.
+#[wasm_bindgen]
+#[derive(Clone, Debug, PartialEq)]
+pub enum MatrixUnion {
+    Loading = "loading",
+    Count(u32),
+    Name(MatrixName),
+}
+
 #[wasm_bindgen(module = "tests/wasm/element_matrix.js")]
 extern "C" {
     #[derive(Clone, Debug, PartialEq)]
@@ -260,6 +269,8 @@ matrix! {
     of_exported       [+  +  +  +  -  +  +  +]: MatrixItem               = [item(1), item(2), item(3)] => "[Item(1),Item(2),Item(3)]";
     of_c_enum         [+  +  +  +  +  +  +  -]: MatrixLevel              = [Low, High, High] => "[1,2,2]";
     of_string_enum    [+  +  +  +  +  +  +  -]: MatrixName               = [A, B, B] => r#"["a","b","b"]"#;
+    // hole: of_union sl, `MatrixUnion: RefIntoWasmAbi` is not satisfied
+    of_union          [+  +  +  +  -  +  +  +]: MatrixUnion              = [MatrixUnion::Loading, MatrixUnion::Count(7), MatrixUnion::Name(A)] => r#"["loading",7,"a"]"#;
     of_hand_written   [+  +  +  +  +  +  +  -]: Point                    = [point(1., 2.), point(3., 4.)] => r#"[{"x":1,"y":2},{"x":3,"y":4}]"#;
 
     opt_u32           [+  +  +  +  +  +  +  -]: Option<u32>              = [Some(1), None, Some(u32::MAX)] => "[1,undefined,4294967295]";
@@ -274,6 +285,8 @@ matrix! {
     opt_exported      [+  +  +  +  -  +  +  +]: Option<MatrixItem>       = [Some(item(1)), None, Some(item(3))] => "[Item(1),undefined,Item(3)]";
     opt_c_enum        [+  +  +  +  +  +  +  -]: Option<MatrixLevel>      = [Some(Low), None, Some(High)] => "[1,undefined,2]";
     opt_string_enum   [+  +  +  +  +  +  +  -]: Option<MatrixName>       = [Some(A), None, Some(B)] => r#"["a",undefined,"b"]"#;
+    // hole: opt_union sl, `Option<MatrixUnion>: RefIntoWasmAbi` is not satisfied
+    opt_union         [+  +  +  +  -  +  +  +]: Option<MatrixUnion>      = [Some(MatrixUnion::Loading), None, Some(MatrixUnion::Count(7))] => r#"["loading",undefined,7]"#;
     // hole: opt_hand_written sl, `Option<Point>: RefIntoWasmAbi` is not satisfied
     opt_hand_written  [+  +  +  +  -  +  +  -]: Option<Point>            = [Some(point(1., 2.)), None, Some(point(3., 4.))] => r#"[{"x":1,"y":2},undefined,{"x":3,"y":4}]"#;
 
@@ -289,6 +302,8 @@ matrix! {
     null_exported     [+  +  +  +  -  +  +  +]: Nullable<MatrixItem>     = [Value(item(1)), Null, Value(item(3))] => "[Item(1),null,Item(3)]";
     null_c_enum       [+  +  +  +  +  +  +  -]: Nullable<MatrixLevel>    = [Value(Low), Null, Value(High)] => "[1,null,2]";
     null_string_enum  [+  +  +  +  +  +  +  -]: Nullable<MatrixName>     = [Value(A), Null, Value(B)] => r#"["a",null,"b"]"#;
+    // hole: null_union sl, `Nullable<MatrixUnion>: RefIntoWasmAbi` is not satisfied
+    null_union        [+  +  +  +  -  +  +  +]: Nullable<MatrixUnion>    = [Value(MatrixUnion::Loading), Null, Value(MatrixUnion::Count(7))] => r#"["loading",null,7]"#;
     null_opt_string   [+  +  +  +  +  +  +  +]: Nullable<Option<String>> = [Value(Some(s("a"))), Null, Value(None)] => r#"["a",null,undefined]"#;
 
     vec_u32           [+  +  +  +  +  +  +  +]: Vec<u32>                 = [vec![1, 2], vec![], vec![3]] => "[Uint32Array[1,2],Uint32Array[],Uint32Array[3]]";
