@@ -1907,6 +1907,41 @@ if (require('worker_threads').isMainThread) {{
         } else {
             String::new()
         };
+        // Termination on emscripten is its `abort()`, which runs
+        // `Module.onAbort` before re-trapping. Route that to the runtime's
+        // `set_on_abort` handler through the `__wbg_call_abort_hook` export,
+        // wrapping an `onAbort` the embedder set so both run (ours first:
+        // the embedder's may tear the process down). A handler that throws
+        // must not turn the abort into a different error, and one that
+        // itself aborts (a `panic=abort` panic, `process::abort()`) must not
+        // recurse: `abort()` runs `onAbort` before it sets `ABORT`, so the
+        // wrapper keeps its own re-entry flag and runs the handler once.
+        // That inner `abort()` has already run the embedder's `onAbort`
+        // (with the handler's own cause) and set `ABORT`, so the outer
+        // level doesn't run it a second time.
+        let abort_hook_logic = if self
+            .module
+            .exports
+            .iter()
+            .any(|e| e.name == "__wbg_call_abort_hook")
+        {
+            format!(
+                "const __wbg_prev_on_abort = Module['onAbort'];
+                    let __wbg_in_abort_hook = false;
+                    Module['onAbort'] = (what) => {{
+                        if (!__wbg_in_abort_hook) {{
+                            __wbg_in_abort_hook = true;
+                            const abortedBefore = ABORT;
+                            try {{ {}(); }} catch (_) {{}}
+                            if (ABORT && !abortedBefore) return;
+                        }}
+                        __wbg_prev_on_abort?.(what);
+                    }};",
+                emscripten_mangle("__wbg_call_abort_hook")
+            )
+        } else {
+            String::new()
+        };
 
         let init_deps: BTreeSet<&str> = std::iter::once("addOnInit")
             .chain(self.adapter_deps.iter().map(String::as_str))
@@ -1914,6 +1949,10 @@ if (require('worker_threads').isMainThread) {{
             .collect();
         let init_dep_refs: Vec<String> = init_deps.iter().map(|d| format!("'${d}'")).collect();
 
+        // The abort hook is installed before `_initialize` / the start
+        // function run, so a `#[wasm_bindgen(start)]` that registers a
+        // handler and then aborts still reaches it.
+        //
         // `__force` keeps `$initBindgen` (and, via its `__deps`, every global
         // helper) in the build even though no compiled code references it.
         // Public exports carry their own `__export`/`__force` attributes at
@@ -1927,6 +1966,7 @@ if (require('worker_threads').isMainThread) {{
                 $initBindgen__postset: 'addOnInit(initBindgen);',
                 $initBindgen__force: true,
                 $initBindgen: () => {{
+                    {abort_hook_logic}
                     {initialize_logic}
                     {start_logic}
                     {classes_and_exports}
