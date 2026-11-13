@@ -87,3 +87,74 @@ exports.jsFreeKept = () => {
     returned = [];
     return sum;
 };
+
+// Runs `f` with `object[name]` throwing on its `nth` call.
+function failing(object, name, nth, f) {
+    const original = object[name];
+    let calls = 0;
+    object[name] = function (...args) {
+        if (++calls === nth) throw new Error('failed decode');
+        return original.apply(this, args);
+    };
+    try {
+        return f(() => { calls = 0; });
+    } finally {
+        object[name] = original;
+    }
+}
+
+exports.failedDecodes = (memory) => {
+    // A string that fails to decode releases the rest, and their buffer.
+    failing(TextDecoder.prototype, 'decode', 2, reset => {
+        assertFlat(memory, () => {
+            reset();
+            assert.throws(() => wasm.given_names(3), /failed decode/);
+        });
+    });
+    failing(TextDecoder.prototype, 'decode', 4, reset => {
+        assertFlat(memory, () => {
+            reset();
+            assert.throws(() => wasm.given_nested_names(3), /failed decode/);
+        });
+    });
+
+    // A point that fails to wrap frees the ones not yet wrapped, and leaves
+    // the wrapped ones to their wrappers.
+    for (const given of [wasm.given_points, wasm.given_maybe_points]) {
+        const before = live();
+        const wrapped = [];
+        const wrap = wasm.Kept.__wrap;
+        failing(wasm.Kept, '__wrap', 3, () => {
+            const failingWrap = wasm.Kept.__wrap;
+            wasm.Kept.__wrap = function (ptr) {
+                const point = failingWrap.call(this, ptr);
+                wrapped.push(point);
+                return point;
+            };
+            assert.throws(() => given(5), /failed decode/);
+        });
+        assert.strictEqual(wasm.Kept.__wrap, wrap);
+        assert.deepStrictEqual(wrapped.map(point => point.value), [0, 1]);
+        assert.strictEqual(live(), before + 2);
+        wrapped.forEach(point => point.free());
+        assert.strictEqual(live(), before);
+    }
+
+    // A handle that fails to load drops the rest. Without reference types
+    // a handle is read off the JS heap, which can't fail.
+    for (const given of [wasm.given_values, wasm.given_maybe_values]) {
+        assert.deepStrictEqual(given(3), ['v0', 'v1', 'v2']);
+        const before = wasm.rejected_handles();
+        let failed = true;
+        failing(WebAssembly.Table.prototype, 'get', 2, () => {
+            try {
+                given(3);
+                failed = false;
+            } catch (e) {
+                assert.match(e.message, /failed decode/);
+            }
+        });
+        assert.strictEqual(wasm.rejected_handles(), before);
+        if (!failed) continue;
+    }
+};

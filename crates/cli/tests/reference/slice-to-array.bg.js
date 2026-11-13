@@ -10,13 +10,17 @@ export function __wbg_js_slice_optional_string_as_array_ce9ccdb9300131fd(arg0, a
         v0 = [];
         let p0 = arg0;
         p0 = p0 >>> 0;
-        const view0 = getDataViewMemory0();
-        for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
-            const w0_0 = view0.getInt32(p0 + 0, true);
-            const w0_1 = view0.getInt32(p0 + 4, true);
-            v0.push(getStringFromWasm0(w0_0, w0_1));
+        const b0 = p0;
+        try {
+            const view0 = getDataViewMemory0();
+            for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
+                const w0_0 = view0.getInt32(p0 + 0, true);
+                const w0_1 = view0.getInt32(p0 + 4, true);
+                v0.push(getStringFromWasm0(w0_0, w0_1));
+            }
+        } finally {
+            if (b0) wasm.__wbindgen_free(b0, arg1 * 8, 4);
         }
-        wasm.__wbindgen_free(arg0, arg1 * 8, 4);
     }
     js_slice_optional_string_as_array(v0);
 }
@@ -27,13 +31,17 @@ export function __wbg_js_slice_string_as_array_03aefca66a560a29(arg0, arg1) {
     const v0 = [];
     let p0 = arg0;
     p0 = p0 >>> 0;
-    const view0 = getDataViewMemory0();
-    for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
-        const w0_0 = view0.getInt32(p0 + 0, true);
-        const w0_1 = view0.getInt32(p0 + 4, true);
-        v0.push(getStringFromWasm0(w0_0, w0_1));
+    const b0 = p0;
+    try {
+        const view0 = getDataViewMemory0();
+        for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
+            const w0_0 = view0.getInt32(p0 + 0, true);
+            const w0_1 = view0.getInt32(p0 + 4, true);
+            v0.push(getStringFromWasm0(w0_0, w0_1));
+        }
+    } finally {
+        if (b0) wasm.__wbindgen_free(b0, arg1 * 8, 4);
     }
-    wasm.__wbindgen_free(arg0, arg1 * 8, 4);
     js_slice_string_as_array(v0);
 }
 export function __wbg_js_slice_u16_as_array_78e736a5d5adf04b(arg0, arg1) {

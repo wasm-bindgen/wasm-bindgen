@@ -757,6 +757,11 @@ impl VectorKind {
         }
     }
 
+    /// Whether the elements are handles to JS values.
+    pub fn is_handles(&self) -> bool {
+        matches!(self, VectorKind::Externref | VectorKind::NamedExternref(_))
+    }
+
     pub fn size(&self) -> usize {
         match *self {
             VectorKind::String => 1,

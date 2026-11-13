@@ -1,5 +1,6 @@
 //! A value JS passes that its glue rejects leaves every other value of the
-//! call with JS.
+//! call with JS, and a sequence Rust gives is released however far JS got in
+//! reading it.
 
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
@@ -78,10 +79,44 @@ pub fn rejected_handles() -> u32 {
     wasm_bindgen::externref_heap_live_count()
 }
 
+#[wasm_bindgen]
+pub fn given_names(n: usize) -> Vec<String> {
+    (0..n).map(|_| "a".repeat(200 * 1024)).collect()
+}
+
+#[wasm_bindgen]
+pub fn given_nested_names(n: usize) -> Vec<Vec<String>> {
+    (0..n).map(|_| given_names(2)).collect()
+}
+
+#[wasm_bindgen]
+pub fn given_points(n: u32) -> Vec<Kept> {
+    (0..n).map(Kept::new).collect()
+}
+
+#[wasm_bindgen]
+pub fn given_maybe_points(n: u32) -> Vec<Option<Kept>> {
+    (0..n).map(|i| Some(Kept::new(i))).collect()
+}
+
+#[wasm_bindgen]
+pub fn given_values(n: u32) -> Vec<JsValue> {
+    (0..n).map(|i| JsValue::from(format!("v{i}"))).collect()
+}
+
+#[wasm_bindgen]
+pub fn given_maybe_values(n: u32) -> Vec<Option<JsValue>> {
+    (0..n)
+        .map(|i| Some(JsValue::from(format!("v{i}"))))
+        .collect()
+}
+
 #[wasm_bindgen(module = "tests/wasm/rejected_values.js")]
 extern "C" {
     #[wasm_bindgen(js_name = rejectedArguments)]
     fn rejected_arguments(memory: JsValue);
+    #[wasm_bindgen(js_name = failedDecodes)]
+    fn failed_decodes(memory: JsValue);
     #[wasm_bindgen(catch, js_name = jsBadPoints)]
     fn js_bad_points() -> Result<Vec<Kept>, JsValue>;
     #[wasm_bindgen(catch, js_name = jsBadNestedPoints)]
@@ -108,4 +143,9 @@ fn returns() {
     assert_eq!(Kept::live_count(), live + 2);
     assert_eq!(js_free_kept(), 3);
     assert_eq!(Kept::live_count(), live);
+}
+
+#[wasm_bindgen_test]
+fn decodes() {
+    failed_decodes(wasm_bindgen::memory());
 }

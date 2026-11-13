@@ -24,12 +24,25 @@ export class NamespaceConsumer {
         const v1 = [];
         let p1 = ret[0];
         p1 = p1 >>> 0;
-        const view1 = getDataViewMemory0();
-        for (const end1 = p1 + ret[1] * 4; p1 < end1; p1 += 4) {
-            const w1_0 = view1.getInt32(p1 + 0, true);
-            v1.push(bar__Point.__wrap(w1_0));
+        const b1 = p1;
+        try {
+            const view1 = getDataViewMemory0();
+            for (const end1 = p1 + ret[1] * 4; p1 < end1; p1 += 4) {
+                const w1_0 = view1.getInt32(p1 + 0, true);
+                const obj2 = bar__Point.__wrap(w1_0);
+                getDataViewMemory0().setInt32(p1 + 0, 0, true);
+                v1.push(obj2);
+            }
+        } finally {
+            if (b1) {
+                for (let k3 = 0; k3 < ret[1]; k3++) {
+                    const cell3 = b1 + k3 * 4;
+                    const w3_0 = getDataViewMemory0().getInt32(cell3 + 0, true) >>> 0;
+                    if (w3_0) wasm.__wbg_bar__point_free(w3_0, 1);
+                }
+                wasm.__wbindgen_free(b1, ret[1] * 4, 4);
+            }
         }
-        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
         return v1;
     }
     /**
@@ -76,12 +89,25 @@ export class NamespaceConsumer {
         const v4 = [];
         let p4 = ret[0];
         p4 = p4 >>> 0;
-        const view4 = getDataViewMemory0();
-        for (const end4 = p4 + ret[1] * 4; p4 < end4; p4 += 4) {
-            const w4_0 = view4.getInt32(p4 + 0, true);
-            v4.push(bar__Point.__wrap(w4_0));
+        const b4 = p4;
+        try {
+            const view4 = getDataViewMemory0();
+            for (const end4 = p4 + ret[1] * 4; p4 < end4; p4 += 4) {
+                const w4_0 = view4.getInt32(p4 + 0, true);
+                const obj5 = bar__Point.__wrap(w4_0);
+                getDataViewMemory0().setInt32(p4 + 0, 0, true);
+                v4.push(obj5);
+            }
+        } finally {
+            if (b4) {
+                for (let k6 = 0; k6 < ret[1]; k6++) {
+                    const cell6 = b4 + k6 * 4;
+                    const w6_0 = getDataViewMemory0().getInt32(cell6 + 0, true) >>> 0;
+                    if (w6_0) wasm.__wbg_bar__point_free(w6_0, 1);
+                }
+                wasm.__wbindgen_free(b4, ret[1] * 4, 4);
+            }
         }
-        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
         return v4;
     }
     /**
@@ -121,12 +147,25 @@ export class NamespaceConsumer {
         const v4 = [];
         let p4 = ret[0];
         p4 = p4 >>> 0;
-        const view4 = getDataViewMemory0();
-        for (const end4 = p4 + ret[1] * 4; p4 < end4; p4 += 4) {
-            const w4_0 = view4.getInt32(p4 + 0, true);
-            v4.push(foo__Point.__wrap(w4_0));
+        const b4 = p4;
+        try {
+            const view4 = getDataViewMemory0();
+            for (const end4 = p4 + ret[1] * 4; p4 < end4; p4 += 4) {
+                const w4_0 = view4.getInt32(p4 + 0, true);
+                const obj5 = foo__Point.__wrap(w4_0);
+                getDataViewMemory0().setInt32(p4 + 0, 0, true);
+                v4.push(obj5);
+            }
+        } finally {
+            if (b4) {
+                for (let k6 = 0; k6 < ret[1]; k6++) {
+                    const cell6 = b4 + k6 * 4;
+                    const w6_0 = getDataViewMemory0().getInt32(cell6 + 0, true) >>> 0;
+                    if (w6_0) wasm.__wbg_foo__point_free(w6_0, 1);
+                }
+                wasm.__wbindgen_free(b4, ret[1] * 4, 4);
+            }
         }
-        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
         return v4;
     }
     /**
@@ -144,12 +183,25 @@ export class NamespaceConsumer {
         const v1 = [];
         let p1 = ret[0];
         p1 = p1 >>> 0;
-        const view1 = getDataViewMemory0();
-        for (const end1 = p1 + ret[1] * 4; p1 < end1; p1 += 4) {
-            const w1_0 = view1.getInt32(p1 + 0, true);
-            v1.push(foo__Point.__wrap(w1_0));
+        const b1 = p1;
+        try {
+            const view1 = getDataViewMemory0();
+            for (const end1 = p1 + ret[1] * 4; p1 < end1; p1 += 4) {
+                const w1_0 = view1.getInt32(p1 + 0, true);
+                const obj2 = foo__Point.__wrap(w1_0);
+                getDataViewMemory0().setInt32(p1 + 0, 0, true);
+                v1.push(obj2);
+            }
+        } finally {
+            if (b1) {
+                for (let k3 = 0; k3 < ret[1]; k3++) {
+                    const cell3 = b1 + k3 * 4;
+                    const w3_0 = getDataViewMemory0().getInt32(cell3 + 0, true) >>> 0;
+                    if (w3_0) wasm.__wbg_foo__point_free(w3_0, 1);
+                }
+                wasm.__wbindgen_free(b1, ret[1] * 4, 4);
+            }
         }
-        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
         return v1;
     }
     /**

@@ -301,13 +301,17 @@ export function __wbindgen_generic_0000000000000023(arg0, arg1, arg2) {
         v0 = [];
         let p0 = arg0;
         p0 = p0 >>> 0;
-        const view0 = getDataViewMemory0();
-        for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
-            const w0_0 = view0.getInt32(p0 + 0, true);
-            const w0_1 = view0.getInt32(p0 + 4, true);
-            v0.push(getStringFromWasm0(w0_0, w0_1));
+        const b0 = p0;
+        try {
+            const view0 = getDataViewMemory0();
+            for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
+                const w0_0 = view0.getInt32(p0 + 0, true);
+                const w0_1 = view0.getInt32(p0 + 4, true);
+                v0.push(getStringFromWasm0(w0_0, w0_1));
+            }
+        } finally {
+            if (b0) wasm.__wbindgen_free(b0, arg1 * 8, 4);
         }
-        wasm.__wbindgen_free(arg0, arg1 * 8, 4);
     }
     // generic import `logOptStrSlice`: [Option(Ref(Slice(Cell(String)))), U32] -> Unit
     logOptStrSlice(v0, arg2 >>> 0);
@@ -328,13 +332,17 @@ export function __wbindgen_generic_0000000000000027(arg0, arg1, arg2) {
     const v0 = [];
     let p0 = arg0;
     p0 = p0 >>> 0;
-    const view0 = getDataViewMemory0();
-    for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
-        const w0_0 = view0.getInt32(p0 + 0, true);
-        const w0_1 = view0.getInt32(p0 + 4, true);
-        v0.push(getStringFromWasm0(w0_0, w0_1));
+    const b0 = p0;
+    try {
+        const view0 = getDataViewMemory0();
+        for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
+            const w0_0 = view0.getInt32(p0 + 0, true);
+            const w0_1 = view0.getInt32(p0 + 4, true);
+            v0.push(getStringFromWasm0(w0_0, w0_1));
+        }
+    } finally {
+        if (b0) wasm.__wbindgen_free(b0, arg1 * 8, 4);
     }
-    wasm.__wbindgen_free(arg0, arg1 * 8, 4);
     // generic import `logStrSlice`: [Ref(Slice(Cell(String))), U32] -> Unit
     logStrSlice(v0, arg2 >>> 0);
 }

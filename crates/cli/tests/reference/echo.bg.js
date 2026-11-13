@@ -396,21 +396,25 @@ export function echo_option_vec_string(a) {
         v4 = [];
         let p4 = ret[0];
         p4 = p4 >>> 0;
-        for (const end4 = p4 + ret[1] * 8; p4 < end4; p4 += 8) {
+        const b4 = p4;
+        try {
             const view4 = getDataViewMemory0();
-            const w4_0 = view4.getInt32(p4 + 0, true);
-            const w4_1 = view4.getInt32(p4 + 4, true);
-            let deferred5_0;
-            let deferred5_1;
-            try {
-                deferred5_0 = w4_0;
-                deferred5_1 = w4_1;
+            for (const end4 = p4 + ret[1] * 8; p4 < end4; p4 += 8) {
+                const w4_0 = view4.getInt32(p4 + 0, true);
+                const w4_1 = view4.getInt32(p4 + 4, true);
                 v4.push(getStringFromWasm0(w4_0, w4_1));
-            } finally {
-                wasm.__wbindgen_free(deferred5_0, deferred5_1, 1);
+            }
+        } finally {
+            if (b4) {
+                for (let k5 = 0; k5 < ret[1]; k5++) {
+                    const cell5 = b4 + k5 * 8;
+                    const w5_0 = getDataViewMemory0().getInt32(cell5 + 0, true) >>> 0;
+                    const w5_1 = getDataViewMemory0().getInt32(cell5 + 4, true) >>> 0;
+                    if (w5_0) { wasm.__wbindgen_free(w5_0, w5_1 * 1, 1); }
+                }
+                wasm.__wbindgen_free(b4, ret[1] * 8, 4);
             }
         }
-        wasm.__wbindgen_free(ret[0], ret[1] * 8, 4);
     }
     return v4;
 }
@@ -458,12 +462,25 @@ export function echo_option_vec_struct(a) {
         v4 = [];
         let p4 = ret[0];
         p4 = p4 >>> 0;
-        const view4 = getDataViewMemory0();
-        for (const end4 = p4 + ret[1] * 4; p4 < end4; p4 += 4) {
-            const w4_0 = view4.getInt32(p4 + 0, true);
-            v4.push(Foo.__wrap(w4_0));
+        const b4 = p4;
+        try {
+            const view4 = getDataViewMemory0();
+            for (const end4 = p4 + ret[1] * 4; p4 < end4; p4 += 4) {
+                const w4_0 = view4.getInt32(p4 + 0, true);
+                const obj5 = Foo.__wrap(w4_0);
+                getDataViewMemory0().setInt32(p4 + 0, 0, true);
+                v4.push(obj5);
+            }
+        } finally {
+            if (b4) {
+                for (let k6 = 0; k6 < ret[1]; k6++) {
+                    const cell6 = b4 + k6 * 4;
+                    const w6_0 = getDataViewMemory0().getInt32(cell6 + 0, true) >>> 0;
+                    if (w6_0) wasm.__wbg_foo_free(w6_0, 1);
+                }
+                wasm.__wbindgen_free(b4, ret[1] * 4, 4);
+            }
         }
-        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
     }
     return v4;
 }
@@ -834,21 +851,25 @@ export function echo_vec_string(a) {
     const v4 = [];
     let p4 = ret[0];
     p4 = p4 >>> 0;
-    for (const end4 = p4 + ret[1] * 8; p4 < end4; p4 += 8) {
+    const b4 = p4;
+    try {
         const view4 = getDataViewMemory0();
-        const w4_0 = view4.getInt32(p4 + 0, true);
-        const w4_1 = view4.getInt32(p4 + 4, true);
-        let deferred5_0;
-        let deferred5_1;
-        try {
-            deferred5_0 = w4_0;
-            deferred5_1 = w4_1;
+        for (const end4 = p4 + ret[1] * 8; p4 < end4; p4 += 8) {
+            const w4_0 = view4.getInt32(p4 + 0, true);
+            const w4_1 = view4.getInt32(p4 + 4, true);
             v4.push(getStringFromWasm0(w4_0, w4_1));
-        } finally {
-            wasm.__wbindgen_free(deferred5_0, deferred5_1, 1);
+        }
+    } finally {
+        if (b4) {
+            for (let k5 = 0; k5 < ret[1]; k5++) {
+                const cell5 = b4 + k5 * 8;
+                const w5_0 = getDataViewMemory0().getInt32(cell5 + 0, true) >>> 0;
+                const w5_1 = getDataViewMemory0().getInt32(cell5 + 4, true) >>> 0;
+                if (w5_0) { wasm.__wbindgen_free(w5_0, w5_1 * 1, 1); }
+            }
+            wasm.__wbindgen_free(b4, ret[1] * 8, 4);
         }
     }
-    wasm.__wbindgen_free(ret[0], ret[1] * 8, 4);
     return v4;
 }
 
@@ -889,12 +910,25 @@ export function echo_vec_struct(a) {
     const v4 = [];
     let p4 = ret[0];
     p4 = p4 >>> 0;
-    const view4 = getDataViewMemory0();
-    for (const end4 = p4 + ret[1] * 4; p4 < end4; p4 += 4) {
-        const w4_0 = view4.getInt32(p4 + 0, true);
-        v4.push(Foo.__wrap(w4_0));
+    const b4 = p4;
+    try {
+        const view4 = getDataViewMemory0();
+        for (const end4 = p4 + ret[1] * 4; p4 < end4; p4 += 4) {
+            const w4_0 = view4.getInt32(p4 + 0, true);
+            const obj5 = Foo.__wrap(w4_0);
+            getDataViewMemory0().setInt32(p4 + 0, 0, true);
+            v4.push(obj5);
+        }
+    } finally {
+        if (b4) {
+            for (let k6 = 0; k6 < ret[1]; k6++) {
+                const cell6 = b4 + k6 * 4;
+                const w6_0 = getDataViewMemory0().getInt32(cell6 + 0, true) >>> 0;
+                if (w6_0) wasm.__wbg_foo_free(w6_0, 1);
+            }
+            wasm.__wbindgen_free(b4, ret[1] * 4, 4);
+        }
     }
-    wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
     return v4;
 }
 

@@ -100,21 +100,25 @@ export function strings(input) {
     const v4 = [];
     let p4 = ret[0];
     p4 = p4 >>> 0;
-    for (const end4 = p4 + ret[1] * 8; p4 < end4; p4 += 8) {
+    const b4 = p4;
+    try {
         const view4 = getDataViewMemory0();
-        const w4_0 = view4.getInt32(p4 + 0, true);
-        const w4_1 = view4.getInt32(p4 + 4, true);
-        let deferred5_0;
-        let deferred5_1;
-        try {
-            deferred5_0 = w4_0;
-            deferred5_1 = w4_1;
+        for (const end4 = p4 + ret[1] * 8; p4 < end4; p4 += 8) {
+            const w4_0 = view4.getInt32(p4 + 0, true);
+            const w4_1 = view4.getInt32(p4 + 4, true);
             v4.push(getStringFromWasm0(w4_0, w4_1));
-        } finally {
-            wasm.__wbindgen_free(deferred5_0, deferred5_1, 1);
+        }
+    } finally {
+        if (b4) {
+            for (let k5 = 0; k5 < ret[1]; k5++) {
+                const cell5 = b4 + k5 * 8;
+                const w5_0 = getDataViewMemory0().getInt32(cell5 + 0, true) >>> 0;
+                const w5_1 = getDataViewMemory0().getInt32(cell5 + 4, true) >>> 0;
+                if (w5_0) { wasm.__wbindgen_free(w5_0, w5_1 * 1, 1); }
+            }
+            wasm.__wbindgen_free(b4, ret[1] * 8, 4);
         }
     }
-    wasm.__wbindgen_free(ret[0], ret[1] * 8, 4);
     return v4;
 }
 export function __wbg___wbindgen_debug_string_f249a2a76caa9a55(arg0, arg1) {

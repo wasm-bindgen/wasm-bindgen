@@ -46,12 +46,16 @@ export function enum_vec_echo(values) {
     const v2 = [];
     let p2 = ret[0];
     p2 = p2 >>> 0;
-    const view2 = getDataViewMemory0();
-    for (const end2 = p2 + ret[1] * 8; p2 < end2; p2 += 8) {
-        const w2_0 = view2.getFloat64(p2 + 0, true);
-        v2.push(w2_0);
+    const b2 = p2;
+    try {
+        const view2 = getDataViewMemory0();
+        for (const end2 = p2 + ret[1] * 8; p2 < end2; p2 += 8) {
+            const w2_0 = view2.getFloat64(p2 + 0, true);
+            v2.push(w2_0);
+        }
+    } finally {
+        if (b2) wasm.__wbindgen_free(b2, ret[1] * 8, 8);
     }
-    wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
     return v2;
 }
 
@@ -78,12 +82,16 @@ export function hidden_err_vec_echo(values) {
     const v2 = [];
     let p2 = ret[0];
     p2 = p2 >>> 0;
-    const view2 = getDataViewMemory0();
-    for (const end2 = p2 + ret[1] * 8; p2 < end2; p2 += 8) {
-        const w2_0 = view2.getFloat64(p2 + 0, true);
-        v2.push(w2_0);
+    const b2 = p2;
+    try {
+        const view2 = getDataViewMemory0();
+        for (const end2 = p2 + ret[1] * 8; p2 < end2; p2 += 8) {
+            const w2_0 = view2.getFloat64(p2 + 0, true);
+            v2.push(w2_0);
+        }
+    } finally {
+        if (b2) wasm.__wbindgen_free(b2, ret[1] * 8, 8);
     }
-    wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
     return v2;
 }
 
@@ -121,12 +129,16 @@ export function ns_err_vec_echo(values) {
     const v2 = [];
     let p2 = ret[0];
     p2 = p2 >>> 0;
-    const view2 = getDataViewMemory0();
-    for (const end2 = p2 + ret[1] * 8; p2 < end2; p2 += 8) {
-        const w2_0 = view2.getFloat64(p2 + 0, true);
-        v2.push(w2_0);
+    const b2 = p2;
+    try {
+        const view2 = getDataViewMemory0();
+        for (const end2 = p2 + ret[1] * 8; p2 < end2; p2 += 8) {
+            const w2_0 = view2.getFloat64(p2 + 0, true);
+            v2.push(w2_0);
+        }
+    } finally {
+        if (b2) wasm.__wbindgen_free(b2, ret[1] * 8, 8);
     }
-    wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
     return v2;
 }
 
@@ -157,12 +169,16 @@ export function option_enum_vec_echo(values) {
         v2 = [];
         let p2 = ret[0];
         p2 = p2 >>> 0;
-        const view2 = getDataViewMemory0();
-        for (const end2 = p2 + ret[1] * 8; p2 < end2; p2 += 8) {
-            const w2_0 = view2.getFloat64(p2 + 0, true);
-            v2.push(w2_0);
+        const b2 = p2;
+        try {
+            const view2 = getDataViewMemory0();
+            for (const end2 = p2 + ret[1] * 8; p2 < end2; p2 += 8) {
+                const w2_0 = view2.getFloat64(p2 + 0, true);
+                v2.push(w2_0);
+            }
+        } finally {
+            if (b2) wasm.__wbindgen_free(b2, ret[1] * 8, 8);
         }
-        wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
     }
     return v2;
 }
@@ -190,12 +206,16 @@ export function renamed_err_vec_echo(values) {
     const v2 = [];
     let p2 = ret[0];
     p2 = p2 >>> 0;
-    const view2 = getDataViewMemory0();
-    for (const end2 = p2 + ret[1] * 8; p2 < end2; p2 += 8) {
-        const w2_0 = view2.getFloat64(p2 + 0, true);
-        v2.push(w2_0);
+    const b2 = p2;
+    try {
+        const view2 = getDataViewMemory0();
+        for (const end2 = p2 + ret[1] * 8; p2 < end2; p2 += 8) {
+            const w2_0 = view2.getFloat64(p2 + 0, true);
+            v2.push(w2_0);
+        }
+    } finally {
+        if (b2) wasm.__wbindgen_free(b2, ret[1] * 8, 8);
     }
-    wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
     return v2;
 }
 export function __wbg___wbindgen_throw_4c88d8bf264fd984(arg0, arg1) {

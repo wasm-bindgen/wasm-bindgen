@@ -82,6 +82,9 @@ pub struct JsBuilder<'a, 'b> {
     /// Whether the glue is a stored value's, running in a scope.
     stored: bool,
 
+    /// The cell the glue is decoding its value from.
+    cell: Option<CellRead>,
+
     /// An index used to manage allocation of temporary indices, used to name
     /// variables to ensure nothing clashes with anything else.
     tmp: usize,
@@ -303,8 +306,23 @@ struct Scope {
     given: Vec<Given>,
     moved: bool,
     stored: bool,
+    cell: Option<CellRead>,
     instr: InstrState,
     wasm_refs: usize,
+}
+
+/// A cell Rust gave, as its value's glue decodes it. The glue reads the
+/// words and releases nothing: what they own is recorded, for what holds
+/// the cell to release once it has been read, however far the reading got.
+struct CellRead {
+    /// The cell's words, which are the glue's inputs.
+    words: Vec<String>,
+    /// The cell's address, with each word's offset and accessor suffix.
+    at: String,
+    fields: Vec<(usize, &'static str)>,
+    mem: walrus::MemoryId,
+    /// What the words own, by the first one's index.
+    owned: Vec<Given>,
 }
 
 /// What an element's glue did in its scope.
@@ -315,6 +333,8 @@ struct Element {
     finally: String,
     /// What its words own.
     given: Vec<Given>,
+    /// What the words of the cell it decoded own.
+    owned: Vec<Given>,
     /// Whether it may have called into wasm, which may grow memory.
     calls_wasm: bool,
 }
@@ -1181,6 +1201,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             given: Vec::new(),
             moved: false,
             stored: false,
+            cell: None,
             prelude: Vec::new(),
             stack: Vec::new(),
         }
@@ -1470,6 +1491,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             given: std::mem::take(&mut self.given),
             moved: std::mem::take(&mut self.moved),
             stored: std::mem::replace(&mut self.stored, true),
+            cell: self.cell.take(),
             instr: std::mem::take(&mut self.instr),
             wasm_refs: self.cx.wasm_refs,
         }
@@ -1493,6 +1515,10 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             pre_try: std::mem::replace(&mut self.pre_try, scope.pre_try),
             finally: std::mem::replace(&mut self.finally, scope.finally),
             given: std::mem::replace(&mut self.given, scope.given),
+            owned: match std::mem::replace(&mut self.cell, scope.cell) {
+                Some(cell) => cell.owned,
+                None => Vec::new(),
+            },
             calls_wasm: self.cx.wasm_refs != scope.wasm_refs,
         };
         self.args = scope.args;
@@ -1502,6 +1528,48 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         self.stored = scope.stored;
         self.instr = scope.instr;
         Ok(element)
+    }
+
+    /// Records that the words from `first` of the cell being decoded own
+    /// what `owner` says, which leaves releasing it to what holds the cell.
+    /// Glue that isn't decoding a cell releases what it's given itself.
+    fn owns(&mut self, owner: Owner, first: &str) -> Result<bool, Error> {
+        let Some(cell) = &mut self.cell else {
+            return Ok(false);
+        };
+        let Some(word) = cell.words.iter().position(|word| word == first) else {
+            bail!("a stored value's glue owns a word that isn't one of its cell's")
+        };
+        cell.owned.push(Given { word, owner });
+        Ok(true)
+    }
+
+    /// Pushes `wrap`, which hands the instance of `class` at the pointer
+    /// `word` to a wrapper. In a cell the word is cleared once the wrapper
+    /// owns the instance, so releasing the cell frees it only if it was
+    /// never wrapped.
+    fn push_wrapped(
+        &mut self,
+        wrap: String,
+        word: &str,
+        class: &str,
+        nullable: bool,
+    ) -> Result<(), Error> {
+        let class = class.to_string();
+        if !self.owns(Owner::Class { class, nullable }, word)? {
+            self.push(wrap);
+            return Ok(());
+        }
+        let cell = self.cell.as_ref().unwrap();
+        let (word, at, mem) = (cell.owned.last().unwrap().word, cell.at.clone(), cell.mem);
+        let (offset, ty) = cell.fields[word];
+        let none = if ty == "BigInt64" { "0n" } else { "0" };
+        let memory = self.dataview(mem);
+        let i = self.tmp();
+        let wrapped = self.declare("const", format!("obj{i}"), wrap);
+        self.prelude(&format!("{memory}.set{ty}({at} + {offset}, {none}, true);"));
+        self.push(wrapped);
+        Ok(())
     }
 
     fn push_safe(&mut self, arg: String) {
@@ -2130,6 +2198,13 @@ fn instruction(
         Instruction::ArgGet(n) => {
             let arg = js.args[*n as usize].clone();
             js.stack.push(arg);
+        }
+
+        // The string the next instruction decodes from its cell.
+        Instruction::DeferFree { free, align: 1 } if js.cell.is_some() => {
+            let ptr = js.stack[js.stack.len() - 2].expr().to_string();
+            let (kind, mem, free) = (VectorKind::String, js.cell.as_ref().unwrap().mem, *free);
+            js.owns(Owner::Vector { kind, mem, free }, &ptr)?;
         }
 
         Instruction::CallExport(_)
@@ -2867,6 +2942,23 @@ fn instruction(
             js.push(format!("{val} !== 0"));
         }
 
+        // A handle in a cell is read where it is, and dropped with the cell.
+        Instruction::ExternrefLoadOwned { table_and_drop } if js.cell.is_some() => {
+            let val = js.pop();
+            js.owns(Owner::Handle, &val)?;
+            match *table_and_drop {
+                Some((table, _)) => {
+                    let table = js.cx.export_name_of(table);
+                    let table = js.cx.wasm_export_ref(&table);
+                    js.push(format!("{table}.get({val})"));
+                }
+                None => {
+                    js.cx.expose_get_object();
+                    js.push(format!("getObject({val})"));
+                }
+            }
+        }
+
         Instruction::ExternrefLoadOwned { table_and_drop } => {
             let take_object = if let Some((table, drop)) = *table_and_drop {
                 js.cx
@@ -2987,7 +3079,7 @@ fn instruction(
                 }
                 Some(_) | None => {
                     let identifier = js.cx.require_class_wrap(class);
-                    js.push(format!("{identifier}.__wrap({val})"));
+                    js.push_wrapped(format!("{identifier}.__wrap({val})"), &val, class, false)?;
                 }
             }
         }
@@ -2996,13 +3088,14 @@ fn instruction(
             assert!(constructor.is_none());
             let val = js.pop();
             let identifier = js.cx.require_class_wrap(class);
-            js.push(abi_option(
+            let wrap = abi_option(
                 &val,
                 *kind,
                 "0",
                 "1",
                 &format!("{identifier}.__wrap({val})"),
-            ));
+            );
+            js.push_wrapped(wrap, &val, class, kind.nullable())?;
         }
 
         Instruction::CachedStringLoad {
@@ -3019,7 +3112,17 @@ fn instruction(
 
             js.prelude(&format!("var v{tmp} = {get}({ptr}, {len});"));
 
-            if *owned {
+            let (kind, mem, string_free) = (VectorKind::String, *mem, *free);
+            if *owned
+                && !js.owns(
+                    Owner::Vector {
+                        kind,
+                        mem,
+                        free: string_free,
+                    },
+                    &ptr,
+                )?
+            {
                 let free = js.cx.wasm_export_of(*free);
                 js.prelude(&format!("if ({ptr} !== 0) {{ {free}({ptr}, {len}, 1); }}",));
             }
@@ -3134,24 +3237,41 @@ fn instruction(
         } => {
             let len = js.pop();
             let ptr = js.pop();
+            // The data is freed once it's read, so it can never be left as
+            // a view.
+            let copy = match mode {
+                SeqValue::View => SeqValue::Copy,
+                mode => *mode,
+            };
+            let owner = Owner::Vector {
+                kind: kind.clone(),
+                mem: *mem,
+                free: *free,
+            };
+            if js.owns(owner, &ptr)? {
+                let f = view_from_wasm(js, kind, *mem);
+                js.push(seq_value_expr(format!("{f}({ptr}, {len})"), kind, copy));
+                return Ok(());
+            }
             let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem);
-            // The data is freed below, so it can never be left as a view.
             // TODO(next major): default to `slice = transfer` here and in
             // `OptionVectorLoad`, once supported. It needs a view no other view
             // can be derived from, so that a finalizer can free the data:
             // https://github.com/tc39/proposal-limited-arraybuffer/issues/19.
-            let mode = match mode {
-                SeqValue::View => SeqValue::Copy,
-                mode => *mode,
-            };
-            let load = seq_value_expr(format!("{f}({ptr}, {len})"), kind, mode);
+            let load = seq_value_expr(format!("{f}({ptr}, {len})"), kind, copy);
             let i = js.tmp();
             let free = js.cx.wasm_export_of(*free);
-            js.prelude(&format!("var v{i} = {load};"));
-            js.prelude(&format!(
-                "{free}({ptr}, {len} * {size}, {size});",
-                size = kind.size()
-            ));
+            let free = format!("{free}({ptr}, {len} * {size}, {size});", size = kind.size());
+            if kind.is_handles() {
+                // Reading a handle goes through the table, however that
+                // ends.
+                js.prelude(&format!(
+                    "var v{i};\ntry {{\nv{i} = {load};\n}} finally {{\n{free}\n}}"
+                ));
+            } else {
+                js.prelude(&format!("var v{i} = {load};"));
+                js.prelude(&free);
+            }
             let v = js.local(format!("v{i}"));
             js.push(v)
         }
@@ -3165,22 +3285,38 @@ fn instruction(
         } => {
             let len = js.pop();
             let ptr = js.pop();
-            let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem);
             let mode = match mode {
                 SeqValue::View => SeqValue::Copy,
                 mode => *mode,
+            };
+            let owner = Owner::Vector {
+                kind: kind.clone(),
+                mem: *mem,
+                free: *free,
+            };
+            let owned = js.owns(owner, &ptr)?;
+            let f = if owned {
+                view_from_wasm(js, kind, *mem)
+            } else {
+                js.cx.expose_get_vector_from_wasm(kind.clone(), *mem)
             };
             let load = seq_value_expr(format!("{f}({ptr}, {len})"), kind, mode);
             let i = js.tmp();
             let free = js.cx.wasm_export_of(*free);
             let init = empty_vector_init(&len, *option_kind);
+            let free = format!("{free}({ptr}, {len} * {size}, {size});", size = kind.size());
             js.prelude(&format!("let v{i}{init};"));
             js.prelude(&format!("if ({ptr} !== 0) {{"));
-            js.prelude(&format!("v{i} = {load};"));
-            js.prelude(&format!(
-                "{free}({ptr}, {len} * {size}, {size});",
-                size = kind.size()
-            ));
+            if owned {
+                js.prelude(&format!("v{i} = {load};"));
+            } else if kind.is_handles() {
+                js.prelude(&format!(
+                    "try {{\nv{i} = {load};\n}} finally {{\n{free}\n}}"
+                ));
+            } else {
+                js.prelude(&format!("v{i} = {load};"));
+                js.prelude(&free);
+            }
             js.prelude("}");
             let v = js.local(format!("v{i}"));
             js.push(v);
@@ -3205,24 +3341,27 @@ fn instruction(
             let memory = js.dataview(*mem);
             let view = js.local(format!("view{i}"));
             let (fields, stride, align) = encoded_slice_layout(layout)?;
-            let reads = fields
-                .iter()
-                .map(|(offset, ty)| format!("{view}.get{ty}({p} + {offset}, true)"))
-                .collect::<Vec<_>>();
             // Decode one element from its words with its own instructions,
             // into the loop body, which reads the cell's words ahead of
             // them.
             let mut bind = String::new();
-            let words = reads
+            let words = fields
                 .iter()
                 .enumerate()
-                .map(|(n, read)| {
+                .map(|(n, (offset, ty))| {
                     let word = js.local(format!("w{i}_{n}"));
-                    writeln!(bind, "const {word} = {read};").unwrap();
-                    Value::Local(word)
+                    writeln!(bind, "const {word} = {view}.get{ty}({p} + {offset}, true);").unwrap();
+                    word
                 })
                 .collect();
-            let (element, value) = encoded_element(js, elem, words, log_error, constructor)?;
+            let cell = CellRead {
+                words,
+                at: p.clone(),
+                fields: fields.clone(),
+                mem: *mem,
+                owned: Vec::new(),
+            };
+            let (element, value) = encoded_element(js, elem, cell, log_error, constructor)?;
             // Glue that calls into wasm may grow memory under the loop, so
             // each iteration then reads through the memory as it is.
             let effects =
@@ -3231,43 +3370,59 @@ fn instruction(
                 bind.insert_str(0, &format!("const {view} = {memory};\n"));
             }
             let v = js.local(format!("v{i}"));
-            let free = js.cx.wasm_export_of(*free);
             let coerce = js.cx.coerce_ptr_assign(&p);
+            // The cells are read and nothing of theirs released: what they
+            // own goes with the buffer, which a cell holding it releases
+            // and otherwise this does once the cells are read, however far
+            // the reading got.
+            let owner = Owner::Cells(Rc::new(Cells {
+                fields,
+                stride,
+                align,
+                mem: *mem,
+                free: *free,
+                given: element.owned,
+                count: *count,
+            }));
+            let held = js.owns(owner.clone(), &ptr)?;
+            let base = js.local(format!("b{i}"));
+            let release = if held {
+                None
+            } else {
+                let mut words = vec![base.clone()];
+                words.extend(len.clone());
+                Some(js.release_stmt(&owner, &words, None))
+            };
             // A sequence's cells decode into an array, and a single cell
             // into its value.
-            let (take, size, open, close) = match &len {
-                Some(len) => {
-                    if let Some(kind) = optional {
-                        let init = empty_vector_init(len, *kind);
-                        js.prelude(&format!("let {v}{init};\nif ({ptr} !== 0) {{\n{v} = [];"));
-                    } else {
-                        js.prelude(&format!("const {v} = [];"));
-                    }
-                    (
-                        format!("{v}.push({value});"),
-                        format!("{len} * {stride}"),
-                        format!(
-                            "for (const {end} = {p} + {len} * {stride}; {p} < {end}; {p} += {stride}) {{"
-                        ),
-                        "}",
-                    )
-                }
-                None => {
+            let (init, take, open, close) = match &len {
+                Some(len) => (
+                    match optional {
+                        Some(kind) => {
+                            let init = empty_vector_init(len, *kind);
+                            format!("let {v}{init};\nif ({ptr} !== 0) {{\n{v} = [];")
+                        }
+                        None => format!("const {v} = [];"),
+                    },
+                    format!("{v}.push({value});"),
+                    format!(
+                        "for (const {end} = {p} + {len} * {stride}; {p} < {end}; {p} += {stride}) {{"
+                    ),
+                    "}",
+                ),
+                None => (
                     match optional {
                         // A nullable `null` is told apart by the length.
                         Some(kind) if kind.nullable() => {
                             bail!("a single cell can't be nullable")
                         }
-                        Some(_) => js.prelude(&format!("let {v};\nif ({ptr} !== 0) {{")),
-                        None => js.prelude(&format!("let {v};")),
-                    }
-                    (
-                        format!("{v} = {value};"),
-                        stride.to_string(),
-                        String::new(),
-                        "",
-                    )
-                }
+                        Some(_) => format!("let {v};\nif ({ptr} !== 0) {{"),
+                        None => format!("let {v};"),
+                    },
+                    format!("{v} = {value};"),
+                    String::new(),
+                    "",
+                ),
             };
             // What the element deferred runs at the end of its iteration.
             let body = with_deferred(
@@ -3280,14 +3435,19 @@ fn instruction(
             } else {
                 format!("const {view} = {memory};")
             };
+            let read = format!("{view}\n{open}\n{bind}{body}{close}\n");
+            let read = match release {
+                Some(release) => {
+                    format!("const {base} = {p};\ntry {{\n{read}}} finally {{\n{release}\n}}")
+                }
+                None => read,
+            };
             js.prelude(&format!(
                 "
+                {init}
                 let {p} = {ptr};
                 {coerce}
-                {view}
-                {open}
-                {bind}{body}{close}
-                {free}({ptr}, {size}, {align});
+                {read}
                 "
             ));
             if optional.is_some() {
@@ -3636,14 +3796,15 @@ fn instruction(
 fn encoded_element(
     js: &mut JsBuilder,
     elem: &[InstructionData],
-    words: Vec<Value>,
+    cell: CellRead,
     log_error: &mut bool,
     constructor: &Option<String>,
 ) -> Result<(Element, String), Error> {
     let scope = js.enter_scope();
-    for word in words {
-        js.input(word);
+    for word in &cell.words {
+        js.input(Value::Local(word.clone()));
     }
+    js.cell = Some(cell);
     for instr in elem {
         js.begin_instr();
         instruction(js, &instr.instr, log_error, constructor)?;

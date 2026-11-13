@@ -26,13 +26,17 @@ export function __wbg_js_shapes_bd63f6912e6d4d8c(arg0, arg1, arg2, arg3, arg4, a
     const v2 = [];
     let p2 = arg6;
     p2 = p2 >>> 0;
-    const view2 = getDataViewMemory0();
-    for (const end2 = p2 + arg7 * 8; p2 < end2; p2 += 8) {
-        const w2_0 = view2.getInt32(p2 + 0, true);
-        const w2_1 = view2.getInt32(p2 + 4, true);
-        v2.push(getStringFromWasm0(w2_0, w2_1));
+    const b2 = p2;
+    try {
+        const view2 = getDataViewMemory0();
+        for (const end2 = p2 + arg7 * 8; p2 < end2; p2 += 8) {
+            const w2_0 = view2.getInt32(p2 + 0, true);
+            const w2_1 = view2.getInt32(p2 + 4, true);
+            v2.push(getStringFromWasm0(w2_0, w2_1));
+        }
+    } finally {
+        if (b2) wasm.__wbindgen_free(b2, arg7 * 8, 4);
     }
-    wasm.__wbindgen_free(arg6, arg7 * 8, 4);
     js_shapes(v0, v1, Array.from(getClampedArrayU8FromWasm0(arg4, arg5)), v2);
 }
 export function __wbg_js_vec_block_d2b61694b56cf97a(arg0, arg1, arg2, arg3, arg4, arg5) {
@@ -49,13 +53,17 @@ export function __wbindgen_generic_0000000000000000(arg0, arg1) {
     const v0 = [];
     let p0 = arg0;
     p0 = p0 >>> 0;
-    const view0 = getDataViewMemory0();
-    for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
-        const w0_0 = view0.getInt32(p0 + 0, true);
-        const w0_1 = view0.getInt32(p0 + 4, true);
-        v0.push(getStringFromWasm0(w0_0, w0_1));
+    const b0 = p0;
+    try {
+        const view0 = getDataViewMemory0();
+        for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
+            const w0_0 = view0.getInt32(p0 + 0, true);
+            const w0_1 = view0.getInt32(p0 + 4, true);
+            v0.push(getStringFromWasm0(w0_0, w0_1));
+        }
+    } finally {
+        if (b0) wasm.__wbindgen_free(b0, arg1 * 8, 4);
     }
-    wasm.__wbindgen_free(arg0, arg1 * 8, 4);
     // generic import `js_generic_slice`: [Ref(Slice(Cell(String)))] -> Unit
     js_generic_slice(v0);
 }

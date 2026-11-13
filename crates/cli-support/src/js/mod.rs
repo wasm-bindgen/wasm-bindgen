@@ -3657,10 +3657,13 @@ if (require('worker_threads').isMainThread) {{
                             {ptr_fixup}
                             const mem = {mem_access};
                             const result = [];
-                            for (let i = ptr; i < ptr + 4 * len; i += 4) {{
-                                result.push({table}.get(mem.getUint32(i, true)));
+                            try {{
+                                for (let i = ptr; i < ptr + 4 * len; i += 4) {{
+                                    result.push({table}.get(mem.getUint32(i, true)));
+                                }}
+                            }} finally {{
+                                {drop}(ptr, len);
                             }}
-                            {drop}(ptr, len);
                             return result;
                         }}
                         ",
