@@ -195,6 +195,12 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
 
+            // PROTOTYPE: a bare tuple is wider than the primitives, so it
+            // spills to a single cell, which crosses as its address.
+            Descriptor::Tuple(_) => {
+                return self.incoming_cells(arg, false, OptionKind::Option, CellCount::One)
+            }
+
             // Can't be passed from JS to Rust yet
             Descriptor::Function(_) |
             Descriptor::Closure(_) |
@@ -741,6 +747,9 @@ impl InstructionBuilder<'_, '_> {
         &mut self,
         elem: &Descriptor,
     ) -> Result<(AdapterType, CellLayout, Vec<InstructionData>), Error> {
+        if let Descriptor::Tuple(parts) = elem {
+            return self.incoming_tuple_cell(parts);
+        }
         let mut encode = InstructionBuilder {
             input: Vec::new(),
             output: Vec::new(),
@@ -765,6 +774,52 @@ impl InstructionBuilder<'_, '_> {
             ..
         } = encode;
         Ok((input.remove(0), CellLayout::Words(words), instructions))
+    }
+
+    /// PROTOTYPE: a tuple's cell is the record of its parts' cells, each
+    /// lowered by the part's own instructions. The parts are split onto the
+    /// stack first part on top, and each one after the first is rolled up
+    /// past the words of the parts before it, so the cell's words come out
+    /// in order.
+    fn incoming_tuple_cell(
+        &mut self,
+        parts: &[Descriptor],
+    ) -> Result<(AdapterType, CellLayout, Vec<InstructionData>), Error> {
+        let n = parts.len();
+        let mut tys = Vec::with_capacity(n);
+        let mut layouts = Vec::with_capacity(n);
+        let mut instructions = vec![InstructionData {
+            instr: Instruction::TupleSplit { n },
+            stack_change: StackChange::Modified {
+                popped: 1,
+                pushed: n,
+            },
+        }];
+        let mut words = 0;
+        for (k, part) in parts.iter().enumerate() {
+            let (ty, layout, part) = self.incoming_cell(part)?;
+            if k > 0 {
+                instructions.push(InstructionData {
+                    instr: Instruction::Roll {
+                        depth: words + 1,
+                        count: 1,
+                    },
+                    stack_change: StackChange::Modified {
+                        popped: words + 1,
+                        pushed: words + 1,
+                    },
+                });
+            }
+            words += layout.words().len();
+            instructions.extend(part);
+            tys.push(ty);
+            layouts.push(layout);
+        }
+        Ok((
+            AdapterType::Tuple(tys),
+            CellLayout::Record(layouts),
+            instructions,
+        ))
     }
 
     /// A stored value is checked where an argument is only in a debug build:

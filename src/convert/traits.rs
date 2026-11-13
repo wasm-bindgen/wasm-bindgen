@@ -1007,43 +1007,10 @@ mod tests {
     use super::{AbiCell, WasmAbi};
     use crate::__rt::WasmWord;
     use crate::convert::WasmSlice;
-    use alloc::boxed::Box;
     use core::mem::{align_of, offset_of, size_of};
 
-    /// A pair's cell: the `#[repr(C)]` record of its parts' cells.
-    #[repr(C)]
-    pub struct PairCell<A, B>(A, B);
-
-    // A pair is wider than the primitives, so it crosses as a pointer to its
-    // cell, which is the record of its parts' cells. This is generic over
-    // both parts next to the blanket impl for primitives, which is what a
-    // tuple ABI needs to be. `tests/wasm/abi_cells.rs` crosses one, where a
-    // pointer fits the word.
-    impl<A: WasmAbi, B: WasmAbi> WasmAbi for (A, B) {
-        type Prim1 = <WasmWord as WasmAbi>::Prim1;
-        type Prim2 = ();
-        type Prim3 = ();
-        type Prim4 = ();
-        type Cell = PairCell<A::Cell, B::Cell>;
-
-        fn split(self) -> (Self::Prim1, (), (), ()) {
-            let cell = Box::into_raw(Box::new(self.into_cell()));
-            WasmWord::from_usize(cell as usize).split()
-        }
-
-        fn join(ptr: Self::Prim1, _: (), _: (), _: ()) -> Self {
-            let cell = WasmWord::join(ptr, (), (), ()).into_usize() as *mut Self::Cell;
-            Self::from_cell(*unsafe { Box::from_raw(cell) })
-        }
-
-        fn into_cell(self) -> Self::Cell {
-            PairCell(self.0.into_cell(), self.1.into_cell())
-        }
-
-        fn from_cell(cell: Self::Cell) -> Self {
-            (A::from_cell(cell.0), B::from_cell(cell.1))
-        }
-    }
+    // `(A, B)` is the tuple ABI in `tuples.rs`, whose cell is the record of
+    // its parts' cells.
 
     fn cell<A: WasmAbi>() -> (usize, usize) {
         (size_of::<A::Cell>(), align_of::<A::Cell>())

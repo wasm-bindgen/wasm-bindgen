@@ -37,6 +37,7 @@ mod closures;
 mod impls;
 mod slices;
 mod traits;
+mod tuples;
 
 pub use self::impls::*;
 pub use self::slices::WasmSlice;

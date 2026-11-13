@@ -4008,6 +4008,44 @@ fn instruction(
             }
         }
 
+        // PROTOTYPE: a tuple's parts, each read once from the array.
+        Instruction::TupleSplit { n } => {
+            let val = js.pop();
+            js.check(&format!(
+                "if (!Array.isArray({val}) || {val}.length !== {n}) throw new Error('array contains a value of the wrong type');"
+            ));
+            for i in (0..*n).rev() {
+                js.push(format!("{val}[{i}]"));
+            }
+        }
+
+        Instruction::TupleJoin { n } => {
+            let mut parts = (0..*n).map(|_| js.pop()).collect::<Vec<_>>();
+            parts.reverse();
+            js.push(format!("[{}]", parts.join(", ")));
+        }
+
+        // The values move, and so do the words that what they own is
+        // recorded at, which are stack positions.
+        Instruction::Roll { depth, count } => {
+            let len = js.stack.len();
+            let start = len - depth;
+            let end = start + count;
+            let moved = js.stack.drain(start..end).collect::<Vec<_>>();
+            js.stack.extend(moved);
+            for given in &mut js.given {
+                let last = given.word + given.owner.words();
+                if given.word >= end {
+                    given.word -= count;
+                } else if given.word >= start {
+                    assert!(last <= end, "a roll splits what a value owns");
+                    given.word = len - count + (given.word - start);
+                } else {
+                    assert!(last <= start, "a roll splits what a value owns");
+                }
+            }
+        }
+
         Instruction::StoredCheck(check) => {
             let val = js.pop();
             let misplaced = match check {
@@ -4445,6 +4483,24 @@ pub(crate) fn adapter2ts(
             } else {
                 dst.push_str(&format!("({elem_ty})[]"));
             }
+        }
+        AdapterType::Tuple(parts) => {
+            let mut refs = refs;
+            dst.push('[');
+            for (i, part) in parts.iter().enumerate() {
+                if i > 0 {
+                    dst.push_str(", ");
+                }
+                adapter2ts(
+                    part,
+                    position,
+                    dst,
+                    refs.as_deref_mut(),
+                    name_map,
+                    typed_array_buffers,
+                );
+            }
+            dst.push(']');
         }
         AdapterType::MutableSlice(kind) => dst.push_str(&kind.js_ty()),
         AdapterType::Option { ty, kind } => {

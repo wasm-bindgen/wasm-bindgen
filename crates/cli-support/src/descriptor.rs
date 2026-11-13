@@ -99,6 +99,9 @@ pub enum Descriptor {
     /// A sequence element whose memory isn't the cell its descriptor implies,
     /// so the sequence holds a cell of its ABI instead.
     Cell(Box<Descriptor>),
+    /// PROTOTYPE: a Rust tuple, a JS array of its parts. It crosses as a
+    /// pointer to its cell, the record of its parts' cells.
+    Tuple(Vec<Descriptor>),
 }
 
 /// How a sequence's cells hold its elements, which the element's descriptor
@@ -259,6 +262,10 @@ impl Descriptor {
             OPTIONAL => Descriptor::Option(Box::new(Descriptor::_decode(data, clamped))),
             NULLABLE => Descriptor::Nullable(Box::new(Descriptor::_decode(data, clamped))),
             ABI_CELL => Descriptor::Cell(Box::new(Descriptor::_decode(data, clamped))),
+            TUPLE => {
+                let n = get(data);
+                Descriptor::Tuple((0..n).map(|_| Descriptor::_decode(data, clamped)).collect())
+            }
             RESULT => Descriptor::Result(Box::new(Descriptor::_decode(data, clamped))),
             CACHED_STRING => Descriptor::CachedString,
             STRING => Descriptor::String,
@@ -427,6 +434,12 @@ impl Descriptor {
                     }),
                 )?;
                 for d in variant_types {
+                    d.visit_named_types_mut(f)?;
+                }
+                Ok(())
+            }
+            Descriptor::Tuple(parts) => {
+                for d in parts {
                     d.visit_named_types_mut(f)?;
                 }
                 Ok(())

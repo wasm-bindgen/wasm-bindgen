@@ -130,8 +130,6 @@ impl OptionKind {
 #[derive(Debug, Clone)]
 pub enum CellLayout {
     Words(Vec<AdapterType>),
-    // No value crosses as a record yet.
-    #[allow(dead_code)]
     Record(Vec<CellLayout>),
 }
 
@@ -152,8 +150,6 @@ pub enum CellCount {
     Word,
     /// One, with no word for it: the cell a value wider than the primitives
     /// spills to, which crosses as the value and not as an array of it.
-    // No value spills yet.
-    #[allow(dead_code)]
     One,
 }
 
@@ -188,6 +184,8 @@ pub enum AdapterType {
     Vector(VectorKind),
     /// A plain array of the element type.
     Array(Box<AdapterType>),
+    /// PROTOTYPE: a JS array of a tuple's parts, `[a, b]`.
+    Tuple(Vec<AdapterType>),
     /// A `&mut [T]` argument. Unlike `Vector`, the contents are copied back
     /// into the buffer of the passed typed array after the call, so it can't
     /// be a plain array.
@@ -523,6 +521,23 @@ pub enum Instruction {
     /// pops a value in stored position, throws unless it's of the checked
     /// type, pushes it back
     StoredCheck(StoredCheck),
+    /// PROTOTYPE: pops a JS array of `n` parts, throwing unless it is one,
+    /// and pushes the parts last first, so the first part is on top.
+    TupleSplit {
+        n: usize,
+    },
+    /// PROTOTYPE: pops `n` values and pushes the JS array of them, the first
+    /// popped last.
+    TupleJoin {
+        n: usize,
+    },
+    /// PROTOTYPE: moves the `count` values that begin `depth` from the top of
+    /// the stack to the top, keeping their order. This is how a record's
+    /// parts each run their own instructions on a single stack.
+    Roll {
+        depth: usize,
+        count: usize,
+    },
     /// pops i32, loads externref from externref table
     TableGet,
     /// pops two i32 data pointers, pushes an externref closure

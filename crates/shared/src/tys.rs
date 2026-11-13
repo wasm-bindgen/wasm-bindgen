@@ -48,6 +48,7 @@ tys! {
     SEQ_MODE
     NULLABLE
     ABI_CELL
+    TUPLE
 }
 
 /// The word following a `SEQ_MODE` tag: what JS receives, ORed with flags.

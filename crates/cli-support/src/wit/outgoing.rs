@@ -209,6 +209,10 @@ impl InstructionBuilder<'_, '_> {
                 bail!("unsupported argument type for calling JS function from Rust: {arg:?}")
             }
 
+            // PROTOTYPE: a bare tuple spills to a single cell, which crosses
+            // as its address.
+            Descriptor::Tuple(_) => return self.outgoing_cells(arg, true, None, CellCount::One),
+
             // nothing to do
             Descriptor::Unit => {}
 
@@ -730,6 +734,7 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::Slice(_)
             | Descriptor::SeqMode(..)
             | Descriptor::Cell(_)
+            | Descriptor::Tuple(_)
             | Descriptor::Result(_) => {
                 bail!("unsupported Result type for returning from exported Rust function: {arg:?}")
             }
@@ -914,6 +919,12 @@ impl InstructionBuilder<'_, '_> {
         elem: &Descriptor,
         owned: bool,
     ) -> Result<(CellLayout, Vec<InstructionData>, AdapterType), Error> {
+        if let Descriptor::Tuple(parts) = elem {
+            if !owned {
+                bail!("PROTOTYPE: a lent tuple isn't supported: {elem:?}")
+            }
+            return self.outgoing_tuple_cell(parts);
+        }
         let mut decode = InstructionBuilder {
             input: Vec::new(),
             output: Vec::new(),
@@ -949,6 +960,52 @@ impl InstructionBuilder<'_, '_> {
             ..
         } = decode;
         Ok((CellLayout::Words(words), instructions, output.remove(0)))
+    }
+
+    /// PROTOTYPE: a tuple's cell is the record of its parts' cells, each
+    /// lifted by the part's own instructions. Each part's words are rolled
+    /// up from the bottom of what is left of the cell's, past the parts
+    /// already lifted, and the parts are then joined into an array.
+    fn outgoing_tuple_cell(
+        &mut self,
+        parts: &[Descriptor],
+    ) -> Result<(CellLayout, Vec<InstructionData>, AdapterType), Error> {
+        let n = parts.len();
+        let mut cells = Vec::with_capacity(n);
+        for part in parts {
+            cells.push(self.outgoing_cell(part, true)?);
+        }
+        let mut remaining: usize = cells.iter().map(|(layout, ..)| layout.words().len()).sum();
+        let mut layouts = Vec::with_capacity(n);
+        let mut tys = Vec::with_capacity(n);
+        let mut instructions = Vec::new();
+        for (k, (layout, part, ty)) in cells.into_iter().enumerate() {
+            let count = layout.words().len();
+            let depth = remaining + k;
+            instructions.push(InstructionData {
+                instr: Instruction::Roll { depth, count },
+                stack_change: StackChange::Modified {
+                    popped: depth,
+                    pushed: depth,
+                },
+            });
+            remaining -= count;
+            instructions.extend(part);
+            layouts.push(layout);
+            tys.push(ty);
+        }
+        instructions.push(InstructionData {
+            instr: Instruction::TupleJoin { n },
+            stack_change: StackChange::Modified {
+                popped: n,
+                pushed: 1,
+            },
+        });
+        Ok((
+            CellLayout::Record(layouts),
+            instructions,
+            AdapterType::Tuple(tys),
+        ))
     }
 
     fn outgoing_string_enum(&mut self, name: &str) {
