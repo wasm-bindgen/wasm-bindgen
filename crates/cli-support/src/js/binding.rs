@@ -2460,7 +2460,10 @@ fn instruction(
             js.cx.inject_stack_pointer_shim()?;
             let sp = js.cx.wasm_export_ref("__wbindgen_add_to_stack_pointer");
             let coerce = js.cx.coerce_ptr_suffix();
-            let retptr = js.declare("const", "retptr".into(), format!("{sp}(-{size}){coerce}"));
+            // Taken before the `try` whose `finally` gives it back, so that
+            // a throw from anything in it finds the space taken.
+            writeln!(js.pre_try, "const retptr = {sp}(-{size}){coerce};").unwrap();
+            let retptr = js.local("retptr".into());
             js.finally(&format!("{sp}({size});"));
             js.push(retptr);
         }

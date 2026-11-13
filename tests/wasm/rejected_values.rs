@@ -37,6 +37,28 @@ impl Kept {
 
     #[wasm_bindgen(js_name = consumeWith)]
     pub fn consume_with(self, _names: Vec<String>) {}
+
+    pub fn merge(self, _other: Kept) -> String {
+        String::new()
+    }
+
+    #[wasm_bindgen(js_name = mergeAll)]
+    pub fn merge_all(self, _others: Vec<Kept>, _names: Vec<String>) -> String {
+        String::new()
+    }
+
+    #[wasm_bindgen(js_name = mergeMaybe)]
+    pub fn merge_maybe(self, _other: Option<Kept>) -> String {
+        String::new()
+    }
+
+    pub fn label(&self, _other: &Kept) -> String {
+        String::new()
+    }
+
+    pub fn join(_a: Kept, _names: Vec<String>) -> String {
+        String::new()
+    }
 }
 
 impl Drop for Kept {
@@ -78,6 +100,18 @@ pub fn rejected_nested_numbers(v: Vec<Vec<u32>>) -> usize {
 
 #[wasm_bindgen]
 pub fn rejected_names_then_point(_a: Vec<String>, _b: Kept) {}
+
+#[wasm_bindgen]
+pub fn rejected_named(_a: Kept, _names: Vec<String>) -> String {
+    String::new()
+}
+
+/// Where the shadow stack is, by a frame of the same size each call.
+#[wasm_bindgen]
+pub fn rejected_stack() -> u32 {
+    let frame = [0u8; 64];
+    core::hint::black_box(frame.as_ptr()) as u32
+}
 
 #[wasm_bindgen]
 pub fn rejected_handles() -> u32 {
@@ -124,6 +158,8 @@ extern "C" {
     fn rejected_instances();
     #[wasm_bindgen(js_name = rejectedByRust)]
     fn rejected_by_rust();
+    #[wasm_bindgen(js_name = rejectedKeepsTheStack)]
+    fn rejected_keeps_the_stack();
     #[wasm_bindgen(js_name = failedDecodes)]
     fn failed_decodes(memory: JsValue);
     #[wasm_bindgen(catch, js_name = jsBadPoints)]
@@ -148,6 +184,11 @@ fn arguments_freed_or_repeated() {
 #[wasm_bindgen_test]
 fn arguments_rust_rejects() {
     rejected_by_rust();
+}
+
+#[wasm_bindgen_test]
+fn arguments_keep_the_stack() {
+    rejected_keeps_the_stack();
 }
 
 #[wasm_bindgen_test]

@@ -113,6 +113,36 @@ exports.rejectedByRust = () => {
     }
 };
 
+// A function that returns through the stack takes its space there, which a
+// rejected value mustn't leave taken or give back untaken.
+exports.rejectedKeepsTheStack = () => {
+    const before = live();
+    const a = new wasm.Kept(1);
+    const b = new wasm.Kept(2);
+    const freed = new wasm.Kept(3);
+    freed.free();
+    const stack = wasm.rejected_stack();
+    for (let i = 0; i < 8; i++) {
+        assert.throws(() => a.merge({}));
+        assert.throws(() => a.mergeAll([b, {}], ['x']));
+        assert.throws(() => a.mergeAll([b], ['x', 1]));
+        assert.throws(() => a.mergeMaybe(1));
+        assert.throws(() => a.label({}));
+        assert.throws(() => wasm.Kept.join(a, ['x', 1]));
+        assert.throws(() => wasm.rejected_named(a, [1]));
+        assert.throws(() => wasm.rejected_named({}, ['x']));
+        assert.throws(() => freed.label(a));
+        assert.throws(() => freed.merge(b));
+        assert.throws(() => wasm.Kept.prototype.merge.call({}, b));
+    }
+    assert.strictEqual(wasm.rejected_stack(), stack);
+    assert.strictEqual(a.value, 1);
+    assert.strictEqual(b.value, 2);
+    a.free();
+    b.free();
+    assert.strictEqual(live(), before);
+};
+
 let returned = [];
 
 exports.jsBadPoints = () => {
