@@ -32,9 +32,13 @@ impl WasmAbi for NamedAbi {
     type Prim3 = ();
     type Prim4 = ();
 
-    // The cell methods store the record `{ ptr, len, n }`.
-    const CELL: CellLayout<Self> =
-        unsafe { CellLayout::new(Self::N + u32::CELL.size(), WasmSlice::CELL.align()) };
+    // The cell methods store the record `{ ptr, len, n }`, padded to its
+    // alignment as a `#[repr(C)]` record is.
+    const CELL: CellLayout<Self> = {
+        let align = WasmSlice::CELL.align();
+        let size = (Self::N + u32::CELL.size()).next_multiple_of(align);
+        unsafe { CellLayout::new(size, align) }
+    };
 
     fn split(self) -> (Self::Prim1, (), (), ()) {
         unsafe {
@@ -149,8 +153,12 @@ fn items() -> Vec<Named> {
 
 #[wasm_bindgen_test]
 fn wide_cell_layout() {
-    assert_eq!((NamedAbi::CELL.size(), NamedAbi::CELL.align()), (12, 4));
-    assert_eq!(NamedAbi::N, 8);
+    let word = core::mem::size_of::<usize>();
+    assert_eq!(
+        (NamedAbi::CELL.size(), NamedAbi::CELL.align()),
+        (3 * word, word)
+    );
+    assert_eq!(NamedAbi::N, 2 * word);
 }
 
 #[wasm_bindgen_test]
@@ -171,11 +179,12 @@ fn wide_cells_round_trip_as_a_sequence() {
     let slice = WasmSlice::encode(&items, |item| item.clone().into_abi());
     assert_eq!(slice.len.into_usize(), 3);
 
-    // The buffer is the cells in order, 12 bytes each, with `n` third.
+    // The buffer is the cells in order, three words each, with `n` third.
     let cells = slice.ptr.into_usize() as *const u32;
-    assert_eq!(unsafe { *cells.add(2) }, 1);
-    assert_eq!(unsafe { *cells.add(3 + 1) }, 0);
-    assert_eq!(unsafe { *cells.add(6 + 2) }, u32::MAX);
+    let (n, stride) = (NamedAbi::N / 4, NamedAbi::CELL.size() / 4);
+    assert_eq!(unsafe { *cells.add(n) }, 1);
+    assert_eq!(unsafe { *cells.add(stride + n) }, 0);
+    assert_eq!(unsafe { *cells.add(2 * stride + n) }, u32::MAX);
 
     let decoded = unsafe { slice.try_decode::<Named>() }.unwrap();
     assert_eq!(&*decoded, &*items);
