@@ -30,10 +30,12 @@
   as nothing, a `&mut [T]`, whose copy JS's writes would never leave, and a
   borrowed closure (`&dyn Fn()`) in a value Rust returns or converts with
   `JsValue::from`, which outlives the call it is lent for.
+  [#5471](https://github.com/wasm-bindgen/wasm-bindgen/pull/5471)
 
 * A dynamic-union enum is a `Vec<T>` / `Box<[T]>` element in both
   directions, crossing as a JS array whose elements are each converted as a
   single value is, and typed as `Union[]`.
+  [#5471](https://github.com/wasm-bindgen/wasm-bindgen/pull/5471)
 
 * Added `aarch64-pc-windows-msvc` release artifacts.
   [#5439](https://github.com/wasm-bindgen/wasm-bindgen/pull/5439)
@@ -72,6 +74,7 @@
   `T: FromWasmAbi` to pass a `Vec<T>`. `OptionIntoWasmAbi` and
   `OptionFromWasmAbi` are soft-deprecated in favour of `MaybeIntoWasmAbi` and
   `MaybeFromWasmAbi`. All five will be removed in the next major release.
+  [#5471](https://github.com/wasm-bindgen/wasm-bindgen/pull/5471)
 
 * A `Vec<String>` and a `Vec` of an exported Rust type reach the generated JS
   as each element's own ABI rather than as a list of JS handles. What JS
@@ -79,6 +82,7 @@
   `catch` import returns is now that import's `Err` rather than an exception
   thrown from the export that called it, and that a call rejected for an
   argument of the wrong class now leaves its other arguments untouched.
+  [#5471](https://github.com/wasm-bindgen/wasm-bindgen/pull/5471)
 
 * Stabilized the `js_sys::Temporal` bindings and `Date::to_temporal_instant`,
   previously behind `js_sys_unstable_apis`, now that Temporal is Stage 4 and
@@ -193,6 +197,7 @@
 * Removed `convert::VectorRefIntoWasmAbi`. A `&[T]` crosses for every
   `T: RefIntoWasmAbi`, which is the bound to declare on an
   `experimental_generic_mono` import in its place.
+  [#5471](https://github.com/wasm-bindgen/wasm-bindgen/pull/5471)
 
 ## [0.2.130](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.129...0.2.130)
 
