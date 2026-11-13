@@ -250,6 +250,18 @@ pub fn given_mixed() -> bool {
     .is_err()
 }
 
+/// Whether JS failed to take a call's values.
+#[wasm_bindgen]
+pub fn given_owned() -> bool {
+    js_takes_owned(
+        Kept::new(1),
+        Some(Kept::new(2)),
+        JsValue::from(1.5),
+        given_names(2),
+    )
+    .is_err()
+}
+
 #[wasm_bindgen(module = "tests/wasm/rejected_values.js")]
 extern "C" {
     #[wasm_bindgen(js_name = rejectedArguments)]
@@ -281,6 +293,8 @@ extern "C" {
         d: String,
         e: Vec<u8>,
     ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, js_name = jsTakesOwned)]
+    fn js_takes_owned(a: Kept, b: Option<Kept>, c: JsValue, d: Vec<String>) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, js_name = jsBadNames)]
     fn js_bad_names() -> Result<Vec<String>, JsValue>;
     #[wasm_bindgen(catch, js_name = jsBadPoints)]

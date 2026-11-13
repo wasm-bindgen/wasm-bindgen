@@ -1679,8 +1679,9 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         nullable: bool,
     ) -> Result<(), Error> {
         let class = class.to_string();
-        if !self.owns(Owner::Class { class, nullable }, word)? {
-            self.push(wrap);
+        let owner = Owner::Class { class, nullable };
+        if !self.owns(owner.clone(), word)? {
+            self.push_taken(wrap, word, &owner);
             return Ok(());
         }
         let cell = self.cell.as_ref().unwrap();
@@ -1697,6 +1698,24 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         self.prelude(&format!("{memory}.set{ty}({at} + {offset}, {none}, true);"));
         self.push(wrapped);
         Ok(())
+    }
+
+    /// Pushes `take`, which hands what `owner` holds through `word` over to
+    /// JS when it's evaluated. In a function whose `finally` releases what
+    /// it was given, that releases this too until then: a sequence that
+    /// fails to decode ahead of the call leaves it neither wrapped nor
+    /// taken.
+    fn push_taken(&mut self, take: String, word: &str, owner: &Owner) {
+        if !self.defers_given || !self.held_by_args(word, None) {
+            self.push(take);
+            return;
+        }
+        let i = self.tmp();
+        let taken = self.local(format!("taken{i}"));
+        writeln!(self.pre_try, "let {taken} = false;").unwrap();
+        let release = self.release_stmt(owner, &[word.to_string()], None);
+        self.finally(&format!("if (!{taken}) {{\n{release}\n}}"));
+        self.push(format!("({taken} = true, {take})"));
     }
 
     fn push_safe(&mut self, arg: String) {
@@ -3160,7 +3179,7 @@ fn instruction(
                 "takeObject".to_string()
             };
             let val = js.pop();
-            js.push(format!("{take_object}({val})"));
+            js.push_taken(format!("{take_object}({val})"), &val, &Owner::Handle);
         }
 
         Instruction::StringFromChar => {

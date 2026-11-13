@@ -260,6 +260,11 @@ exports.jsTakesMixed = (points) => points.forEach(point => point.free());
 
 let returned = [];
 
+exports.jsTakesOwned = (a, b) => {
+    a.free();
+    b.free();
+};
+
 exports.jsBadNames = () => ['a', 5];
 
 exports.jsBadPoints = () => {
@@ -342,6 +347,19 @@ exports.failedDecodes = (memory) => {
         assertFlat(memory, () => {
             reset();
             assert.strictEqual(wasm.given_mixed(), true);
+        });
+        assert.strictEqual(live(), before);
+        assert.strictEqual(wasm.rejected_handles(), handles);
+    });
+
+    // So are the flat arguments beside a sequence that fails to decode,
+    // which nothing has wrapped or taken by then.
+    failing(TextDecoder.prototype, 'decode', 1, reset => {
+        const before = live();
+        const handles = wasm.rejected_handles();
+        assertFlat(memory, () => {
+            reset();
+            assert.strictEqual(wasm.given_owned(), true);
         });
         assert.strictEqual(live(), before);
         assert.strictEqual(wasm.rejected_handles(), handles);
