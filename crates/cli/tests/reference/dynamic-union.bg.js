@@ -108,10 +108,12 @@ export function echo_wrappers(list) {
         }
     } catch (e) {
         if (ptr0) {
+            let view1 = getDataViewMemory0();
             for (let k1 = 0; k1 < j0; k1++) {
                 const cell1 = ptr0 + k1 * 4;
-                const w1_0 = getDataViewMemory0().getInt32(cell1 + 0, true) >>> 0;
+                const w1_0 = view1.getInt32(cell1 + 0, true) >>> 0;
                 wasm.__externref_table_dealloc(w1_0);
+                view1 = getDataViewMemory0();
             }
             wasm.__wbindgen_free(ptr0, len0 * 4, 4);
         }
@@ -130,10 +132,12 @@ export function echo_wrappers(list) {
         }
     } finally {
         if (b3) {
+            let view4 = getDataViewMemory0();
             for (let k4 = 0; k4 < ret[1]; k4++) {
                 const cell4 = b3 + k4 * 4;
-                const w4_0 = getDataViewMemory0().getInt32(cell4 + 0, true) >>> 0;
+                const w4_0 = view4.getInt32(cell4 + 0, true) >>> 0;
                 wasm.__externref_table_dealloc(w4_0);
+                view4 = getDataViewMemory0();
             }
             wasm.__wbindgen_free(b3, ret[1] * 4, 4);
         }

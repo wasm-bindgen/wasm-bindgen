@@ -50,9 +50,7 @@ export function makeRenamed(value) {
 export function readRenameds(renameds) {
     for (let n0 = 0; n0 < renameds.length; n0++) {
         const e0 = renameds[n0];
-        if (!(e0 instanceof Renamed)) throw new Error('array contains a value of the wrong type');
-        _assertClass(e0, Renamed);
-        if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
+        if (!(e0 instanceof Renamed) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
     }
     let j0 = 0, len0, ptr0;
     try {
@@ -60,9 +58,7 @@ export function readRenameds(renameds) {
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = renameds[j0];
-            if (!(e0 instanceof Renamed)) throw new Error('array contains a value of the wrong type');
-            _assertClass(e0, Renamed);
-            if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
+            if (!(e0 instanceof Renamed) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
             var ptr1 = e0.__destroy_into_raw();
             const view0 = getDataViewMemory0();
             const p0 = ptr0 + j0 * 4;
@@ -70,10 +66,14 @@ export function readRenameds(renameds) {
         }
     } catch (e) {
         if (ptr0) {
+            let view2 = getDataViewMemory0();
             for (let k2 = 0; k2 < j0; k2++) {
                 const cell2 = ptr0 + k2 * 4;
-                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
-                if (w2_0) wasm.__wbg_renamed_free(w2_0, 1);
+                const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
+                if (w2_0) {
+                    wasm.__wbg_renamed_free(w2_0, 1);
+                    view2 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(ptr0, len0 * 4, 4);
         }
@@ -100,12 +100,6 @@ export function __wbindgen_init_externref_table() {
 const RenamedFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_renamed_free(ptr, 1));
-
-function _assertClass(instance, klass) {
-    if (!(instance instanceof klass)) {
-        throw new Error(`expected instance of ${klass.name}`);
-    }
-}
 
 let cachedDataViewMemory0 = null;
 function getDataViewMemory0() {

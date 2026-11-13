@@ -30,15 +30,19 @@ export class NamespaceConsumer {
             for (const end1 = p1 + ret[1] * 4; p1 < end1; p1 += 4) {
                 const w1_0 = view1.getInt32(p1 + 0, true);
                 const obj2 = bar__Point.__wrap(w1_0);
-                getDataViewMemory0().setInt32(p1 + 0, 0, true);
+                view1.setInt32(p1 + 0, 0, true);
                 v1.push(obj2);
             }
         } finally {
             if (b1) {
+                let view3 = getDataViewMemory0();
                 for (let k3 = 0; k3 < ret[1]; k3++) {
                     const cell3 = b1 + k3 * 4;
-                    const w3_0 = getDataViewMemory0().getInt32(cell3 + 0, true) >>> 0;
-                    if (w3_0) wasm.__wbg_bar__point_free(w3_0, 1);
+                    const w3_0 = view3.getInt32(cell3 + 0, true) >>> 0;
+                    if (w3_0) {
+                        wasm.__wbg_bar__point_free(w3_0, 1);
+                        view3 = getDataViewMemory0();
+                    }
                 }
                 wasm.__wbindgen_free(b1, ret[1] * 4, 4);
             }
@@ -59,9 +63,7 @@ export class NamespaceConsumer {
     duplicate_bar_points(points) {
         for (let n0 = 0; n0 < points.length; n0++) {
             const e0 = points[n0];
-            if (!(e0 instanceof bar__Point)) throw new Error('array contains a value of the wrong type');
-            _assertClass(e0, bar__Point);
-            if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
+            if (!(e0 instanceof bar__Point) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
         }
         let j0 = 0, len0, ptr0;
         try {
@@ -69,9 +71,7 @@ export class NamespaceConsumer {
             ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
             for (; j0 < len0; j0++) {
                 const e0 = points[j0];
-                if (!(e0 instanceof bar__Point)) throw new Error('array contains a value of the wrong type');
-                _assertClass(e0, bar__Point);
-                if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
+                if (!(e0 instanceof bar__Point) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
                 var ptr1 = e0.__destroy_into_raw();
                 const view0 = getDataViewMemory0();
                 const p0 = ptr0 + j0 * 4;
@@ -79,10 +79,14 @@ export class NamespaceConsumer {
             }
         } catch (e) {
             if (ptr0) {
+                let view2 = getDataViewMemory0();
                 for (let k2 = 0; k2 < j0; k2++) {
                     const cell2 = ptr0 + k2 * 4;
-                    const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
-                    if (w2_0) wasm.__wbg_bar__point_free(w2_0, 1);
+                    const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
+                    if (w2_0) {
+                        wasm.__wbg_bar__point_free(w2_0, 1);
+                        view2 = getDataViewMemory0();
+                    }
                 }
                 wasm.__wbindgen_free(ptr0, len0 * 4, 4);
             }
@@ -98,15 +102,19 @@ export class NamespaceConsumer {
             for (const end4 = p4 + ret[1] * 4; p4 < end4; p4 += 4) {
                 const w4_0 = view4.getInt32(p4 + 0, true);
                 const obj5 = bar__Point.__wrap(w4_0);
-                getDataViewMemory0().setInt32(p4 + 0, 0, true);
+                view4.setInt32(p4 + 0, 0, true);
                 v4.push(obj5);
             }
         } finally {
             if (b4) {
+                let view6 = getDataViewMemory0();
                 for (let k6 = 0; k6 < ret[1]; k6++) {
                     const cell6 = b4 + k6 * 4;
-                    const w6_0 = getDataViewMemory0().getInt32(cell6 + 0, true) >>> 0;
-                    if (w6_0) wasm.__wbg_bar__point_free(w6_0, 1);
+                    const w6_0 = view6.getInt32(cell6 + 0, true) >>> 0;
+                    if (w6_0) {
+                        wasm.__wbg_bar__point_free(w6_0, 1);
+                        view6 = getDataViewMemory0();
+                    }
                 }
                 wasm.__wbindgen_free(b4, ret[1] * 4, 4);
             }
@@ -120,9 +128,7 @@ export class NamespaceConsumer {
     duplicate_foo_points(points) {
         for (let n0 = 0; n0 < points.length; n0++) {
             const e0 = points[n0];
-            if (!(e0 instanceof foo__Point)) throw new Error('array contains a value of the wrong type');
-            _assertClass(e0, foo__Point);
-            if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
+            if (!(e0 instanceof foo__Point) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
         }
         let j0 = 0, len0, ptr0;
         try {
@@ -130,9 +136,7 @@ export class NamespaceConsumer {
             ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
             for (; j0 < len0; j0++) {
                 const e0 = points[j0];
-                if (!(e0 instanceof foo__Point)) throw new Error('array contains a value of the wrong type');
-                _assertClass(e0, foo__Point);
-                if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
+                if (!(e0 instanceof foo__Point) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
                 var ptr1 = e0.__destroy_into_raw();
                 const view0 = getDataViewMemory0();
                 const p0 = ptr0 + j0 * 4;
@@ -140,10 +144,14 @@ export class NamespaceConsumer {
             }
         } catch (e) {
             if (ptr0) {
+                let view2 = getDataViewMemory0();
                 for (let k2 = 0; k2 < j0; k2++) {
                     const cell2 = ptr0 + k2 * 4;
-                    const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
-                    if (w2_0) wasm.__wbg_foo__point_free(w2_0, 1);
+                    const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
+                    if (w2_0) {
+                        wasm.__wbg_foo__point_free(w2_0, 1);
+                        view2 = getDataViewMemory0();
+                    }
                 }
                 wasm.__wbindgen_free(ptr0, len0 * 4, 4);
             }
@@ -159,15 +167,19 @@ export class NamespaceConsumer {
             for (const end4 = p4 + ret[1] * 4; p4 < end4; p4 += 4) {
                 const w4_0 = view4.getInt32(p4 + 0, true);
                 const obj5 = foo__Point.__wrap(w4_0);
-                getDataViewMemory0().setInt32(p4 + 0, 0, true);
+                view4.setInt32(p4 + 0, 0, true);
                 v4.push(obj5);
             }
         } finally {
             if (b4) {
+                let view6 = getDataViewMemory0();
                 for (let k6 = 0; k6 < ret[1]; k6++) {
                     const cell6 = b4 + k6 * 4;
-                    const w6_0 = getDataViewMemory0().getInt32(cell6 + 0, true) >>> 0;
-                    if (w6_0) wasm.__wbg_foo__point_free(w6_0, 1);
+                    const w6_0 = view6.getInt32(cell6 + 0, true) >>> 0;
+                    if (w6_0) {
+                        wasm.__wbg_foo__point_free(w6_0, 1);
+                        view6 = getDataViewMemory0();
+                    }
                 }
                 wasm.__wbindgen_free(b4, ret[1] * 4, 4);
             }
@@ -195,15 +207,19 @@ export class NamespaceConsumer {
             for (const end1 = p1 + ret[1] * 4; p1 < end1; p1 += 4) {
                 const w1_0 = view1.getInt32(p1 + 0, true);
                 const obj2 = foo__Point.__wrap(w1_0);
-                getDataViewMemory0().setInt32(p1 + 0, 0, true);
+                view1.setInt32(p1 + 0, 0, true);
                 v1.push(obj2);
             }
         } finally {
             if (b1) {
+                let view3 = getDataViewMemory0();
                 for (let k3 = 0; k3 < ret[1]; k3++) {
                     const cell3 = b1 + k3 * 4;
-                    const w3_0 = getDataViewMemory0().getInt32(cell3 + 0, true) >>> 0;
-                    if (w3_0) wasm.__wbg_foo__point_free(w3_0, 1);
+                    const w3_0 = view3.getInt32(cell3 + 0, true) >>> 0;
+                    if (w3_0) {
+                        wasm.__wbg_foo__point_free(w3_0, 1);
+                        view3 = getDataViewMemory0();
+                    }
                 }
                 wasm.__wbindgen_free(b1, ret[1] * 4, 4);
             }
@@ -292,9 +308,7 @@ export class NamespaceConsumer {
     set bar_points(bar_points) {
         for (let n0 = 0; n0 < bar_points.length; n0++) {
             const e0 = bar_points[n0];
-            if (!(e0 instanceof bar__Point)) throw new Error('array contains a value of the wrong type');
-            _assertClass(e0, bar__Point);
-            if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
+            if (!(e0 instanceof bar__Point) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
         }
         let j0 = 0, len0, ptr0;
         try {
@@ -302,9 +316,7 @@ export class NamespaceConsumer {
             ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
             for (; j0 < len0; j0++) {
                 const e0 = bar_points[j0];
-                if (!(e0 instanceof bar__Point)) throw new Error('array contains a value of the wrong type');
-                _assertClass(e0, bar__Point);
-                if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
+                if (!(e0 instanceof bar__Point) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
                 var ptr1 = e0.__destroy_into_raw();
                 const view0 = getDataViewMemory0();
                 const p0 = ptr0 + j0 * 4;
@@ -312,10 +324,14 @@ export class NamespaceConsumer {
             }
         } catch (e) {
             if (ptr0) {
+                let view2 = getDataViewMemory0();
                 for (let k2 = 0; k2 < j0; k2++) {
                     const cell2 = ptr0 + k2 * 4;
-                    const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
-                    if (w2_0) wasm.__wbg_bar__point_free(w2_0, 1);
+                    const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
+                    if (w2_0) {
+                        wasm.__wbg_bar__point_free(w2_0, 1);
+                        view2 = getDataViewMemory0();
+                    }
                 }
                 wasm.__wbindgen_free(ptr0, len0 * 4, 4);
             }
@@ -343,9 +359,7 @@ export class NamespaceConsumer {
     set foo_points(foo_points) {
         for (let n0 = 0; n0 < foo_points.length; n0++) {
             const e0 = foo_points[n0];
-            if (!(e0 instanceof foo__Point)) throw new Error('array contains a value of the wrong type');
-            _assertClass(e0, foo__Point);
-            if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
+            if (!(e0 instanceof foo__Point) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
         }
         let j0 = 0, len0, ptr0;
         try {
@@ -353,9 +367,7 @@ export class NamespaceConsumer {
             ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
             for (; j0 < len0; j0++) {
                 const e0 = foo_points[j0];
-                if (!(e0 instanceof foo__Point)) throw new Error('array contains a value of the wrong type');
-                _assertClass(e0, foo__Point);
-                if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
+                if (!(e0 instanceof foo__Point) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
                 var ptr1 = e0.__destroy_into_raw();
                 const view0 = getDataViewMemory0();
                 const p0 = ptr0 + j0 * 4;
@@ -363,10 +375,14 @@ export class NamespaceConsumer {
             }
         } catch (e) {
             if (ptr0) {
+                let view2 = getDataViewMemory0();
                 for (let k2 = 0; k2 < j0; k2++) {
                     const cell2 = ptr0 + k2 * 4;
-                    const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
-                    if (w2_0) wasm.__wbg_foo__point_free(w2_0, 1);
+                    const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
+                    if (w2_0) {
+                        wasm.__wbg_foo__point_free(w2_0, 1);
+                        view2 = getDataViewMemory0();
+                    }
                 }
                 wasm.__wbindgen_free(ptr0, len0 * 4, 4);
             }

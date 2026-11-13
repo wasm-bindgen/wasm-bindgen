@@ -17,10 +17,12 @@ export function things_out() {
         }
     } finally {
         if (b1) {
+            let view2 = getDataViewMemory0();
             for (let k2 = 0; k2 < ret[1]; k2++) {
                 const cell2 = b1 + k2 * 4;
-                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
+                const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
                 wasm.__externref_table_dealloc(w2_0);
+                view2 = getDataViewMemory0();
             }
             wasm.__wbindgen_free(b1, ret[1] * 4, 4);
         }

@@ -162,8 +162,6 @@ pub enum CellCount {
 pub enum StoredCheck {
     /// A string, or with a kind none of that kind.
     String(Option<OptionKind>),
-    /// An instance of an exported class.
-    Class(String),
     /// An array or a typed array, or with a kind none of that kind.
     Sequence(Option<OptionKind>),
 }

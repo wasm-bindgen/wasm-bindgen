@@ -327,8 +327,39 @@ struct CellRead {
     at: String,
     fields: Vec<(usize, &'static str)>,
     mem: walrus::MemoryId,
+    /// The view the words were read through, which holds until the glue
+    /// makes a call into wasm: `wasm_refs` is how many it began with.
+    view: String,
+    wasm_refs: usize,
     /// What the words own, by the first one's index.
     owned: Vec<Given>,
+}
+
+/// How to release what an owner's words hold: `calls`, when `held`.
+struct Release {
+    held: Option<String>,
+    calls: String,
+    style: ReleaseStyle,
+    /// Whether the calls reach wasm, which may grow memory.
+    calls_wasm: bool,
+}
+
+enum ReleaseStyle {
+    Bare,
+    Inline,
+    Block,
+}
+
+impl Release {
+    fn stmt(&self) -> String {
+        let Release { held, calls, .. } = self;
+        match (held, &self.style) {
+            (None, _) => calls.clone(),
+            (Some(held), ReleaseStyle::Bare) => format!("if ({held}) {calls}"),
+            (Some(held), ReleaseStyle::Inline) => format!("if ({held}) {{ {calls} }}"),
+            (Some(held), ReleaseStyle::Block) => format!("if ({held}) {{\n{calls}\n}}"),
+        }
+    }
 }
 
 /// What an element's glue did in its scope.
@@ -1423,25 +1454,43 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
 
     /// The statement releasing what `owner` holds through `words`.
     fn release_stmt(&mut self, owner: &Owner, words: &[String], written: Option<&str>) -> String {
+        self.release_of(owner, words, written).stmt()
+    }
+
+    fn release_of(&mut self, owner: &Owner, words: &[String], written: Option<&str>) -> Release {
         let ptr = &words[0];
         match owner {
-            Owner::Vector { kind, mem, free } => {
-                self.vector_release(kind, *mem, *free, ptr, &words[1])
-            }
+            Owner::Vector { kind, mem, free } => Release {
+                held: Some(ptr.clone()),
+                calls: self.vector_free(kind, *mem, *free, ptr, &words[1]),
+                style: ReleaseStyle::Inline,
+                calls_wasm: true,
+            },
             Owner::Class { class, nullable } => {
                 let free = self.class_free(class);
                 let owned = if *nullable { "> 1" } else { "" };
-                format!("if ({ptr}{owned}) {free}({ptr}, 1);")
+                Release {
+                    held: Some(format!("{ptr}{owned}")),
+                    calls: format!("{free}({ptr}, 1);"),
+                    style: ReleaseStyle::Bare,
+                    calls_wasm: true,
+                }
             }
             Owner::Handle => {
-                let drop = match (self.cx.aux.externref_table, self.cx.aux.externref_drop) {
-                    (Some(_), Some(drop)) => self.cx.wasm_export_of(drop),
-                    _ => {
-                        self.cx.expose_drop_ref();
-                        "dropObject".into()
-                    }
-                };
-                format!("{drop}({ptr});")
+                let (drop, calls_wasm) =
+                    match (self.cx.aux.externref_table, self.cx.aux.externref_drop) {
+                        (Some(_), Some(drop)) => (self.cx.wasm_export_of(drop), true),
+                        _ => {
+                            self.cx.expose_drop_ref();
+                            ("dropObject".into(), false)
+                        }
+                    };
+                Release {
+                    held: None,
+                    calls: format!("{drop}({ptr});"),
+                    style: ReleaseStyle::Bare,
+                    calls_wasm,
+                }
             }
             Owner::Cells(cells) => {
                 let Cells {
@@ -1463,45 +1512,78 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
                 };
                 let free = self.cx.wasm_export_of(*free);
                 let free = format!("{free}({ptr}, {size}, {align});");
+                let held = Some(ptr.clone());
                 if given.is_empty() {
-                    return format!("if ({ptr}) {free}");
+                    return Release {
+                        held,
+                        calls: free,
+                        style: ReleaseStyle::Bare,
+                        calls_wasm: true,
+                    };
                 }
-                // The releases call into wasm, so each word is read through
-                // the memory as it is then.
+                // A cell's words are read through one view of the memory,
+                // taken again after a release that calls into wasm, which
+                // may grow it.
                 let memory = self.dataview(*mem);
                 let coerce = self.cx.coerce_ptr_suffix();
                 let i = self.tmp();
                 let k = self.local(format!("k{i}"));
                 let cell = self.local(format!("cell{i}"));
-                let mut elems = String::new();
+                let view = self.local(format!("view{i}"));
+                let mut reads = String::new();
+                let mut releases = String::new();
+                let mut retakes = false;
                 for Given { word, owner } in given {
                     let words = (*word..word + owner.words())
                         .map(|n| {
                             let (offset, ty) = fields[n];
                             let name = self.local(format!("w{i}_{n}"));
                             writeln!(
-                                elems,
-                                "const {name} = {memory}.get{ty}({cell} + {offset}, true){coerce};"
+                                reads,
+                                "const {name} = {view}.get{ty}({cell} + {offset}, true){coerce};"
                             )
                             .unwrap();
                             name
                         })
                         .collect::<Vec<_>>();
-                    elems.push_str(&self.release_stmt(owner, &words, None));
-                    elems.push('\n');
+                    let release = self.release_of(owner, &words, None);
+                    if len.is_none() || !release.calls_wasm {
+                        releases.push_str(&release.stmt());
+                        releases.push('\n');
+                        continue;
+                    }
+                    retakes = true;
+                    let calls = release.calls.trim_end();
+                    match &release.held {
+                        Some(held) => {
+                            writeln!(releases, "if ({held}) {{\n{calls}\n{view} = {memory};\n}}")
+                        }
+                        None => writeln!(releases, "{calls}\n{view} = {memory};"),
+                    }
+                    .unwrap();
                 }
+                let decl = if retakes { "let" } else { "const" };
                 let elems = match len {
                     Some(len) => {
                         let written = written.unwrap_or(len);
                         format!(
-                            "for (let {k} = 0; {k} < {written}; {k}++) {{\n\
+                            "{decl} {view} = {memory};\n\
+                             for (let {k} = 0; {k} < {written}; {k}++) {{\n\
                              const {cell} = {ptr} + {k} * {stride};\n\
-                             {elems}}}"
+                             {reads}{releases}}}"
                         )
                     }
-                    None => format!("const {cell} = {ptr};\n{}", elems.trim_end()),
+                    None => format!(
+                        "const {cell} = {ptr};\n{decl} {view} = {memory};\n{reads}{}",
+                        releases.trim_end()
+                    ),
                 };
-                format!("if ({ptr}) {{\n{elems}\n{free}\n}}")
+                Release {
+                    held,
+                    calls: format!("{elems}\n{free}"),
+                    style: ReleaseStyle::Block,
+                    calls_wasm: true,
+                }
             }
         }
     }
@@ -1605,7 +1687,11 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         let (word, at, mem) = (cell.owned.last().unwrap().word, cell.at.clone(), cell.mem);
         let (offset, ty) = cell.fields[word];
         let none = if ty == "BigInt64" { "0n" } else { "0" };
-        let memory = self.dataview(mem);
+        let memory = if cell.wasm_refs == self.cx.wasm_refs {
+            cell.view.clone()
+        } else {
+            self.dataview(mem)
+        };
         let i = self.tmp();
         let wrapped = self.declare("const", format!("obj{i}"), wrap);
         self.prelude(&format!("{memory}.set{ty}({at} + {offset}, {none}, true);"));
@@ -1846,8 +1932,21 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     /// (or a user-written JS-only subclass) those agree; for a Rust
     /// descendant the per-class slot holds the upcasted ancestor pointer
     /// and differs from `__wbg_ptr`, so we throw.
-    fn owned_class_assert(&mut self, arg: &str, class: &str) -> String {
-        let mut assert = self.class_assert(arg, class);
+    ///
+    /// A stored instance is one that still has its pointer: one that never
+    /// had it, or was freed or moved, isn't, which a sequence holding an
+    /// instance twice makes of it where it's taken the second time. That is
+    /// a single test where the value isn't optional, made ahead of taking
+    /// any value and again where this one is taken.
+    fn owned_class_assert(&mut self, arg: &str, class: &str, optional: bool) -> String {
+        let live = format!("!{arg}.__wbg_ptr");
+        let wrong = "throw new Error('array contains a value of the wrong type');";
+        let mut assert = if self.stored && !optional {
+            let identifier = self.cx.require_class_reference(class);
+            format!("if (!({arg} instanceof {identifier}) || {live}) {wrong}\n")
+        } else {
+            self.class_assert(arg, class)
+        };
         let resolved = self.cx.resolve_class_name(class).to_string();
         let participates = self
             .cx
@@ -1865,15 +1964,8 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             )
             .unwrap();
         }
-        if self.stored {
-            // An instance that never had a pointer, or was freed or moved,
-            // which a sequence holding one twice makes of it where it's
-            // taken the second time.
-            writeln!(
-                assert,
-                "if (!{arg}.__wbg_ptr) throw new Error('array contains a value of the wrong type');"
-            )
-            .unwrap();
+        if self.stored && optional {
+            writeln!(assert, "if ({live}) {wrong}").unwrap();
         }
         assert.push_str(&self.not_moved_assert(arg));
         assert
@@ -1883,7 +1975,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     /// by value. A stored optional's check is returned for the branch that
     /// takes the instance to repeat.
     fn assert_owned_class(&mut self, arg: &str, class: &str, some: Option<&str>) -> String {
-        let assert = self.owned_class_assert(arg, class);
+        let assert = self.owned_class_assert(arg, class, some.is_some());
         let Some(some) = some else {
             self.check(&assert);
             return String::new();
@@ -2161,6 +2253,19 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         ptr: &str,
         len: &str,
     ) -> String {
+        let free = self.vector_free(kind, mem, free, ptr, len);
+        format!("if ({ptr}) {{ {free} }}")
+    }
+
+    /// The calls releasing the vector at `ptr`.
+    fn vector_free(
+        &mut self,
+        kind: &VectorKind,
+        mem: walrus::MemoryId,
+        free: walrus::FunctionId,
+        ptr: &str,
+        len: &str,
+    ) -> String {
         let free = self.cx.wasm_export_of(free);
         let size = kind.size();
         let elems = match kind {
@@ -2177,14 +2282,14 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
                         self.cx.expose_drop_ref();
                         let view = self.dataview(mem);
                         format!(
-                            "for (let i = 0; i < {len}; i++) dropObject({view}.getUint32({ptr} + 4 * i, true)); "
+                            "for (let i = 0, view = {view}; i < {len}; i++) dropObject(view.getUint32({ptr} + 4 * i, true)); "
                         )
                     }
                 }
             }
             _ => String::new(),
         };
-        format!("if ({ptr}) {{ {elems}{free}({ptr}, {len} * {size}, {size}); }}")
+        format!("{elems}{free}({ptr}, {len} * {size}, {size});")
     }
 }
 
@@ -3471,6 +3576,8 @@ fn instruction(
                 at: p.clone(),
                 fields: fields.clone(),
                 mem: *mem,
+                view: view.clone(),
+                wasm_refs: js.cx.wasm_refs,
                 owned: Vec::new(),
             };
             let (element, value) = encoded_element(js, elem, cell, log_error, constructor)?;
@@ -3791,10 +3898,6 @@ fn instruction(
                 StoredCheck::String(Some(kind)) => {
                     let none = js.is_none(&val, *kind);
                     format!("!({none}) && typeof {val} !== 'string'")
-                }
-                StoredCheck::Class(class) => {
-                    let class = js.cx.require_class_reference(class);
-                    format!("!({val} instanceof {class})")
                 }
                 StoredCheck::Sequence(kind) => {
                     let sequence = format!("!Array.isArray({val}) && !ArrayBuffer.isView({val})");

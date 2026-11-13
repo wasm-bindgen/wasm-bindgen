@@ -76,7 +76,6 @@ impl InstructionBuilder<'_, '_> {
                 } else {
                     self.ptr_ty()
                 };
-                self.stored_check(StoredCheck::Class(class.clone()));
                 self.instruction(
                     &[AdapterType::Struct(class.clone())],
                     Instruction::I32FromExternrefRustOwned {

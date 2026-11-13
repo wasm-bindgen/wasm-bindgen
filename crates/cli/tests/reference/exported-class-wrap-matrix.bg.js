@@ -370,10 +370,8 @@ nsa.Widget = nsa__Widget;
 export function readAnimals(animals) {
     for (let n0 = 0; n0 < animals.length; n0++) {
         const e0 = animals[n0];
-        if (!(e0 instanceof Animal)) throw new Error('array contains a value of the wrong type');
-        _assertClass(e0, Animal);
+        if (!(e0 instanceof Animal) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
         if (e0.__wbg_ptr !== e0.__wbg_ptr_Animal) { throw new TypeError('expected exact instance of Animal; a wasm-bindgen descendant cannot be consumed by-value as its ancestor'); }
-        if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
     }
     let j0 = 0, len0, ptr0;
     try {
@@ -381,10 +379,8 @@ export function readAnimals(animals) {
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = animals[j0];
-            if (!(e0 instanceof Animal)) throw new Error('array contains a value of the wrong type');
-            _assertClass(e0, Animal);
+            if (!(e0 instanceof Animal) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
             if (e0.__wbg_ptr !== e0.__wbg_ptr_Animal) { throw new TypeError('expected exact instance of Animal; a wasm-bindgen descendant cannot be consumed by-value as its ancestor'); }
-            if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
             var ptr1 = e0.__destroy_into_raw();
             const view0 = getDataViewMemory0();
             const p0 = ptr0 + j0 * 4;
@@ -392,10 +388,14 @@ export function readAnimals(animals) {
         }
     } catch (e) {
         if (ptr0) {
+            let view2 = getDataViewMemory0();
             for (let k2 = 0; k2 < j0; k2++) {
                 const cell2 = ptr0 + k2 * 4;
-                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
-                if (w2_0) wasm.__wbg_animal_free(w2_0, 1);
+                const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
+                if (w2_0) {
+                    wasm.__wbg_animal_free(w2_0, 1);
+                    view2 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(ptr0, len0 * 4, 4);
         }
@@ -412,10 +412,8 @@ export function readAnimals(animals) {
 export function readBases(bases) {
     for (let n0 = 0; n0 < bases.length; n0++) {
         const e0 = bases[n0];
-        if (!(e0 instanceof zoo__Base)) throw new Error('array contains a value of the wrong type');
-        _assertClass(e0, zoo__Base);
+        if (!(e0 instanceof zoo__Base) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
         if (e0.__wbg_ptr !== e0.__wbg_ptr_zoo__Base) { throw new TypeError('expected exact instance of zoo__Base; a wasm-bindgen descendant cannot be consumed by-value as its ancestor'); }
-        if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
     }
     let j0 = 0, len0, ptr0;
     try {
@@ -423,10 +421,8 @@ export function readBases(bases) {
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = bases[j0];
-            if (!(e0 instanceof zoo__Base)) throw new Error('array contains a value of the wrong type');
-            _assertClass(e0, zoo__Base);
+            if (!(e0 instanceof zoo__Base) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
             if (e0.__wbg_ptr !== e0.__wbg_ptr_zoo__Base) { throw new TypeError('expected exact instance of zoo__Base; a wasm-bindgen descendant cannot be consumed by-value as its ancestor'); }
-            if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
             var ptr1 = e0.__destroy_into_raw();
             const view0 = getDataViewMemory0();
             const p0 = ptr0 + j0 * 4;
@@ -434,10 +430,14 @@ export function readBases(bases) {
         }
     } catch (e) {
         if (ptr0) {
+            let view2 = getDataViewMemory0();
             for (let k2 = 0; k2 < j0; k2++) {
                 const cell2 = ptr0 + k2 * 4;
-                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
-                if (w2_0) wasm.__wbg_zoo__base_free(w2_0, 1);
+                const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
+                if (w2_0) {
+                    wasm.__wbg_zoo__base_free(w2_0, 1);
+                    view2 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(ptr0, len0 * 4, 4);
         }
@@ -454,10 +454,8 @@ export function readBases(bases) {
 export function readCars(cars) {
     for (let n0 = 0; n0 < cars.length; n0++) {
         const e0 = cars[n0];
-        if (!(e0 instanceof Car)) throw new Error('array contains a value of the wrong type');
-        _assertClass(e0, Car);
+        if (!(e0 instanceof Car) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
         if (e0.__wbg_ptr !== e0.__wbg_ptr_Car) { throw new TypeError('expected exact instance of Car; a wasm-bindgen descendant cannot be consumed by-value as its ancestor'); }
-        if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
     }
     let j0 = 0, len0, ptr0;
     try {
@@ -465,10 +463,8 @@ export function readCars(cars) {
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = cars[j0];
-            if (!(e0 instanceof Car)) throw new Error('array contains a value of the wrong type');
-            _assertClass(e0, Car);
+            if (!(e0 instanceof Car) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
             if (e0.__wbg_ptr !== e0.__wbg_ptr_Car) { throw new TypeError('expected exact instance of Car; a wasm-bindgen descendant cannot be consumed by-value as its ancestor'); }
-            if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
             var ptr1 = e0.__destroy_into_raw();
             const view0 = getDataViewMemory0();
             const p0 = ptr0 + j0 * 4;
@@ -476,10 +472,14 @@ export function readCars(cars) {
         }
     } catch (e) {
         if (ptr0) {
+            let view2 = getDataViewMemory0();
             for (let k2 = 0; k2 < j0; k2++) {
                 const cell2 = ptr0 + k2 * 4;
-                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
-                if (w2_0) wasm.__wbg_car_free(w2_0, 1);
+                const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
+                if (w2_0) {
+                    wasm.__wbg_car_free(w2_0, 1);
+                    view2 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(ptr0, len0 * 4, 4);
         }
@@ -496,10 +496,8 @@ export function readCars(cars) {
 export function readDeriveds(deriveds) {
     for (let n0 = 0; n0 < deriveds.length; n0++) {
         const e0 = deriveds[n0];
-        if (!(e0 instanceof garden__Derived)) throw new Error('array contains a value of the wrong type');
-        _assertClass(e0, garden__Derived);
+        if (!(e0 instanceof garden__Derived) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
         if (e0.__wbg_ptr !== e0.__wbg_ptr_garden__Derived) { throw new TypeError('expected exact instance of garden__Derived; a wasm-bindgen descendant cannot be consumed by-value as its ancestor'); }
-        if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
     }
     let j0 = 0, len0, ptr0;
     try {
@@ -507,10 +505,8 @@ export function readDeriveds(deriveds) {
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = deriveds[j0];
-            if (!(e0 instanceof garden__Derived)) throw new Error('array contains a value of the wrong type');
-            _assertClass(e0, garden__Derived);
+            if (!(e0 instanceof garden__Derived) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
             if (e0.__wbg_ptr !== e0.__wbg_ptr_garden__Derived) { throw new TypeError('expected exact instance of garden__Derived; a wasm-bindgen descendant cannot be consumed by-value as its ancestor'); }
-            if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
             var ptr1 = e0.__destroy_into_raw();
             const view0 = getDataViewMemory0();
             const p0 = ptr0 + j0 * 4;
@@ -518,10 +514,14 @@ export function readDeriveds(deriveds) {
         }
     } catch (e) {
         if (ptr0) {
+            let view2 = getDataViewMemory0();
             for (let k2 = 0; k2 < j0; k2++) {
                 const cell2 = ptr0 + k2 * 4;
-                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
-                if (w2_0) wasm.__wbg_garden__derived_free(w2_0, 1);
+                const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
+                if (w2_0) {
+                    wasm.__wbg_garden__derived_free(w2_0, 1);
+                    view2 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(ptr0, len0 * 4, 4);
         }
@@ -550,10 +550,8 @@ export function readDog(d) {
 export function readDogs(dogs) {
     for (let n0 = 0; n0 < dogs.length; n0++) {
         const e0 = dogs[n0];
-        if (!(e0 instanceof Dog)) throw new Error('array contains a value of the wrong type');
-        _assertClass(e0, Dog);
+        if (!(e0 instanceof Dog) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
         if (e0.__wbg_ptr !== e0.__wbg_ptr_Dog) { throw new TypeError('expected exact instance of Dog; a wasm-bindgen descendant cannot be consumed by-value as its ancestor'); }
-        if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
     }
     let j0 = 0, len0, ptr0;
     try {
@@ -561,10 +559,8 @@ export function readDogs(dogs) {
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = dogs[j0];
-            if (!(e0 instanceof Dog)) throw new Error('array contains a value of the wrong type');
-            _assertClass(e0, Dog);
+            if (!(e0 instanceof Dog) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
             if (e0.__wbg_ptr !== e0.__wbg_ptr_Dog) { throw new TypeError('expected exact instance of Dog; a wasm-bindgen descendant cannot be consumed by-value as its ancestor'); }
-            if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
             var ptr1 = e0.__destroy_into_raw();
             const view0 = getDataViewMemory0();
             const p0 = ptr0 + j0 * 4;
@@ -572,10 +568,14 @@ export function readDogs(dogs) {
         }
     } catch (e) {
         if (ptr0) {
+            let view2 = getDataViewMemory0();
             for (let k2 = 0; k2 < j0; k2++) {
                 const cell2 = ptr0 + k2 * 4;
-                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
-                if (w2_0) wasm.__wbg_dog_free(w2_0, 1);
+                const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
+                if (w2_0) {
+                    wasm.__wbg_dog_free(w2_0, 1);
+                    view2 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(ptr0, len0 * 4, 4);
         }
@@ -592,10 +592,8 @@ export function readDogs(dogs) {
 export function readHabitats(habitats) {
     for (let n0 = 0; n0 < habitats.length; n0++) {
         const e0 = habitats[n0];
-        if (!(e0 instanceof wild__Habitat)) throw new Error('array contains a value of the wrong type');
-        _assertClass(e0, wild__Habitat);
+        if (!(e0 instanceof wild__Habitat) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
         if (e0.__wbg_ptr !== e0.__wbg_ptr_wild__Habitat) { throw new TypeError('expected exact instance of wild__Habitat; a wasm-bindgen descendant cannot be consumed by-value as its ancestor'); }
-        if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
     }
     let j0 = 0, len0, ptr0;
     try {
@@ -603,10 +601,8 @@ export function readHabitats(habitats) {
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = habitats[j0];
-            if (!(e0 instanceof wild__Habitat)) throw new Error('array contains a value of the wrong type');
-            _assertClass(e0, wild__Habitat);
+            if (!(e0 instanceof wild__Habitat) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
             if (e0.__wbg_ptr !== e0.__wbg_ptr_wild__Habitat) { throw new TypeError('expected exact instance of wild__Habitat; a wasm-bindgen descendant cannot be consumed by-value as its ancestor'); }
-            if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
             var ptr1 = e0.__destroy_into_raw();
             const view0 = getDataViewMemory0();
             const p0 = ptr0 + j0 * 4;
@@ -614,10 +610,14 @@ export function readHabitats(habitats) {
         }
     } catch (e) {
         if (ptr0) {
+            let view2 = getDataViewMemory0();
             for (let k2 = 0; k2 < j0; k2++) {
                 const cell2 = ptr0 + k2 * 4;
-                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
-                if (w2_0) wasm.__wbg_wild__habitat_free(w2_0, 1);
+                const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
+                if (w2_0) {
+                    wasm.__wbg_wild__habitat_free(w2_0, 1);
+                    view2 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(ptr0, len0 * 4, 4);
         }
@@ -634,10 +634,8 @@ export function readHabitats(habitats) {
 export function readReserves(reserves) {
     for (let n0 = 0; n0 < reserves.length; n0++) {
         const e0 = reserves[n0];
-        if (!(e0 instanceof Reserve)) throw new Error('array contains a value of the wrong type');
-        _assertClass(e0, Reserve);
+        if (!(e0 instanceof Reserve) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
         if (e0.__wbg_ptr !== e0.__wbg_ptr_Reserve) { throw new TypeError('expected exact instance of Reserve; a wasm-bindgen descendant cannot be consumed by-value as its ancestor'); }
-        if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
     }
     let j0 = 0, len0, ptr0;
     try {
@@ -645,10 +643,8 @@ export function readReserves(reserves) {
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = reserves[j0];
-            if (!(e0 instanceof Reserve)) throw new Error('array contains a value of the wrong type');
-            _assertClass(e0, Reserve);
+            if (!(e0 instanceof Reserve) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
             if (e0.__wbg_ptr !== e0.__wbg_ptr_Reserve) { throw new TypeError('expected exact instance of Reserve; a wasm-bindgen descendant cannot be consumed by-value as its ancestor'); }
-            if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
             var ptr1 = e0.__destroy_into_raw();
             const view0 = getDataViewMemory0();
             const p0 = ptr0 + j0 * 4;
@@ -656,10 +652,14 @@ export function readReserves(reserves) {
         }
     } catch (e) {
         if (ptr0) {
+            let view2 = getDataViewMemory0();
             for (let k2 = 0; k2 < j0; k2++) {
                 const cell2 = ptr0 + k2 * 4;
-                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
-                if (w2_0) wasm.__wbg_reserve_free(w2_0, 1);
+                const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
+                if (w2_0) {
+                    wasm.__wbg_reserve_free(w2_0, 1);
+                    view2 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(ptr0, len0 * 4, 4);
         }
@@ -676,10 +676,8 @@ export function readReserves(reserves) {
 export function readVehicles(vehicles) {
     for (let n0 = 0; n0 < vehicles.length; n0++) {
         const e0 = vehicles[n0];
-        if (!(e0 instanceof Vehicle)) throw new Error('array contains a value of the wrong type');
-        _assertClass(e0, Vehicle);
+        if (!(e0 instanceof Vehicle) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
         if (e0.__wbg_ptr !== e0.__wbg_ptr_Vehicle) { throw new TypeError('expected exact instance of Vehicle; a wasm-bindgen descendant cannot be consumed by-value as its ancestor'); }
-        if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
     }
     let j0 = 0, len0, ptr0;
     try {
@@ -687,10 +685,8 @@ export function readVehicles(vehicles) {
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = vehicles[j0];
-            if (!(e0 instanceof Vehicle)) throw new Error('array contains a value of the wrong type');
-            _assertClass(e0, Vehicle);
+            if (!(e0 instanceof Vehicle) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
             if (e0.__wbg_ptr !== e0.__wbg_ptr_Vehicle) { throw new TypeError('expected exact instance of Vehicle; a wasm-bindgen descendant cannot be consumed by-value as its ancestor'); }
-            if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
             var ptr1 = e0.__destroy_into_raw();
             const view0 = getDataViewMemory0();
             const p0 = ptr0 + j0 * 4;
@@ -698,10 +694,14 @@ export function readVehicles(vehicles) {
         }
     } catch (e) {
         if (ptr0) {
+            let view2 = getDataViewMemory0();
             for (let k2 = 0; k2 < j0; k2++) {
                 const cell2 = ptr0 + k2 * 4;
-                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
-                if (w2_0) wasm.__wbg_vehicle_free(w2_0, 1);
+                const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
+                if (w2_0) {
+                    wasm.__wbg_vehicle_free(w2_0, 1);
+                    view2 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(ptr0, len0 * 4, 4);
         }
@@ -729,9 +729,7 @@ export function readWidget(w) {
 export function readWidgets(widgets) {
     for (let n0 = 0; n0 < widgets.length; n0++) {
         const e0 = widgets[n0];
-        if (!(e0 instanceof nsa__Widget)) throw new Error('array contains a value of the wrong type');
-        _assertClass(e0, nsa__Widget);
-        if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
+        if (!(e0 instanceof nsa__Widget) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
     }
     let j0 = 0, len0, ptr0;
     try {
@@ -739,9 +737,7 @@ export function readWidgets(widgets) {
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = widgets[j0];
-            if (!(e0 instanceof nsa__Widget)) throw new Error('array contains a value of the wrong type');
-            _assertClass(e0, nsa__Widget);
-            if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
+            if (!(e0 instanceof nsa__Widget) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
             var ptr1 = e0.__destroy_into_raw();
             const view0 = getDataViewMemory0();
             const p0 = ptr0 + j0 * 4;
@@ -749,10 +745,14 @@ export function readWidgets(widgets) {
         }
     } catch (e) {
         if (ptr0) {
+            let view2 = getDataViewMemory0();
             for (let k2 = 0; k2 < j0; k2++) {
                 const cell2 = ptr0 + k2 * 4;
-                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
-                if (w2_0) wasm.__wbg_nsa__widget_free(w2_0, 1);
+                const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
+                if (w2_0) {
+                    wasm.__wbg_nsa__widget_free(w2_0, 1);
+                    view2 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(ptr0, len0 * 4, 4);
         }

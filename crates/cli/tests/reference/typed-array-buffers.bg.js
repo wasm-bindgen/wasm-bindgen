@@ -87,11 +87,15 @@ export function strings(input) {
         }
     } catch (e) {
         if (ptr0) {
+            let view2 = getDataViewMemory0();
             for (let k2 = 0; k2 < j0; k2++) {
                 const cell2 = ptr0 + k2 * 8;
-                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
-                const w2_1 = getDataViewMemory0().getInt32(cell2 + 4, true) >>> 0;
-                if (w2_0) { wasm.__wbindgen_free(w2_0, w2_1 * 1, 1); }
+                const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
+                const w2_1 = view2.getInt32(cell2 + 4, true) >>> 0;
+                if (w2_0) {
+                    wasm.__wbindgen_free(w2_0, w2_1 * 1, 1);
+                    view2 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(ptr0, len0 * 8, 4);
         }
@@ -111,11 +115,15 @@ export function strings(input) {
         }
     } finally {
         if (b4) {
+            let view5 = getDataViewMemory0();
             for (let k5 = 0; k5 < ret[1]; k5++) {
                 const cell5 = b4 + k5 * 8;
-                const w5_0 = getDataViewMemory0().getInt32(cell5 + 0, true) >>> 0;
-                const w5_1 = getDataViewMemory0().getInt32(cell5 + 4, true) >>> 0;
-                if (w5_0) { wasm.__wbindgen_free(w5_0, w5_1 * 1, 1); }
+                const w5_0 = view5.getInt32(cell5 + 0, true) >>> 0;
+                const w5_1 = view5.getInt32(cell5 + 4, true) >>> 0;
+                if (w5_0) {
+                    wasm.__wbindgen_free(w5_0, w5_1 * 1, 1);
+                    view5 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(b4, ret[1] * 8, 4);
         }

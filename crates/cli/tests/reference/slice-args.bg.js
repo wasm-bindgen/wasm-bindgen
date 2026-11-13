@@ -285,9 +285,7 @@ export function take_non_numbers(a, b, c) {
     }
     for (let n4 = 0; n4 < c.length; n4++) {
         const e4 = c[n4];
-        if (!(e4 instanceof Point)) throw new Error('array contains a value of the wrong type');
-        _assertClass(e4, Point);
-        if (!e4.__wbg_ptr) throw new Error('array contains a value of the wrong type');
+        if (!(e4 instanceof Point) || !e4.__wbg_ptr) throw new Error('array contains a value of the wrong type');
     }
     let ptr0, len0, j1 = 0, len1, ptr1, j4 = 0, len4, ptr4;
     try {
@@ -309,9 +307,7 @@ export function take_non_numbers(a, b, c) {
         ptr4 = wasm.__wbindgen_malloc(len4 * 4, 4) >>> 0;
         for (; j4 < len4; j4++) {
             const e4 = c[j4];
-            if (!(e4 instanceof Point)) throw new Error('array contains a value of the wrong type');
-            _assertClass(e4, Point);
-            if (!e4.__wbg_ptr) throw new Error('array contains a value of the wrong type');
+            if (!(e4 instanceof Point) || !e4.__wbg_ptr) throw new Error('array contains a value of the wrong type');
             var ptr5 = e4.__destroy_into_raw();
             const view4 = getDataViewMemory0();
             const p4 = ptr4 + j4 * 4;
@@ -319,19 +315,27 @@ export function take_non_numbers(a, b, c) {
         }
     } catch (e) {
         if (ptr4) {
+            let view6 = getDataViewMemory0();
             for (let k6 = 0; k6 < j4; k6++) {
                 const cell6 = ptr4 + k6 * 4;
-                const w6_0 = getDataViewMemory0().getInt32(cell6 + 0, true) >>> 0;
-                if (w6_0) wasm.__wbg_point_free(w6_0, 1);
+                const w6_0 = view6.getInt32(cell6 + 0, true) >>> 0;
+                if (w6_0) {
+                    wasm.__wbg_point_free(w6_0, 1);
+                    view6 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(ptr4, len4 * 4, 4);
         }
         if (ptr1) {
+            let view3 = getDataViewMemory0();
             for (let k3 = 0; k3 < j1; k3++) {
                 const cell3 = ptr1 + k3 * 8;
-                const w3_0 = getDataViewMemory0().getInt32(cell3 + 0, true) >>> 0;
-                const w3_1 = getDataViewMemory0().getInt32(cell3 + 4, true) >>> 0;
-                if (w3_0) { wasm.__wbindgen_free(w3_0, w3_1 * 1, 1); }
+                const w3_0 = view3.getInt32(cell3 + 0, true) >>> 0;
+                const w3_1 = view3.getInt32(cell3 + 4, true) >>> 0;
+                if (w3_0) {
+                    wasm.__wbindgen_free(w3_0, w3_1 * 1, 1);
+                    view3 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(ptr1, len1 * 8, 4);
         }
@@ -450,12 +454,6 @@ function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
     wasm.__wbindgen_externrefs.set(idx, obj);
     return idx;
-}
-
-function _assertClass(instance, klass) {
-    if (!(instance instanceof klass)) {
-        throw new Error(`expected instance of ${klass.name}`);
-    }
 }
 
 function getArrayF64FromWasm0(ptr, len) {

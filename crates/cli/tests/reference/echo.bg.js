@@ -381,11 +381,15 @@ export function echo_option_vec_string(a) {
         }
     } catch (e) {
         if (ptr0) {
+            let view2 = getDataViewMemory0();
             for (let k2 = 0; k2 < j0; k2++) {
                 const cell2 = ptr0 + k2 * 8;
-                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
-                const w2_1 = getDataViewMemory0().getInt32(cell2 + 4, true) >>> 0;
-                if (w2_0) { wasm.__wbindgen_free(w2_0, w2_1 * 1, 1); }
+                const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
+                const w2_1 = view2.getInt32(cell2 + 4, true) >>> 0;
+                if (w2_0) {
+                    wasm.__wbindgen_free(w2_0, w2_1 * 1, 1);
+                    view2 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(ptr0, len0 * 8, 4);
         }
@@ -407,11 +411,15 @@ export function echo_option_vec_string(a) {
             }
         } finally {
             if (b4) {
+                let view5 = getDataViewMemory0();
                 for (let k5 = 0; k5 < ret[1]; k5++) {
                     const cell5 = b4 + k5 * 8;
-                    const w5_0 = getDataViewMemory0().getInt32(cell5 + 0, true) >>> 0;
-                    const w5_1 = getDataViewMemory0().getInt32(cell5 + 4, true) >>> 0;
-                    if (w5_0) { wasm.__wbindgen_free(w5_0, w5_1 * 1, 1); }
+                    const w5_0 = view5.getInt32(cell5 + 0, true) >>> 0;
+                    const w5_1 = view5.getInt32(cell5 + 4, true) >>> 0;
+                    if (w5_0) {
+                        wasm.__wbindgen_free(w5_0, w5_1 * 1, 1);
+                        view5 = getDataViewMemory0();
+                    }
                 }
                 wasm.__wbindgen_free(b4, ret[1] * 8, 4);
             }
@@ -428,9 +436,7 @@ export function echo_option_vec_struct(a) {
     if (!isLikeNone(a)) {
         for (let n0 = 0; n0 < a.length; n0++) {
             const e0 = a[n0];
-            if (!(e0 instanceof Foo)) throw new Error('array contains a value of the wrong type');
-            _assertClass(e0, Foo);
-            if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
+            if (!(e0 instanceof Foo) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
         }
     }
     let j0 = 0, ptr0 = 0, len0 = 0;
@@ -440,9 +446,7 @@ export function echo_option_vec_struct(a) {
             ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
             for (; j0 < len0; j0++) {
                 const e0 = a[j0];
-                if (!(e0 instanceof Foo)) throw new Error('array contains a value of the wrong type');
-                _assertClass(e0, Foo);
-                if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
+                if (!(e0 instanceof Foo) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
                 var ptr1 = e0.__destroy_into_raw();
                 const view0 = getDataViewMemory0();
                 const p0 = ptr0 + j0 * 4;
@@ -451,10 +455,14 @@ export function echo_option_vec_struct(a) {
         }
     } catch (e) {
         if (ptr0) {
+            let view2 = getDataViewMemory0();
             for (let k2 = 0; k2 < j0; k2++) {
                 const cell2 = ptr0 + k2 * 4;
-                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
-                if (w2_0) wasm.__wbg_foo_free(w2_0, 1);
+                const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
+                if (w2_0) {
+                    wasm.__wbg_foo_free(w2_0, 1);
+                    view2 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(ptr0, len0 * 4, 4);
         }
@@ -472,15 +480,19 @@ export function echo_option_vec_struct(a) {
             for (const end4 = p4 + ret[1] * 4; p4 < end4; p4 += 4) {
                 const w4_0 = view4.getInt32(p4 + 0, true);
                 const obj5 = Foo.__wrap(w4_0);
-                getDataViewMemory0().setInt32(p4 + 0, 0, true);
+                view4.setInt32(p4 + 0, 0, true);
                 v4.push(obj5);
             }
         } finally {
             if (b4) {
+                let view6 = getDataViewMemory0();
                 for (let k6 = 0; k6 < ret[1]; k6++) {
                     const cell6 = b4 + k6 * 4;
-                    const w6_0 = getDataViewMemory0().getInt32(cell6 + 0, true) >>> 0;
-                    if (w6_0) wasm.__wbg_foo_free(w6_0, 1);
+                    const w6_0 = view6.getInt32(cell6 + 0, true) >>> 0;
+                    if (w6_0) {
+                        wasm.__wbg_foo_free(w6_0, 1);
+                        view6 = getDataViewMemory0();
+                    }
                 }
                 wasm.__wbindgen_free(b4, ret[1] * 4, 4);
             }
@@ -842,11 +854,15 @@ export function echo_vec_string(a) {
         }
     } catch (e) {
         if (ptr0) {
+            let view2 = getDataViewMemory0();
             for (let k2 = 0; k2 < j0; k2++) {
                 const cell2 = ptr0 + k2 * 8;
-                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
-                const w2_1 = getDataViewMemory0().getInt32(cell2 + 4, true) >>> 0;
-                if (w2_0) { wasm.__wbindgen_free(w2_0, w2_1 * 1, 1); }
+                const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
+                const w2_1 = view2.getInt32(cell2 + 4, true) >>> 0;
+                if (w2_0) {
+                    wasm.__wbindgen_free(w2_0, w2_1 * 1, 1);
+                    view2 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(ptr0, len0 * 8, 4);
         }
@@ -866,11 +882,15 @@ export function echo_vec_string(a) {
         }
     } finally {
         if (b4) {
+            let view5 = getDataViewMemory0();
             for (let k5 = 0; k5 < ret[1]; k5++) {
                 const cell5 = b4 + k5 * 8;
-                const w5_0 = getDataViewMemory0().getInt32(cell5 + 0, true) >>> 0;
-                const w5_1 = getDataViewMemory0().getInt32(cell5 + 4, true) >>> 0;
-                if (w5_0) { wasm.__wbindgen_free(w5_0, w5_1 * 1, 1); }
+                const w5_0 = view5.getInt32(cell5 + 0, true) >>> 0;
+                const w5_1 = view5.getInt32(cell5 + 4, true) >>> 0;
+                if (w5_0) {
+                    wasm.__wbindgen_free(w5_0, w5_1 * 1, 1);
+                    view5 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(b4, ret[1] * 8, 4);
         }
@@ -885,9 +905,7 @@ export function echo_vec_string(a) {
 export function echo_vec_struct(a) {
     for (let n0 = 0; n0 < a.length; n0++) {
         const e0 = a[n0];
-        if (!(e0 instanceof Foo)) throw new Error('array contains a value of the wrong type');
-        _assertClass(e0, Foo);
-        if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
+        if (!(e0 instanceof Foo) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
     }
     let j0 = 0, len0, ptr0;
     try {
@@ -895,9 +913,7 @@ export function echo_vec_struct(a) {
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = a[j0];
-            if (!(e0 instanceof Foo)) throw new Error('array contains a value of the wrong type');
-            _assertClass(e0, Foo);
-            if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
+            if (!(e0 instanceof Foo) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
             var ptr1 = e0.__destroy_into_raw();
             const view0 = getDataViewMemory0();
             const p0 = ptr0 + j0 * 4;
@@ -905,10 +921,14 @@ export function echo_vec_struct(a) {
         }
     } catch (e) {
         if (ptr0) {
+            let view2 = getDataViewMemory0();
             for (let k2 = 0; k2 < j0; k2++) {
                 const cell2 = ptr0 + k2 * 4;
-                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
-                if (w2_0) wasm.__wbg_foo_free(w2_0, 1);
+                const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
+                if (w2_0) {
+                    wasm.__wbg_foo_free(w2_0, 1);
+                    view2 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(ptr0, len0 * 4, 4);
         }
@@ -924,15 +944,19 @@ export function echo_vec_struct(a) {
         for (const end4 = p4 + ret[1] * 4; p4 < end4; p4 += 4) {
             const w4_0 = view4.getInt32(p4 + 0, true);
             const obj5 = Foo.__wrap(w4_0);
-            getDataViewMemory0().setInt32(p4 + 0, 0, true);
+            view4.setInt32(p4 + 0, 0, true);
             v4.push(obj5);
         }
     } finally {
         if (b4) {
+            let view6 = getDataViewMemory0();
             for (let k6 = 0; k6 < ret[1]; k6++) {
                 const cell6 = b4 + k6 * 4;
-                const w6_0 = getDataViewMemory0().getInt32(cell6 + 0, true) >>> 0;
-                if (w6_0) wasm.__wbg_foo_free(w6_0, 1);
+                const w6_0 = view6.getInt32(cell6 + 0, true) >>> 0;
+                if (w6_0) {
+                    wasm.__wbg_foo_free(w6_0, 1);
+                    view6 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(b4, ret[1] * 4, 4);
         }

@@ -63,11 +63,15 @@ export function __wbg_js_each_c2094a133f72a80f(arg0, arg1, arg2, arg3) {
         if (b0) wasm.__wbindgen_free(b0, arg1 * 8, 4);
         for (const f of lent2) f();
         if (b2) {
+            let view5 = getDataViewMemory0();
             for (let k5 = 0; k5 < arg3; k5++) {
                 const cell5 = b2 + k5 * 8;
-                const w5_0 = getDataViewMemory0().getInt32(cell5 + 0, true) >>> 0;
-                const w5_1 = getDataViewMemory0().getInt32(cell5 + 4, true) >>> 0;
-                if (w5_0) wasm.__wbindgen_free(w5_0, w5_1 * 8, 4);
+                const w5_0 = view5.getInt32(cell5 + 0, true) >>> 0;
+                const w5_1 = view5.getInt32(cell5 + 4, true) >>> 0;
+                if (w5_0) {
+                    wasm.__wbindgen_free(w5_0, w5_1 * 8, 4);
+                    view5 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(b2, arg3 * 8, 4);
         }

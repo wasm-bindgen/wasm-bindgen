@@ -76,10 +76,12 @@ export function maybe_foos(v) {
         }
     } catch (e) {
         if (ptr0) {
+            let view1 = getDataViewMemory0();
             for (let k1 = 0; k1 < j0; k1++) {
                 const cell1 = ptr0 + k1 * 4;
-                const w1_0 = getDataViewMemory0().getInt32(cell1 + 0, true) >>> 0;
+                const w1_0 = view1.getInt32(cell1 + 0, true) >>> 0;
                 wasm.__externref_table_dealloc(w1_0);
+                view1 = getDataViewMemory0();
             }
             wasm.__wbindgen_free(ptr0, len0 * 4, 4);
         }
@@ -98,10 +100,12 @@ export function maybe_foos(v) {
         }
     } finally {
         if (b3) {
+            let view4 = getDataViewMemory0();
             for (let k4 = 0; k4 < ret[1]; k4++) {
                 const cell4 = b3 + k4 * 4;
-                const w4_0 = getDataViewMemory0().getInt32(cell4 + 0, true) >>> 0;
+                const w4_0 = view4.getInt32(cell4 + 0, true) >>> 0;
                 wasm.__externref_table_dealloc(w4_0);
+                view4 = getDataViewMemory0();
             }
             wasm.__wbindgen_free(b3, ret[1] * 4, 4);
         }
@@ -138,11 +142,15 @@ export function maybe_names(v) {
         }
     } catch (e) {
         if (ptr0) {
+            let view2 = getDataViewMemory0();
             for (let k2 = 0; k2 < j0; k2++) {
                 const cell2 = ptr0 + k2 * 8;
-                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
-                const w2_1 = getDataViewMemory0().getInt32(cell2 + 4, true) >>> 0;
-                if (w2_0) { wasm.__wbindgen_free(w2_0, w2_1 * 1, 1); }
+                const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
+                const w2_1 = view2.getInt32(cell2 + 4, true) >>> 0;
+                if (w2_0) {
+                    wasm.__wbindgen_free(w2_0, w2_1 * 1, 1);
+                    view2 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(ptr0, len0 * 8, 4);
         }
@@ -168,11 +176,15 @@ export function maybe_names(v) {
             }
         } finally {
             if (b4) {
+                let view6 = getDataViewMemory0();
                 for (let k6 = 0; k6 < ret[1]; k6++) {
                     const cell6 = b4 + k6 * 8;
-                    const w6_0 = getDataViewMemory0().getInt32(cell6 + 0, true) >>> 0;
-                    const w6_1 = getDataViewMemory0().getInt32(cell6 + 4, true) >>> 0;
-                    if (w6_0) { wasm.__wbindgen_free(w6_0, w6_1 * 1, 1); }
+                    const w6_0 = view6.getInt32(cell6 + 0, true) >>> 0;
+                    const w6_1 = view6.getInt32(cell6 + 4, true) >>> 0;
+                    if (w6_0) {
+                        wasm.__wbindgen_free(w6_0, w6_1 * 1, 1);
+                        view6 = getDataViewMemory0();
+                    }
                 }
                 wasm.__wbindgen_free(b4, ret[1] * 8, 4);
             }
@@ -211,10 +223,14 @@ export function maybe_nullable_points(v) {
         }
     } catch (e) {
         if (ptr0) {
+            let view2 = getDataViewMemory0();
             for (let k2 = 0; k2 < j0; k2++) {
                 const cell2 = ptr0 + k2 * 4;
-                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
-                if (w2_0> 1) wasm.__wbg_point_free(w2_0, 1);
+                const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
+                if (w2_0> 1) {
+                    wasm.__wbg_point_free(w2_0, 1);
+                    view2 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(ptr0, len0 * 4, 4);
         }
@@ -230,15 +246,19 @@ export function maybe_nullable_points(v) {
         for (const end4 = p4 + ret[1] * 4; p4 < end4; p4 += 4) {
             const w4_0 = view4.getInt32(p4 + 0, true);
             const obj5 = w4_0 === 0 ? undefined : w4_0 === 1 ? null : Point.__wrap(w4_0);
-            getDataViewMemory0().setInt32(p4 + 0, 0, true);
+            view4.setInt32(p4 + 0, 0, true);
             v4.push(obj5);
         }
     } finally {
         if (b4) {
+            let view6 = getDataViewMemory0();
             for (let k6 = 0; k6 < ret[1]; k6++) {
                 const cell6 = b4 + k6 * 4;
-                const w6_0 = getDataViewMemory0().getInt32(cell6 + 0, true) >>> 0;
-                if (w6_0> 1) wasm.__wbg_point_free(w6_0, 1);
+                const w6_0 = view6.getInt32(cell6 + 0, true) >>> 0;
+                if (w6_0> 1) {
+                    wasm.__wbg_point_free(w6_0, 1);
+                    view6 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(b4, ret[1] * 4, 4);
         }
@@ -276,10 +296,14 @@ export function maybe_points(v) {
         }
     } catch (e) {
         if (ptr0) {
+            let view2 = getDataViewMemory0();
             for (let k2 = 0; k2 < j0; k2++) {
                 const cell2 = ptr0 + k2 * 4;
-                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
-                if (w2_0) wasm.__wbg_point_free(w2_0, 1);
+                const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
+                if (w2_0) {
+                    wasm.__wbg_point_free(w2_0, 1);
+                    view2 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(ptr0, len0 * 4, 4);
         }
@@ -295,15 +319,19 @@ export function maybe_points(v) {
         for (const end4 = p4 + ret[1] * 4; p4 < end4; p4 += 4) {
             const w4_0 = view4.getInt32(p4 + 0, true);
             const obj5 = w4_0 === 0 ? undefined : Point.__wrap(w4_0);
-            getDataViewMemory0().setInt32(p4 + 0, 0, true);
+            view4.setInt32(p4 + 0, 0, true);
             v4.push(obj5);
         }
     } finally {
         if (b4) {
+            let view6 = getDataViewMemory0();
             for (let k6 = 0; k6 < ret[1]; k6++) {
                 const cell6 = b4 + k6 * 4;
-                const w6_0 = getDataViewMemory0().getInt32(cell6 + 0, true) >>> 0;
-                if (w6_0) wasm.__wbg_point_free(w6_0, 1);
+                const w6_0 = view6.getInt32(cell6 + 0, true) >>> 0;
+                if (w6_0) {
+                    wasm.__wbg_point_free(w6_0, 1);
+                    view6 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(b4, ret[1] * 4, 4);
         }
@@ -336,11 +364,15 @@ export function names(v) {
         }
     } catch (e) {
         if (ptr0) {
+            let view2 = getDataViewMemory0();
             for (let k2 = 0; k2 < j0; k2++) {
                 const cell2 = ptr0 + k2 * 8;
-                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
-                const w2_1 = getDataViewMemory0().getInt32(cell2 + 4, true) >>> 0;
-                if (w2_0) { wasm.__wbindgen_free(w2_0, w2_1 * 1, 1); }
+                const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
+                const w2_1 = view2.getInt32(cell2 + 4, true) >>> 0;
+                if (w2_0) {
+                    wasm.__wbindgen_free(w2_0, w2_1 * 1, 1);
+                    view2 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(ptr0, len0 * 8, 4);
         }
@@ -360,11 +392,15 @@ export function names(v) {
         }
     } finally {
         if (b4) {
+            let view5 = getDataViewMemory0();
             for (let k5 = 0; k5 < ret[1]; k5++) {
                 const cell5 = b4 + k5 * 8;
-                const w5_0 = getDataViewMemory0().getInt32(cell5 + 0, true) >>> 0;
-                const w5_1 = getDataViewMemory0().getInt32(cell5 + 4, true) >>> 0;
-                if (w5_0) { wasm.__wbindgen_free(w5_0, w5_1 * 1, 1); }
+                const w5_0 = view5.getInt32(cell5 + 0, true) >>> 0;
+                const w5_1 = view5.getInt32(cell5 + 4, true) >>> 0;
+                if (w5_0) {
+                    wasm.__wbindgen_free(w5_0, w5_1 * 1, 1);
+                    view5 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(b4, ret[1] * 8, 4);
         }
@@ -403,10 +439,12 @@ export function nested_maybe_foos(v) {
                 }
             } catch (e) {
                 if (ptr1) {
+                    let view2 = getDataViewMemory0();
                     for (let k2 = 0; k2 < j1; k2++) {
                         const cell2 = ptr1 + k2 * 4;
-                        const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
+                        const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
                         wasm.__externref_table_dealloc(w2_0);
+                        view2 = getDataViewMemory0();
                     }
                     wasm.__wbindgen_free(ptr1, len1 * 4, 4);
                 }
@@ -419,17 +457,21 @@ export function nested_maybe_foos(v) {
         }
     } catch (e) {
         if (ptr0) {
+            let view3 = getDataViewMemory0();
             for (let k3 = 0; k3 < j0; k3++) {
                 const cell3 = ptr0 + k3 * 8;
-                const w3_0 = getDataViewMemory0().getInt32(cell3 + 0, true) >>> 0;
-                const w3_1 = getDataViewMemory0().getInt32(cell3 + 4, true) >>> 0;
+                const w3_0 = view3.getInt32(cell3 + 0, true) >>> 0;
+                const w3_1 = view3.getInt32(cell3 + 4, true) >>> 0;
                 if (w3_0) {
+                    let view4 = getDataViewMemory0();
                     for (let k4 = 0; k4 < w3_1; k4++) {
                         const cell4 = w3_0 + k4 * 4;
-                        const w4_0 = getDataViewMemory0().getInt32(cell4 + 0, true) >>> 0;
+                        const w4_0 = view4.getInt32(cell4 + 0, true) >>> 0;
                         wasm.__externref_table_dealloc(w4_0);
+                        view4 = getDataViewMemory0();
                     }
                     wasm.__wbindgen_free(w3_0, w3_1 * 4, 4);
+                    view3 = getDataViewMemory0();
                 }
             }
             wasm.__wbindgen_free(ptr0, len0 * 8, 4);
@@ -461,17 +503,21 @@ export function nested_maybe_foos(v) {
         }
     } finally {
         if (b6) {
+            let view8 = getDataViewMemory0();
             for (let k8 = 0; k8 < ret[1]; k8++) {
                 const cell8 = b6 + k8 * 8;
-                const w8_0 = getDataViewMemory0().getInt32(cell8 + 0, true) >>> 0;
-                const w8_1 = getDataViewMemory0().getInt32(cell8 + 4, true) >>> 0;
+                const w8_0 = view8.getInt32(cell8 + 0, true) >>> 0;
+                const w8_1 = view8.getInt32(cell8 + 4, true) >>> 0;
                 if (w8_0) {
+                    let view9 = getDataViewMemory0();
                     for (let k9 = 0; k9 < w8_1; k9++) {
                         const cell9 = w8_0 + k9 * 4;
-                        const w9_0 = getDataViewMemory0().getInt32(cell9 + 0, true) >>> 0;
+                        const w9_0 = view9.getInt32(cell9 + 0, true) >>> 0;
                         wasm.__externref_table_dealloc(w9_0);
+                        view9 = getDataViewMemory0();
                     }
                     wasm.__wbindgen_free(w8_0, w8_1 * 4, 4);
+                    view8 = getDataViewMemory0();
                 }
             }
             wasm.__wbindgen_free(b6, ret[1] * 8, 4);
@@ -516,11 +562,15 @@ export function nested_names(v) {
                 }
             } catch (e) {
                 if (ptr1) {
+                    let view3 = getDataViewMemory0();
                     for (let k3 = 0; k3 < j1; k3++) {
                         const cell3 = ptr1 + k3 * 8;
-                        const w3_0 = getDataViewMemory0().getInt32(cell3 + 0, true) >>> 0;
-                        const w3_1 = getDataViewMemory0().getInt32(cell3 + 4, true) >>> 0;
-                        if (w3_0) { wasm.__wbindgen_free(w3_0, w3_1 * 1, 1); }
+                        const w3_0 = view3.getInt32(cell3 + 0, true) >>> 0;
+                        const w3_1 = view3.getInt32(cell3 + 4, true) >>> 0;
+                        if (w3_0) {
+                            wasm.__wbindgen_free(w3_0, w3_1 * 1, 1);
+                            view3 = getDataViewMemory0();
+                        }
                     }
                     wasm.__wbindgen_free(ptr1, len1 * 8, 4);
                 }
@@ -533,18 +583,24 @@ export function nested_names(v) {
         }
     } catch (e) {
         if (ptr0) {
+            let view4 = getDataViewMemory0();
             for (let k4 = 0; k4 < j0; k4++) {
                 const cell4 = ptr0 + k4 * 8;
-                const w4_0 = getDataViewMemory0().getInt32(cell4 + 0, true) >>> 0;
-                const w4_1 = getDataViewMemory0().getInt32(cell4 + 4, true) >>> 0;
+                const w4_0 = view4.getInt32(cell4 + 0, true) >>> 0;
+                const w4_1 = view4.getInt32(cell4 + 4, true) >>> 0;
                 if (w4_0) {
+                    let view5 = getDataViewMemory0();
                     for (let k5 = 0; k5 < w4_1; k5++) {
                         const cell5 = w4_0 + k5 * 8;
-                        const w5_0 = getDataViewMemory0().getInt32(cell5 + 0, true) >>> 0;
-                        const w5_1 = getDataViewMemory0().getInt32(cell5 + 4, true) >>> 0;
-                        if (w5_0) { wasm.__wbindgen_free(w5_0, w5_1 * 1, 1); }
+                        const w5_0 = view5.getInt32(cell5 + 0, true) >>> 0;
+                        const w5_1 = view5.getInt32(cell5 + 4, true) >>> 0;
+                        if (w5_0) {
+                            wasm.__wbindgen_free(w5_0, w5_1 * 1, 1);
+                            view5 = getDataViewMemory0();
+                        }
                     }
                     wasm.__wbindgen_free(w4_0, w4_1 * 8, 4);
+                    view4 = getDataViewMemory0();
                 }
             }
             wasm.__wbindgen_free(ptr0, len0 * 8, 4);
@@ -574,18 +630,24 @@ export function nested_names(v) {
         }
     } finally {
         if (b7) {
+            let view9 = getDataViewMemory0();
             for (let k9 = 0; k9 < ret[1]; k9++) {
                 const cell9 = b7 + k9 * 8;
-                const w9_0 = getDataViewMemory0().getInt32(cell9 + 0, true) >>> 0;
-                const w9_1 = getDataViewMemory0().getInt32(cell9 + 4, true) >>> 0;
+                const w9_0 = view9.getInt32(cell9 + 0, true) >>> 0;
+                const w9_1 = view9.getInt32(cell9 + 4, true) >>> 0;
                 if (w9_0) {
+                    let view10 = getDataViewMemory0();
                     for (let k10 = 0; k10 < w9_1; k10++) {
                         const cell10 = w9_0 + k10 * 8;
-                        const w10_0 = getDataViewMemory0().getInt32(cell10 + 0, true) >>> 0;
-                        const w10_1 = getDataViewMemory0().getInt32(cell10 + 4, true) >>> 0;
-                        if (w10_0) { wasm.__wbindgen_free(w10_0, w10_1 * 1, 1); }
+                        const w10_0 = view10.getInt32(cell10 + 0, true) >>> 0;
+                        const w10_1 = view10.getInt32(cell10 + 4, true) >>> 0;
+                        if (w10_0) {
+                            wasm.__wbindgen_free(w10_0, w10_1 * 1, 1);
+                            view10 = getDataViewMemory0();
+                        }
                     }
                     wasm.__wbindgen_free(w9_0, w9_1 * 8, 4);
+                    view9 = getDataViewMemory0();
                 }
             }
             wasm.__wbindgen_free(b7, ret[1] * 8, 4);
@@ -612,10 +674,12 @@ export function nullable_foos(v) {
         }
     } catch (e) {
         if (ptr0) {
+            let view1 = getDataViewMemory0();
             for (let k1 = 0; k1 < j0; k1++) {
                 const cell1 = ptr0 + k1 * 4;
-                const w1_0 = getDataViewMemory0().getInt32(cell1 + 0, true) >>> 0;
+                const w1_0 = view1.getInt32(cell1 + 0, true) >>> 0;
                 wasm.__externref_table_dealloc(w1_0);
+                view1 = getDataViewMemory0();
             }
             wasm.__wbindgen_free(ptr0, len0 * 4, 4);
         }
@@ -634,10 +698,12 @@ export function nullable_foos(v) {
         }
     } finally {
         if (b3) {
+            let view4 = getDataViewMemory0();
             for (let k4 = 0; k4 < ret[1]; k4++) {
                 const cell4 = b3 + k4 * 4;
-                const w4_0 = getDataViewMemory0().getInt32(cell4 + 0, true) >>> 0;
+                const w4_0 = view4.getInt32(cell4 + 0, true) >>> 0;
                 wasm.__externref_table_dealloc(w4_0);
+                view4 = getDataViewMemory0();
             }
             wasm.__wbindgen_free(b3, ret[1] * 4, 4);
         }
@@ -675,10 +741,14 @@ export function nullable_points(v) {
         }
     } catch (e) {
         if (ptr0) {
+            let view2 = getDataViewMemory0();
             for (let k2 = 0; k2 < j0; k2++) {
                 const cell2 = ptr0 + k2 * 4;
-                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
-                if (w2_0> 1) wasm.__wbg_point_free(w2_0, 1);
+                const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
+                if (w2_0> 1) {
+                    wasm.__wbg_point_free(w2_0, 1);
+                    view2 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(ptr0, len0 * 4, 4);
         }
@@ -694,15 +764,19 @@ export function nullable_points(v) {
         for (const end4 = p4 + ret[1] * 4; p4 < end4; p4 += 4) {
             const w4_0 = view4.getInt32(p4 + 0, true);
             const obj5 = w4_0 === 1 ? null : Point.__wrap(w4_0);
-            getDataViewMemory0().setInt32(p4 + 0, 0, true);
+            view4.setInt32(p4 + 0, 0, true);
             v4.push(obj5);
         }
     } finally {
         if (b4) {
+            let view6 = getDataViewMemory0();
             for (let k6 = 0; k6 < ret[1]; k6++) {
                 const cell6 = b4 + k6 * 4;
-                const w6_0 = getDataViewMemory0().getInt32(cell6 + 0, true) >>> 0;
-                if (w6_0> 1) wasm.__wbg_point_free(w6_0, 1);
+                const w6_0 = view6.getInt32(cell6 + 0, true) >>> 0;
+                if (w6_0> 1) {
+                    wasm.__wbg_point_free(w6_0, 1);
+                    view6 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(b4, ret[1] * 4, 4);
         }
@@ -738,10 +812,12 @@ export function __wbg_js_maybe_foos_0a6988fff2da253a(arg0, arg1, arg2) {
             getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 0, ptr3, true);
         } catch (e) {
             if (ptr3) {
+                let view4 = getDataViewMemory0();
                 for (let k4 = 0; k4 < j3; k4++) {
                     const cell4 = ptr3 + k4 * 4;
-                    const w4_0 = getDataViewMemory0().getInt32(cell4 + 0, true) >>> 0;
+                    const w4_0 = view4.getInt32(cell4 + 0, true) >>> 0;
                     wasm.__externref_table_dealloc(w4_0);
+                    view4 = getDataViewMemory0();
                 }
                 wasm.__wbindgen_free(ptr3, len3 * 4, 4);
             }
@@ -749,10 +825,12 @@ export function __wbg_js_maybe_foos_0a6988fff2da253a(arg0, arg1, arg2) {
         }
     } finally {
         if (b0) {
+            let view1 = getDataViewMemory0();
             for (let k1 = 0; k1 < arg2; k1++) {
                 const cell1 = b0 + k1 * 4;
-                const w1_0 = getDataViewMemory0().getInt32(cell1 + 0, true) >>> 0;
+                const w1_0 = view1.getInt32(cell1 + 0, true) >>> 0;
                 wasm.__externref_table_dealloc(w1_0);
+                view1 = getDataViewMemory0();
             }
             wasm.__wbindgen_free(b0, arg2 * 4, 4);
         }
@@ -767,7 +845,7 @@ export function __wbg_js_maybe_points_a502c96988d34bc0(arg0, arg1, arg2) {
         for (const end0 = p0 + arg2 * 4; p0 < end0; p0 += 4) {
             const w0_0 = view0.getInt32(p0 + 0, true);
             const obj1 = w0_0 === 0 ? undefined : Point.__wrap(w0_0);
-            getDataViewMemory0().setInt32(p0 + 0, 0, true);
+            view0.setInt32(p0 + 0, 0, true);
             v0.push(obj1);
         }
         const ret = js_maybe_points(v0);
@@ -798,10 +876,14 @@ export function __wbg_js_maybe_points_a502c96988d34bc0(arg0, arg1, arg2) {
             getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 0, ptr4, true);
         } catch (e) {
             if (ptr4) {
+                let view6 = getDataViewMemory0();
                 for (let k6 = 0; k6 < j4; k6++) {
                     const cell6 = ptr4 + k6 * 4;
-                    const w6_0 = getDataViewMemory0().getInt32(cell6 + 0, true) >>> 0;
-                    if (w6_0) wasm.__wbg_point_free(w6_0, 1);
+                    const w6_0 = view6.getInt32(cell6 + 0, true) >>> 0;
+                    if (w6_0) {
+                        wasm.__wbg_point_free(w6_0, 1);
+                        view6 = getDataViewMemory0();
+                    }
                 }
                 wasm.__wbindgen_free(ptr4, len4 * 4, 4);
             }
@@ -809,10 +891,14 @@ export function __wbg_js_maybe_points_a502c96988d34bc0(arg0, arg1, arg2) {
         }
     } finally {
         if (b0) {
+            let view2 = getDataViewMemory0();
             for (let k2 = 0; k2 < arg2; k2++) {
                 const cell2 = b0 + k2 * 4;
-                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
-                if (w2_0) wasm.__wbg_point_free(w2_0, 1);
+                const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
+                if (w2_0) {
+                    wasm.__wbg_point_free(w2_0, 1);
+                    view2 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(b0, arg2 * 4, 4);
         }
@@ -852,11 +938,15 @@ export function __wbg_js_names_8202f1528d646c9a(arg0, arg1, arg2) {
             getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 0, ptr3, true);
         } catch (e) {
             if (ptr3) {
+                let view5 = getDataViewMemory0();
                 for (let k5 = 0; k5 < j3; k5++) {
                     const cell5 = ptr3 + k5 * 8;
-                    const w5_0 = getDataViewMemory0().getInt32(cell5 + 0, true) >>> 0;
-                    const w5_1 = getDataViewMemory0().getInt32(cell5 + 4, true) >>> 0;
-                    if (w5_0) { wasm.__wbindgen_free(w5_0, w5_1 * 1, 1); }
+                    const w5_0 = view5.getInt32(cell5 + 0, true) >>> 0;
+                    const w5_1 = view5.getInt32(cell5 + 4, true) >>> 0;
+                    if (w5_0) {
+                        wasm.__wbindgen_free(w5_0, w5_1 * 1, 1);
+                        view5 = getDataViewMemory0();
+                    }
                 }
                 wasm.__wbindgen_free(ptr3, len3 * 8, 4);
             }
@@ -864,11 +954,15 @@ export function __wbg_js_names_8202f1528d646c9a(arg0, arg1, arg2) {
         }
     } finally {
         if (b0) {
+            let view1 = getDataViewMemory0();
             for (let k1 = 0; k1 < arg2; k1++) {
                 const cell1 = b0 + k1 * 8;
-                const w1_0 = getDataViewMemory0().getInt32(cell1 + 0, true) >>> 0;
-                const w1_1 = getDataViewMemory0().getInt32(cell1 + 4, true) >>> 0;
-                if (w1_0) { wasm.__wbindgen_free(w1_0, w1_1 * 1, 1); }
+                const w1_0 = view1.getInt32(cell1 + 0, true) >>> 0;
+                const w1_1 = view1.getInt32(cell1 + 4, true) >>> 0;
+                if (w1_0) {
+                    wasm.__wbindgen_free(w1_0, w1_1 * 1, 1);
+                    view1 = getDataViewMemory0();
+                }
             }
             wasm.__wbindgen_free(b0, arg2 * 8, 4);
         }
