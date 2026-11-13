@@ -3923,13 +3923,14 @@ impl ast::ImportFunction {
                 quote! { #name }
             };
 
-            // A mode written on a generic argument applies to the
-            // instantiations it fits, as an inherited mode does.
+            // A mode written on an argument that is generic as a whole
+            // applies to the instantiations it fits, as an inherited mode
+            // does. One whose shape is written (`&[T]`, `Vec<T>`) is checked.
             let seq_modes: Vec<ast::SeqMode> = arg
                 .seq_modes
                 .iter()
                 .map(|mode| ast::SeqMode {
-                    explicit: mode.explicit && !generics::uses_generic_params(ty, &type_params),
+                    explicit: mode.explicit && !generic_as_a_whole(ty, &type_params),
                     ..*mode
                 })
                 .collect();
@@ -6209,6 +6210,44 @@ fn result_err_ty(ty: &syn::Type) -> Option<&syn::Type> {
     match &args.args[1] {
         syn::GenericArgument::Type(t) => Some(t),
         _ => None,
+    }
+}
+
+/// Whether `ty` is a type parameter or a projection off one, behind any `&`,
+/// `Option` or `Nullable`, so that its shape is each instantiation's.
+fn generic_as_a_whole(ty: &syn::Type, type_params: &[&Ident]) -> bool {
+    match ty {
+        syn::Type::Reference(r) => {
+            r.mutability.is_none() && generic_as_a_whole(&r.elem, type_params)
+        }
+        syn::Type::Paren(p) => generic_as_a_whole(&p.elem, type_params),
+        syn::Type::Group(g) => generic_as_a_whole(&g.elem, type_params),
+        syn::Type::Path(path) => {
+            let Some(first) = path.path.segments.first() else {
+                return false;
+            };
+            if path.qself.is_some()
+                || (first.arguments.is_none() && type_params.contains(&&first.ident))
+            {
+                return true;
+            }
+            let Some(last) = path.path.segments.last() else {
+                return false;
+            };
+            let syn::PathArguments::AngleBracketed(args) = &last.arguments else {
+                return false;
+            };
+            match args.args.first() {
+                Some(syn::GenericArgument::Type(inner))
+                    if args.args.len() == 1
+                        && (last.ident == "Option" || last.ident == "Nullable") =>
+                {
+                    generic_as_a_whole(inner, type_params)
+                }
+                _ => false,
+            }
+        }
+        _ => false,
     }
 }
 
