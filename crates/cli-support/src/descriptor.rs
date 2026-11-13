@@ -677,6 +677,7 @@ fn seq_modes_apply_by_shape() {
     assert_eq!(fit(array, &[OPTIONAL, REF, SLICE, F64]), Ok(true));
     assert_eq!(fit(array, &[CLAMPED, REF, SLICE, U8]), Ok(true));
     assert_eq!(fit(vec_array, &[OPTIONAL, VECTOR, U8]), Ok(true));
+    assert_eq!(fit(vec_array, &[OPTIONAL, REF, VECTOR, U8]), Ok(true));
     assert_eq!(fit(explicit, &[REFMUT, SLICE, U8]), Ok(true));
     // Inherited, it has nothing to do elsewhere, and is dropped.
     assert_eq!(fit(array, &[VECTOR, U8]), Ok(false));

@@ -761,6 +761,13 @@ fn seq_modes_are_validated_when_explicit() {
              always reaches JS as a fresh `Array`",
         ),
         (
+            "seq_mode_slice_on_optional_borrowed_vec",
+            "fn f(#[wasm_bindgen(slice = copy)] xs: Option<&Vec<u8>>);",
+            "None",
+            "`slice = copy` can't apply to this argument: `slice` applies to borrowed slices; \
+             for an owned `Vec<T>` use `vec = copy | array`",
+        ),
+        (
             "seq_mode_slice_on_scalar",
             "fn f(#[wasm_bindgen(slice = copy)] x: u32);",
             "1",
@@ -790,11 +797,13 @@ fn seq_modes_are_validated_when_explicit() {
                     #[wasm_bindgen(slice = array)] strings: &[String],
                     #[wasm_bindgen(vec = array)] owned: Vec<String>,
                 );
+                fn h(#[wasm_bindgen(vec = array)] optional: Option<&Vec<u8>>);
             }
         "#,
         r#"
             f(&[1], vec![2], vec![3], &["a".to_string()]);
             g(&["a".to_string()], vec!["b".to_string()]);
+            h(None);
         "#,
     )
     .unwrap();

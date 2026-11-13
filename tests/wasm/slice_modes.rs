@@ -612,3 +612,57 @@ fn a_borrowed_vector_lends_no_view() {
     assert_eq!(kind_of_array_generic_ref(&7u32), "Number");
     assert!(!is_view_under_generic_slice_view(&bytes));
 }
+
+#[allow(clippy::ptr_arg, clippy::borrowed_box)]
+#[wasm_bindgen(module = "tests/wasm/slice_modes.js")]
+extern "C" {
+    #[wasm_bindgen(js_name = js_keep)]
+    fn js_keep_opt_vec(v: Option<&Vec<u8>>);
+    #[wasm_bindgen(js_name = js_keep)]
+    fn js_keep_null_boxed(v: Nullable<&Box<[u8]>>);
+    #[wasm_bindgen(js_name = js_keep)]
+    fn js_keep_opt_vecs(v: &[Option<Vec<u8>>]);
+
+    #[wasm_bindgen(vec = array, js_name = kindOf)]
+    fn kind_of_array_opt_vec_ref(v: Option<&Vec<u8>>) -> String;
+    #[wasm_bindgen(slice = array, js_name = kindOf)]
+    fn kind_of_opt_vec_ref_under_slice_array(v: Option<&Vec<u8>>) -> String;
+    #[wasm_bindgen(slice = view, js_name = isWasmMemoryView)]
+    fn is_opt_vec_view_under_slice_view(v: Option<&Vec<u8>>) -> bool;
+}
+
+/// What JS kept of `bytes` is its own: Rust's writes since don't reach it,
+/// nor do its writes reach Rust.
+fn kept_is_a_copy(bytes: &mut [u8]) {
+    assert!(js_holds_no_view(&js_kept()));
+    assert!(js_kept_is(0x41.into()));
+    bytes.fill(0x11);
+    assert!(js_kept_is(0x41.into()));
+    js_fill(&js_kept(), 9);
+    assert!(bytes.iter().all(|&b| b == 0x11));
+}
+
+// An optional borrowed vector is the copy that a borrowed vector is.
+#[wasm_bindgen_test]
+fn an_optional_borrowed_vector_lends_no_view() {
+    let mut bytes = vec![0x41u8; 64];
+    js_keep_opt_vec(Some(&bytes));
+    kept_is_a_copy(&mut bytes);
+
+    let mut bytes: Box<[u8]> = vec![0x41u8; 64].into();
+    js_keep_null_boxed(Nullable::Value(&bytes));
+    kept_is_a_copy(&mut bytes);
+
+    let mut held = [Some(vec![0x41u8; 64]), None];
+    js_keep_opt_vecs(&held);
+    kept_is_a_copy(held[0].as_mut().unwrap());
+
+    let bytes = vec![1u8, 2];
+    assert_eq!(kind_of_array_opt_vec_ref(Some(&bytes)), "Array");
+    assert_eq!(kind_of_array_opt_vec_ref(None), "undefined");
+    assert_eq!(
+        kind_of_opt_vec_ref_under_slice_array(Some(&bytes)),
+        "Uint8Array"
+    );
+    assert!(!is_opt_vec_view_under_slice_view(Some(&bytes)));
+}

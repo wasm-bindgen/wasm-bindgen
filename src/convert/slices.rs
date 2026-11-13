@@ -337,20 +337,27 @@ impl<T: RefIntoWasmAbi> IntoWasmAbi for &Box<[T]> {
     }
 }
 
-impl<'a, T> OptionIntoWasmAbi for &'a [T]
-where
-    &'a [T]: IntoWasmAbi<Abi = WasmSlice>,
-{
-    #[inline]
-    fn none() -> WasmSlice {
-        null_slice()
-    }
+// A lent sequence is absent as a given one is, whichever of these lends it.
+macro_rules! optional_lent_sequences {
+    ($($t:ty)*) => ($(
+        impl<'a, T> OptionIntoWasmAbi for &'a $t
+        where
+            &'a $t: IntoWasmAbi<Abi = WasmSlice>,
+        {
+            #[inline]
+            fn none() -> WasmSlice {
+                null_slice()
+            }
+        }
+
+        impl_nullable_into_shared_abi!(
+            null = js_null_slice();
+            ['a, T] &'a $t where Self: IntoWasmAbi<Abi = WasmSlice>
+        );
+    )*)
 }
 
-impl_nullable_into_shared_abi!(
-    null = js_null_slice();
-    ['a, T] &'a [T] where Self: IntoWasmAbi<Abi = WasmSlice>
-);
+optional_lent_sequences!([T] Vec<T> Box<[T]>);
 
 // A `(ptr, len)` cell is two pointer words, which are `f64`s on memory64.
 #[cfg(target_arch = "wasm64")]

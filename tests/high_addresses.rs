@@ -186,6 +186,20 @@ extern "C" {
     fn value_slice(v: &[JsValue]) -> String;
     #[wasm_bindgen(js_name = join)]
     fn byte_slices(v: Vec<&[u8]>) -> String;
+    #[wasm_bindgen(js_name = sum)]
+    fn opt_vec_ref(v: Option<&Vec<u32>>) -> u32;
+    #[wasm_bindgen(js_name = joinOptional)]
+    fn opt_string_vec_ref(v: Option<&Vec<String>>) -> String;
+    #[wasm_bindgen(catch, js_name = fail)]
+    fn opt_string_vec_ref_throw(v: Option<&Vec<String>>) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, js_name = joinOptional)]
+    fn opt_string_vec_ref_caught(v: Option<&Vec<String>>) -> Result<String, JsValue>;
+    #[wasm_bindgen(js_name = join)]
+    fn opt_vecs(v: &[Option<Vec<u32>>]) -> String;
+    #[wasm_bindgen(catch, js_name = join)]
+    fn null_string_vecs_caught(v: &[Nullable<Vec<String>>]) -> Result<String, JsValue>;
+    #[wasm_bindgen(js_name = callFailedLends)]
+    fn js_failed_lends();
     #[wasm_bindgen(js_name = call)]
     fn call(
         f: &mut dyn FnMut(Vec<JsValue>, Vec<String>, Vec<u8>) -> Vec<String>,
@@ -277,6 +291,44 @@ fn an_import_is_given_instances() {
         balanced(|| assert_eq!(item_beside(HighItem::new(3), vec![s("x")]), [s("x")]));
         balanced(|| item_after(vec![s("x")], Nullable::Value(HighItem::new(4))));
         balanced(|| item_after(vec![s("x")], Nullable::Null));
+    }
+}
+
+// A borrowed vector that is absent crosses as nothing, and one that is there
+// is still Rust's: only the buffer that encodes it is freed, however the
+// import ends.
+#[wasm_bindgen_test]
+fn an_import_is_lent_an_optional_vector() {
+    if !high() {
+        return;
+    }
+    let names = || vec![s("a"), s(""), s("cde")];
+    for _ in 0..3 {
+        balanced(|| assert_eq!(opt_vec_ref(Some(&vec![1, 2, 3])), 6));
+        balanced(|| assert_eq!(opt_vec_ref(None), 0));
+        balanced(|| assert_eq!(opt_string_vec_ref(Some(&names())), "a,,cde"));
+        balanced(|| assert_eq!(opt_string_vec_ref(None), "none"));
+        balanced(|| assert!(opt_string_vec_ref_throw(Some(&names())).is_err()));
+        balanced(|| assert!(opt_string_vec_ref_throw(None).is_err()));
+        balanced(|| assert_eq!(opt_vecs(&[Some(vec![1, 2]), None]), "1,2,undefined"));
+    }
+}
+
+/// Whether each import failed to decode what it was lent, partway through.
+#[wasm_bindgen]
+pub fn high_lends_undecodable() -> bool {
+    let names = vec![s("a"), s("undecodable")];
+    opt_string_vec_ref_caught(Some(&names)).is_err()
+        && null_string_vecs_caught(&[Nullable::Null, Nullable::Value(names)]).is_err()
+}
+
+#[wasm_bindgen_test]
+fn a_failed_decode_frees_what_encoded_a_lent_sequence() {
+    if !high() {
+        return;
+    }
+    for _ in 0..3 {
+        balanced(js_failed_lends);
     }
 }
 

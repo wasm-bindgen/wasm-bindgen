@@ -95,4 +95,7 @@ exports.js_fill = (v, byte) => typedArrays(v).forEach(a => a.fill(byte));
 let kept;
 exports.js_keep = (v) => { kept = v; };
 exports.js_kept = () => kept;
-exports.js_kept_is = (value) => kept.length > 0 && kept.every(x => x === value);
+exports.js_kept_is = (value) => {
+    const all = typedArrays(kept);
+    return all.length > 0 && all.every(a => a.length > 0 && a.every(x => x === value));
+};

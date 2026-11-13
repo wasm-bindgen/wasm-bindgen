@@ -275,13 +275,9 @@ impl InstructionBuilder<'_, '_> {
                 };
                 let mem = self.cx.memory()?;
                 let ptr_ty = self.outgoing_internal_word_ty();
-                let mode = match (arg, self.lent_mode(mutable)?) {
-                    // Only the unsized `&[T]` is a view. A borrowed vector is
-                    // a sized type, which a generic `&T` can pass to JS that
-                    // keeps it, so it's read as the vector is, by copy, with
-                    // nothing freed.
-                    (Descriptor::Vector(_), SeqValue::View) => SeqValue::Copy,
-                    (_, mode) => mode,
+                let mode = match arg {
+                    Descriptor::Vector(_) => self.borrowed_vector_mode(mutable)?,
+                    _ => self.lent_mode(mutable)?,
                 };
                 self.instruction(
                     &[ptr_ty.clone(), ptr_ty],
@@ -764,20 +760,23 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
             Descriptor::CachedString => self.cached_string(false)?,
-            Descriptor::String | Descriptor::Slice(_) => {
+            Descriptor::String | Descriptor::Slice(_) | Descriptor::Vector(_) => {
                 let kind = match arg {
-                    Descriptor::Slice(cell) => match cell.sequence_cell() {
-                        SequenceCell::InPlace(kind) => kind,
-                        SequenceCell::Encoded(elem) => {
-                            return self.outgoing_encoded_slice(elem, false, Some(option_kind))
+                    Descriptor::Slice(cell) | Descriptor::Vector(cell) => {
+                        match cell.sequence_cell() {
+                            SequenceCell::InPlace(kind) => kind,
+                            SequenceCell::Encoded(elem) => {
+                                return self.outgoing_encoded_slice(elem, false, Some(option_kind))
+                            }
                         }
-                    },
+                    }
                     _ => VectorKind::String,
                 };
                 let mem = self.cx.memory()?;
                 let ptr_ty = self.outgoing_internal_word_ty();
                 let mode = match arg {
                     Descriptor::Slice(_) => self.lent_mode(mutable)?,
+                    Descriptor::Vector(_) => self.borrowed_vector_mode(mutable)?,
                     _ => self.seq_value,
                 };
                 self.instruction(
@@ -1041,6 +1040,17 @@ impl InstructionBuilder<'_, '_> {
             bail!("a `&mut [T]` can't be an element: JS would receive a copy, whose writes never reach it");
         }
         Ok(match self.seq_value {
+            SeqValue::View => SeqValue::Copy,
+            mode => mode,
+        })
+    }
+
+    /// The mode a borrowed numeric vector reaches JS in. Only the unsized
+    /// `&[T]` is a view: a borrowed vector is a sized type, which a generic
+    /// `&T` can pass to JS that keeps it, so it's read as the vector is, by
+    /// copy, with nothing freed.
+    fn borrowed_vector_mode(&self, mutable: bool) -> Result<SeqValue, Error> {
+        Ok(match self.lent_mode(mutable)? {
             SeqValue::View => SeqValue::Copy,
             mode => mode,
         })

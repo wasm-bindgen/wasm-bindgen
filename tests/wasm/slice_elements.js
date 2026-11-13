@@ -20,3 +20,14 @@ exports.retained = () => describe(retained);
 exports.makeThing = (id) => ({ id });
 exports.thingIds = (v) =>
     v === undefined ? 'undefined' : `${Array.isArray(v) ? 'Array' : v.constructor.name}:${v.map((t) => t.id).join(',')}`;
+
+// Each level's own kind: a typed array by its constructor, an `Array` bare.
+const shape = (v) =>
+    v === undefined ? 'undefined'
+    : v === null ? 'null'
+    : typeof v === 'bigint' ? `${v}n`
+    : ArrayBuffer.isView(v) ? `${v.constructor.name}[${Array.from(v, (e) => shape(e))}]`
+    : Array.isArray(v) ? `[${v.map((e) => shape(e))}]`
+    : JSON.stringify(v);
+
+exports.shape = shape;

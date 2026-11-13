@@ -306,3 +306,83 @@ fn imported_types_are_borrowed_handles() {
     // Borrowed, not moved: the handles are still usable.
     assert_eq!(thing_ids(&things), "Array:1,2");
 }
+
+macro_rules! shapes {
+    ($($name:ident($ty:ty);)*) => {
+        #[allow(clippy::ptr_arg, clippy::borrowed_box)]
+        #[wasm_bindgen(module = "tests/wasm/slice_elements.js")]
+        extern "C" {
+            $(
+                #[wasm_bindgen(js_name = shape)]
+                fn $name(v: $ty) -> String;
+            )*
+        }
+    };
+}
+
+// A borrowed vector is absent as the slice of it is.
+shapes! {
+    opt_vec_ref(Option<&Vec<u32>>);
+    opt_string_vec_ref(Option<&Vec<String>>);
+    opt_value_vec_ref(Option<&Vec<JsValue>>);
+    null_vec_ref(Nullable<&Vec<u32>>);
+    null_string_vec_ref(Nullable<&Vec<String>>);
+    opt_boxed_ref(Option<&Box<[f64]>>);
+    opt_string_boxed_ref(Option<&Box<[String]>>);
+    null_opt_vec_ref(Nullable<Option<&Vec<u32>>>);
+    ref_opt_vec(&Option<Vec<u32>>);
+    opt_vecs(&[Option<Vec<u32>>]);
+    null_string_vecs(&[Nullable<Vec<String>>]);
+    opt_boxed_slices(&[Option<Box<[bool]>>]);
+}
+
+#[wasm_bindgen_test]
+fn optional_borrowed_vectors() {
+    use Nullable::{Null, Value};
+
+    let numbers = vec![1, 2];
+    let strings = vec!["a".to_string(), String::new()];
+    assert_eq!(opt_vec_ref(Some(&numbers)), "Uint32Array[1,2]");
+    assert_eq!(opt_vec_ref(Some(&vec![])), "Uint32Array[]");
+    assert_eq!(opt_vec_ref(None), "undefined");
+    assert_eq!(opt_string_vec_ref(Some(&strings)), r#"["a",""]"#);
+    assert_eq!(opt_string_vec_ref(Some(&vec![])), "[]");
+    assert_eq!(opt_string_vec_ref(None), "undefined");
+    let values = vec![JsValue::from(1), JsValue::NULL];
+    assert_eq!(opt_value_vec_ref(Some(&values)), "[1,null]");
+    assert_eq!(opt_value_vec_ref(None), "undefined");
+    // Lent, not given: the handles are still Rust's.
+    assert_eq!(values[0], 1);
+
+    assert_eq!(null_vec_ref(Value(&numbers)), "Uint32Array[1,2]");
+    assert_eq!(null_vec_ref(Null), "null");
+    assert_eq!(null_string_vec_ref(Value(&strings)), r#"["a",""]"#);
+    assert_eq!(null_string_vec_ref(Null), "null");
+    assert_eq!(opt_boxed_ref(Some(&vec![0.5].into())), "Float64Array[0.5]");
+    assert_eq!(opt_boxed_ref(None), "undefined");
+    assert_eq!(
+        opt_string_boxed_ref(Some(&strings.clone().into())),
+        r#"["a",""]"#
+    );
+    assert_eq!(opt_string_boxed_ref(None), "undefined");
+    assert_eq!(null_opt_vec_ref(Value(Some(&numbers))), "Uint32Array[1,2]");
+    assert_eq!(null_opt_vec_ref(Value(None)), "undefined");
+    assert_eq!(null_opt_vec_ref(Null), "null");
+    assert_eq!(ref_opt_vec(&Some(numbers.clone())), "Uint32Array[1,2]");
+    assert_eq!(ref_opt_vec(&None), "undefined");
+
+    assert_eq!(
+        opt_vecs(&[Some(numbers.clone()), None, Some(vec![])]),
+        "[Uint32Array[1,2],undefined,Uint32Array[]]"
+    );
+    assert_eq!(
+        null_string_vecs(&[Value(strings.clone()), Null, Value(vec![])]),
+        r#"[["a",""],null,[]]"#
+    );
+    assert_eq!(
+        opt_boxed_slices(&[Some(vec![true].into()), None]),
+        "[[true],undefined]"
+    );
+    assert_eq!(numbers, [1, 2]);
+    assert_eq!(strings, ["a", ""]);
+}

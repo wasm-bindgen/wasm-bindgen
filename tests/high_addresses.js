@@ -14,6 +14,7 @@ exports.fail = () => {
 exports.sum = (v) => (v ? Array.from(v).reduce((a, b) => a + b, 0) : 0);
 exports.fill = (v) => v.fill(7);
 exports.join = (v) => v.map(String).join(',');
+exports.joinOptional = (v) => (v ? exports.join(v) : 'none');
 exports.call = (f, v) => f(v, ['a', 'b'], new Uint8Array([1, 2, 3]));
 
 exports.callExports = () => {
@@ -69,6 +70,22 @@ exports.callFailedDecodes = () => {
     } finally {
         TextDecoder.prototype.decode = decode;
     }
+};
+
+// The strings before the one that fails to decode are decoded.
+exports.callFailedLends = () => {
+    const decode = TextDecoder.prototype.decode;
+    TextDecoder.prototype.decode = function (...args) {
+        const text = decode.apply(this, args);
+        if (text === 'undecodable') throw new Error('failed decode');
+        return text;
+    };
+    try {
+        assert.strictEqual(wasm.high_lends_undecodable(), true);
+    } finally {
+        TextDecoder.prototype.decode = decode;
+    }
+    assert.strictEqual(wasm.high_lends_undecodable(), false);
 };
 
 exports.callRejectedBeside = () => {
