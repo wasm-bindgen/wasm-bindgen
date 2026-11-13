@@ -121,10 +121,10 @@ Note that a bound only constrains which types the import can be *called* with; i
 cannot make a type marshallable. Combining a higher-ranked bound with a `&T`
 argument is a common way to write a declaration that does not accept the types
 it was written for: `&T` additionally requires `T: RefIntoWasmAbi`. A bound such
-as `for<'a> &'a T: IntoIterator<Item = &'a u32>`, meant for a collection like
-`Vec<u32>`, rejects it, since a `Vec` has no borrowed ABI; only `Option<u32>` and
-`Nullable<u32>`, which also iterate by reference, satisfy both. Take a `&[u32]`
-argument instead. See [Note on `&T` arguments](#note-on-t-arguments).
+as `for<'a> &'a T: IntoIterator<Item = &'a u32>` admits a `HashSet<u32>`, which
+has no borrowed ABI and so can't be passed. A `Vec<u32>` satisfies both and
+crosses as a copy; take a `&[u32]` argument to pass a view instead. See
+[Note on `&T` arguments](#note-on-t-arguments).
 
 Relaxed bounds are the exception: `T: ?Sized` is not supported on any
 `wasm-bindgen` generic — erased or per-monomorphisation — and is reported as
