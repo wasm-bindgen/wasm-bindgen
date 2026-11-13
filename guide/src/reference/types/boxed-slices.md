@@ -5,7 +5,7 @@
 | Yes | No | No | Yes | Yes | Yes | A JavaScript `Array` object |
 
 You can pass boxed slices and `Vec`s to and from JS of any type that can be
-passed on its own, including:
+passed on its own, other than `()`, which crosses as nothing, including:
 
 - `JsValue`s.
 - Imported JavaScript types.
