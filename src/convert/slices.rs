@@ -399,6 +399,17 @@ impl WasmSlice {
         Self::from_usize(Box::into_raw(cells) as *mut Cell<T::Abi> as usize, len)
     }
 
+    /// An encoded sequence that gives its elements: a fresh buffer of each
+    /// element's cell, its ABI by `f`, which JS decodes, takes and frees.
+    pub fn encode_owned<T: IntoWasmAbi>(vector: Box<[T]>, mut f: impl FnMut(T) -> T::Abi) -> Self {
+        let cells: Box<[Cell<T::Abi>]> = Vec::from(vector)
+            .into_iter()
+            .map(|elem| f(elem).into_cell())
+            .collect();
+        let len = cells.len();
+        Self::from_usize(Box::into_raw(cells) as *mut Cell<T::Abi> as usize, len)
+    }
+
     /// Takes an encoded sequence from JS, converting each element from its
     /// cell's ABI with `FromWasmAbi::try_from_abi`. A rejected element stops
     /// the decode, dropping the buffer and every element converted so far.
@@ -858,5 +869,45 @@ where
     #[inline]
     fn into_abi(self) -> Self::Abi {
         self.map(Option::as_ref).into_abi()
+    }
+}
+
+// `Option<T>` and `Nullable<T>` as a borrowed sequence element: `&[Option<T>]`
+// is an encoded sequence whose cell is `Option<&T>`'s ABI, which is
+// `Option<T>`'s, so numbers copy and strings and handles borrow, as `&[T]`
+// does. `Nullable<Option<T>>` nests as it does for a single value.
+impl<T> crate::__rt::marker::VectorRefIntoWasmAbiSealed for Option<T>
+where
+    Option<T>: IntoWasmAbi,
+    for<'a> &'a Option<T>: IntoWasmAbi<Abi = <Option<T> as IntoWasmAbi>::Abi>,
+{
+}
+
+impl<T> VectorRefIntoWasmAbi for Option<T>
+where
+    Option<T>: IntoWasmAbi,
+    for<'a> &'a Option<T>: IntoWasmAbi<Abi = <Option<T> as IntoWasmAbi>::Abi>,
+{
+    #[inline]
+    fn slice_into_abi(slice: &[Self]) -> WasmSlice {
+        WasmSlice::encode(slice, |e| e.into_abi())
+    }
+}
+
+impl<T> crate::__rt::marker::VectorRefIntoWasmAbiSealed for Nullable<T>
+where
+    Nullable<T>: IntoWasmAbi,
+    for<'a> &'a Nullable<T>: IntoWasmAbi<Abi = <Nullable<T> as IntoWasmAbi>::Abi>,
+{
+}
+
+impl<T> VectorRefIntoWasmAbi for Nullable<T>
+where
+    Nullable<T>: IntoWasmAbi,
+    for<'a> &'a Nullable<T>: IntoWasmAbi<Abi = <Nullable<T> as IntoWasmAbi>::Abi>,
+{
+    #[inline]
+    fn slice_into_abi(slice: &[Self]) -> WasmSlice {
+        WasmSlice::encode(slice, |e| e.into_abi())
     }
 }
