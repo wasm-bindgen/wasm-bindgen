@@ -370,15 +370,18 @@ fn flat() {
 fn flat_map() {
     let array = js_array![JsValue; 1, 2, 3, 1];
 
+    let mut callback = |val: JsValue, _, _| {
+        let items: Vec<JsValue> = match val.as_f64().map(|v| v as i32) {
+            Some(1) => vec![JsString::from("x").into(), JsString::from("x").into()],
+            Some(2) => vec![],
+            Some(3) => vec![JsString::from("z").into()],
+            _ => panic!("Unexpected conversion"),
+        };
+        // Under `js_sys_unstable_apis` the callback returns an `Array`.
+        items.into()
+    };
     assert_eq!(
-        to_rust(&array.flat_map::<JsValue>(
-            &mut |val, _, _| match val.as_f64().map(|v| v as i32) {
-                Some(1) => vec![JsString::from("x").into(), JsString::from("x").into()],
-                Some(2) => vec![],
-                Some(3) => vec![JsString::from("z").into()],
-                _ => panic!("Unexpected conversion"),
-            }
-        )),
+        to_rust(&array.flat_map::<JsValue>(&mut callback)),
         vec!["x", "x", "z", "x", "x"]
     );
 }

@@ -425,7 +425,10 @@
   `Array::of5` are generic, taking all arguments as `&T` of one type and
   returning `Array<T>`, so mixed arguments need converting to a common type
   such as `JsValue`. `Promise::resolve` takes its value by value rather than
-  by reference, though references still work as the value.
+  by reference, though references still work as the value. `Array::flat_map`
+  and `try_flat_map` callbacks return an `Array<U>` rather than a `Vec<U>`, as
+  `flatMap()` flattens arrays only and a `Vec` of numbers crosses as a typed
+  array.
   `Array::from_iter_typed` and `extend_typed` are deprecated under the cfg, as
   `collect()` and `extend()` give the typed array directly.
   [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)

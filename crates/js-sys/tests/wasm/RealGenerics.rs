@@ -496,6 +496,12 @@ fn array_callbacks_of_rust_types() {
     );
     let chars: Array<String> = a.flat_map(&mut |s, _, _| s.chars().map(String::from).collect());
     assert_eq!(chars.length(), 6);
+    let pairs: Array<u32> = a.flat_map(&mut |s, _, _| [s.len() as u32, 0].into_iter().collect());
+    assert_eq!(pairs.to_vec(), [1, 0, 2, 0, 3, 0]);
+    assert_eq!(
+        describe(&pairs),
+        r#"Array:["number 1","number 0","number 2","number 0","number 3","number 0"]"#
+    );
 
     let mut seen = Vec::new();
     a.for_each(&mut |s, i, _| seen.push((i, s)));
@@ -552,6 +558,10 @@ fn array_fallible_callbacks_of_rust_types() {
         .try_flat_map(&mut |s, _| s.chars().map(String::from).collect())
         .unwrap();
     assert_eq!(chars.length(), 6);
+    let halves: Array<f64> = a
+        .try_flat_map(&mut |s, _| [s.len() as f64, 0.5].into_iter().collect())
+        .unwrap();
+    assert_eq!(halves.to_vec(), [1.0, 0.5, 2.0, 0.5, 3.0, 0.5]);
     let mut total = 0;
     a.try_for_each(&mut |s, _| {
         total += s.len();
@@ -688,6 +698,9 @@ async fn promise_callbacks_of_rust_types() {
     let len = Closure::new(|s: String| Ok(s.len() as f64));
     let p: Promise<f64> = Promise::resolve("abc").then_map(&len);
     assert_eq!(p.await.unwrap(), 3.0);
+    let typed: Promise<String, Error> = Promise::resolve("abcd").unchecked_into();
+    let p: Promise<f64> = typed.then_map(&len);
+    assert_eq!(p.await.unwrap(), 4.0);
 
     let on_ok = Closure::new(|s: String| Ok(s + "!"));
     let on_err = Closure::new(|_: JsValue| Ok("err".to_string()));

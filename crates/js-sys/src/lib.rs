@@ -1124,6 +1124,9 @@ extern "C" {
     /// The `flatMap()` method first maps each element using a mapping function, then flattens
     /// the result into a new array.
     ///
+    /// The callback returns an `Array`, as `flatMap()` flattens arrays only
+    /// and a `Vec` of numbers crosses as a typed array.
+    ///
     /// **Note:** Consider using [`Array::try_flat_map`] for safer fallible handling.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flatMap)
@@ -1131,11 +1134,10 @@ extern "C" {
     #[wasm_bindgen(method, js_name = flatMap, experimental_generic_mono)]
     pub fn flat_map<T, U>(
         this: &Array<T>,
-        callback: &mut dyn FnMut(T, u32, Array<T>) -> Vec<U>,
+        callback: &mut dyn FnMut(T, u32, Array<T>) -> Array<U>,
     ) -> Array<U>
     where
-        T: FromWasmAbi,
-        Vec<U>: IntoWasmAbi;
+        T: FromWasmAbi;
 
     /// The `flatMap()` method first maps each element using a mapping function, then flattens
     /// the result into a new array.
@@ -1151,16 +1153,18 @@ extern "C" {
     /// The `flatMap()` method first maps each element using a mapping function, then flattens
     /// the result into a new array.
     ///
+    /// The callback returns an `Array`, as `flatMap()` flattens arrays only
+    /// and a `Vec` of numbers crosses as a typed array.
+    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flatMap)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, js_name = flatMap, catch, experimental_generic_mono)]
     pub fn try_flat_map<T, U>(
         this: &Array<T>,
-        callback: &mut dyn FnMut(T, u32) -> Vec<U>,
+        callback: &mut dyn FnMut(T, u32) -> Array<U>,
     ) -> Result<Array<U>, JsValue>
     where
-        T: FromWasmAbi,
-        Vec<U>: IntoWasmAbi;
+        T: FromWasmAbi;
 
     /// The `forEach()` method executes a provided function once for each array element.
     ///
@@ -9658,7 +9662,6 @@ extern "C" {
     /// prototype chain as well).
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/entries)
-    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(static_method_of = Object, js_name = entries, catch)]
     pub fn entries_typed<T>(
         object: &Object<T>,
@@ -9690,19 +9693,6 @@ extern "C" {
     where
         T: FromWasmAbi,
         K: IntoWasmAbi;
-
-    /// The `Object.entries()` method returns an array of a given
-    /// object's own enumerable property [key, value] pairs, in the
-    /// same order as that provided by a for...in loop (the difference
-    /// being that a for-in loop enumerates properties in the
-    /// prototype chain as well).
-    ///
-    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/entries)
-    #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(static_method_of = Object, js_name = entries, catch)]
-    pub fn entries_typed<T>(
-        object: &Object<T>,
-    ) -> Result<Array<ArrayTuple<(JsString, T)>>, JsValue>;
 
     /// The `Object.freeze()` method freezes an object: that is, prevents new
     /// properties from being added to it; prevents existing properties from
@@ -17078,8 +17068,8 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, js_name = then, experimental_generic_mono)]
-    pub fn then_map<'a, T, R: Promising>(
-        this: &Promise<T>,
+    pub fn then_map<'a, T, E, R: Promising>(
+        this: &Promise<T, E>,
         cb: &ScopedClosure<'a, dyn FnMut(T) -> Result<R, JsError>>,
     ) -> Promise<R::Resolution>
     where
