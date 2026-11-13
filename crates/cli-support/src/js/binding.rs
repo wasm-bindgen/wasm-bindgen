@@ -9,7 +9,7 @@ use crate::js::{Context, IdentScope, MemView};
 use crate::wit::{
     Adapter, AdapterId, AdapterKind, AdapterType, AuxFunctionArgumentData, ClosureDtor, Instruction,
 };
-use crate::wit::{InstructionData, OptionKind};
+use crate::wit::{CellLayout, InstructionData, OptionKind};
 use crate::OutputMode;
 use anyhow::{bail, Error};
 use std::borrow::Cow;
@@ -3039,7 +3039,7 @@ fn instruction(
         }
 
         Instruction::EncodedSliceLoad {
-            words,
+            layout,
             elem,
             mem,
             free,
@@ -3052,7 +3052,7 @@ fn instruction(
             let end = js.local(format!("end{i}"));
             let memory = js.dataview(*mem);
             let view = js.local(format!("view{i}"));
-            let (fields, stride, align) = encoded_slice_layout(words)?;
+            let (fields, stride, align) = encoded_slice_layout(layout)?;
             let reads = fields
                 .iter()
                 .map(|(offset, ty)| format!("{view}.get{ty}({p} + {offset}, true)"))
@@ -3128,7 +3128,7 @@ fn instruction(
         }
 
         Instruction::EncodedSliceStore {
-            words,
+            layout,
             elem,
             malloc,
             free,
@@ -3145,7 +3145,7 @@ fn instruction(
             let e = js.local(format!("e{i}"));
             let memory = js.dataview(*mem);
             let view = js.local(format!("view{i}"));
-            let (fields, stride, align) = encoded_slice_layout(words)?;
+            let (fields, stride, align) = encoded_slice_layout(layout)?;
             // Encode one element into its words with its own instructions,
             // into the loop body. The buffer takes the words as a call takes
             // its arguments: what the element allocated is released should
@@ -3184,8 +3184,9 @@ fn instruction(
                 .iter()
                 .map(|value| matches!(value, Value::Alloc(_)))
                 .collect::<Vec<_>>();
-            let tys = words
-                .iter()
+            let tys = layout
+                .words()
+                .into_iter()
                 .map(AdapterType::to_wasm)
                 .collect::<Option<Vec<_>>>();
             let values = js.take_args(values, tys.as_deref());
@@ -3426,29 +3427,44 @@ fn view_from_wasm(js: &mut JsBuilder, kind: &VectorKind, mem: walrus::MemoryId) 
     }
 }
 
-/// The layout of an encoded slice element's ABI `words`, each at its natural
-/// alignment as in the `#[repr(C)]` ABI types the buffer holds: each word's
-/// offset and `DataView` accessor suffix, the stride and the alignment.
+/// The layout of a cell: each word's offset and `DataView` accessor suffix
+/// in order, the size and the alignment. A value's words are each at their
+/// natural alignment, as in the `#[repr(C)]` ABI type the cell holds, and a
+/// record's parts are each at their cell's, as in the `#[repr(C)]` record of
+/// them.
 fn encoded_slice_layout(
-    words: &[AdapterType],
+    layout: &CellLayout,
 ) -> Result<(Vec<(usize, &'static str)>, usize, usize), Error> {
     let mut fields = Vec::new();
-    let mut stride: usize = 0;
+    let mut size: usize = 0;
     let mut align: usize = 1;
-    for word in words {
-        let (size, ty) = match word {
-            AdapterType::I32 => (4, "Int32"),
-            AdapterType::F32 => (4, "Float32"),
-            AdapterType::I64 => (8, "BigInt64"),
-            AdapterType::F64 => (8, "Float64"),
-            _ => bail!("unsupported slice element word {word:?}"),
-        };
-        stride = stride.next_multiple_of(size);
-        fields.push((stride, ty));
-        stride += size;
-        align = align.max(size);
+    match layout {
+        CellLayout::Words(words) => {
+            for word in words {
+                let (word_size, ty) = match word {
+                    AdapterType::I32 => (4, "Int32"),
+                    AdapterType::F32 => (4, "Float32"),
+                    AdapterType::I64 => (8, "BigInt64"),
+                    AdapterType::F64 => (8, "Float64"),
+                    _ => bail!("unsupported slice element word {word:?}"),
+                };
+                size = size.next_multiple_of(word_size);
+                fields.push((size, ty));
+                size += word_size;
+                align = align.max(word_size);
+            }
+        }
+        CellLayout::Record(parts) => {
+            for part in parts {
+                let (part_fields, part_size, part_align) = encoded_slice_layout(part)?;
+                size = size.next_multiple_of(part_align);
+                fields.extend(part_fields.into_iter().map(|(at, ty)| (size + at, ty)));
+                size += part_size;
+                align = align.max(part_align);
+            }
+        }
     }
-    Ok((fields, stride.next_multiple_of(align), align))
+    Ok((fields, size.next_multiple_of(align), align))
 }
 
 /// The JS value for the vector `load` of `kind` per `mode`. Only typed kinds
@@ -3708,7 +3724,8 @@ pub(crate) fn adapter2ts(
 
 #[test]
 fn encoded_slice_layout_matches_repr_c() {
-    let layout = |words: &[AdapterType]| encoded_slice_layout(words).unwrap();
+    let words = |words: &[AdapterType]| CellLayout::Words(words.to_vec());
+    let layout = |tys: &[AdapterType]| encoded_slice_layout(&words(tys)).unwrap();
     assert_eq!(layout(&[AdapterType::I32]), (vec![(0, "Int32")], 4, 4));
     assert_eq!(
         layout(&[AdapterType::F64, AdapterType::F64]),
@@ -3717,5 +3734,15 @@ fn encoded_slice_layout_matches_repr_c() {
     assert_eq!(
         layout(&[AdapterType::I32, AdapterType::F64]),
         (vec![(0, "Int32"), (8, "Float64")], 16, 8)
+    );
+    // `{ { x, n }, m }` keeps the inner record's padding, where the flat run
+    // of its words would be 16 bytes.
+    let record = CellLayout::Record(vec![
+        CellLayout::Record(vec![words(&[AdapterType::F64]), words(&[AdapterType::I32])]),
+        words(&[AdapterType::I32]),
+    ]);
+    assert_eq!(
+        encoded_slice_layout(&record).unwrap(),
+        (vec![(0, "Float64"), (8, "Int32"), (16, "Int32")], 24, 8)
     );
 }

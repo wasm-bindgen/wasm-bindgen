@@ -1,7 +1,7 @@
 use crate::descriptor::{Descriptor, Function, SeqValue, SequenceCell, VectorKind};
 use crate::wasm_conventions::get_function_table_entry;
 use crate::wit::{AdapterType, ClosureDtor, Instruction, InstructionBuilder, OptionKind};
-use crate::wit::{InstructionData, StackChange};
+use crate::wit::{CellLayout, InstructionData, StackChange};
 use anyhow::{bail, Error};
 use walrus::{ExportId, ValType};
 use wasm_bindgen_shared::identifier::to_valid_ident;
@@ -883,7 +883,7 @@ impl InstructionBuilder<'_, '_> {
         self.instruction(
             &[ptr_ty.clone(), ptr_ty],
             Instruction::EncodedSliceLoad {
-                words,
+                layout: CellLayout::Words(words),
                 elem,
                 mem,
                 free,

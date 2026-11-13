@@ -124,6 +124,27 @@ impl OptionKind {
     }
 }
 
+/// A cell: what a value is as stored in memory. A value's own cell is the
+/// `#[repr(C)]` record of its ABI words, and a record's is the `#[repr(C)]`
+/// record of its parts' cells, which keeps their padding.
+#[derive(Debug, Clone)]
+pub enum CellLayout {
+    Words(Vec<AdapterType>),
+    // No value crosses as a record yet.
+    #[allow(dead_code)]
+    Record(Vec<CellLayout>),
+}
+
+impl CellLayout {
+    /// The cell's words in order.
+    pub fn words(&self) -> Vec<&AdapterType> {
+        match self {
+            CellLayout::Words(words) => words.iter().collect(),
+            CellLayout::Record(parts) => parts.iter().flat_map(CellLayout::words).collect(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AdapterType {
     S8,
@@ -450,22 +471,22 @@ pub enum Instruction {
         mode: SeqValue,
         option_kind: OptionKind,
     },
-    /// pops ptr/length of a buffer holding `length` element ABIs, each laid
-    /// out as `words`, pushes the array `elem` decodes them into (or
-    /// `undefined` for a null `optional` buffer), frees the buffer
+    /// pops ptr/length of a buffer holding `length` cells of `layout`, pushes
+    /// the array `elem` decodes them into (or `undefined` for a null
+    /// `optional` buffer), frees the buffer
     EncodedSliceLoad {
-        words: Vec<AdapterType>,
+        layout: CellLayout,
         elem: Vec<InstructionData>,
         mem: walrus::MemoryId,
         free: walrus::FunctionId,
         optional: Option<OptionKind>,
     },
     /// pops an array (or, `optional`, `undefined`), encodes each element with
-    /// `elem` into the `words` of its ABI in a buffer allocated with `malloc`
+    /// `elem` into a cell of `layout` in a buffer allocated with `malloc`
     /// (freed with `free`, after what its elements own, if an element
     /// throws), pushes the buffer's ptr/length (ptr 0 for `undefined`)
     EncodedSliceStore {
-        words: Vec<AdapterType>,
+        layout: CellLayout,
         elem: Vec<InstructionData>,
         malloc: walrus::FunctionId,
         free: walrus::FunctionId,

@@ -8,8 +8,8 @@
 //! the `outgoing.rs` module.
 
 use crate::descriptor::{Descriptor, SeqValue, SequenceCell};
-use crate::wit::InstructionData;
 use crate::wit::{AdapterType, Instruction, InstructionBuilder, OptionKind, StackChange};
+use crate::wit::{CellLayout, InstructionData};
 use anyhow::{bail, format_err, Error};
 use walrus::ValType;
 
@@ -711,7 +711,7 @@ impl InstructionBuilder<'_, '_> {
                 array
             }],
             Instruction::EncodedSliceStore {
-                words,
+                layout: CellLayout::Words(words),
                 elem,
                 malloc,
                 free,
