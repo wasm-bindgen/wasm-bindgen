@@ -291,12 +291,24 @@ matrix! {
     null_string_enum  [+  +  +  +  +  +  +  -]: Nullable<MatrixName>     = [Value(A), Null, Value(B)] => r#"["a",null,"b"]"#;
     null_opt_string   [+  +  +  +  +  +  +  +]: Nullable<Option<String>> = [Value(Some(s("a"))), Null, Value(None)] => r#"["a",null,undefined]"#;
 
-    // hole: vec_u32 sl, `Vec<u32>: RefIntoWasmAbi` is not satisfied
-    vec_u32           [+  +  +  +  -  +  +  +]: Vec<u32>                 = [vec![1, 2], vec![], vec![3]] => "[Uint32Array[1,2],Uint32Array[],Uint32Array[3]]";
-    // hole: vec_string sl, `Vec<String>: RefIntoWasmAbi` is not satisfied
-    vec_string        [+  +  +  +  -  +  +  +]: Vec<String>              = [vec![s("a"), s("b")], vec![], vec![s("c")]] => r#"[["a","b"],[],["c"]]"#;
-    // hole: vec_js_string sl, `Vec<JsString>: RefIntoWasmAbi` is not satisfied
-    vec_js_string     [+  +  +  +  -  +  +  +]: Vec<JsString>            = [vec![js("a"), js("b")], vec![], vec![js("c")]] => r#"[["a","b"],[],["c"]]"#;
-    // hole: vec_opt_string sl, `Vec<Option<String>>: RefIntoWasmAbi` is not satisfied
-    vec_opt_string    [+  +  +  +  -  +  +  +]: Vec<Option<String>>      = [vec![Some(s("a")), None], vec![], vec![None]] => r#"[["a",undefined],[],[undefined]]"#;
+    vec_u32           [+  +  +  +  +  +  +  +]: Vec<u32>                 = [vec![1, 2], vec![], vec![3]] => "[Uint32Array[1,2],Uint32Array[],Uint32Array[3]]";
+    vec_string        [+  +  +  +  +  +  +  +]: Vec<String>              = [vec![s("a"), s("b")], vec![], vec![s("c")]] => r#"[["a","b"],[],["c"]]"#;
+    vec_js_string     [+  +  +  +  +  +  +  +]: Vec<JsString>            = [vec![js("a"), js("b")], vec![], vec![js("c")]] => r#"[["a","b"],[],["c"]]"#;
+    vec_opt_string    [+  +  +  +  +  +  +  +]: Vec<Option<String>>      = [vec![Some(s("a")), None], vec![], vec![None]] => r#"[["a",undefined],[],[undefined]]"#;
+}
+
+#[allow(clippy::ptr_arg, clippy::borrowed_box)]
+#[wasm_bindgen(module = "tests/wasm/element_matrix.js")]
+extern "C" {
+    #[wasm_bindgen(js_name = show)]
+    fn show_vec_ref(v: &Vec<String>) -> String;
+    #[wasm_bindgen(js_name = show)]
+    fn show_boxed_ref(v: &Box<[u32]>) -> String;
+}
+
+/// A borrowed vector on its own is lent as the slice of it is.
+#[wasm_bindgen_test]
+fn borrowed_vectors() {
+    assert_eq!(show_vec_ref(&vec![s("a"), s("b")]), r#"["a","b"]"#);
+    assert_eq!(show_boxed_ref(&vec![1, 2].into()), "Uint32Array[1,2]");
 }

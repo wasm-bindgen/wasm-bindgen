@@ -315,6 +315,26 @@ impl<T: RefIntoWasmAbi> IntoWasmAbi for &[T] {
     }
 }
 
+/// A borrowed vector is lent as the slice of it, so a `&[Vec<T>]` lends each
+/// of its vectors.
+impl<T: RefIntoWasmAbi> IntoWasmAbi for &Vec<T> {
+    type Abi = WasmSlice;
+
+    #[inline]
+    fn into_abi(self) -> WasmSlice {
+        self.as_slice().into_abi()
+    }
+}
+
+impl<T: RefIntoWasmAbi> IntoWasmAbi for &Box<[T]> {
+    type Abi = WasmSlice;
+
+    #[inline]
+    fn into_abi(self) -> WasmSlice {
+        (**self).into_abi()
+    }
+}
+
 impl<'a, T> OptionIntoWasmAbi for &'a [T]
 where
     &'a [T]: IntoWasmAbi<Abi = WasmSlice>,

@@ -266,7 +266,8 @@ impl InstructionBuilder<'_, '_> {
                     &[AdapterType::String],
                 );
             }
-            Descriptor::Slice(cell) => {
+            // A borrowed vector is lent as the slice of it.
+            Descriptor::Slice(cell) | Descriptor::Vector(cell) => {
                 let kind = match cell.sequence_cell() {
                     SequenceCell::InPlace(kind) => kind,
                     SequenceCell::Encoded(elem) => {
