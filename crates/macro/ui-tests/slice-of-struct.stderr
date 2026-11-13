@@ -1,23 +1,41 @@
-error[E0277]: the trait bound `for<'a> &'a Point: IntoWasmAbi` is not satisfied
+error[E0277]: the trait bound `Point: RefIntoWasmAbi` is not satisfied
   --> ui-tests/slice-of-struct.rs:13:8
    |
 11 | #[wasm_bindgen]
    | --------------- in this procedural macro expansion
 12 | extern "C" {
 13 |     fn take_points(points: &[Point]);
-   |        ^^^^^^^^^^^ the trait `for<'a> IntoWasmAbi` is not implemented for `&'a Point`
+   |        ^^^^^^^^^^^ the trait `RefIntoWasmAbi` is not implemented for `Point`
    |
-   = help: the trait `IntoWasmAbi` is implemented for `Point`
-   = note: required for `Point` to implement `RefIntoWasmAbi`
+   = note: `&Point` does not implement `IntoWasmAbi`, which is how a reference, and each element of a slice, is lent
+   = help: the following other types implement trait `IntoWasmAbi`:
+             &[MaybeUninit<f32>]
+             &[MaybeUninit<f64>]
+             &[MaybeUninit<i16>]
+             &[MaybeUninit<i32>]
+             &[MaybeUninit<i64>]
+             &[MaybeUninit<i8>]
+             &[MaybeUninit<isize>]
+             &[MaybeUninit<u16>]
+           and $N others
    = note: required for `&[Point]` to implement `IntoWasmAbi`
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
-error[E0277]: the trait bound `for<'a> &'a Point: IntoWasmAbi` is not satisfied
+error[E0277]: the trait bound `Point: RefIntoWasmAbi` is not satisfied
   --> ui-tests/slice-of-struct.rs:13:28
    |
 13 |     fn take_points(points: &[Point]);
-   |                            ^ the trait `for<'a> IntoWasmAbi` is not implemented for `&'a Point`
+   |                            ^ the trait `RefIntoWasmAbi` is not implemented for `Point`
    |
-   = help: the trait `IntoWasmAbi` is implemented for `Point`
-   = note: required for `Point` to implement `RefIntoWasmAbi`
+   = note: `&Point` does not implement `IntoWasmAbi`, which is how a reference, and each element of a slice, is lent
+   = help: the following other types implement trait `IntoWasmAbi`:
+             &[MaybeUninit<f32>]
+             &[MaybeUninit<f64>]
+             &[MaybeUninit<i16>]
+             &[MaybeUninit<i32>]
+             &[MaybeUninit<i64>]
+             &[MaybeUninit<i8>]
+             &[MaybeUninit<isize>]
+             &[MaybeUninit<u16>]
+           and $N others
    = note: required for `&[Point]` to implement `IntoWasmAbi`

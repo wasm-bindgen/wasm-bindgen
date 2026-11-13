@@ -45,6 +45,12 @@ pub trait IntoWasmAbi: WasmDescribe {
 /// This is part of the internal [`convert`](crate::convert) module, **no
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
+#[cfg_attr(
+    wbg_diagnostic,
+    diagnostic::on_unimplemented(
+        note = "`&{Self}` does not implement `IntoWasmAbi`, which is how a reference, and each element of a slice, is lent"
+    )
+)]
 pub trait RefIntoWasmAbi: WasmDescribe + ref_into_wasm_abi::Sealed {
     /// The Wasm ABI type that `&Self` converts into.
     type Abi: WasmAbi;
@@ -64,6 +70,8 @@ mod ref_into_wasm_abi {
     impl<T: ?Sized> Sealed for T where for<'a> &'a T: IntoWasmAbi {}
 }
 
+// Reports a missing `T: RefIntoWasmAbi` as that bound, not as this impl's.
+#[cfg_attr(wbg_do_not_recommend, diagnostic::do_not_recommend)]
 impl<T: WasmDescribe + ?Sized, A: WasmAbi> RefIntoWasmAbi for T
 where
     for<'a> &'a T: IntoWasmAbi<Abi = A>,
