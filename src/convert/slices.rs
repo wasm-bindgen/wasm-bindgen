@@ -352,9 +352,9 @@ impl_nullable_into_shared_abi!(
 
 // A `(ptr, len)` cell is two pointer words, which are `f64`s on memory64.
 #[cfg(target_arch = "wasm64")]
-const _: () = assert!(WasmSlice::CELL_SIZE == 16 && WasmSlice::CELL_ALIGN == 8);
+const _: () = assert!(WasmSlice::CELL.size() == 16 && WasmSlice::CELL.align() == 8);
 #[cfg(not(target_arch = "wasm64"))]
-const _: () = assert!(WasmSlice::CELL_SIZE == 8 && WasmSlice::CELL_ALIGN == 4);
+const _: () = assert!(WasmSlice::CELL.size() == 8 && WasmSlice::CELL.align() == 4);
 
 /// A buffer of `len` cells of `A`, freed on drop.
 struct Cells<A: WasmAbi> {
@@ -365,14 +365,14 @@ struct Cells<A: WasmAbi> {
 
 impl<A: WasmAbi> Cells<A> {
     const HOLDS_A_WORD: () = assert!(
-        A::CELL_SIZE != 0,
+        A::CELL.size() != 0,
         "a sequence's element must cross as at least one word"
     );
 
     fn layout(len: usize) -> Layout {
         let () = Self::HOLDS_A_WORD;
-        len.checked_mul(A::CELL_SIZE)
-            .and_then(|size| Layout::from_size_align(size, A::CELL_ALIGN).ok())
+        len.checked_mul(A::CELL.size())
+            .and_then(|size| Layout::from_size_align(size, A::CELL.align()).ok())
             .expect("capacity overflow")
     }
 
@@ -398,7 +398,7 @@ impl<A: WasmAbi> Cells<A> {
     fn encode(elems: impl ExactSizeIterator<Item = A>) -> WasmSlice {
         let cells = Self::new(elems.len());
         for (i, elem) in elems.enumerate() {
-            unsafe { elem.write_cell(cells.ptr.add(i * A::CELL_SIZE)) }
+            unsafe { elem.write_cell(cells.ptr.add(i * A::CELL.size())) }
         }
         let slice = WasmSlice::from_usize(cells.ptr as usize, cells.len);
         mem::forget(cells);
@@ -452,7 +452,7 @@ impl WasmSlice {
         let mut elems = Vec::with_capacity(cells.len);
         let mut rejected = None;
         for i in 0..cells.len {
-            match T::try_from_abi(T::Abi::read_cell(cells.ptr.add(i * T::Abi::CELL_SIZE))) {
+            match T::try_from_abi(T::Abi::read_cell(cells.ptr.add(i * T::Abi::CELL.size()))) {
                 Ok(elem) if rejected.is_none() => elems.push(elem),
                 Ok(_) => {}
                 Err(msg) => rejected = rejected.or(Some(msg)),

@@ -5,7 +5,7 @@
 use std::alloc::{alloc, dealloc, Layout};
 
 use wasm_bindgen::__rt::WasmWord;
-use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, WasmAbi, WasmSlice};
+use wasm_bindgen::convert::{CellLayout, FromWasmAbi, IntoWasmAbi, WasmAbi, WasmSlice};
 use wasm_bindgen::describe::WasmDescribe;
 use wasm_bindgen_test::*;
 
@@ -19,8 +19,8 @@ struct NamedAbi(WasmSlice, u32);
 
 impl NamedAbi {
     /// `{ ptr, len, n }`
-    const N: usize = WasmSlice::CELL_SIZE;
-    const LAYOUT: Layout = match Layout::from_size_align(Self::CELL_SIZE, Self::CELL_ALIGN) {
+    const N: usize = WasmSlice::CELL.size();
+    const LAYOUT: Layout = match Layout::from_size_align(Self::CELL.size(), Self::CELL.align()) {
         Ok(layout) => layout,
         Err(_) => panic!(),
     };
@@ -32,8 +32,9 @@ impl WasmAbi for NamedAbi {
     type Prim3 = ();
     type Prim4 = ();
 
-    const CELL_SIZE: usize = Self::N + u32::CELL_SIZE;
-    const CELL_ALIGN: usize = WasmSlice::CELL_ALIGN;
+    // The cell methods store the record `{ ptr, len, n }`.
+    const CELL: CellLayout<Self> =
+        unsafe { CellLayout::new(Self::N + u32::CELL.size(), WasmSlice::CELL.align()) };
 
     fn split(self) -> (Self::Prim1, (), (), ()) {
         unsafe {
@@ -148,13 +149,13 @@ fn items() -> Vec<Named> {
 
 #[wasm_bindgen_test]
 fn wide_cell_layout() {
-    assert_eq!((NamedAbi::CELL_SIZE, NamedAbi::CELL_ALIGN), (12, 4));
+    assert_eq!((NamedAbi::CELL.size(), NamedAbi::CELL.align()), (12, 4));
     assert_eq!(NamedAbi::N, 8);
 }
 
 #[wasm_bindgen_test]
 fn default_cells_round_trip_as_a_sequence() {
-    assert_eq!((Flat::CELL_SIZE, Flat::CELL_ALIGN), (16, 8));
+    assert_eq!((Flat::CELL.size(), Flat::CELL.align()), (16, 8));
     let slice = WasmSlice::encode_owned(
         vec![Sample(1, 0.5), Sample(2, 1.5)].into_boxed_slice(),
         Sample::into_abi,

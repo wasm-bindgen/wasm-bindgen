@@ -1,4 +1,5 @@
 use core::borrow::Borrow;
+use core::marker::PhantomData;
 use core::mem;
 use core::ops::{Deref, DerefMut};
 use core::panic::AssertUnwindSafe;
@@ -443,24 +444,20 @@ pub trait WasmAbi {
     fn join(prim1: Self::Prim1, prim2: Self::Prim2, prim3: Self::Prim3, prim4: Self::Prim4)
         -> Self;
 
-    /// The size of this type's cell: the type as stored in memory, which a
+    /// The layout of this type's cell: the type as stored in memory, which a
     /// sequence holds one of per element. By default the cell is the
     /// `#[repr(C)]` record of the four primitives, the same split as the wasm
     /// signature, which is how the CLI lays out the cell's words. An ABI that
     /// is wider than its primitives stores a record of the cells it is made
-    /// of instead, and overrides all four items together.
+    /// of instead, and overrides this with both cell methods.
     #[doc(hidden)]
-    const CELL_SIZE: usize = mem::size_of::<AbiCell<Self>>();
-
-    /// The alignment of this type's cell. See [`CELL_SIZE`](Self::CELL_SIZE).
-    #[doc(hidden)]
-    const CELL_ALIGN: usize = mem::align_of::<AbiCell<Self>>();
+    const CELL: CellLayout<Self> = CellLayout::PRIMS;
 
     /// Stores this type in its cell.
     ///
     /// # Safety
     ///
-    /// `cell` must be valid for a write of `CELL_SIZE` bytes, at `CELL_ALIGN`.
+    /// `cell` must be valid for a write of `CELL`'s size, at its alignment.
     #[doc(hidden)]
     #[inline]
     unsafe fn write_cell(self, cell: *mut u8)
@@ -491,6 +488,57 @@ pub trait WasmAbi {
 
 #[repr(C)]
 struct AbiCell<A: WasmAbi + ?Sized>(A::Prim1, A::Prim2, A::Prim3, A::Prim4);
+
+/// The size and alignment of `A`'s cell. It names `A` so that one ABI's can't
+/// stand in for another's, and is other than the record of `A`'s primitives
+/// only through [`CellLayout::new`].
+#[doc(hidden)]
+pub struct CellLayout<A: ?Sized> {
+    size: usize,
+    align: usize,
+    abi: PhantomData<fn(&A)>,
+}
+
+impl<A: ?Sized> Clone for CellLayout<A> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<A: ?Sized> Copy for CellLayout<A> {}
+
+impl<A: WasmAbi + ?Sized> CellLayout<A> {
+    pub const PRIMS: Self = Self {
+        size: mem::size_of::<AbiCell<A>>(),
+        align: mem::align_of::<AbiCell<A>>(),
+        abi: PhantomData,
+    };
+}
+
+impl<A: ?Sized> CellLayout<A> {
+    /// # Safety
+    ///
+    /// This is a layout promise: `A::write_cell` and `A::read_cell` stay
+    /// within `size` bytes at `align`, a power of two, storing the words the
+    /// CLI lays out for the type's descriptor.
+    pub const unsafe fn new(size: usize, align: usize) -> Self {
+        Self {
+            size,
+            align,
+            abi: PhantomData,
+        }
+    }
+
+    #[inline]
+    pub const fn size(self) -> usize {
+        self.size
+    }
+
+    #[inline]
+    pub const fn align(self) -> usize {
+        self.align
+    }
+}
 
 /// A trait representing how to interpret the return value of a function for
 /// the Wasm ABI.
