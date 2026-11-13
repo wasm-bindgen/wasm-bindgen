@@ -507,3 +507,77 @@ async fn an_element_lends_no_view() {
         &vec![&floats[..]].into_boxed_slice().into()
     ));
 }
+
+#[wasm_bindgen(module = "tests/wasm/slice_modes.js")]
+extern "C" {
+    fn js_keep(v: &Vec<u8>);
+    #[wasm_bindgen(js_name = js_keep)]
+    fn js_keep_boxed(v: &Box<[f64]>);
+    #[wasm_bindgen(experimental_generic_mono, js_name = js_keep)]
+    fn js_keep_generic<T>(v: &T)
+    where
+        T: RefIntoWasmAbi;
+    fn js_kept() -> JsValue;
+    fn js_kept_is(value: f64) -> bool;
+
+    #[wasm_bindgen(js_name = kindOf)]
+    fn kind_of_vec_ref(v: &Vec<u8>) -> String;
+    #[wasm_bindgen(vec = array, js_name = kindOf)]
+    fn kind_of_array_vec_ref(v: &Vec<u8>) -> String;
+    #[wasm_bindgen(js_name = kindOf)]
+    fn kind_of_array_vec_ref_arg(#[wasm_bindgen(vec = array)] v: &Box<[f64]>) -> String;
+    #[wasm_bindgen(slice = view, js_name = isWasmMemoryView)]
+    fn is_view_under_slice_view(v: &Vec<u8>) -> bool;
+}
+
+// A view is the unsized `&[T]` argument alone. A borrowed vector is a sized
+// type, which a generic `&T` import may keep, so it reaches JS as the vector
+// does: copied, with its storage still Rust's.
+#[wasm_bindgen_test]
+fn a_borrowed_vector_lends_no_view() {
+    fn kept_survives(drop_and_reuse: impl FnOnce(), value: f64) {
+        assert!(js_holds_no_view(&js_kept()));
+        js_fill(&js_kept(), 9);
+        drop_and_reuse();
+        assert!(js_kept_is(value));
+    }
+
+    let bytes = vec![0x41u8; 64];
+    js_keep(&bytes);
+    kept_survives(
+        || {
+            assert_eq!(bytes, [0x41; 64]);
+            drop(bytes);
+            core::hint::black_box(vec![0x11u8; 64]);
+        },
+        9.0,
+    );
+
+    let floats: Box<[f64]> = vec![1.5; 8].into_boxed_slice();
+    js_keep_boxed(&floats);
+    kept_survives(
+        || {
+            assert_eq!(*floats, [1.5; 8]);
+            drop(floats);
+            core::hint::black_box(vec![2.5f64; 8]);
+        },
+        9.0,
+    );
+
+    let bytes = vec![0x41u8; 64];
+    js_keep_generic(&bytes);
+    kept_survives(
+        || {
+            assert_eq!(bytes, [0x41; 64]);
+            drop(bytes);
+            core::hint::black_box(vec![0x11u8; 64]);
+        },
+        9.0,
+    );
+
+    let bytes = vec![1u8, 2];
+    assert_eq!(kind_of_vec_ref(&bytes), "Uint8Array");
+    assert_eq!(kind_of_array_vec_ref(&bytes), "Array");
+    assert_eq!(kind_of_array_vec_ref_arg(&vec![1.5].into()), "Array");
+    assert!(!is_view_under_slice_view(&bytes));
+}

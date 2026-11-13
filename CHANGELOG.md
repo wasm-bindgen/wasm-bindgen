@@ -24,6 +24,8 @@
   conversions newly cross, in arguments, returns and `JsValue::from`. A
   borrowed slice of numbers held by a sequence, such as each `&[u8]` of a
   `Vec<&[u8]>`, reaches JS as a copy and never as a view of wasm memory.
+  A borrowed vector (`&Vec<T>`, `&Box<[T]>`) is an imported function's
+  argument too, reaching JS as a copy, as the vector does.
 
 * A dynamic-union enum is a `Vec<T>` / `Box<[T]>` element in both
   directions, crossing as a JS array whose elements are each converted as a

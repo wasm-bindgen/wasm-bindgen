@@ -25,7 +25,8 @@ the wrong type throws.
 
 Borrowed slices (`&[T]`) can be passed to imported JS functions for every
 element type that can be passed by reference on its own, which exported Rust
-types can't be; see
+types can't be, and so can a borrowed vector (`&Vec<T>`, `&Box<[T]>`), which
+reaches JS as a copy; see
 [`slice` and `vec`](../attributes/on-js-imports/slice.md).
 
 [You can also pass boxed slices of numbers to JS](boxed-number-slices.html),

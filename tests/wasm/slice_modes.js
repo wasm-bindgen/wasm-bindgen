@@ -91,3 +91,8 @@ exports.js_holds_no_view = (v) => {
 };
 
 exports.js_fill = (v, byte) => typedArrays(v).forEach(a => a.fill(byte));
+
+let kept;
+exports.js_keep = (v) => { kept = v; };
+exports.js_kept = () => kept;
+exports.js_kept_is = (value) => kept.length > 0 && kept.every(x => x === value);

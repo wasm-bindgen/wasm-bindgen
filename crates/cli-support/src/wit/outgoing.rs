@@ -266,7 +266,6 @@ impl InstructionBuilder<'_, '_> {
                     &[AdapterType::String],
                 );
             }
-            // A borrowed vector is lent as the slice of it.
             Descriptor::Slice(cell) | Descriptor::Vector(cell) => {
                 let kind = match cell.sequence_cell() {
                     SequenceCell::InPlace(kind) => kind,
@@ -276,7 +275,14 @@ impl InstructionBuilder<'_, '_> {
                 };
                 let mem = self.cx.memory()?;
                 let ptr_ty = self.outgoing_internal_word_ty();
-                let mode = self.lent_mode(mutable)?;
+                let mode = match (arg, self.lent_mode(mutable)?) {
+                    // Only the unsized `&[T]` is a view. A borrowed vector is
+                    // a sized type, which a generic `&T` can pass to JS that
+                    // keeps it, so it's read as the vector is, by copy, with
+                    // nothing freed.
+                    (Descriptor::Vector(_), SeqValue::View) => SeqValue::Copy,
+                    (_, mode) => mode,
+                };
                 self.instruction(
                     &[ptr_ty.clone(), ptr_ty],
                     Instruction::View {

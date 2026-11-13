@@ -461,6 +461,11 @@ impl Descriptor {
             Descriptor::Option(inner) => inner,
             d => d,
         };
+        // A borrowed vector reaches JS as the vector does, under `vec`.
+        let d = match d {
+            Descriptor::Ref(v) if matches!(**v, Descriptor::Vector(_)) => v,
+            d => d,
+        };
         let (borrowed, mutable) = match d {
             Descriptor::Ref(s) => (matches!(**s, Descriptor::Slice(_)), false),
             Descriptor::RefMut(s) => (matches!(**s, Descriptor::Slice(_)), true),

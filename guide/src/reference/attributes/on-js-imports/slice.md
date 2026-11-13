@@ -8,14 +8,16 @@ receives:
 | key | shapes | values | default |
 |---|---|---|---|
 | `slice` | `&[T]`, `&mut [T]`, `Clamped<&[u8]>`, or an `Option` of one | `view`, `copy`, `array` | `view` |
-| `vec` | `Vec<T>`, `Box<[T]>`, `Clamped<Vec<u8>>`, or an `Option` of one | `copy`, `array` | `copy` |
+| `vec` | `Vec<T>`, `Box<[T]>`, `Clamped<Vec<u8>>`, or an `Option` of one, and `&Vec<T>`, `&Box<[T]>` | `copy`, `array` | `copy` |
 
 * `view`: a live typed array over wasm memory.
 * `copy`: a fresh typed array.
 * `array`: a fresh plain `Array`.
 
 Owned data is freed once the call returns, so it is never a view. Nor is a
-slice of numbers that another sequence holds, such as each `&[u8]` of a
+borrowed vector (`&Vec<T>`, `&Box<[T]>`): a view is the `&[T]` argument
+alone, and a borrowed vector is copied as the vector is, with its storage
+left to Rust. Nor is a slice of numbers that another sequence holds, such as each `&[u8]` of a
 `Vec<&[u8]>`: only the argument itself is a view, and these are copied. A
 sequence can't hold a `&mut [T]`, whose copy JS's writes would never leave.
 

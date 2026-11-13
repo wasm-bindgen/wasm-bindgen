@@ -315,8 +315,10 @@ impl<T: RefIntoWasmAbi> IntoWasmAbi for &[T] {
     }
 }
 
-/// A borrowed vector is lent as the slice of it, so a `&[Vec<T>]` lends each
-/// of its vectors.
+/// A borrowed vector lends its storage as the slice of it does, so a
+/// `&[Vec<T>]` lends each of its vectors. It is described as the vector,
+/// which JS reads by copy: a view is the unsized `&[T]` alone, as a generic
+/// `&T` can pass a `&Vec<T>` to JS that keeps it.
 impl<T: RefIntoWasmAbi> IntoWasmAbi for &Vec<T> {
     type Abi = WasmSlice;
 
