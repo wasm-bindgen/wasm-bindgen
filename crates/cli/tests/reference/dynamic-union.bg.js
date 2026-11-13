@@ -89,6 +89,63 @@ export function echo_wrapper(w) {
     const ret = wasm.echo_wrapper(w);
     return ret;
 }
+
+/**
+ * @param {Wrapper[]} list
+ * @returns {Wrapper[]}
+ */
+export function echo_wrappers(list) {
+    if (list.length > 536870911) throw new Error('invalid malloc request');
+    let j0 = 0, len0, ptr0;
+    try {
+        len0 = list.length >>> 0;
+        if (len0 > 536870911) throw new Error('invalid malloc request');
+        ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
+        for (; j0 < len0; j0++) {
+            const e0 = list[j0];
+            const w0_0 = addToExternrefTable0(e0);
+            const view0 = getDataViewMemory0();
+            const p0 = ptr0 + j0 * 4;
+            view0.setInt32(p0 + 0, w0_0, true);
+        }
+    } catch (e) {
+        if (ptr0) {
+            let view1 = getDataViewMemory0();
+            for (let k1 = 0; k1 < j0; k1++) {
+                const cell1 = ptr0 + k1 * 4;
+                const w1_0 = view1.getInt32(cell1 + 0, true) >>> 0;
+                wasm.__externref_table_dealloc(w1_0);
+                view1 = getDataViewMemory0();
+            }
+            wasm.__wbindgen_free(ptr0, len0 * 4, 4);
+        }
+        throw e;
+    }
+    const ret = wasm.echo_wrappers(ptr0, len0);
+    const v3 = [];
+    let p3 = ret[0];
+    p3 = p3 >>> 0;
+    const b3 = p3;
+    try {
+        const view3 = getDataViewMemory0();
+        for (const end3 = p3 + ret[1] * 4; p3 < end3; p3 += 4) {
+            const w3_0 = view3.getInt32(p3 + 0, true);
+            v3.push(wasm.__wbindgen_externrefs.get(w3_0));
+        }
+    } finally {
+        if (b3) {
+            let view4 = getDataViewMemory0();
+            for (let k4 = 0; k4 < ret[1]; k4++) {
+                const cell4 = b3 + k4 * 4;
+                const w4_0 = view4.getInt32(cell4 + 0, true) >>> 0;
+                wasm.__externref_table_dealloc(w4_0);
+                view4 = getDataViewMemory0();
+            }
+            wasm.__wbindgen_free(b3, ret[1] * 4, 4);
+        }
+    }
+    return v3;
+}
 export function __wbg___wbindgen_is_undefined_be5b34249ff1fc15(arg0) {
     const ret = arg0 === undefined;
     return ret;

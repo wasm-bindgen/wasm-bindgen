@@ -18,20 +18,34 @@ export function __wbg_js_fn_keys_1ccf98d6a63ca6c5(arg0, arg1, arg2, arg3) {
     wasm.__wbindgen_free(arg2, arg3 * 1, 1);
     js_fn_keys(getArrayU8FromWasm0(arg0, arg1).slice(), v0);
 }
-export function __wbg_js_shapes_bd63f6912e6d4d8c(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7) {
-    var v0 = getArrayU8FromWasm0(arg0, arg1).slice();
-    wasm.__wbindgen_free(arg0, arg1 * 1, 1);
-    var v1 = getArrayF64FromWasm0(arg2, arg3).slice();
+export function __wbg_js_safe_integers_09bf93739842c15f(arg0, arg1, arg2, arg3, arg4, arg5) {
+    var v0 = Array.from(getArrayF64FromWasm0(arg0, arg1));
+    wasm.__wbindgen_free(arg0, arg1 * 8, 8);
+    var v1 = Array.from(getArrayF64FromWasm0(arg2, arg3));
     wasm.__wbindgen_free(arg2, arg3 * 8, 8);
-    const v2 = [];
-    let p2 = arg6;
-    p2 = p2 >>> 0;
-    const view2 = getDataViewMemory0();
-    for (const end2 = p2 + arg7 * 8; p2 < end2; p2 += 8) {
-        v2.push(getStringFromWasm0(view2.getInt32(p2 + 0, true), view2.getInt32(p2 + 4, true)));
+    var v2 = getArrayF64FromWasm0(arg4, arg5).slice();
+    wasm.__wbindgen_free(arg4, arg5 * 8, 8);
+    js_safe_integers(v0, v1, v2);
+}
+export function __wbg_js_shapes_bd63f6912e6d4d8c(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7) {
+    const b2 = arg6 >>> 0;
+    try {
+        var v0 = getArrayU8FromWasm0(arg0, arg1).slice();
+        var v1 = getArrayF64FromWasm0(arg2, arg3).slice();
+        const v2 = [];
+        let p2 = b2;
+        const view2 = getDataViewMemory0();
+        for (const end2 = p2 + arg7 * 8; p2 < end2; p2 += 8) {
+            const w2_0 = view2.getInt32(p2 + 0, true);
+            const w2_1 = view2.getInt32(p2 + 4, true);
+            v2.push(getStringFromWasm0(w2_0, w2_1));
+        }
+        js_shapes(v0, v1, Array.from(getClampedArrayU8FromWasm0(arg4, arg5)), v2);
+    } finally {
+        if (arg0) { wasm.__wbindgen_free(arg0, arg1 * 1, 1); }
+        if (arg2) { wasm.__wbindgen_free(arg2, arg3 * 8, 8); }
+        if (b2) wasm.__wbindgen_free(b2, arg7 * 8, 4);
     }
-    wasm.__wbindgen_free(arg6, arg7 * 8, 4);
-    js_shapes(v0, v1, Array.from(getClampedArrayU8FromWasm0(arg4, arg5)), v2);
 }
 export function __wbg_js_vec_block_d2b61694b56cf97a(arg0, arg1, arg2, arg3, arg4, arg5) {
     var v0 = Array.from(getArrayU8FromWasm0(arg2, arg3));
@@ -44,24 +58,29 @@ export function __wbg_js_view_u8_121c4880f6a160aa(arg0, arg1) {
     js_view_u8(getArrayU8FromWasm0(arg0, arg1));
 }
 export function __wbindgen_generic_0000000000000000(arg0, arg1) {
-    // generic import `js_generic_slice`: [SeqMode(slice = copy, Option(Ref(Slice(U8))))] -> Unit
-    js_generic_slice(arg0 === 0 ? undefined : getArrayU8FromWasm0(arg0, arg1).slice());
+    const b0 = arg0 >>> 0;
+    try {
+        const v0 = [];
+        let p0 = b0;
+        const view0 = getDataViewMemory0();
+        for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
+            const w0_0 = view0.getInt32(p0 + 0, true);
+            const w0_1 = view0.getInt32(p0 + 4, true);
+            v0.push(getStringFromWasm0(w0_0, w0_1));
+        }
+        // generic import `js_generic_slice`: [Ref(Slice(Cell(String)))] -> Unit
+        js_generic_slice(v0);
+    } finally {
+        if (b0) wasm.__wbindgen_free(b0, arg1 * 8, 4);
+    }
 }
 export function __wbindgen_generic_0000000000000001(arg0, arg1) {
-    const v0 = [];
-    let p0 = arg0;
-    p0 = p0 >>> 0;
-    const view0 = getDataViewMemory0();
-    for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
-        v0.push(getStringFromWasm0(view0.getInt32(p0 + 0, true), view0.getInt32(p0 + 4, true)));
-    }
-    wasm.__wbindgen_free(arg0, arg1 * 8, 4);
-    // generic import `js_generic_slice`: [Ref(Slice(String))] -> Unit
-    js_generic_slice(v0);
-}
-export function __wbindgen_generic_0000000000000002(arg0, arg1) {
     // generic import `js_generic_slice`: [Ref(Slice(U16))] -> Unit
     js_generic_slice(getArrayU16FromWasm0(arg0, arg1));
+}
+export function __wbindgen_generic_0000000000000002(arg0, arg1) {
+    // generic import `js_generic_slice`: [SeqMode(slice = copy, Option(Ref(Slice(U8))))] -> Unit
+    js_generic_slice(arg0 === 0 ? undefined : getArrayU8FromWasm0(arg0, arg1).slice());
 }
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_externrefs;

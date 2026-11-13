@@ -60,7 +60,7 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
-use crate::convert::{TryFromJsValue, UpcastFrom, VectorIntoWasmAbi};
+use crate::convert::{IntoWasmAbi, TryFromJsValue, UpcastFrom};
 use crate::sys::Promising;
 use alloc::boxed::Box;
 use alloc::string::String;
@@ -187,6 +187,7 @@ use __rt::wbg_cast;
 /// owned by the `wasm-bindgen` generated JS glue code. Eventually the ownership
 /// will transfer into Wasm directly and this will likely become more efficient,
 /// but for now it may be slightly slow.
+#[repr(transparent)]
 pub struct JsValue {
     idx: u32,
     _marker: PhantomData<*mut u8>, // not at all threadsafe
@@ -1929,25 +1930,37 @@ impl From<JsError> for JsValue {
     }
 }
 
-impl<T: VectorIntoWasmAbi> From<Box<[T]>> for JsValue {
+impl<T> From<Box<[T]>> for JsValue
+where
+    Box<[T]>: IntoWasmAbi,
+{
     fn from(vector: Box<[T]>) -> Self {
         wbg_cast(vector)
     }
 }
 
-impl<T: VectorIntoWasmAbi> From<Clamped<Box<[T]>>> for JsValue {
+impl<T> From<Clamped<Box<[T]>>> for JsValue
+where
+    Box<[T]>: IntoWasmAbi,
+{
     fn from(vector: Clamped<Box<[T]>>) -> Self {
         wbg_cast(vector)
     }
 }
 
-impl<T: VectorIntoWasmAbi> From<Vec<T>> for JsValue {
+impl<T> From<Vec<T>> for JsValue
+where
+    Box<[T]>: IntoWasmAbi,
+{
     fn from(vector: Vec<T>) -> Self {
         JsValue::from(vector.into_boxed_slice())
     }
 }
 
-impl<T: VectorIntoWasmAbi> From<Clamped<Vec<T>>> for JsValue {
+impl<T> From<Clamped<Vec<T>>> for JsValue
+where
+    Box<[T]>: IntoWasmAbi,
+{
     fn from(vector: Clamped<Vec<T>>) -> Self {
         JsValue::from(Clamped(vector.0.into_boxed_slice()))
     }

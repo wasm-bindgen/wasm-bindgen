@@ -281,3 +281,24 @@ exports.immediate_closure_fn_reentrant = f => {
 exports.immediate_closure_fn_reentrant_invoke = () => {
   IMMEDIATE_FN_REENTRANT_CB();
 };
+
+exports.call_each = fs => {
+  assert.ok(Array.isArray(fs));
+  fs.forEach(f => f(10));
+  return fs.length;
+};
+
+exports.map_each = fs => fs.map(f => f(3));
+exports.map_each_nested = fs => fs.flat().map(f => f(3));
+exports.count_each = fs => fs.forEach(f => f());
+
+let keptEach = [];
+exports.keep_each = fs => { keptEach = fs; };
+exports.kept_each_are_dead = () => keptEach.flat().length === 2 && keptEach.flat().every(f => {
+    try {
+        f(3);
+        return false;
+    } catch (e) {
+        return true;
+    }
+});

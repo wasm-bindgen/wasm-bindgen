@@ -338,6 +338,23 @@ fn runtest_targets_mvp() -> Result<()> {
     })
 }
 
+/// Without the externref table an import's glue walks the handles it was
+/// given itself.
+#[test]
+fn runtest_import_handle_vector_mvp() -> Result<()> {
+    let mut test = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    test.push("tests");
+    test.push("reference");
+    test.push("import-handle-vector.rs");
+
+    runtest_with_opts(test, Some("mvp"), |command| {
+        command
+            .env("RUSTUP_TOOLCHAIN", "nightly")
+            .env("RUSTFLAGS", "-C target-cpu=mvp")
+            .arg("-Zbuild-std=std,panic_abort");
+    })
+}
+
 fn runtest_with_opts(
     test: PathBuf,
     suffix: Option<&str>,

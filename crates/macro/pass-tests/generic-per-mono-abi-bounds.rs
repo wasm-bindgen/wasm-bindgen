@@ -2,7 +2,7 @@
 #![allow(dead_code)]
 
 use wasm_bindgen::convert::{
-    FromWasmAbi, IntoWasmAbi, RefIntoWasmAbi, ReturnWasmAbi, VectorRefIntoWasmAbi,
+    FromWasmAbi, IntoWasmAbi, RefIntoWasmAbi, ReturnWasmAbi,
 };
 use wasm_bindgen::prelude::*;
 
@@ -17,10 +17,10 @@ extern "C" {
     fn reference_argument<T: RefIntoWasmAbi>(x: &T);
 
     #[wasm_bindgen(experimental_generic_mono)]
-    fn slice_argument<T: VectorRefIntoWasmAbi>(xs: &[T]);
+    fn slice_argument<T: RefIntoWasmAbi>(xs: &[T]);
 
     #[wasm_bindgen(experimental_generic_mono)]
-    fn option_slice_argument<T: VectorRefIntoWasmAbi>(xs: Option<&[T]>);
+    fn option_slice_argument<T: RefIntoWasmAbi>(xs: Option<&[T]>);
 
     #[wasm_bindgen(experimental_generic_mono)]
     fn ret<T: FromWasmAbi>() -> T;
@@ -57,7 +57,7 @@ fn forward_reference<T: RefIntoWasmAbi>(x: &T) {
     reference_argument(x);
 }
 
-fn forward_slice<T: VectorRefIntoWasmAbi>(xs: &[T]) {
+fn forward_slice<T: RefIntoWasmAbi>(xs: &[T]) {
     slice_argument(xs);
     option_slice_argument(Some(xs));
 }

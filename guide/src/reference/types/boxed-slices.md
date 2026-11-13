@@ -4,7 +4,8 @@
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | Yes | No | No | Yes | Yes | Yes | A JavaScript `Array` object |
 
-You can pass boxed slices and `Vec`s of several different types to and from JS:
+You can pass boxed slices and `Vec`s to and from JS of any type that can be
+passed on its own, including:
 
 - `JsValue`s.
 - Imported JavaScript types.
@@ -12,17 +13,32 @@ You can pass boxed slices and `Vec`s of several different types to and from JS:
 - C-style exported enums and string enums.
 - `String`s.
 - `bool`s and `char`s.
-- `&str`s, to JS only.
+- `&str`s and borrowed slices of numbers (`&[u8]`), to JS only. Each slice
+  reaches JS as a copy.
+- `Option<T>` and `Nullable<T>` of any of these, and of numbers.
+- Other `Vec`s.
 
-Imported JS types and `JsValue`s are passed as their handles. `bool`s,
-`char`s, C-style and string enums, and `&str`s are converted element by
-element, the same way a single value of that type is. `String`s and
-exported Rust types are passed as JS values, and each is checked as it
-comes into Rust, so an element of the wrong type throws.
+Three types that can be passed on their own can't be an element: `()`, which
+crosses as nothing, a `&mut [T]`, whose copy JS's writes would never leave,
+and a borrowed closure (`&dyn Fn()`) in a value Rust returns or converts
+with `JsValue::from`, which outlives the call the closure is lent for.
 
-Borrowed slices (`&[T]`) of the same element types, apart from exported Rust
-types, can be passed to imported JS functions; see
+Imported JS types and `JsValue`s are passed as their handles. Every other
+element is converted the same way a single value of that type is. A `String`
+or an exported Rust type is checked as it comes into Rust, so an element of
+the wrong type throws.
+
+Borrowed slices (`&[T]`) can be passed to imported JS functions for every
+element type that can be passed by reference on its own, which exported Rust
+types can't be, and so can a borrowed vector (`&Vec<T>`, `&Box<[T]>`), which
+reaches JS as a copy and may be optional (`Option<&Vec<T>>`); see
 [`slice` and `vec`](../attributes/on-js-imports/slice.md).
+
+A reference inside a borrowed sequence is lent as itself, so its elements
+can be references (`&[&JsValue]`, `&[Option<&str>]`) and sequences in turn
+(`&[&[u8]]`, `&[&Vec<String>]`, `&[Option<Vec<u32>>]`), to any depth. Only
+the `&[T]` argument itself is a view of wasm memory: a slice of numbers that
+is nested, or behind a second reference (`&&[u8]`), reaches JS as a copy.
 
 [You can also pass boxed slices of numbers to JS](boxed-number-slices.html),
 except that they're converted to typed arrays (`Uint8Array`, `Int32Array`, etc.)

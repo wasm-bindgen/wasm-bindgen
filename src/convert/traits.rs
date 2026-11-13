@@ -1,4 +1,6 @@
 use core::borrow::Borrow;
+use core::marker::PhantomData;
+use core::mem;
 use core::ops::{Deref, DerefMut};
 use core::panic::AssertUnwindSafe;
 
@@ -36,12 +38,21 @@ pub trait IntoWasmAbi: WasmDescribe {
 /// argument through it, so `T: RefIntoWasmAbi` is the bound they declare. It
 /// is sealed, holding exactly where the higher-ranked bound does.
 ///
+/// A slice lends each of its elements, so `&[T]` crosses for every
+/// `T: RefIntoWasmAbi`.
+///
 /// # ⚠️ Unstable
 ///
 /// This is part of the internal [`convert`](crate::convert) module, **no
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
-pub trait RefIntoWasmAbi: ref_into_wasm_abi::Sealed {
+#[cfg_attr(
+    wbg_diagnostic,
+    diagnostic::on_unimplemented(
+        note = "`&{Self}` does not implement `IntoWasmAbi`, which is how a reference, and each element of a slice, is lent"
+    )
+)]
+pub trait RefIntoWasmAbi: WasmDescribe + ref_into_wasm_abi::Sealed {
     /// The Wasm ABI type that `&Self` converts into.
     type Abi: WasmAbi;
 
@@ -60,7 +71,9 @@ mod ref_into_wasm_abi {
     impl<T: ?Sized> Sealed for T where for<'a> &'a T: IntoWasmAbi {}
 }
 
-impl<T: ?Sized, A: WasmAbi> RefIntoWasmAbi for T
+// Reports a missing `T: RefIntoWasmAbi` as that bound, not as this impl's.
+#[cfg_attr(wbg_do_not_recommend, diagnostic::do_not_recommend)]
+impl<T: WasmDescribe + ?Sized, A: WasmAbi> RefIntoWasmAbi for T
 where
     for<'a> &'a T: IntoWasmAbi<Abi = A>,
 {
@@ -107,7 +120,10 @@ pub trait FromWasmAbi: WasmDescribe {
     /// A throw runs no destructors, so the generated wrappers convert every
     /// argument with this and throw only once all of them are released.
     /// Implementations must release anything `js` owns before returning an
-    /// error.
+    /// error. One that throws or panics instead, here, in `from_abi` or in
+    /// `IntoWasmAbi::into_abi`, leaves unreleased whatever its caller still
+    /// held or had already converted, such as the other elements of a
+    /// sequence it is in.
     ///
     /// # Safety
     ///
@@ -241,6 +257,10 @@ pub trait RefMutFromWasmAbi: WasmDescribe {
 /// through; a type whose ABI has no spare value implements that trait
 /// directly instead.
 ///
+/// Soft-deprecated: new code should bound on and implement
+/// [`MaybeIntoWasmAbi`]. This trait will be removed in the next major
+/// release.
+///
 /// # ⚠️ Unstable
 ///
 /// This is part of the internal [`convert`](crate::convert) module, **no
@@ -257,6 +277,10 @@ pub trait OptionIntoWasmAbi: IntoWasmAbi {
 
 /// Indicates that this type can be received from JS as `Option<Self>` over
 /// its own ABI. See [`OptionIntoWasmAbi`].
+///
+/// Soft-deprecated: new code should bound on and implement
+/// [`MaybeFromWasmAbi`]. This trait will be removed in the next major
+/// release.
 ///
 /// # ⚠️ Unstable
 ///
@@ -424,6 +448,106 @@ pub trait WasmAbi {
     /// Reconstructs this type from primitives received over the ABI.
     fn join(prim1: Self::Prim1, prim2: Self::Prim2, prim3: Self::Prim3, prim4: Self::Prim4)
         -> Self;
+
+    /// The layout of this type's cell: the type as stored in memory, which a
+    /// sequence holds one of per element. By default the cell is the
+    /// `#[repr(C)]` record of the four primitives, the same split as the wasm
+    /// signature, which is how the CLI lays out the cell's words. An ABI that
+    /// is wider than its primitives stores a record of the cells it is made
+    /// of instead, and overrides this with both cell methods.
+    #[doc(hidden)]
+    const CELL: CellLayout<Self> = CellLayout::PRIMS;
+
+    /// Stores this type in its cell.
+    ///
+    /// # Safety
+    ///
+    /// `cell` must be valid for a write of `CELL`'s size, at its alignment.
+    #[doc(hidden)]
+    #[inline]
+    unsafe fn write_cell(self, cell: *mut u8)
+    where
+        Self: Sized,
+    {
+        let (prim1, prim2, prim3, prim4) = self.split();
+        cell.cast::<AbiCell<Self>>()
+            .write(AbiCell(prim1, prim2, prim3, prim4));
+    }
+
+    /// Takes this type out of its cell.
+    ///
+    /// # Safety
+    ///
+    /// `cell` must hold a cell that [`write_cell`](Self::write_cell), or the
+    /// moral equivalent in JS, stored.
+    #[doc(hidden)]
+    #[inline]
+    unsafe fn read_cell(cell: *const u8) -> Self
+    where
+        Self: Sized,
+    {
+        let AbiCell(prim1, prim2, prim3, prim4) = cell.cast::<AbiCell<Self>>().read();
+        Self::join(prim1, prim2, prim3, prim4)
+    }
+}
+
+#[repr(C)]
+struct AbiCell<A: WasmAbi + ?Sized>(A::Prim1, A::Prim2, A::Prim3, A::Prim4);
+
+/// The size and alignment of `A`'s cell. It names `A`, invariantly, so that
+/// one ABI's can't stand in for another's, a subtype's included, and is other
+/// than the record of `A`'s primitives only through [`CellLayout::new`].
+#[doc(hidden)]
+pub struct CellLayout<A: ?Sized> {
+    size: usize,
+    align: usize,
+    abi: PhantomData<fn(*const A) -> *const A>,
+}
+
+impl<A: ?Sized> Clone for CellLayout<A> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<A: ?Sized> Copy for CellLayout<A> {}
+
+impl<A: WasmAbi + ?Sized> CellLayout<A> {
+    pub const PRIMS: Self = Self {
+        size: mem::size_of::<AbiCell<A>>(),
+        align: mem::align_of::<AbiCell<A>>(),
+        abi: PhantomData,
+    };
+}
+
+impl<A: ?Sized> CellLayout<A> {
+    /// # Safety
+    ///
+    /// This is a layout promise: `A::write_cell` and `A::read_cell` stay
+    /// within `size` bytes at `align`, storing the words the CLI lays out
+    /// for the type's descriptor. `align` is a power of two and `size` a
+    /// multiple of it, as a sequence's cells are `size` apart.
+    pub const unsafe fn new(size: usize, align: usize) -> Self {
+        assert!(
+            align.is_power_of_two() && size % align == 0,
+            "a cell's size is a multiple of its alignment, a power of two"
+        );
+        Self {
+            size,
+            align,
+            abi: PhantomData,
+        }
+    }
+
+    #[inline]
+    pub const fn size(self) -> usize {
+        self.size
+    }
+
+    #[inline]
+    pub const fn align(self) -> usize {
+        self.align
+    }
 }
 
 /// A trait representing how to interpret the return value of a function for
@@ -463,6 +587,10 @@ use core::marker::Sized;
 /// Trait for element types to implement IntoWasmAbi for vectors of
 /// themselves.
 ///
+/// Soft-deprecated and unused: `Vec<T>` and `Box<[T]>` cross for every
+/// `T: IntoWasmAbi`, by the element's own ABI. It will be removed in the
+/// next major release.
+///
 /// # ⚠️ Unstable
 ///
 /// This is part of the internal [`convert`](crate::convert) module, **no
@@ -476,6 +604,10 @@ pub trait VectorIntoWasmAbi: WasmDescribeVector + Sized {
 
 /// Trait for element types to implement FromWasmAbi for vectors of
 /// themselves.
+///
+/// Soft-deprecated and unused: `Vec<T>` and `Box<[T]>` cross for every
+/// `T: FromWasmAbi`, by the element's own ABI. It will be removed in the
+/// next major release.
 ///
 /// # ⚠️ Unstable
 ///
@@ -874,9 +1006,10 @@ impl<T: IntoJsGeneric + Clone> IntoJsGeneric for &T {
 /// This trait is sealed: it is implemented only for the string shapes above,
 /// each of which is guaranteed to produce a JS string on the other side.
 ///
-/// `OptionIntoWasmAbi`, `NullableIntoWasmAbi` and `VectorRefIntoWasmAbi` are
+/// `OptionIntoWasmAbi`, `NullableIntoWasmAbi` and `RefIntoWasmAbi` are
 /// supertraits so that optional and nullable string positions (`Option<T>`,
-/// `Nullable<T>`) and string slices (`&[T]`) work under the same bound. A slice arrives in JS as an `Array` of strings.
+/// `Nullable<T>`) and string slices (`&[T]`) work under the same bound. A
+/// slice arrives in JS as an `Array` of strings.
 ///
 /// This trait is experimental, like `experimental_generic_mono` itself, and
 /// may change or be removed as that feature stabilizes.
@@ -884,7 +1017,7 @@ pub trait JsStringLike:
     IntoWasmAbi
     + OptionIntoWasmAbi
     + NullableIntoWasmAbi
-    + crate::convert::VectorRefIntoWasmAbi
+    + RefIntoWasmAbi
     + crate::__rt::marker::JsStringLikeSealed
 {
 }
@@ -909,4 +1042,154 @@ impl_js_string_like!(
 /// for `Promise<T>` as a rejected promise, so the throw arrives at `.await`.
 pub trait FromCaughtException {
     fn from_caught_exception(e: JsValue) -> Self;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{CellLayout, WasmAbi};
+    use crate::__rt::WasmWord;
+    use crate::convert::WasmSlice;
+    use alloc::alloc::{alloc, dealloc, Layout};
+
+    const fn round_up(n: usize, align: usize) -> usize {
+        (n + align - 1) & !(align - 1)
+    }
+
+    const fn max(a: usize, b: usize) -> usize {
+        if a > b {
+            a
+        } else {
+            b
+        }
+    }
+
+    // A pair is wider than the primitives, so it crosses as a pointer to its
+    // cell, which is the record of its parts' cells. This is generic over
+    // both parts next to the blanket impl for primitives, which is what a
+    // tuple ABI needs to be. `tests/wasm/abi_cells.rs` crosses one, where a
+    // pointer fits the word.
+    impl<A: WasmAbi, B: WasmAbi> WasmAbi for (A, B) {
+        type Prim1 = <WasmWord as WasmAbi>::Prim1;
+        type Prim2 = ();
+        type Prim3 = ();
+        type Prim4 = ();
+
+        const CELL: CellLayout<Self> = {
+            let align = max(A::CELL.align(), B::CELL.align());
+            unsafe { CellLayout::new(round_up(second::<A, B>() + B::CELL.size(), align), align) }
+        };
+
+        fn split(self) -> (Self::Prim1, (), (), ()) {
+            unsafe {
+                let cell = alloc(layout::<Self>());
+                self.write_cell(cell);
+                WasmWord::from_usize(cell as usize).split()
+            }
+        }
+
+        fn join(ptr: Self::Prim1, _: (), _: (), _: ()) -> Self {
+            let cell = WasmWord::join(ptr, (), (), ()).into_usize() as *mut u8;
+            unsafe {
+                let pair = Self::read_cell(cell);
+                dealloc(cell, layout::<Self>());
+                pair
+            }
+        }
+
+        unsafe fn write_cell(self, cell: *mut u8) {
+            self.0.write_cell(cell);
+            self.1.write_cell(cell.add(second::<A, B>()));
+        }
+
+        unsafe fn read_cell(cell: *const u8) -> Self {
+            (A::read_cell(cell), B::read_cell(cell.add(second::<A, B>())))
+        }
+    }
+
+    /// The offset of a pair's second part in its cell.
+    const fn second<A: WasmAbi, B: WasmAbi>() -> usize {
+        round_up(A::CELL.size(), B::CELL.align())
+    }
+
+    fn cell<A: WasmAbi>() -> (usize, usize) {
+        (A::CELL.size(), A::CELL.align())
+    }
+
+    fn layout<A: WasmAbi>() -> Layout {
+        Layout::from_size_align(A::CELL.size(), A::CELL.align()).unwrap()
+    }
+
+    // An ABI written against the trait before it had a cell.
+    struct External(u32, f64);
+
+    impl WasmAbi for External {
+        type Prim1 = u32;
+        type Prim2 = f64;
+        type Prim3 = ();
+        type Prim4 = ();
+
+        fn split(self) -> (u32, f64, (), ()) {
+            (self.0, self.1, (), ())
+        }
+
+        fn join(a: u32, b: f64, _: (), _: ()) -> Self {
+            Self(a, b)
+        }
+    }
+
+    #[test]
+    fn primitive_cells_are_their_primitives() {
+        assert_eq!(cell::<u32>(), (4, 4));
+        assert_eq!(cell::<f64>(), (8, 8));
+        assert_eq!(cell::<WasmSlice>().0, 2 * cell::<WasmWord>().0);
+        assert_eq!(cell::<u128>().0, 16);
+        assert_eq!(cell::<()>().0, 0);
+        assert_eq!(cell::<External>(), (16, 8));
+
+        let mut cell = [0u64; 2];
+        let External(a, b) = unsafe {
+            External(7, 1.5).write_cell(cell.as_mut_ptr().cast());
+            External::read_cell(cell.as_ptr().cast())
+        };
+        assert_eq!((a, b), (7, 1.5));
+    }
+
+    #[test]
+    #[should_panic(expected = "multiple of its alignment")]
+    fn cell_strides_by_its_size() {
+        unsafe { CellLayout::<f64>::new(12, 8) };
+    }
+
+    // Laid out for a 32-bit pointer word, which wasm32 and a native host
+    // both have.
+    #[cfg(not(target_arch = "wasm64"))]
+    #[test]
+    fn wide_cell_is_a_record_of_cells() {
+        // `{ ptr, len, n }`
+        type Named = (WasmSlice, u32);
+        assert_eq!(cell::<Named>(), (12, 4));
+        assert_eq!(second::<WasmSlice, u32>(), 8);
+
+        // `{ { ptr, len, n }, pad, x }`: nested, not the flat run of words.
+        type Nested = (Named, f64);
+        assert_eq!(cell::<Nested>(), (24, 8));
+        assert_eq!(second::<Named, f64>(), 16);
+
+        // `{ n, pad, { x, m } }` keeps the inner record's padding.
+        type Padded = (u32, (f64, u32));
+        assert_eq!(cell::<Padded>().0, 24);
+        assert_eq!(second::<u32, (f64, u32)>(), 8);
+
+        let abi: Nested = ((WasmSlice::from_usize(8, 2), 7), 1.5);
+        let mut cell = [0u64; 3];
+        let ((slice, n), x) = unsafe {
+            abi.write_cell(cell.as_mut_ptr().cast());
+            Nested::read_cell(cell.as_ptr().cast())
+        };
+        assert_eq!(cell[2], 1.5f64.to_bits());
+        assert_eq!(
+            (slice.ptr.into_usize(), slice.len.into_usize(), n, x),
+            (8, 2, 7, 1.5)
+        );
+    }
 }

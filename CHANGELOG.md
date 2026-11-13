@@ -17,6 +17,30 @@
   provide its own.
   [#5446](https://github.com/wasm-bindgen/wasm-bindgen/pull/5446)
 
+* `Vec<T>` and `Box<[T]>` cross for every `T` that crosses on its own, and
+  `&[T]` as an imported function's argument for every `T` whose `&T` does,
+  by the element's own `IntoWasmAbi` / `FromWasmAbi`. `Vec<Option<T>>`, `Vec<Nullable<T>>`,
+  `Vec<Vec<T>>` and vectors of types with hand-written conversions newly
+  cross, in arguments, returns and `JsValue::from`, and `&[Closure<T>]` as
+  an imported function's argument. A borrowed slice of numbers held by a
+  sequence, such as each `&[u8]` of a `Vec<&[u8]>`, reaches JS as a copy
+  and never as a view of wasm memory. A borrowed vector (`&Vec<T>`,
+  `&Box<[T]>`) is an imported function's argument too, reaching JS as a
+  copy, as the vector does, and may be optional (`Option<&Vec<T>>`). A
+  reference that a borrowed sequence holds is lent as itself, so `&[&T]`
+  and `&[&[T]]` cross wherever `&T` does, to any depth, and `&[Option<&T>]`
+  where `Option<&T>` does, and a slice of numbers behind a second reference
+  (`&&[u8]`) is a copy as a nested one is. Three elements don't cross: `()`, which crosses
+  as nothing, a `&mut [T]`, whose copy JS's writes would never leave, and a
+  borrowed closure (`&dyn Fn()`) in a value Rust returns or converts with
+  `JsValue::from`, which outlives the call it is lent for.
+  [#5471](https://github.com/wasm-bindgen/wasm-bindgen/pull/5471)
+
+* A dynamic-union enum is a `Vec<T>` / `Box<[T]>` element in both
+  directions, crossing as a JS array whose elements are each converted as a
+  single value is, and typed as `Union[]`.
+  [#5471](https://github.com/wasm-bindgen/wasm-bindgen/pull/5471)
+
 * Added `aarch64-pc-windows-msvc` release artifacts.
   [#5439](https://github.com/wasm-bindgen/wasm-bindgen/pull/5439)
 
@@ -45,6 +69,26 @@
   [#5457](https://github.com/wasm-bindgen/wasm-bindgen/pull/5457)
 
 ### Changed
+
+* `VectorIntoWasmAbi`, `VectorFromWasmAbi` and `WasmDescribeVector` are
+  soft-deprecated and no longer read: a vector crosses by its element's
+  `IntoWasmAbi` / `FromWasmAbi`. Existing impls still compile. A type that
+  implemented them without `IntoWasmAbi` / `FromWasmAbi` no longer crosses in
+  a `Vec`, and generic code bounded by them alone needs `T: IntoWasmAbi` /
+  `T: FromWasmAbi` to pass a `Vec<T>`. `OptionIntoWasmAbi` and
+  `OptionFromWasmAbi` are soft-deprecated in favour of `MaybeIntoWasmAbi` and
+  `MaybeFromWasmAbi`. All five will be removed in the next major release.
+  A `&&T` crosses as its `&T` does, so a hand-written `IntoWasmAbi` for a
+  `&&T` whose `&T` also implements it now conflicts and can be removed.
+  [#5471](https://github.com/wasm-bindgen/wasm-bindgen/pull/5471)
+
+* A `Vec<String>` and a `Vec` of an exported Rust type reach the generated JS
+  as each element's own ABI rather than as a list of JS handles. What JS
+  passes and receives is unchanged, except that a wrong element in what a
+  `catch` import returns is now that import's `Err` rather than an exception
+  thrown from the export that called it, and that a call rejected for an
+  argument of the wrong class now leaves its other arguments untouched.
+  [#5471](https://github.com/wasm-bindgen/wasm-bindgen/pull/5471)
 
 * Stabilized the `js_sys::Temporal` bindings and `Date::to_temporal_instant`,
   previously behind `js_sys_unstable_apis`, now that Temporal is Stage 4 and
@@ -155,6 +199,11 @@
   [#5458](https://github.com/wasm-bindgen/wasm-bindgen/pull/5458)
 
 ### Removed
+
+* Removed `convert::VectorRefIntoWasmAbi`. A `&[T]` crosses for every
+  `T: RefIntoWasmAbi`, which is the bound to declare on an
+  `experimental_generic_mono` import in its place.
+  [#5471](https://github.com/wasm-bindgen/wasm-bindgen/pull/5471)
 
 ## [0.2.130](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.129...0.2.130)
 

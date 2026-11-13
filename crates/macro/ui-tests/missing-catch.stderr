@@ -12,10 +12,10 @@ error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, wasm_bindgen::JsVal
             *const T
             *mut T
             AssertUnwindSafe<T>
-            Box<[T]>
-            Clamped<T>
-            JsError
-            JsNullable<T>
+            Box<[MaybeUninit<f32>]>
+            Box<[MaybeUninit<f64>]>
+            Box<[MaybeUninit<i16>]>
+            Box<[MaybeUninit<i32>]>
           and $N others
   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
@@ -30,8 +30,8 @@ error[E0277]: the trait bound `Result<wasm_bindgen::JsValue, wasm_bindgen::JsVal
             *const T
             *mut T
             AssertUnwindSafe<T>
-            Box<[T]>
-            Clamped<T>
-            JsError
-            JsNullable<T>
+            Box<[MaybeUninit<f32>]>
+            Box<[MaybeUninit<f64>]>
+            Box<[MaybeUninit<i16>]>
+            Box<[MaybeUninit<i32>]>
           and $N others

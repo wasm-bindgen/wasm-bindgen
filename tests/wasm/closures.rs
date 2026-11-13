@@ -1263,3 +1263,88 @@ mod closure_variance {
         let _equiv: &mut Closure<dyn Fn(Undefined)> = (&mut closure).upcast_into();
     }
 }
+
+// A `&[Closure<T>]` crosses as a buffer of each `&Closure<T>`'s handle, which
+// JS decodes and frees.
+mod slices {
+    use super::*;
+
+    #[wasm_bindgen(module = "tests/wasm/closures.js")]
+    extern "C" {
+        fn call_each(fs: &[Closure<dyn Fn(u32)>]) -> u32;
+        fn map_each(fs: Vec<&dyn Fn(u32) -> u32>) -> Vec<u32>;
+        fn map_each_nested(fs: Vec<Vec<&dyn Fn(u32) -> u32>>) -> Vec<u32>;
+        fn count_each(fs: Vec<&mut dyn FnMut()>);
+        fn keep_each(fs: Vec<&dyn Fn(u32) -> u32>);
+        fn kept_each_are_dead() -> bool;
+        #[wasm_bindgen(js_name = map_each)]
+        fn map_each_lent(fs: &[&dyn Fn(u32) -> u32]) -> Vec<u32>;
+        #[wasm_bindgen(js_name = map_each_nested)]
+        fn map_each_nested_lent(fs: &[&[&dyn Fn(u32) -> u32]]) -> Vec<u32>;
+        #[wasm_bindgen(js_name = map_each)]
+        fn map_each_twice_lent(fs: Vec<&&dyn Fn(u32) -> u32>) -> Vec<u32>;
+        #[wasm_bindgen(js_name = keep_each)]
+        fn keep_each_lent(fs: &[&dyn Fn(u32) -> u32]);
+        #[wasm_bindgen(js_name = keep_each)]
+        fn keep_each_nested_lent(fs: &[&[&dyn Fn(u32) -> u32]]);
+    }
+
+    // Each lent closure is its own, and is JS's to call until the call that
+    // lent it returns.
+    #[wasm_bindgen_test]
+    fn lent_closures() {
+        let add = |x: u32| x + 1;
+        let scale = |x: u32| x * 10;
+        let square = |x: u32| x * x;
+        assert_eq!(map_each(vec![&add, &scale, &square]), [4, 30, 9]);
+        assert_eq!(
+            map_each_nested(vec![vec![&add, &scale], vec![], vec![&square]]),
+            [4, 30, 9]
+        );
+        assert!(map_each(vec![]).is_empty());
+
+        let mut a = 0;
+        let mut b = 0;
+        count_each(vec![&mut || a += 1, &mut || b += 2]);
+        assert_eq!((a, b), (1, 2));
+
+        keep_each(vec![&add, &scale]);
+        assert!(kept_each_are_dead());
+    }
+
+    // A sequence that is itself lent lends its closures for as long.
+    #[wasm_bindgen_test]
+    fn closures_lent_by_a_lent_sequence() {
+        let add = |x: u32| x + 1;
+        let scale = |x: u32| x * 10;
+        let fs: [&dyn Fn(u32) -> u32; 2] = [&add, &scale];
+        assert_eq!(map_each_lent(&fs), [4, 30]);
+        assert_eq!(map_each_nested_lent(&[&fs, &[], &fs[1..]]), [4, 30, 30]);
+        assert_eq!(map_each_twice_lent(vec![&fs[1], &fs[0]]), [30, 4]);
+        assert!(map_each_lent(&[]).is_empty());
+
+        keep_each_lent(&fs);
+        assert!(kept_each_are_dead());
+        keep_each_nested_lent(&[&fs]);
+        assert!(kept_each_are_dead());
+        // They were lent, so they are still Rust's to lend again.
+        assert_eq!(map_each_lent(&fs), [4, 30]);
+    }
+
+    #[wasm_bindgen_test]
+    fn borrowed_closures() {
+        let sum = Rc::new(Cell::new(0));
+        let closures: Vec<Closure<dyn Fn(u32)>> = (1..=3)
+            .map(|i| {
+                let sum = sum.clone();
+                Closure::own_aborting(move |x: u32| sum.set(sum.get() + i * x))
+            })
+            .collect();
+        assert_eq!(call_each(&closures), 3);
+        assert_eq!(sum.get(), 60);
+        // JS only borrowed them, so they are still Rust's to call again.
+        assert_eq!(call_each(&closures), 3);
+        assert_eq!(sum.get(), 120);
+        assert_eq!(call_each(&[]), 0);
+    }
+}

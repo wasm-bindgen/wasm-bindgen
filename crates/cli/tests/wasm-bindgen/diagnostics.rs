@@ -761,6 +761,20 @@ fn seq_modes_are_validated_when_explicit() {
              always reaches JS as a fresh `Array`",
         ),
         (
+            "seq_mode_slice_on_slice_behind_ref",
+            "fn f(#[wasm_bindgen(slice = view)] xs: &&[u8]);",
+            "&&[1][..]",
+            "`slice = view` can't apply to this argument: `slice` applies to borrowed slices; \
+             for an owned `Vec<T>` use `vec = copy | array`",
+        ),
+        (
+            "seq_mode_slice_on_optional_borrowed_vec",
+            "fn f(#[wasm_bindgen(slice = copy)] xs: Option<&Vec<u8>>);",
+            "None",
+            "`slice = copy` can't apply to this argument: `slice` applies to borrowed slices; \
+             for an owned `Vec<T>` use `vec = copy | array`",
+        ),
+        (
             "seq_mode_slice_on_scalar",
             "fn f(#[wasm_bindgen(slice = copy)] x: u32);",
             "1",
@@ -790,12 +804,191 @@ fn seq_modes_are_validated_when_explicit() {
                     #[wasm_bindgen(slice = array)] strings: &[String],
                     #[wasm_bindgen(vec = array)] owned: Vec<String>,
                 );
+                fn h(
+                    behind_ref: &&[u8],
+                    #[wasm_bindgen(vec = copy)] copied: &&[u8],
+                    #[wasm_bindgen(vec = array)] optional: Option<&Vec<u8>>,
+                    #[wasm_bindgen(slice = array)] nested: &[&[u8]],
+                );
             }
         "#,
         r#"
             f(&[1], vec![2], vec![3], &["a".to_string()]);
             g(&["a".to_string()], vec!["b".to_string()]);
+            h(&&[1][..], &&[2][..], None, &[&[3]]);
         "#,
     )
     .unwrap();
+}
+
+/// A value Rust returns is JS's for good, so it can't hold a closure that is
+/// only lent for a call.
+#[test]
+fn returned_sequence_cannot_lend_a_closure() {
+    let err = Project::new("returned_sequence_cannot_lend_a_closure")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen]
+                pub fn lent() -> Vec<&'static dyn Fn()> {
+                    Vec::new()
+                }
+            "#,
+        )
+        .wasm_bindgen("")
+        .unwrap_err();
+
+    assert_contains!(
+        format!("{err:?}"),
+        "a closure can't be lent by a value that Rust returns"
+    );
+}
+
+/// As is the value `JsValue::from` makes of one.
+#[test]
+fn cast_sequence_cannot_lend_a_closure() {
+    let err = Project::new("cast_sequence_cannot_lend_a_closure")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen]
+                pub fn lent() -> JsValue {
+                    let f = || {};
+                    JsValue::from(vec![&f as &dyn Fn()])
+                }
+            "#,
+        )
+        .wasm_bindgen("")
+        .unwrap_err();
+
+    assert_contains!(
+        format!("{err:?}"),
+        "a closure can't be lent by a value that Rust returns"
+    );
+}
+
+/// Behind a second reference the closure is lent no longer.
+#[test]
+fn returned_sequence_cannot_lend_a_closure_behind_a_reference() {
+    let err = Project::new("returned_sequence_cannot_lend_a_closure_behind_a_reference")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen]
+                pub fn lent() -> Vec<&'static &'static dyn Fn()> {
+                    Vec::new()
+                }
+            "#,
+        )
+        .wasm_bindgen("")
+        .unwrap_err();
+
+    assert_contains!(
+        format!("{err:?}"),
+        "a closure can't be lent by a value that Rust returns"
+    );
+}
+
+#[test]
+fn cast_sequence_cannot_lend_a_closure_behind_a_reference() {
+    let err = Project::new("cast_sequence_cannot_lend_a_closure_behind_a_reference")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen]
+                pub fn lent() -> JsValue {
+                    let f = || {};
+                    let f: &dyn Fn() = &f;
+                    JsValue::from(vec![&f])
+                }
+            "#,
+        )
+        .wasm_bindgen("")
+        .unwrap_err();
+
+    assert_contains!(
+        format!("{err:?}"),
+        "a closure can't be lent by a value that Rust returns"
+    );
+}
+
+/// Only the argument itself is a view of wasm memory, so a sequence would
+/// hold a copy of a `&mut [T]`, which JS's writes never leave.
+#[test]
+fn sequence_cannot_hold_a_mutable_slice() {
+    let err = Project::new("sequence_cannot_hold_a_mutable_slice")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen]
+                extern "C" {
+                    fn take(v: Vec<&mut [u32]>);
+                }
+
+                #[wasm_bindgen]
+                pub fn run() {
+                    take(Vec::new());
+                }
+            "#,
+        )
+        .wasm_bindgen("")
+        .unwrap_err();
+
+    assert_contains!(format!("{err:?}"), "a `&mut [T]` can't be an element");
+}
+
+/// A sequence that is lent has no borrowed form of a `&mut [T]` to lend.
+#[test]
+fn lent_sequence_cannot_hold_a_mutable_slice() {
+    let err = Project::new("lent_sequence_cannot_hold_a_mutable_slice")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen]
+                extern "C" {
+                    fn take(v: &[&mut [u32]]);
+                }
+
+                #[wasm_bindgen]
+                pub fn run() {
+                    take(&[]);
+                }
+            "#,
+        )
+        .build_err();
+
+    assert_contains!(err, "`&mut [u32]: RefIntoWasmAbi` is not satisfied");
+}
+
+/// `()` crosses as nothing, so a sequence has no cell to hold one in, which
+/// the build finds where it lays the element out.
+#[test]
+fn sequence_cannot_hold_unit() {
+    let err = Project::new("sequence_cannot_hold_unit")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen]
+                pub fn units() -> JsValue {
+                    JsValue::from(vec![(), ()])
+                }
+            "#,
+        )
+        .build_err();
+
+    assert_contains!(err, "a sequence's element must cross as at least one word");
 }

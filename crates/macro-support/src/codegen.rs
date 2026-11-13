@@ -661,67 +661,7 @@ impl ToTokens for ast::Struct {
                         }
                     }
                 }
-
-                #[automatically_derived]
-                impl #wasm_bindgen::convert::VectorFromWasmAbi for #name {
-                    type Abi = <
-                        #wasm_bindgen::__rt::alloc::boxed::Box<[#wasm_bindgen::JsValue]>
-                        as #wasm_bindgen::convert::FromWasmAbi
-                    >::Abi;
-
-                    unsafe fn vector_from_abi(
-                        js: Self::Abi
-                    ) -> #wasm_bindgen::__rt::alloc::boxed::Box<[#name]> {
-                        match <Self as #wasm_bindgen::convert::VectorFromWasmAbi>::try_vector_from_abi(js) {
-                            #wasm_bindgen::__rt::core::result::Result::Ok(vector) => vector,
-                            #wasm_bindgen::__rt::core::result::Result::Err(msg) => #wasm_bindgen::throw_str(msg),
-                        }
-                    }
-
-                    unsafe fn try_vector_from_abi(
-                        js: Self::Abi
-                    ) -> #wasm_bindgen::__rt::core::result::Result<
-                        #wasm_bindgen::__rt::alloc::boxed::Box<[#name]>,
-                        &'static str,
-                    > {
-                        <#wasm_bindgen::__rt::alloc::vec::Vec<#wasm_bindgen::JsValue> as #wasm_bindgen::convert::FromWasmAbi>::from_abi(js)
-                            .into_iter()
-                            .map(|value| {
-                                let ptr = unwrap(&value);
-                                if ptr.is_null() {
-                                    #wasm_bindgen::__rt::core::result::Result::Err(#wasm_bindgen::__rt::WRONG_TYPE_ERROR)
-                                } else {
-                                    <Self as #wasm_bindgen::convert::FromWasmAbi>::try_from_abi(ptr)
-                                }
-                            })
-                            .collect()
-                    }
-                }
             };
-
-            #[automatically_derived]
-            impl #wasm_bindgen::describe::WasmDescribeVector for #name {
-                fn describe_vector() {
-                    use #wasm_bindgen::describe::*;
-                    inform(VECTOR);
-                    <#name as #wasm_bindgen::describe::WasmDescribe>::describe();
-                }
-            }
-
-            #[automatically_derived]
-            impl #wasm_bindgen::convert::VectorIntoWasmAbi for #name {
-                type Abi = <
-                    #wasm_bindgen::__rt::alloc::boxed::Box<[#wasm_bindgen::JsValue]>
-                    as #wasm_bindgen::convert::IntoWasmAbi
-                >::Abi;
-
-                fn vector_into_abi(
-                    vector: #wasm_bindgen::__rt::alloc::boxed::Box<[#name]>
-                ) -> Self::Abi {
-                    #wasm_bindgen::convert::js_value_vector_into_abi(vector)
-                }
-            }
-
         })
         .to_tokens(tokens);
 
@@ -1886,6 +1826,10 @@ impl TryToTokens for ast::ImportType {
 
                 #[automatically_derived]
                 impl #impl_generics WasmDescribe for #rust_name #ty_generics #where_clause {
+                    // SAFETY: A handle's memory is its table index.
+                    const ABI_TRANSPARENT: #wasm_bindgen::describe::AbiTransparent<Self> =
+                        unsafe { #wasm_bindgen::describe::AbiTransparent::yes() };
+
                     fn describe() {
                         #description
                     }
@@ -1963,19 +1907,6 @@ impl TryToTokens for ast::ImportType {
                         (&self.obj).into_abi()
                     }
                 }
-
-                // A handle's memory is its table index, so a slice of them is
-                // borrowed as is.
-                #[automatically_derived]
-                impl #impl_generics #wasm_bindgen::convert::VectorRefIntoWasmAbi for #rust_name #ty_generics #where_clause {
-                    #[inline]
-                    fn slice_into_abi(slice: &[Self]) -> #wasm_bindgen::convert::WasmSlice {
-                        #wasm_bindgen::convert::WasmSlice::borrow(slice)
-                    }
-                }
-
-                #[automatically_derived]
-                impl #impl_generics #wasm_bindgen::__rt::marker::VectorRefIntoWasmAbiSealed for #rust_name #ty_generics #where_clause {}
 
                 #[automatically_derived]
                 impl #impl_generics RefFromWasmAbi for #rust_name #ty_generics #where_clause {
@@ -2412,14 +2343,31 @@ impl ToTokens for ast::StringEnum {
                 }
             }
 
-            #wasm_bindgen::__wbindgen_encoded_sequence!(
-                #enum_name,
-                |e| match e {
-                    #(#variant_paths_ref => #variant_indices,)*
-                    #enum_name::__Invalid => #invalid,
-                },
-                [ref_into, into, from]
-            );
+            // A borrowed enum crosses by copy, as a borrowed number does.
+            #[automatically_derived]
+            impl #wasm_bindgen::convert::IntoWasmAbi for &#enum_name {
+                type Abi = u32;
+
+                #[inline]
+                fn into_abi(self) -> u32 {
+                    match self {
+                        #(#variant_paths_ref => #variant_indices,)*
+                        #enum_name::__Invalid => #invalid,
+                    }
+                }
+            }
+
+            #[automatically_derived]
+            impl #wasm_bindgen::convert::OptionIntoWasmAbi for &#enum_name {
+                #[inline]
+                fn none() -> Self::Abi { #hole }
+            }
+
+            #[automatically_derived]
+            impl #wasm_bindgen::convert::NullableIntoWasmAbi for &#enum_name {
+                #[inline]
+                fn null() -> Self::MaybeAbi { #null_hole }
+            }
 
             #[automatically_derived]
             impl #wasm_bindgen::convert::FromWasmAbi for #enum_name {
@@ -3861,7 +3809,7 @@ impl ast::ImportFunction {
 
             let mut ref_elem = None;
             // A slice (`Option<&[T]>` included) is marshalled directly,
-            // needing its element's `VectorRefIntoWasmAbi`.
+            // needing its element's `RefIntoWasmAbi`.
             let is_slice = detect_slice_or_option_slice(ty).is_some_and(|s| {
                 !s.is_mut
                     && !s.is_clamped
@@ -3931,17 +3879,26 @@ impl ast::ImportFunction {
             };
 
             let (abi, into_abi, describe) = match &ref_elem {
-                Some(elem) => (
-                    quote_spanned! { ty_span =>
-                        <#elem as #wasm_bindgen::convert::RefIntoWasmAbi>::Abi
-                    },
-                    quote_spanned! { ty_span =>
-                        <#elem as #wasm_bindgen::convert::RefIntoWasmAbi>::ref_into_abi
-                    },
-                    quote_spanned! { ty_span =>
-                        <#elem as #wasm_bindgen::convert::RefIntoWasmAbi>::describe_ref
-                    },
-                ),
+                Some(elem) => {
+                    // The words `seq_mode_describe_ty` wraps around a type,
+                    // ahead of a describe that isn't one's.
+                    let modes = seq_mode_words(ty, &arg.seq_modes).into_iter().rev();
+                    (
+                        quote_spanned! { ty_span =>
+                            <#elem as #wasm_bindgen::convert::RefIntoWasmAbi>::Abi
+                        },
+                        quote_spanned! { ty_span =>
+                            <#elem as #wasm_bindgen::convert::RefIntoWasmAbi>::ref_into_abi
+                        },
+                        quote_spanned! { ty_span =>
+                            #(
+                                #wasm_bindgen::describe::inform(#wasm_bindgen::describe::SEQ_MODE);
+                                #wasm_bindgen::describe::inform(#modes);
+                            )*
+                            <#elem as #wasm_bindgen::convert::RefIntoWasmAbi>::describe_ref()
+                        },
+                    )
+                }
                 None => {
                     let describe_ty = respan_all(
                         seq_mode_describe_ty(wasm_bindgen, ty, &arg.seq_modes).to_token_stream(),
@@ -3955,7 +3912,7 @@ impl ast::ImportFunction {
                             <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>::into_abi
                         },
                         quote_spanned! { ty_span =>
-                            <#describe_ty as #wasm_bindgen::describe::WasmDescribe>::describe
+                            <#describe_ty as #wasm_bindgen::describe::WasmDescribe>::describe()
                         },
                     )
                 }
@@ -3968,7 +3925,7 @@ impl ast::ImportFunction {
             });
             all_prim_names.extend(names);
             describe_args.push(quote_spanned! { ty_span =>
-                #describe();
+                #describe;
             });
         }
 
@@ -5537,13 +5494,30 @@ impl ToTokens for ast::Enum {
                 }
             }
 
-            #wasm_bindgen::__wbindgen_encoded_sequence!(
-                #enum_name,
-                |e| match e {
-                    #(#enum_name::#variant_names => #enum_name::#variant_names as #underlying as f64,)*
-                },
-                [ref_into, into, from]
-            );
+            // A borrowed enum crosses by copy, as a borrowed number does.
+            #[automatically_derived]
+            impl #wasm_bindgen::convert::IntoWasmAbi for &#enum_name {
+                type Abi = f64;
+
+                #[inline]
+                fn into_abi(self) -> f64 {
+                    match self {
+                        #(#enum_name::#variant_names => #enum_name::#variant_names as #underlying as f64,)*
+                    }
+                }
+            }
+
+            #[automatically_derived]
+            impl #wasm_bindgen::convert::OptionIntoWasmAbi for &#enum_name {
+                #[inline]
+                fn none() -> Self::Abi { #hole as f64 }
+            }
+
+            #[automatically_derived]
+            impl #wasm_bindgen::convert::NullableIntoWasmAbi for &#enum_name {
+                #[inline]
+                fn null() -> Self::MaybeAbi { #wasm_bindgen::convert::F64_ABI_NULL_SENTINEL }
+            }
 
             #[automatically_derived]
             impl #wasm_bindgen::convert::FromWasmAbi for #enum_name {
@@ -6120,7 +6094,15 @@ fn seq_mode_describe_ty(
     modes: &[ast::SeqMode],
 ) -> syn::Type {
     let mut describe = ty.clone();
-    for mode in modes {
+    for word in seq_mode_words(ty, modes) {
+        describe = parse_quote! { #wasm_bindgen::describe::WasmDescribeSeqMode<#describe, #word> };
+    }
+    describe
+}
+
+/// The word of each mode that reaches the argument, innermost first.
+fn seq_mode_words(ty: &syn::Type, modes: &[ast::SeqMode]) -> Vec<u32> {
+    let word = |mode: &ast::SeqMode| {
         let value = match mode.value {
             ast::SeqValue::View => shared::tys::SEQ_MODE_VIEW,
             ast::SeqValue::Copy => shared::tys::SEQ_MODE_COPY,
@@ -6130,7 +6112,7 @@ fn seq_mode_describe_ty(
             {
                 shared::tys::SEQ_MODE_ARRAY
             }
-            ast::SeqValue::SliceToArray => continue,
+            ast::SeqValue::SliceToArray => return None,
         };
         let key = match mode.key {
             ast::SeqKey::Slice => 0,
@@ -6141,10 +6123,9 @@ fn seq_mode_describe_ty(
         } else {
             0
         };
-        let word = value | key | explicit;
-        describe = parse_quote! { #wasm_bindgen::describe::WasmDescribeSeqMode<#describe, #word> };
-    }
-    describe
+        Some(value | key | explicit)
+    };
+    modes.iter().filter_map(word).collect()
 }
 
 /// Detects whether a type is a raw `&dyn Fn(...)` or `&mut dyn FnMut(...)` argument.

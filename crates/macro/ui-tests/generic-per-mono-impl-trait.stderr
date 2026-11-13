@@ -54,7 +54,7 @@ note: required by a bound in `nested_impl_trait`
    |
 27 |     fn nested_impl_trait<T: IntoWasmAbi>(
    |        ----------------- required by a bound in this function
-28 |         x: Vec<impl Marker + VectorIntoWasmAbi<Abi = WasmSlice>>,
+28 |         x: Vec<impl Marker + IntoWasmAbi>,
    |                     ^^^^^^ required by this bound in `nested_impl_trait`
 
 error[E0277]: the trait bound `u32: Marker` is not satisfied

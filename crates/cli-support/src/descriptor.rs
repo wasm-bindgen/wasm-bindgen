@@ -96,6 +96,9 @@ pub enum Descriptor {
     /// that applies to it, or that was written on it, for the binding to
     /// validate (see [`Descriptor::seq_mode_fit`]).
     SeqMode(SeqMode, Box<Descriptor>),
+    /// A sequence element whose memory isn't the cell its descriptor implies,
+    /// so the sequence holds a cell of its ABI instead.
+    Cell(Box<Descriptor>),
 }
 
 /// How a sequence's cells hold its elements, which the element's descriptor
@@ -255,6 +258,7 @@ impl Descriptor {
             VECTOR => Descriptor::Vector(Box::new(Descriptor::_decode(data, clamped))),
             OPTIONAL => Descriptor::Option(Box::new(Descriptor::_decode(data, clamped))),
             NULLABLE => Descriptor::Nullable(Box::new(Descriptor::_decode(data, clamped))),
+            ABI_CELL => Descriptor::Cell(Box::new(Descriptor::_decode(data, clamped))),
             RESULT => Descriptor::Result(Box::new(Descriptor::_decode(data, clamped))),
             CACHED_STRING => Descriptor::CachedString,
             STRING => Descriptor::String,
@@ -361,7 +365,8 @@ impl Descriptor {
             | Descriptor::RefMut(d)
             | Descriptor::Slice(d)
             | Descriptor::Vector(d)
-            | Descriptor::Result(d) => d.visit_named_types_mut(f),
+            | Descriptor::Result(d)
+            | Descriptor::Cell(d) => d.visit_named_types_mut(f),
             Descriptor::Option(inner) | Descriptor::Nullable(inner) => {
                 inner.visit_named_types_mut(f)
             }
@@ -456,6 +461,22 @@ impl Descriptor {
             Descriptor::Option(inner) => inner,
             d => d,
         };
+        // A borrowed vector reaches JS as the vector does, under `vec`, and
+        // so does a slice behind a second reference.
+        let d = match d {
+            Descriptor::Ref(first) => {
+                let mut referent = &**first;
+                while let Descriptor::Ref(next) = referent {
+                    referent = next;
+                }
+                match referent {
+                    Descriptor::Vector(_) => referent,
+                    Descriptor::Slice(_) if matches!(**first, Descriptor::Ref(_)) => referent,
+                    _ => d,
+                }
+            }
+            d => d,
+        };
         let (borrowed, mutable) = match d {
             Descriptor::Ref(s) => (matches!(**s, Descriptor::Slice(_)), false),
             Descriptor::RefMut(s) => (matches!(**s, Descriptor::Slice(_)), true),
@@ -466,12 +487,14 @@ impl Descriptor {
                 kind,
                 VectorKind::String | VectorKind::Externref | VectorKind::NamedExternref(_)
             )
+        }) || d.sequence_elem().is_some_and(|elem| {
+            matches!(elem.sequence_cell(), SequenceCell::Encoded(cell) if cell.typed_cell().is_some())
         });
-        let owned = matches!(d, Descriptor::Vector(_));
+        let owned = matches!(d, Descriptor::Vector(_) | Descriptor::Slice(_));
         let misfit = if mode.vec && borrowed {
             "`vec` applies to owned vectors; for a borrowed `&[T]` use `slice = view | copy | array`"
         } else if mode.vec && !owned {
-            "`vec` applies to owned vector arguments (`Vec<T>`, `Box<[T]>`)"
+            "`vec` applies to vector arguments (`Vec<T>`, `Box<[T]>`, `&Vec<T>`, `&Box<[T]>`, `&&[T]`)"
         } else if !mode.vec && owned {
             "`slice` applies to borrowed slices; for an owned `Vec<T>` use `vec = copy | array`"
         } else if !mode.vec && !borrowed {
@@ -487,6 +510,17 @@ impl Descriptor {
             Err(misfit)
         } else {
             Ok(false)
+        }
+    }
+
+    fn sequence_elem(&self) -> Option<&Descriptor> {
+        match self {
+            Descriptor::Vector(d) | Descriptor::Slice(d) => Some(d),
+            Descriptor::Ref(d) | Descriptor::RefMut(d) => match &**d {
+                Descriptor::Slice(d) => Some(d),
+                _ => None,
+            },
+            _ => None,
         }
     }
 
@@ -513,9 +547,24 @@ impl Descriptor {
     /// a number or a JS handle, and its scalar ABI for anything else, which
     /// the binding rejects if it has no glue for it.
     pub fn sequence_cell(&self) -> SequenceCell<'_> {
+        if let Descriptor::Cell(d) = self {
+            return SequenceCell::Encoded(d);
+        }
         match self.in_place_kind() {
             Some(kind) => SequenceCell::InPlace(kind),
             None => SequenceCell::Encoded(self),
+        }
+    }
+
+    /// The typed array that a buffer of this encoded element's cells already
+    /// is. An `f64` cell is laid out as a `Float64Array` element, so a
+    /// sequence of an element that crosses as an `f64`, such as
+    /// `SafeInteger<T>`, crosses as the same `Float64Array` as when it is in
+    /// place.
+    pub fn typed_cell(&self) -> Option<VectorKind> {
+        match self {
+            Descriptor::F64 => Some(VectorKind::F64),
+            _ => None,
         }
     }
 
@@ -604,6 +653,25 @@ fn sequence_cells() {
         Descriptor::decode(&[REF, SLICE, BOOLEAN]).vector_kind(),
         None
     );
+    // An `ABI_CELL` element is encoded even where its descriptor is in place.
+    let cell = Descriptor::decode(&[VECTOR, ABI_CELL, U8]);
+    assert_eq!(cell.vector_kind(), None);
+    let Descriptor::Vector(elem) = &cell else {
+        unreachable!()
+    };
+    assert_eq!(elem.sequence_cell(), SequenceCell::Encoded(&Descriptor::U8));
+    let cell = Descriptor::decode(&[REF, SLICE, ABI_CELL, EXTERNREF]);
+    assert_eq!(cell.vector_kind(), None);
+    let Descriptor::Ref(slice) = &cell else {
+        unreachable!()
+    };
+    let Descriptor::Slice(elem) = &**slice else {
+        unreachable!()
+    };
+    assert_eq!(
+        elem.sequence_cell(),
+        SequenceCell::Encoded(&Descriptor::Externref)
+    );
 }
 
 #[test]
@@ -620,6 +688,15 @@ fn seq_modes_apply_by_shape() {
     assert_eq!(fit(array, &[OPTIONAL, REF, SLICE, F64]), Ok(true));
     assert_eq!(fit(array, &[CLAMPED, REF, SLICE, U8]), Ok(true));
     assert_eq!(fit(vec_array, &[OPTIONAL, VECTOR, U8]), Ok(true));
+    assert_eq!(fit(vec_array, &[OPTIONAL, REF, VECTOR, U8]), Ok(true));
+    // A slice behind a second reference is copied as a borrowed vector is.
+    assert_eq!(fit(vec_array, &[REF, REF, SLICE, U8]), Ok(true));
+    assert_eq!(
+        fit(vec_array, &[NULLABLE, REF, REF, REF, SLICE, F64]),
+        Ok(true)
+    );
+    assert_eq!(fit(copy, &[REF, REF, SLICE, U8]), Ok(false));
+    assert!(fit(explicit | copy, &[REF, REF, SLICE, U8]).is_err());
     assert_eq!(fit(explicit, &[REFMUT, SLICE, U8]), Ok(true));
     // Inherited, it has nothing to do elsewhere, and is dropped.
     assert_eq!(fit(array, &[VECTOR, U8]), Ok(false));
@@ -716,6 +793,11 @@ impl VectorKind {
             // Not typed arrays.
             VectorKind::String | VectorKind::Externref | VectorKind::NamedExternref(_) => None,
         }
+    }
+
+    /// Whether the elements are handles to JS values.
+    pub fn is_handles(&self) -> bool {
+        matches!(self, VectorKind::Externref | VectorKind::NamedExternref(_))
     }
 
     pub fn size(&self) -> usize {

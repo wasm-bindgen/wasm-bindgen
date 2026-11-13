@@ -67,7 +67,8 @@ everything a caller has to satisfy:
 |---|---|
 | argument `T` | `T: IntoWasmAbi` |
 | argument `&T` | `T: RefIntoWasmAbi` |
-| argument `&[T]` or `Option<&[T]>` | `T: VectorRefIntoWasmAbi` |
+| argument `&[T]` or `Option<&[T]>` | `T: RefIntoWasmAbi` |
+| argument `Vec<T>` or `Option<Vec<T>>` | `T: IntoWasmAbi` |
 | return `T` | `T: FromWasmAbi` |
 | `async` return `T` | `T: FromWasmAbi + 'static` |
 | callback argument `A` (`&dyn Fn(A)`) | `A: FromWasmAbi` |
@@ -120,10 +121,10 @@ Note that a bound only constrains which types the import can be *called* with; i
 cannot make a type marshallable. Combining a higher-ranked bound with a `&T`
 argument is a common way to write a declaration that does not accept the types
 it was written for: `&T` additionally requires `T: RefIntoWasmAbi`. A bound such
-as `for<'a> &'a T: IntoIterator<Item = &'a u32>`, meant for a collection like
-`Vec<u32>`, rejects it, since a `Vec` has no borrowed ABI; only `Option<u32>` and
-`Nullable<u32>`, which also iterate by reference, satisfy both. Take a `&[u32]`
-argument instead. See [Note on `&T` arguments](#note-on-t-arguments).
+as `for<'a> &'a T: IntoIterator<Item = &'a u32>` admits a `HashSet<u32>`, which
+has no borrowed ABI and so can't be passed. A `Vec<u32>` satisfies both and
+crosses as a copy; take a `&[u32]` argument to pass a view instead. See
+[Note on `&T` arguments](#note-on-t-arguments).
 
 Relaxed bounds are the exception: `T: ?Sized` is not supported on any
 `wasm-bindgen` generic — erased or per-monomorphisation — and is reported as
@@ -152,8 +153,9 @@ native wire format — UTF-8 buffers for the Rust strings, a handle for
 `JsString` — all arriving in JS as a string value. Optional positions
 (`Option<T>`, `Nullable<T>`) and slices (`&[T]`, arriving as an `Array` of
 strings) work under the same bound, since the trait carries
-`NullableIntoWasmAbi` and `VectorRefIntoWasmAbi` as supertraits. So a plain Rust function bounded by
-`JsStringLike` alone can forward a `&[T]` to such an import. The trait is
+`NullableIntoWasmAbi` and `RefIntoWasmAbi` as supertraits. So a plain Rust
+function bounded by `JsStringLike` alone can forward a `&[T]` to such an
+import. The trait is
 sealed to exactly these string shapes. Like
 `experimental_generic_mono` itself, the trait is experimental and may change
 as the feature stabilizes.
@@ -248,14 +250,13 @@ synthesized parameter:
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(experimental_generic_mono)]
-    fn mix<T: IntoWasmAbi>(label: T, value: Option<impl Clone + OptionIntoWasmAbi>);
+    fn mix<T: IntoWasmAbi>(label: T, value: Option<impl Clone + MaybeIntoWasmAbi>);
 }
 ```
 
 A synthesized parameter has no name to bound its containing type by, so a
 nested `impl Trait` carries whatever bound makes the container marshal:
-`OptionIntoWasmAbi` for `Option`, or `VectorIntoWasmAbi<Abi = WasmSlice>` for
-`Vec`.
+`MaybeIntoWasmAbi` for `Option`, or `IntoWasmAbi` for `Vec`.
 
 Bounds on a synthesized parameter are enforced exactly as if you had written
 them out by hand: a caller that violates one gets a diagnostic pointing at the
@@ -564,6 +565,9 @@ different signatures.
 A bare `&T` argument is supported, declared with the bound
 `T: RefIntoWasmAbi`, which holds for `JsValue` and JS handle types, `String`,
 `str`, numbers, `bool`, `char`, and `Option<T>` or `Nullable<T>` of any of
-them; a borrowed number crosses by copy. Passing `&SomeStruct` for a plain
-Rust struct is rejected, since there is no `&T` ABI representation for it;
-take the value by value, or pass a JS type.
+them; a borrowed number crosses by copy. It also holds for a `Vec<T>` or
+`Box<[T]>` of these, and for a reference to one (`T = &str`, `T = &[u8]`),
+which is lent as itself; a sequence of numbers behind the `&T` reaches JS as
+a copy. Passing `&SomeStruct` for a plain Rust struct is rejected, since
+there is no `&T` ABI representation for it; take the value by value, or pass
+a JS type.

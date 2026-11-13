@@ -149,6 +149,12 @@ struct InstructionBuilder<'a, 'b> {
     instructions: Vec<InstructionData>,
     cx: &'a mut Context<'b>,
     return_position: bool,
+    /// Whether the value is, or is held by, what a call into Rust returns,
+    /// which is given whole: nothing in it can stay Rust's.
+    returned: bool,
+    /// Whether the value is held in a cell, where it's lowered and lifted
+    /// as it is across a call unless a type says otherwise.
+    stored: bool,
     /// The mode of the `Descriptor::SeqMode` being lowered, read where the
     /// typed sequence it wraps is materialised.
     seq_value: SeqValue,
@@ -706,9 +712,14 @@ impl<'a> Context<'a> {
 
             match key {
                 GenericImportKey::Cast => {
-                    // Identity adapter, no AST metadata required.
-                    let id =
-                        self.import_adapter(import_id, signature, AdapterJsImportKind::Normal)?;
+                    // Identity adapter, no AST metadata required. What it's
+                    // given is what it returns, to outlive the call.
+                    let id = self.adapter_of_import(
+                        import_id,
+                        signature,
+                        AdapterJsImportKind::Normal,
+                        true,
+                    )?;
                     self.aux
                         .import_map
                         .insert(id, AuxImport::Cast { sig_comment });
@@ -2547,8 +2558,20 @@ impl<'a> Context<'a> {
     fn import_adapter(
         &mut self,
         import: ImportId,
+        signature: Function,
+        kind: AdapterJsImportKind,
+    ) -> Result<AdapterId, Error> {
+        self.adapter_of_import(import, signature, kind, false)
+    }
+
+    /// [`Self::import_adapter`], whose arguments JS keeps past the call when
+    /// `kept`.
+    fn adapter_of_import(
+        &mut self,
+        import: ImportId,
         mut signature: Function,
         kind: AdapterJsImportKind,
+        kept: bool,
     ) -> Result<AdapterId, Error> {
         let import = self.module.imports.get(import);
         let import_name = import.name.clone();
@@ -2582,6 +2605,7 @@ impl<'a> Context<'a> {
         // was present. Additionally configure the `module` and `adapters` to allow
         // usage of closures going out to the import.
         let mut args = ret.cx.instruction_builder(false);
+        args.returned = kept;
         if uses_retptr {
             args.input.push(if memory64 {
                 AdapterType::F64
@@ -2842,6 +2866,8 @@ impl<'a> Context<'a> {
             output: Vec::new(),
             instructions: Vec::new(),
             return_position,
+            returned: return_position,
+            stored: false,
             seq_value: SeqValue::View,
         }
     }

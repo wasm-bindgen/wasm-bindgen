@@ -39,9 +39,10 @@
 //!   memory (no accidental default flip)
 
 use js_sys::JsString;
-use wasm_bindgen::convert::{IntoWasmAbi, VectorRefIntoWasmAbi};
+use wasm_bindgen::convert::{IntoWasmAbi, RefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::Clamped;
+use wasm_bindgen::SafeInteger;
 use wasm_bindgen_test::*;
 
 #[wasm_bindgen(module = "tests/wasm/slice_modes.js")]
@@ -124,7 +125,7 @@ extern "C" {
     // element (`JsString`) it is a no-op, and JS receives the fresh `Array`
     // the handle tier always produces.
     #[wasm_bindgen(experimental_generic_mono, js_name = kindsOf)]
-    fn describe_generic<T: VectorRefIntoWasmAbi>(v: &[T]) -> String;
+    fn describe_generic<T: RefIntoWasmAbi>(v: &[T]) -> String;
 
     // String and handle slices are untouched by `copy`: exactly as without a
     // mode, a fresh `Array` of the same handles, with no Rust-side copy.
@@ -206,25 +207,25 @@ extern "C" {
 #[wasm_bindgen(module = "tests/wasm/slice_modes.js")]
 extern "C" {
     #[wasm_bindgen(experimental_generic_mono, js_name = kindsOf)]
-    fn kinds_generic<T: VectorRefIntoWasmAbi>(v: &[T]) -> String;
+    fn kinds_generic<T: RefIntoWasmAbi>(v: &[T]) -> String;
 
     #[wasm_bindgen(experimental_generic_mono, js_name = joined)]
-    fn joined_generic<T: VectorRefIntoWasmAbi>(v: &[T]) -> String;
+    fn joined_generic<T: RefIntoWasmAbi>(v: &[T]) -> String;
 
     #[wasm_bindgen(experimental_generic_mono, js_name = kindsOf)]
-    fn kinds_generic_opt<T: VectorRefIntoWasmAbi>(v: Option<&[T]>) -> String;
+    fn kinds_generic_opt<T: RefIntoWasmAbi>(v: Option<&[T]>) -> String;
 
     // `Option<&[T]>` under a mode: formerly a "nested reference" compile
     // error on this path, now just a slice.
     #[wasm_bindgen(experimental_generic_mono, slice = copy, js_name = kindsOf)]
-    fn kinds_generic_opt_copy<T: VectorRefIntoWasmAbi>(v: Option<&[T]>) -> String;
+    fn kinds_generic_opt_copy<T: RefIntoWasmAbi>(v: Option<&[T]>) -> String;
 
     #[wasm_bindgen(experimental_generic_mono, slice = array, js_name = kindsOf)]
-    fn kinds_generic_opt_array<T: VectorRefIntoWasmAbi>(v: Option<&[T]>) -> String;
+    fn kinds_generic_opt_array<T: RefIntoWasmAbi>(v: Option<&[T]>) -> String;
 
     // Per-arg modes on one generic import, each resolved per instantiation.
     #[wasm_bindgen(experimental_generic_mono, js_name = kindsOf)]
-    fn kinds_generic_mixed<T: VectorRefIntoWasmAbi>(
+    fn kinds_generic_mixed<T: RefIntoWasmAbi>(
         #[wasm_bindgen(slice = copy)] copied: &[T],
         #[wasm_bindgen(slice = array)] as_array: &[T],
         view: &[T],
@@ -233,12 +234,18 @@ extern "C" {
     // `array` fits every instantiation, written on the argument too, and a
     // generic `Vec<T>` resolves `vec` per instantiation in the same way.
     #[wasm_bindgen(experimental_generic_mono, js_name = kindsOf)]
-    fn kinds_generic_explicit_array<T: VectorRefIntoWasmAbi>(
+    fn kinds_generic_explicit_array<T: RefIntoWasmAbi>(
         #[wasm_bindgen(slice = array)] borrowed: &[T],
         #[wasm_bindgen(vec = array)] owned: Vec<T>,
     ) -> String
     where
         Vec<T>: IntoWasmAbi;
+
+    // A generic vector is bounded by its element, optional or not.
+    #[wasm_bindgen(experimental_generic_mono, js_name = joined)]
+    fn joined_generic_vec<T: IntoWasmAbi>(v: Vec<T>) -> String;
+    #[wasm_bindgen(experimental_generic_mono, js_name = joined)]
+    fn joined_generic_opt_vec<T: IntoWasmAbi>(v: Option<Vec<T>>) -> String;
 
     // A concrete element alongside a type parameter.
     #[wasm_bindgen(experimental_generic_mono, js_name = joined)]
@@ -418,4 +425,345 @@ fn per_mono_per_arg_modes_resolve_per_instantiation() {
     );
     let s = ["a".to_string()];
     assert_eq!(kinds_generic_explicit_array(&s, s.to_vec()), "Array,Array");
+
+    assert_eq!(joined_generic_vec(vec![1u8, 2]), "Uint8Array:fresh:1,2");
+    assert_eq!(joined_generic_vec(s.to_vec()), "Array:a");
+    assert_eq!(
+        joined_generic_opt_vec(Some(vec![1u8, 2])),
+        "Uint8Array:fresh:1,2"
+    );
+    assert_eq!(joined_generic_opt_vec(Some(s.to_vec())), "Array:a");
+    assert_eq!(joined_generic_opt_vec(None::<Vec<String>>), "undefined");
+}
+
+#[wasm_bindgen(module = "tests/wasm/slice_modes.js")]
+extern "C" {
+    #[wasm_bindgen(js_name = kindOf)]
+    fn kind_of_safe_vec(v: Vec<SafeInteger<u64>>) -> String;
+    #[wasm_bindgen(vec = array, js_name = kindOf)]
+    fn kind_of_array_safe_vec(v: Vec<SafeInteger<u64>>) -> String;
+    #[wasm_bindgen(vec = array, js_name = kindOf)]
+    fn kind_of_array_opt_safe_vec(v: Option<Vec<SafeInteger<u64>>>) -> String;
+    #[wasm_bindgen(js_name = kindOf)]
+    fn kind_of_safe_slice(v: &[SafeInteger<u64>]) -> String;
+    #[wasm_bindgen(slice = copy, js_name = kindOf)]
+    fn kind_of_copy_safe_slice(v: &[SafeInteger<u64>]) -> String;
+    #[wasm_bindgen(slice = array, js_name = joined)]
+    fn joined_array_safe_slice(v: &[SafeInteger<u64>]) -> String;
+    #[wasm_bindgen(slice_to_array, js_name = kindOf)]
+    fn kind_of_alias_safe_slice(v: &[SafeInteger<u64>]) -> String;
+}
+
+// A sequence of an element that crosses as an `f64` is a `Float64Array`,
+// which the modes apply to as they do to one of `f64`.
+#[wasm_bindgen_test]
+fn modes_apply_to_a_typed_cell() {
+    let safe = || vec![SafeInteger::<u64>::from(1), SafeInteger::from(2)];
+    assert_eq!(kind_of_safe_vec(safe()), "Float64Array");
+    assert_eq!(kind_of_array_safe_vec(safe()), "Array");
+    assert_eq!(kind_of_array_opt_safe_vec(Some(safe())), "Array");
+    assert_eq!(kind_of_array_opt_safe_vec(None), "undefined");
+    assert_eq!(kind_of_safe_slice(&safe()), "Float64Array");
+    assert_eq!(kind_of_copy_safe_slice(&safe()), "Float64Array");
+    assert_eq!(joined_array_safe_slice(&safe()), "Array:1,2");
+    assert_eq!(kind_of_alias_safe_slice(&safe()), "Array");
+}
+
+#[wasm_bindgen(js_name = slice_modes_lent_bytes)]
+pub fn lent_bytes() -> Vec<&'static [u8]> {
+    vec![&[1, 2], &[3]]
+}
+
+#[wasm_bindgen(js_name = slice_modes_maybe_lent_bytes)]
+pub fn maybe_lent_bytes() -> Vec<Option<&'static [u8]>> {
+    vec![Some(&[1, 2]), None]
+}
+
+#[wasm_bindgen(js_name = slice_modes_nested_lent_floats)]
+pub fn nested_lent_floats() -> Vec<Vec<&'static [f64]>> {
+    vec![vec![&[1.5]], vec![]]
+}
+
+#[wasm_bindgen(js_name = slice_modes_async_lent_bytes)]
+pub async fn async_lent_bytes() -> Vec<&'static [u8]> {
+    vec![&[1, 2], &[3]]
+}
+
+#[wasm_bindgen(module = "tests/wasm/slice_modes.js")]
+extern "C" {
+    fn js_returned_bytes_are_copies();
+    #[wasm_bindgen(catch)]
+    async fn js_async_returned_bytes_are_copies() -> Result<(), JsValue>;
+    fn js_lent_bytes_are_copies(bytes: Vec<&[u8]>) -> bool;
+    fn js_holds_no_view(v: &JsValue) -> bool;
+    fn js_fill(v: &JsValue, byte: u8);
+}
+
+// A numeric slice is a view of wasm memory only as the argument itself. One
+// that a sequence holds is copied, as nothing ties the sequence to its lender.
+#[wasm_bindgen_test]
+async fn an_element_lends_no_view() {
+    js_returned_bytes_are_copies();
+    js_async_returned_bytes_are_copies().await.unwrap();
+    assert!(js_lent_bytes_are_copies(vec![&[1, 2], &[3]]));
+
+    let bytes = vec![0x41u8; 64];
+    let floats = [1.5f64];
+    let held: JsValue = vec![&bytes[..]].into();
+    assert!(js_holds_no_view(&held));
+    js_fill(&held, 0xff);
+    assert_eq!(bytes, [0x41; 64]);
+
+    assert!(js_holds_no_view(&vec![&bytes].into()));
+    assert!(js_holds_no_view(&vec![Some(&bytes[..]), None].into()));
+    assert!(js_holds_no_view(&vec![vec![&bytes[..]]].into()));
+    assert!(js_holds_no_view(&vec![Clamped(&bytes[..])].into()));
+    assert!(js_holds_no_view(
+        &vec![&floats[..]].into_boxed_slice().into()
+    ));
+}
+
+#[wasm_bindgen(module = "tests/wasm/slice_modes.js")]
+extern "C" {
+    fn js_keep(v: &Vec<u8>);
+    #[wasm_bindgen(js_name = js_keep)]
+    fn js_keep_boxed(v: &Box<[f64]>);
+    #[wasm_bindgen(experimental_generic_mono, js_name = js_keep)]
+    fn js_keep_generic<T>(v: &T)
+    where
+        T: RefIntoWasmAbi;
+    fn js_kept() -> JsValue;
+    fn js_kept_is(value: f64) -> bool;
+
+    #[wasm_bindgen(js_name = kindOf)]
+    fn kind_of_vec_ref(v: &Vec<u8>) -> String;
+    #[wasm_bindgen(vec = array, js_name = kindOf)]
+    fn kind_of_array_vec_ref(v: &Vec<u8>) -> String;
+    #[wasm_bindgen(js_name = kindOf)]
+    fn kind_of_array_vec_ref_arg(#[wasm_bindgen(vec = array)] v: &Box<[f64]>) -> String;
+    #[wasm_bindgen(slice = view, js_name = isWasmMemoryView)]
+    fn is_view_under_slice_view(v: &Vec<u8>) -> bool;
+    #[wasm_bindgen(experimental_generic_mono, vec = array, js_name = kindOf)]
+    fn kind_of_array_generic_ref<T: RefIntoWasmAbi>(v: &T) -> String;
+    #[wasm_bindgen(experimental_generic_mono, js_name = kindOf)]
+    fn kind_of_array_generic_ref_arg<T: RefIntoWasmAbi>(
+        #[wasm_bindgen(vec = array)] v: &T,
+    ) -> String;
+    #[wasm_bindgen(experimental_generic_mono, slice = view, js_name = isWasmMemoryView)]
+    fn is_view_under_generic_slice_view<T: RefIntoWasmAbi>(v: &T) -> bool;
+}
+
+// A view is the unsized `&[T]` argument alone. A borrowed vector is a sized
+// type, which a generic `&T` import may keep, so it reaches JS as the vector
+// does: copied, with its storage still Rust's.
+#[wasm_bindgen_test]
+fn a_borrowed_vector_lends_no_view() {
+    fn kept_survives(drop_and_reuse: impl FnOnce(), value: f64) {
+        assert!(js_holds_no_view(&js_kept()));
+        js_fill(&js_kept(), 9);
+        drop_and_reuse();
+        assert!(js_kept_is(value));
+    }
+
+    let bytes = vec![0x41u8; 64];
+    js_keep(&bytes);
+    kept_survives(
+        || {
+            assert_eq!(bytes, [0x41; 64]);
+            drop(bytes);
+            core::hint::black_box(vec![0x11u8; 64]);
+        },
+        9.0,
+    );
+
+    let floats: Box<[f64]> = vec![1.5; 8].into_boxed_slice();
+    js_keep_boxed(&floats);
+    kept_survives(
+        || {
+            assert_eq!(*floats, [1.5; 8]);
+            drop(floats);
+            core::hint::black_box(vec![2.5f64; 8]);
+        },
+        9.0,
+    );
+
+    let bytes = vec![0x41u8; 64];
+    js_keep_generic(&bytes);
+    kept_survives(
+        || {
+            assert_eq!(bytes, [0x41; 64]);
+            drop(bytes);
+            core::hint::black_box(vec![0x11u8; 64]);
+        },
+        9.0,
+    );
+
+    let bytes = vec![1u8, 2];
+    assert_eq!(kind_of_vec_ref(&bytes), "Uint8Array");
+    assert_eq!(kind_of_array_vec_ref(&bytes), "Array");
+    assert_eq!(kind_of_array_vec_ref_arg(&vec![1.5].into()), "Array");
+    assert!(!is_view_under_slice_view(&bytes));
+
+    // A mode reaches a generic `&T` as it does the vector it stands for.
+    assert_eq!(kind_of_array_generic_ref(&bytes), "Array");
+    assert_eq!(kind_of_array_generic_ref_arg(&bytes), "Array");
+    let floats: Box<[f64]> = vec![1.5].into();
+    assert_eq!(kind_of_array_generic_ref(&floats), "Array");
+    assert_eq!(kind_of_array_generic_ref(&7u32), "Number");
+    assert!(!is_view_under_generic_slice_view(&bytes));
+}
+
+#[allow(clippy::ptr_arg, clippy::borrowed_box)]
+#[wasm_bindgen(module = "tests/wasm/slice_modes.js")]
+extern "C" {
+    #[wasm_bindgen(js_name = js_keep)]
+    fn js_keep_opt_vec(v: Option<&Vec<u8>>);
+    #[wasm_bindgen(js_name = js_keep)]
+    fn js_keep_null_boxed(v: Nullable<&Box<[u8]>>);
+    #[wasm_bindgen(js_name = js_keep)]
+    fn js_keep_opt_vecs(v: &[Option<Vec<u8>>]);
+
+    #[wasm_bindgen(vec = array, js_name = kindOf)]
+    fn kind_of_array_opt_vec_ref(v: Option<&Vec<u8>>) -> String;
+    #[wasm_bindgen(slice = array, js_name = kindOf)]
+    fn kind_of_opt_vec_ref_under_slice_array(v: Option<&Vec<u8>>) -> String;
+    #[wasm_bindgen(slice = view, js_name = isWasmMemoryView)]
+    fn is_opt_vec_view_under_slice_view(v: Option<&Vec<u8>>) -> bool;
+}
+
+/// What JS kept of `bytes` is its own: Rust's writes since don't reach it,
+/// nor do its writes reach Rust.
+fn kept_is_a_copy(bytes: &mut [u8]) {
+    assert!(js_holds_no_view(&js_kept()));
+    assert!(js_kept_is(0x41.into()));
+    bytes.fill(0x11);
+    assert!(js_kept_is(0x41.into()));
+    js_fill(&js_kept(), 9);
+    assert!(bytes.iter().all(|&b| b == 0x11));
+}
+
+// An optional borrowed vector is the copy that a borrowed vector is.
+#[wasm_bindgen_test]
+fn an_optional_borrowed_vector_lends_no_view() {
+    let mut bytes = vec![0x41u8; 64];
+    js_keep_opt_vec(Some(&bytes));
+    kept_is_a_copy(&mut bytes);
+
+    let mut bytes: Box<[u8]> = vec![0x41u8; 64].into();
+    js_keep_null_boxed(Nullable::Value(&bytes));
+    kept_is_a_copy(&mut bytes);
+
+    let mut held = [Some(vec![0x41u8; 64]), None];
+    js_keep_opt_vecs(&held);
+    kept_is_a_copy(held[0].as_mut().unwrap());
+
+    let bytes = vec![1u8, 2];
+    assert_eq!(kind_of_array_opt_vec_ref(Some(&bytes)), "Array");
+    assert_eq!(kind_of_array_opt_vec_ref(None), "undefined");
+    assert_eq!(
+        kind_of_opt_vec_ref_under_slice_array(Some(&bytes)),
+        "Uint8Array"
+    );
+    assert!(!is_opt_vec_view_under_slice_view(Some(&bytes)));
+}
+
+#[allow(clippy::ptr_arg)]
+#[wasm_bindgen(module = "tests/wasm/slice_modes.js")]
+extern "C" {
+    #[wasm_bindgen(js_name = js_keep)]
+    fn js_keep_ref(v: &&[u8]);
+    #[wasm_bindgen(js_name = js_keep)]
+    fn js_keep_opt_ref(v: Option<&&[u8]>);
+    #[wasm_bindgen(js_name = js_keep)]
+    fn js_keep_ref_opt(v: &Option<&[u8]>);
+    #[wasm_bindgen(js_name = js_keep)]
+    fn js_keep_null_ref_opt(v: Nullable<&Option<&[u8]>>);
+    #[wasm_bindgen(js_name = js_keep)]
+    fn js_keep_slices(v: &[&[u8]]);
+    #[wasm_bindgen(js_name = js_keep)]
+    fn js_keep_opt_slices(v: &[Option<&[u8]>]);
+    #[wasm_bindgen(js_name = js_keep)]
+    fn js_keep_vec_refs(v: &[&Vec<u8>]);
+    #[wasm_bindgen(js_name = js_keep)]
+    fn js_keep_deep(v: &[&[&[u8]]]);
+    #[wasm_bindgen(js_name = js_keep)]
+    fn js_keep_vec_of_slices(v: &Vec<&[u8]>);
+
+    #[wasm_bindgen(js_name = kindOf)]
+    fn kind_of_slice_ref(v: &&[u8]) -> String;
+    #[wasm_bindgen(vec = array, js_name = kindOf)]
+    fn kind_of_array_slice_ref(v: &&[u8]) -> String;
+    #[wasm_bindgen(js_name = kindOf)]
+    fn kind_of_array_opt_slice_ref_arg(#[wasm_bindgen(vec = array)] v: Option<&&[f64]>) -> String;
+    #[wasm_bindgen(slice = array, js_name = kindOf)]
+    fn kind_of_slice_ref_under_slice_array(v: &&[u8]) -> String;
+    #[wasm_bindgen(slice = view, js_name = isWasmMemoryView)]
+    fn is_ref_view_under_slice_view(v: &&[u8]) -> bool;
+}
+
+// A slice behind a second reference is a sized type as a borrowed vector is,
+// which a generic `&T` import may keep, and one that a lent sequence holds is
+// no more tied to its lender than one a given sequence holds. Each reaches JS
+// as a copy.
+#[wasm_bindgen_test]
+fn a_slice_behind_a_reference_lends_no_view() {
+    let mut bytes = vec![0x41u8; 64];
+    js_keep_ref(&&bytes[..]);
+    kept_is_a_copy(&mut bytes);
+
+    let mut bytes = vec![0x41u8; 64];
+    js_keep_opt_ref(Some(&&bytes[..]));
+    kept_is_a_copy(&mut bytes);
+
+    let mut bytes = vec![0x41u8; 64];
+    js_keep_generic(&&bytes[..]);
+    kept_is_a_copy(&mut bytes);
+    assert!(!is_view_under_generic_slice_view(&&bytes[..]));
+    assert_eq!(kind_of_array_generic_ref(&&bytes[..]), "Array");
+    assert_eq!(kind_of_array_generic_ref_arg(&&bytes[..]), "Array");
+
+    // An optional slice is the argument itself, and no longer once borrowed.
+    let mut bytes = vec![0x41u8; 64];
+    js_keep_ref_opt(&Some(&bytes));
+    kept_is_a_copy(&mut bytes);
+
+    let mut bytes = vec![0x41u8; 64];
+    js_keep_null_ref_opt(Nullable::Value(&Some(&bytes)));
+    kept_is_a_copy(&mut bytes);
+
+    let mut bytes = vec![0x41u8; 64];
+    js_keep_generic(&Some(&bytes[..]));
+    kept_is_a_copy(&mut bytes);
+
+    let mut bytes = vec![0x41u8; 64];
+    js_keep_slices(&[&bytes[..32], &bytes[32..]]);
+    kept_is_a_copy(&mut bytes);
+
+    let mut bytes = vec![0x41u8; 64];
+    js_keep_opt_slices(&[Some(&bytes), None]);
+    kept_is_a_copy(&mut bytes);
+
+    let mut bytes = vec![0x41u8; 64];
+    js_keep_vec_refs(&[&bytes, &bytes]);
+    kept_is_a_copy(&mut bytes);
+
+    let mut bytes = vec![0x41u8; 64];
+    js_keep_deep(&[&[&bytes[..8], &bytes[8..]], &[]]);
+    kept_is_a_copy(&mut bytes);
+
+    let mut bytes = vec![0x41u8; 64];
+    js_keep_vec_of_slices(&vec![&bytes[..]]);
+    kept_is_a_copy(&mut bytes);
+
+    // It takes the modes a borrowed vector does: `vec`, and no `slice`.
+    let bytes = [1u8, 2];
+    assert_eq!(kind_of_slice_ref(&&bytes[..]), "Uint8Array");
+    assert_eq!(kind_of_array_slice_ref(&&bytes[..]), "Array");
+    assert_eq!(kind_of_array_opt_slice_ref_arg(Some(&&[1.5][..])), "Array");
+    assert_eq!(kind_of_array_opt_slice_ref_arg(None), "undefined");
+    assert_eq!(
+        kind_of_slice_ref_under_slice_array(&&bytes[..]),
+        "Uint8Array"
+    );
+    assert!(!is_ref_view_under_slice_view(&&bytes[..]));
 }

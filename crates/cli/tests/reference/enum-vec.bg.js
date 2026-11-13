@@ -28,9 +28,11 @@ export const RenamedErr = Object.freeze({
  * @returns {Color[]}
  */
 export function enum_vec_echo(values) {
+    if (values.length > 268435455) throw new Error('invalid malloc request');
     let len0, ptr0;
     try {
-        len0 = values.length;
+        len0 = values.length >>> 0;
+        if (len0 > 268435455) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 8, 8) >>> 0;
         const view0 = getDataViewMemory0();
         for (let j0 = 0; j0 < len0; j0++) {
@@ -46,11 +48,16 @@ export function enum_vec_echo(values) {
     const v2 = [];
     let p2 = ret[0];
     p2 = p2 >>> 0;
-    const view2 = getDataViewMemory0();
-    for (const end2 = p2 + ret[1] * 8; p2 < end2; p2 += 8) {
-        v2.push(view2.getFloat64(p2 + 0, true));
+    const b2 = p2;
+    try {
+        const view2 = getDataViewMemory0();
+        for (const end2 = p2 + ret[1] * 8; p2 < end2; p2 += 8) {
+            const w2_0 = view2.getFloat64(p2 + 0, true);
+            v2.push(w2_0);
+        }
+    } finally {
+        if (b2) wasm.__wbindgen_free(b2, ret[1] * 8, 8);
     }
-    wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
     return v2;
 }
 
@@ -59,9 +66,11 @@ export function enum_vec_echo(values) {
  * @returns {HiddenErr[]}
  */
 export function hidden_err_vec_echo(values) {
+    if (values.length > 268435455) throw new Error('invalid malloc request');
     let len0, ptr0;
     try {
-        len0 = values.length;
+        len0 = values.length >>> 0;
+        if (len0 > 268435455) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 8, 8) >>> 0;
         const view0 = getDataViewMemory0();
         for (let j0 = 0; j0 < len0; j0++) {
@@ -77,11 +86,16 @@ export function hidden_err_vec_echo(values) {
     const v2 = [];
     let p2 = ret[0];
     p2 = p2 >>> 0;
-    const view2 = getDataViewMemory0();
-    for (const end2 = p2 + ret[1] * 8; p2 < end2; p2 += 8) {
-        v2.push(view2.getFloat64(p2 + 0, true));
+    const b2 = p2;
+    try {
+        const view2 = getDataViewMemory0();
+        for (const end2 = p2 + ret[1] * 8; p2 < end2; p2 += 8) {
+            const w2_0 = view2.getFloat64(p2 + 0, true);
+            v2.push(w2_0);
+        }
+    } finally {
+        if (b2) wasm.__wbindgen_free(b2, ret[1] * 8, 8);
     }
-    wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
     return v2;
 }
 
@@ -101,9 +115,11 @@ ns.NsErr = ns__NsErr;
  * @returns {ns__NsErr[]}
  */
 export function ns_err_vec_echo(values) {
+    if (values.length > 268435455) throw new Error('invalid malloc request');
     let len0, ptr0;
     try {
-        len0 = values.length;
+        len0 = values.length >>> 0;
+        if (len0 > 268435455) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 8, 8) >>> 0;
         const view0 = getDataViewMemory0();
         for (let j0 = 0; j0 < len0; j0++) {
@@ -119,11 +135,16 @@ export function ns_err_vec_echo(values) {
     const v2 = [];
     let p2 = ret[0];
     p2 = p2 >>> 0;
-    const view2 = getDataViewMemory0();
-    for (const end2 = p2 + ret[1] * 8; p2 < end2; p2 += 8) {
-        v2.push(view2.getFloat64(p2 + 0, true));
+    const b2 = p2;
+    try {
+        const view2 = getDataViewMemory0();
+        for (const end2 = p2 + ret[1] * 8; p2 < end2; p2 += 8) {
+            const w2_0 = view2.getFloat64(p2 + 0, true);
+            v2.push(w2_0);
+        }
+    } finally {
+        if (b2) wasm.__wbindgen_free(b2, ret[1] * 8, 8);
     }
-    wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
     return v2;
 }
 
@@ -132,10 +153,12 @@ export function ns_err_vec_echo(values) {
  * @returns {Color[] | undefined}
  */
 export function option_enum_vec_echo(values) {
+    if (!isLikeNone(values) && values.length > 268435455) throw new Error('invalid malloc request');
     let ptr0 = 0, len0 = 0;
     try {
         if (!isLikeNone(values)) {
-            len0 = values.length;
+            len0 = values.length >>> 0;
+            if (len0 > 268435455) throw new Error('invalid malloc request');
             ptr0 = wasm.__wbindgen_malloc(len0 * 8, 8) >>> 0;
             const view0 = getDataViewMemory0();
             for (let j0 = 0; j0 < len0; j0++) {
@@ -154,11 +177,16 @@ export function option_enum_vec_echo(values) {
         v2 = [];
         let p2 = ret[0];
         p2 = p2 >>> 0;
-        const view2 = getDataViewMemory0();
-        for (const end2 = p2 + ret[1] * 8; p2 < end2; p2 += 8) {
-            v2.push(view2.getFloat64(p2 + 0, true));
+        const b2 = p2;
+        try {
+            const view2 = getDataViewMemory0();
+            for (const end2 = p2 + ret[1] * 8; p2 < end2; p2 += 8) {
+                const w2_0 = view2.getFloat64(p2 + 0, true);
+                v2.push(w2_0);
+            }
+        } finally {
+            if (b2) wasm.__wbindgen_free(b2, ret[1] * 8, 8);
         }
-        wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
     }
     return v2;
 }
@@ -168,9 +196,11 @@ export function option_enum_vec_echo(values) {
  * @returns {RenamedErr[]}
  */
 export function renamed_err_vec_echo(values) {
+    if (values.length > 268435455) throw new Error('invalid malloc request');
     let len0, ptr0;
     try {
-        len0 = values.length;
+        len0 = values.length >>> 0;
+        if (len0 > 268435455) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 8, 8) >>> 0;
         const view0 = getDataViewMemory0();
         for (let j0 = 0; j0 < len0; j0++) {
@@ -186,11 +216,16 @@ export function renamed_err_vec_echo(values) {
     const v2 = [];
     let p2 = ret[0];
     p2 = p2 >>> 0;
-    const view2 = getDataViewMemory0();
-    for (const end2 = p2 + ret[1] * 8; p2 < end2; p2 += 8) {
-        v2.push(view2.getFloat64(p2 + 0, true));
+    const b2 = p2;
+    try {
+        const view2 = getDataViewMemory0();
+        for (const end2 = p2 + ret[1] * 8; p2 < end2; p2 += 8) {
+            const w2_0 = view2.getFloat64(p2 + 0, true);
+            v2.push(w2_0);
+        }
+    } finally {
+        if (b2) wasm.__wbindgen_free(b2, ret[1] * 8, 8);
     }
-    wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
     return v2;
 }
 export function __wbg___wbindgen_throw_4c88d8bf264fd984(arg0, arg1) {

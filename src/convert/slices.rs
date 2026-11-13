@@ -1,7 +1,9 @@
+use alloc::alloc::{alloc, dealloc, handle_alloc_error, Layout};
 use alloc::borrow::Cow;
 use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::vec::Vec;
+use core::marker::PhantomData;
 use core::mem::{self, MaybeUninit};
 use core::ops::{Deref, DerefMut};
 use core::str;
@@ -9,14 +11,13 @@ use core::str;
 use crate::__rt::{marker::ErasableGeneric, WasmWord};
 use crate::__wbindgen_copy_to_typed_array;
 use crate::convert::{
-    js_value_vector_from_abi, js_value_vector_into_abi, try_js_value_vector_from_abi, FromWasmAbi,
-    IntoWasmAbi, LongRefFromWasmAbi, MaybeIntoWasmAbi, NullableIntoWasmAbi, OptionFromWasmAbi,
-    OptionIntoWasmAbi, RefFromWasmAbi, RefMutFromWasmAbi, UpcastFrom, VectorFromWasmAbi,
-    VectorIntoWasmAbi, WasmAbi,
+    FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, MaybeIntoWasmAbi, NullableIntoWasmAbi,
+    OptionFromWasmAbi, OptionIntoWasmAbi, RefFromWasmAbi, RefIntoWasmAbi, RefMutFromWasmAbi,
+    UpcastFrom, VectorFromWasmAbi, VectorIntoWasmAbi, WasmAbi,
 };
 use crate::describe::*;
 use crate::sys::{JsNullable, JsOption};
-use crate::{JsError, JsValue, Nullable};
+use crate::{JsValue, Nullable};
 
 use cfg_if::cfg_if;
 
@@ -151,51 +152,48 @@ macro_rules! vectors {
     ($($t:ty)*) => ($(
         vectors_internal!($t);
         vectors_internal!(MaybeUninit<$t>);
+        uninit_vectors!($t);
     )*)
 }
 
-macro_rules! vectors_internal {
+// A `MaybeUninit` element has no ABI of its own, so its sequences are
+// declared here, crossing in place as its number's do.
+macro_rules! uninit_vectors {
     ($t:ty) => {
-        impl WasmDescribeVector for $t {
-            #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-            fn describe_vector() {
-                inform(VECTOR);
-                <$t>::describe();
-            }
-        }
-
-        impl VectorIntoWasmAbi for $t {
+        impl IntoWasmAbi for Box<[MaybeUninit<$t>]> {
             type Abi = WasmSlice;
 
             #[inline]
-            fn vector_into_abi(vector: Box<[$t]>) -> WasmSlice {
-                let ptr = vector.as_ptr();
-                let len = vector.len();
-                mem::forget(vector);
-                WasmSlice::from_usize(ptr as usize, len)
+            fn into_abi(self) -> WasmSlice {
+                let len = self.len();
+                WasmSlice::from_usize(Box::into_raw(self) as *mut MaybeUninit<$t> as usize, len)
             }
         }
 
-        impl VectorFromWasmAbi for $t {
+        impl FromWasmAbi for Box<[MaybeUninit<$t>]> {
             type Abi = WasmSlice;
 
             #[inline]
-            unsafe fn vector_from_abi(js: WasmSlice) -> Box<[$t]> {
-                let ptr = js.ptr.into_usize() as *mut $t;
+            unsafe fn from_abi(js: WasmSlice) -> Self {
+                let ptr = js.ptr.into_usize() as *mut MaybeUninit<$t>;
                 let len = js.len.into_usize();
                 Vec::from_raw_parts(ptr, len, len).into_boxed_slice()
             }
         }
 
-        impl VectorRefIntoWasmAbi for $t {
+        impl IntoWasmAbi for &[MaybeUninit<$t>] {
+            type Abi = WasmSlice;
+
             #[inline]
-            fn slice_into_abi(slice: &[$t]) -> WasmSlice {
-                WasmSlice::borrow(slice)
+            fn into_abi(self) -> WasmSlice {
+                WasmSlice::borrow(self)
             }
         }
+    };
+}
 
-        impl crate::__rt::marker::VectorRefIntoWasmAbiSealed for $t {}
-
+macro_rules! vectors_internal {
+    ($t:ty) => {
         impl<'a> IntoWasmAbi for &'a mut [$t] {
             type Abi = WasmSlice;
 
@@ -252,42 +250,6 @@ vectors! {
     u8 i8 u16 i16 u32 i32 u64 i64 usize isize f32 f64
 }
 
-impl WasmDescribeVector for String {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe_vector() {
-        inform(VECTOR);
-        inform(NAMED_EXTERNREF);
-        // Trying to use an actual loop for this breaks the Wasm interpreter.
-        inform(6);
-        inform('s' as u32);
-        inform('t' as u32);
-        inform('r' as u32);
-        inform('i' as u32);
-        inform('n' as u32);
-        inform('g' as u32);
-    }
-}
-
-impl VectorIntoWasmAbi for String {
-    type Abi = <Box<[JsValue]> as IntoWasmAbi>::Abi;
-
-    fn vector_into_abi(vector: Box<[Self]>) -> Self::Abi {
-        js_value_vector_into_abi(vector)
-    }
-}
-
-impl VectorFromWasmAbi for String {
-    type Abi = <Box<[JsValue]> as FromWasmAbi>::Abi;
-
-    unsafe fn vector_from_abi(js: Self::Abi) -> Box<[Self]> {
-        js_value_vector_from_abi(js)
-    }
-
-    unsafe fn try_vector_from_abi(js: Self::Abi) -> Result<Box<[Self]>, &'static str> {
-        try_js_value_vector_from_abi(js)
-    }
-}
-
 cfg_if! {
     if #[cfg(feature = "enable-interning")] {
         #[inline]
@@ -331,56 +293,136 @@ impl_nullable_into_shared_abi!(
     [T] Vec<T> where Box<[T]>: IntoWasmAbi<Abi = WasmSlice>
 );
 
-/// How a borrowed `&[Self]` crosses to JS.
-///
 /// A sequence crosses as a [`WasmSlice`] of `len` cells. In place, the cell is
 /// the element itself, which is its JS encoding (numbers, and JS handles as
-/// table indices), so the slice is borrowed ([`WasmSlice::borrow`]). Encoded,
-/// the cell is the element's scalar ABI, in a fresh buffer that JS decodes
-/// with the element's own glue and frees ([`WasmSlice::encode`]). The CLI
-/// tells them apart by the element's descriptor alone: numbers and JS handles
-/// are in place, and anything else is encoded. Encoded elements are declared
-/// once, with `__wbindgen_encoded_sequence!`.
-pub trait VectorRefIntoWasmAbi:
-    WasmDescribe + Sized + crate::__rt::marker::VectorRefIntoWasmAbiSealed
-{
-    fn slice_into_abi(slice: &[Self]) -> WasmSlice;
-}
-
-impl<T: VectorRefIntoWasmAbi> IntoWasmAbi for &[T] {
+/// table indices), so a `&[T]` is borrowed and a `Vec<T>` hands its buffer
+/// over. Encoded, the cell is the element's ABI, in a fresh buffer that JS
+/// decodes with the element's own glue and frees: `&T`'s ABI for a `&[T]`,
+/// which lends its elements, and `T`'s for a `Vec<T>`, which gives them. An
+/// element is in place when it is
+/// [`ABI_TRANSPARENT`](WasmDescribe::ABI_TRANSPARENT), and the sequence's
+/// descriptor marks an encoded one with `ABI_CELL`.
+impl<T: RefIntoWasmAbi> IntoWasmAbi for &[T] {
     type Abi = WasmSlice;
 
     #[inline]
     fn into_abi(self) -> WasmSlice {
-        T::slice_into_abi(self)
+        if T::ABI_TRANSPARENT.get() {
+            WasmSlice::borrow(self)
+        } else {
+            WasmSlice::encode(self, T::ref_into_abi)
+        }
     }
 }
 
-impl<T: VectorRefIntoWasmAbi> OptionIntoWasmAbi for &[T] {
+/// A borrowed vector lends its storage as the slice of it does, so a
+/// `&[Vec<T>]` lends each of its vectors. It is described as the vector,
+/// which JS reads by copy: a view is the unsized `&[T]` alone, as a generic
+/// `&T` can pass a `&Vec<T>` to JS that keeps it.
+impl<T: RefIntoWasmAbi> IntoWasmAbi for &Vec<T> {
+    type Abi = WasmSlice;
+
     #[inline]
-    fn none() -> WasmSlice {
-        null_slice()
+    fn into_abi(self) -> WasmSlice {
+        self.as_slice().into_abi()
     }
 }
 
-impl_nullable_into_shared_abi!(null = js_null_slice(); [T: VectorRefIntoWasmAbi] &[T]);
+impl<T: RefIntoWasmAbi> IntoWasmAbi for &Box<[T]> {
+    type Abi = WasmSlice;
 
-/// An encoded sequence's cell: the `#[repr(C)]` record of a scalar ABI's
-/// primitives, with unused ones `()`. That is the same split as the wasm
-/// signature, which is how the CLI lays out the cell's words, so both sides
-/// agree on the layout by definition.
-#[repr(C)]
-struct AbiCell<A: WasmAbi>(A::Prim1, A::Prim2, A::Prim3, A::Prim4);
+    #[inline]
+    fn into_abi(self) -> WasmSlice {
+        (**self).into_abi()
+    }
+}
+
+// A lent sequence is absent as a given one is, whichever of these lends it.
+macro_rules! optional_lent_sequences {
+    ($($t:ty)*) => ($(
+        impl<'a, T> OptionIntoWasmAbi for &'a $t
+        where
+            &'a $t: IntoWasmAbi<Abi = WasmSlice>,
+        {
+            #[inline]
+            fn none() -> WasmSlice {
+                null_slice()
+            }
+        }
+
+        impl_nullable_into_shared_abi!(
+            null = js_null_slice();
+            ['a, T] &'a $t where Self: IntoWasmAbi<Abi = WasmSlice>
+        );
+    )*)
+}
+
+optional_lent_sequences!([T] Vec<T> Box<[T]>);
 
 // A `(ptr, len)` cell is two pointer words, which are `f64`s on memory64.
 #[cfg(target_arch = "wasm64")]
-const _: () = assert!(mem::size_of::<AbiCell<WasmSlice>>() == 16);
-#[cfg(target_arch = "wasm64")]
-const _: () = assert!(mem::align_of::<AbiCell<WasmSlice>>() == 8);
+const _: () = assert!(WasmSlice::CELL.size() == 16 && WasmSlice::CELL.align() == 8);
 #[cfg(not(target_arch = "wasm64"))]
-const _: () = assert!(mem::size_of::<AbiCell<WasmSlice>>() == 8);
-#[cfg(not(target_arch = "wasm64"))]
-const _: () = assert!(mem::align_of::<AbiCell<WasmSlice>>() == 4);
+const _: () = assert!(WasmSlice::CELL.size() == 8 && WasmSlice::CELL.align() == 4);
+
+/// A buffer of `len` cells of `A`, freed on drop.
+struct Cells<A: WasmAbi> {
+    ptr: *mut u8,
+    len: usize,
+    abi: PhantomData<A>,
+}
+
+impl<A: WasmAbi> Cells<A> {
+    const HOLDS_A_WORD: () = assert!(
+        A::CELL.size() != 0,
+        "a sequence's element must cross as at least one word"
+    );
+
+    fn layout(len: usize) -> Layout {
+        let () = Self::HOLDS_A_WORD;
+        len.checked_mul(A::CELL.size())
+            .and_then(|size| Layout::from_size_align(size, A::CELL.align()).ok())
+            .expect("capacity overflow")
+    }
+
+    /// An empty buffer is dangling, as `__wbindgen_malloc` gives JS.
+    fn new(len: usize) -> Self {
+        let layout = Self::layout(len);
+        let ptr = if layout.size() == 0 {
+            layout.align() as *mut u8
+        } else {
+            let ptr = unsafe { alloc(layout) };
+            if ptr.is_null() {
+                handle_alloc_error(layout);
+            }
+            ptr
+        };
+        Self {
+            ptr,
+            len,
+            abi: PhantomData,
+        }
+    }
+
+    fn encode(elems: impl ExactSizeIterator<Item = A>) -> WasmSlice {
+        let cells = Self::new(elems.len());
+        for (i, elem) in elems.enumerate() {
+            unsafe { elem.write_cell(cells.ptr.add(i * A::CELL.size())) }
+        }
+        let slice = WasmSlice::from_usize(cells.ptr as usize, cells.len);
+        mem::forget(cells);
+        slice
+    }
+}
+
+impl<A: WasmAbi> Drop for Cells<A> {
+    fn drop(&mut self) {
+        let layout = Self::layout(self.len);
+        if layout.size() != 0 {
+            unsafe { dealloc(self.ptr, layout) }
+        }
+    }
+}
 
 impl WasmSlice {
     /// An in-place sequence: `slice`'s own memory, borrowed.
@@ -389,147 +431,101 @@ impl WasmSlice {
         Self::from_usize(slice.as_ptr() as usize, slice.len())
     }
 
-    /// An encoded sequence: a fresh buffer of each element's cell, its scalar
-    /// ABI by `f`, which JS decodes and frees.
-    pub fn encode<'a, T: IntoWasmAbi + 'a>(
-        slice: &'a [T],
-        mut f: impl FnMut(&'a T) -> T::Abi,
-    ) -> Self {
-        let cells: Box<[AbiCell<T::Abi>]> = slice
-            .iter()
-            .map(|elem| {
-                let (p1, p2, p3, p4) = f(elem).split();
-                AbiCell(p1, p2, p3, p4)
-            })
-            .collect();
-        let len = cells.len();
-        Self::from_usize(Box::into_raw(cells) as *mut AbiCell<T::Abi> as usize, len)
+    /// An encoded sequence: a fresh buffer of each element's cell, its ABI
+    /// by `f`, which JS decodes and frees.
+    pub fn encode<'a, T: 'a, A: WasmAbi>(slice: &'a [T], f: impl FnMut(&'a T) -> A) -> Self {
+        Cells::encode(slice.iter().map(f))
+    }
+
+    /// An encoded sequence that gives its elements: a fresh buffer of each
+    /// element's cell, its ABI by `f`, which JS decodes, takes and frees.
+    pub fn encode_owned<T, A: WasmAbi>(vector: Box<[T]>, f: impl FnMut(T) -> A) -> Self {
+        Cells::encode(Vec::from(vector).into_iter().map(f))
     }
 
     /// Takes an encoded sequence from JS, converting each element from its
-    /// cell's ABI with `FromWasmAbi::try_from_abi`. A rejected element stops
-    /// the decode, dropping the buffer and every element converted so far.
+    /// cell's ABI with `FromWasmAbi::try_from_abi`. Every cell is received
+    /// whether or not one before it was rejected or its conversion unwound,
+    /// as Rust owns them all. A rejected element drops the buffer and every
+    /// other element, and the first conversion to unwind goes on unwinding
+    /// once the rest are received and dropped, as does an element's drop.
     ///
     /// # Safety
     ///
     /// `self` must be `len` cells of `T::Abi` that JS allocated at the cell's
     /// alignment, for Rust to own.
+    // Where a panic aborts none is caught, so what keeps one can't be reached.
+    #[cfg_attr(
+        not(all(feature = "std", panic = "unwind")),
+        allow(unreachable_code, unused_assignments)
+    )]
     pub unsafe fn try_decode<T: FromWasmAbi>(self) -> Result<Box<[T]>, &'static str> {
-        let ptr = self.ptr.into_usize() as *mut AbiCell<T::Abi>;
-        let len = self.len.into_usize();
-        Vec::from_raw_parts(ptr, len, len)
-            .into_iter()
-            .map(|AbiCell(p1, p2, p3, p4)| T::try_from_abi(T::Abi::join(p1, p2, p3, p4)))
-            .collect()
+        let cells = Cells::<T::Abi> {
+            ptr: self.ptr.into_usize() as *mut u8,
+            len: self.len.into_usize(),
+            abi: PhantomData,
+        };
+        let mut elems = Vec::with_capacity(cells.len);
+        let mut rejected = None;
+        let mut unwound = None;
+        for i in 0..cells.len {
+            let cell = cells.ptr.add(i * T::Abi::CELL.size());
+            let failed = rejected.is_some() || unwound.is_some();
+            // Past a failure the element is dropped where it's converted.
+            let converted = catch_conversion(|| {
+                unsafe { T::try_from_abi(T::Abi::read_cell(cell)) }
+                    .map(|elem| (!failed).then_some(elem))
+            });
+            match converted {
+                Ok(Ok(Some(elem))) => elems.push(elem),
+                Ok(Ok(None)) => {}
+                Ok(Err(msg)) => rejected = rejected.or(Some(msg)),
+                Err(payload) => unwound = unwound.or(Some(payload)),
+            }
+        }
+        if rejected.is_some() || unwound.is_some() {
+            for elem in mem::take(&mut elems) {
+                if let Err(payload) = catch_conversion(|| drop(elem)) {
+                    unwound = unwound.or(Some(payload));
+                }
+            }
+        }
+        if let Some(payload) = unwound {
+            drop(cells);
+            resume_conversion(payload);
+        }
+        match rejected {
+            Some(msg) => Err(msg),
+            None => Ok(elems.into_boxed_slice()),
+        }
     }
 }
 
-/// Declares a sequence of `$t` with encoded cells, emitting every impl it
-/// needs together with its descriptor, for each side listed: `ref_into`
-/// (`&[T]` to JS), `into` (`Vec<T>` / `Box<[T]>` to JS) and `from` (`Vec<T>`
-/// / `Box<[T]>` from JS). `$encode` gives a borrowed element's scalar ABI. An
-/// owned vector to JS encodes as its borrowed slice, so `into` is only for
-/// elements that own nothing, which it checks at compile time. `from` takes
-/// its element with `FromWasmAbi` (see [`WasmSlice::try_decode`]).
-#[macro_export]
-#[doc(hidden)]
-macro_rules! __wbindgen_encoded_sequence {
-    ($t:ty, $encode:expr, [$($side:ident),+ $(,)?]) => {
-        $($crate::__wbindgen_encoded_sequence!(@$side $t, $encode);)+
-    };
-    (@ref_into $t:ty, $encode:expr) => {
-        $crate::__wbindgen_coverage! {
-            #[automatically_derived]
-            impl $crate::convert::VectorRefIntoWasmAbi for $t {
-                #[inline]
-                fn slice_into_abi(slice: &[Self]) -> $crate::convert::WasmSlice {
-                    $crate::convert::WasmSlice::encode(slice, $encode)
-                }
-            }
+cfg_if! {
+    if #[cfg(all(feature = "std", panic = "unwind"))] {
+        type Unwound = Box<dyn core::any::Any + Send>;
+
+        // A guard that received the rest while unwinding would abort on a
+        // second element that panics, so each conversion is caught instead.
+        #[inline]
+        fn catch_conversion<R>(f: impl FnOnce() -> R) -> Result<R, Unwound> {
+            std::panic::catch_unwind(core::panic::AssertUnwindSafe(f))
         }
 
-        #[automatically_derived]
-        impl $crate::__rt::marker::VectorRefIntoWasmAbiSealed for $t {}
-    };
-    (@into $t:ty, $encode:expr) => {
-        const _: () = assert!(!$crate::__rt::core::mem::needs_drop::<$t>());
+        fn resume_conversion(payload: Unwound) -> ! {
+            std::panic::resume_unwind(payload)
+        }
+    } else {
+        type Unwound = core::convert::Infallible;
 
-        $crate::__wbindgen_coverage! {
-            #[automatically_derived]
-            impl $crate::describe::WasmDescribeVector for $t {
-                fn describe_vector() {
-                    $crate::describe::inform($crate::describe::VECTOR);
-                    <Self as $crate::describe::WasmDescribe>::describe();
-                }
-            }
+        #[inline]
+        fn catch_conversion<R>(f: impl FnOnce() -> R) -> Result<R, Unwound> {
+            Ok(f())
         }
 
-        #[automatically_derived]
-        impl $crate::convert::VectorIntoWasmAbi for $t {
-            type Abi = $crate::convert::WasmSlice;
-
-            #[inline]
-            fn vector_into_abi(
-                vector: $crate::__rt::alloc::boxed::Box<[Self]>,
-            ) -> $crate::convert::WasmSlice {
-                <Self as $crate::convert::VectorRefIntoWasmAbi>::slice_into_abi(&vector)
-            }
+        fn resume_conversion(payload: Unwound) -> ! {
+            match payload {}
         }
-    };
-    (@from $t:ty, $encode:expr) => {
-        #[automatically_derived]
-        impl $crate::convert::VectorFromWasmAbi for $t {
-            type Abi = $crate::convert::WasmSlice;
-
-            #[inline]
-            unsafe fn vector_from_abi(
-                js: $crate::convert::WasmSlice,
-            ) -> $crate::__rt::alloc::boxed::Box<[Self]> {
-                // Thrown directly, as a closure's frames would push the
-                // caller past the debug-mode error stack's frame limit.
-                match js.try_decode() {
-                    $crate::__rt::core::result::Result::Ok(decoded) => decoded,
-                    $crate::__rt::core::result::Result::Err(msg) => $crate::throw_str(msg),
-                }
-            }
-
-            #[inline]
-            unsafe fn try_vector_from_abi(
-                js: $crate::convert::WasmSlice,
-            ) -> $crate::__rt::core::result::Result<
-                $crate::__rt::alloc::boxed::Box<[Self]>,
-                &'static str,
-            > {
-                js.try_decode()
-            }
-        }
-    };
-}
-
-crate::__wbindgen_encoded_sequence!(bool, |b| (*b).into_abi(), [ref_into, into, from]);
-crate::__wbindgen_encoded_sequence!(char, |c| (*c).into_abi(), [ref_into, into, from]);
-crate::__wbindgen_encoded_sequence!(&str, |s| (*s).into_abi(), [ref_into, into]);
-crate::__wbindgen_encoded_sequence!(&String, |s| (*s).into_abi(), [ref_into]);
-crate::__wbindgen_encoded_sequence!(&Box<str>, |s| (*s).into_abi(), [ref_into]);
-crate::__wbindgen_encoded_sequence!(&Cow<'_, str>, |s| (*s).into_abi(), [ref_into]);
-// An owned `Vec<String>` keeps its released `JsValue` form.
-crate::__wbindgen_encoded_sequence!(String, |s| s.into_abi(), [ref_into]);
-
-impl crate::__rt::marker::VectorRefIntoWasmAbiSealed for JsValue {}
-
-impl VectorRefIntoWasmAbi for JsValue {
-    #[inline]
-    fn slice_into_abi(slice: &[Self]) -> WasmSlice {
-        WasmSlice::borrow(slice)
-    }
-}
-
-impl crate::__rt::marker::VectorRefIntoWasmAbiSealed for JsError {}
-
-impl VectorRefIntoWasmAbi for JsError {
-    #[inline]
-    fn slice_into_abi(slice: &[Self]) -> WasmSlice {
-        WasmSlice::borrow(slice)
     }
 }
 
@@ -706,11 +702,17 @@ unsafe impl<T: ErasableGeneric> ErasableGeneric for Vec<T> {
 
 impl<T, Target> UpcastFrom<Vec<T>> for Vec<Target> where Target: UpcastFrom<T> {}
 
-impl<T: VectorIntoWasmAbi> IntoWasmAbi for Box<[T]> {
-    type Abi = <T as VectorIntoWasmAbi>::Abi;
+impl<T: IntoWasmAbi> IntoWasmAbi for Box<[T]> {
+    type Abi = WasmSlice;
 
-    fn into_abi(self) -> Self::Abi {
-        T::vector_into_abi(self)
+    #[inline]
+    fn into_abi(self) -> WasmSlice {
+        if T::ABI_TRANSPARENT.get() {
+            let len = self.len();
+            WasmSlice::from_usize(Box::into_raw(self) as *mut T as usize, len)
+        } else {
+            WasmSlice::encode_owned(self, T::into_abi)
+        }
     }
 }
 
@@ -728,16 +730,28 @@ impl_nullable_into_shared_abi!(
     [T] Box<[T]> where Self: IntoWasmAbi<Abi = WasmSlice>
 );
 
-impl<T: VectorFromWasmAbi> FromWasmAbi for Box<[T]> {
-    type Abi = <T as VectorFromWasmAbi>::Abi;
+impl<T: FromWasmAbi> FromWasmAbi for Box<[T]> {
+    type Abi = WasmSlice;
 
-    unsafe fn from_abi(js: Self::Abi) -> Self {
-        T::vector_from_abi(js)
+    #[inline]
+    unsafe fn from_abi(js: WasmSlice) -> Self {
+        // Thrown directly, as a closure's frames would push the caller past
+        // the debug-mode error stack's frame limit.
+        match Self::try_from_abi(js) {
+            Ok(vector) => vector,
+            Err(msg) => crate::throw_str(msg),
+        }
     }
 
     #[inline]
-    unsafe fn try_from_abi(js: Self::Abi) -> Result<Self, &'static str> {
-        T::try_vector_from_abi(js)
+    unsafe fn try_from_abi(js: WasmSlice) -> Result<Self, &'static str> {
+        if T::ABI_TRANSPARENT.get() {
+            let ptr = js.ptr.into_usize() as *mut T;
+            let len = js.len.into_usize();
+            Ok(Vec::from_raw_parts(ptr, len, len).into_boxed_slice())
+        } else {
+            js.try_decode()
+        }
     }
 }
 
@@ -755,6 +769,9 @@ impl_nullable_from_shared_abi!(
     [T] Box<[T]> where Self: FromWasmAbi<Abi = WasmSlice>
 );
 
+// The soft-deprecated vector traits are unused, and kept for the types that
+// erase to `JsValue` as bindings that predate sequences crossing by their
+// element's own ABI call these.
 impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe> VectorFromWasmAbi for T {
     type Abi = WasmSlice;
 
@@ -787,13 +804,40 @@ where
 
 impl<'a, T, Target> UpcastFrom<&'a [T]> for &'a [Target] where Target: UpcastFrom<T> {}
 
-// A borrowed number, `bool`, `char` or borrowed string crosses by copy, so
-// `&T`, `Option<&T>` and `Nullable<&T>` have `T`'s ABIs, as generic code
-// borrowing an element (`contains(&T)`) needs for every `T`.
+// A borrowed number, `bool` or `char` crosses by copy, so `&T`, `Option<&T>`
+// and `Nullable<&T>` have `T`'s ABIs, as generic code borrowing an element
+// (`contains(&T)`) needs for every `T`.
 macro_rules! ref_by_copy {
-    ($($t:ty => $base:ty,)*) => ($(
+    // The optional ABI of these is wider than their own, which is all that
+    // a reference to a reference forwards, so `&&T`'s is spelled out: a
+    // sequence that holds an `Option<&T>` lends an `Option<&&T>`.
+    (@optional $t:ty, $($r:ty),*) => ($(
+        impl MaybeIntoWasmAbi for $r {
+            type MaybeAbi = <$t as MaybeIntoWasmAbi>::MaybeAbi;
+
+            #[inline]
+            fn into_maybe_abi(self) -> Self::MaybeAbi {
+                let value: &$t = &self;
+                (*value).into_maybe_abi()
+            }
+
+            #[inline]
+            fn none() -> Self::MaybeAbi {
+                <$t as MaybeIntoWasmAbi>::none()
+            }
+        }
+
+        impl NullableIntoWasmAbi for $r {
+            #[inline]
+            fn null() -> Self::MaybeAbi {
+                <$t as NullableIntoWasmAbi>::null()
+            }
+        }
+    )*);
+
+    ($($t:ty)*) => ($(
         impl IntoWasmAbi for &$t {
-            type Abi = <$base as IntoWasmAbi>::Abi;
+            type Abi = <$t as IntoWasmAbi>::Abi;
 
             #[inline]
             fn into_abi(self) -> Self::Abi {
@@ -801,35 +845,46 @@ macro_rules! ref_by_copy {
             }
         }
 
-        impl MaybeIntoWasmAbi for &$t {
-            type MaybeAbi = <$base as MaybeIntoWasmAbi>::MaybeAbi;
-
-            #[inline]
-            fn into_maybe_abi(self) -> Self::MaybeAbi {
-                (*self).into_maybe_abi()
-            }
-
-            #[inline]
-            fn none() -> Self::MaybeAbi {
-                <$base as MaybeIntoWasmAbi>::none()
-            }
-        }
-
-        impl NullableIntoWasmAbi for &$t {
-            #[inline]
-            fn null() -> Self::MaybeAbi {
-                <$base as NullableIntoWasmAbi>::null()
-            }
-        }
-    )*)
+        ref_by_copy!(@optional $t, &$t, &&$t);
+    )*);
 }
 
 ref_by_copy! {
-    u8 => u8, i8 => i8, u16 => u16, i16 => i16, u32 => u32, i32 => i32,
-    u64 => u64, i64 => i64, u128 => u128, i128 => i128, usize => usize,
-    isize => isize, f32 => f32, f64 => f64, bool => bool, char => char,
-    &str => &'static str, &String => &'static String,
-    &Box<str> => &'static Box<str>, &Cow<'_, str> => &'static Cow<'static, str>,
+    u8 i8 u16 i16 u32 i32 u64 i64 u128 i128 usize isize f32 f64 bool char
+}
+
+// A reference to a reference crosses as the reference, so what lends its
+// elements (`&[&T]`, `&[Option<&T>]`, `&[&[T]]`) lends each as itself.
+impl<'a, T: ?Sized> IntoWasmAbi for &&'a T
+where
+    &'a T: IntoWasmAbi,
+{
+    type Abi = <&'a T as IntoWasmAbi>::Abi;
+
+    #[inline]
+    fn into_abi(self) -> Self::Abi {
+        (*self).into_abi()
+    }
+}
+
+impl<'a, T: ?Sized> OptionIntoWasmAbi for &&'a T
+where
+    &'a T: OptionIntoWasmAbi,
+{
+    #[inline]
+    fn none() -> Self::Abi {
+        <&'a T as OptionIntoWasmAbi>::none()
+    }
+}
+
+impl<'a, T: ?Sized> NullableIntoWasmAbi for &&'a T
+where
+    &'a T: OptionIntoWasmAbi + NullableIntoWasmAbi<MaybeAbi = <&'a T as IntoWasmAbi>::Abi>,
+{
+    #[inline]
+    fn null() -> Self::MaybeAbi {
+        <&'a T as NullableIntoWasmAbi>::null()
+    }
 }
 
 impl<'a, T: WasmDescribe> IntoWasmAbi for &'a Option<T>

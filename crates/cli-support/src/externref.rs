@@ -1,7 +1,8 @@
 use crate::descriptor::VectorKind;
 use crate::transforms::externref::Context;
 use crate::wit::{
-    visit_instructions_mut, AdapterType, InstructionData, StackChange, WasmBindgenAux,
+    visit_instructions, visit_instructions_mut, AdapterType, InstructionData, StackChange,
+    WasmBindgenAux,
 };
 use crate::wit::{AdapterKind, Instruction, NonstandardWitSection, StaticSlot};
 use crate::{INITIAL_HEAP_OFFSET, INITIAL_HEAP_VALUES};
@@ -334,39 +335,41 @@ fn module_needs_externref_metadata(aux: &WasmBindgenAux, section: &NonstandardWi
 
     // Look for any instructions which may use `VectorKind::Externref`. If there
     // are any then we'll need our intrinsics/tables/etc, otherwise we shouldn't
-    // ever need them.
+    // ever need them. A handle in an encoded cell isn't sunk into wasm, so
+    // the glue allocates and drops it too.
     section.adapters.iter().any(|(_, adapter)| {
         let instructions = match &adapter.kind {
             AdapterKind::Local { instructions } => instructions,
             AdapterKind::Import { .. } => return false,
         };
-        instructions.iter().any(|instr| {
-            matches!(
-                instr.instr,
-                VectorToMemory {
-                    kind: VectorKind::Externref | VectorKind::NamedExternref(_),
-                    ..
-                } | MutableSliceToMemory {
-                    kind: VectorKind::Externref | VectorKind::NamedExternref(_),
-                    ..
-                } | OptionVector {
-                    kind: VectorKind::Externref | VectorKind::NamedExternref(_),
-                    ..
-                } | VectorLoad {
-                    kind: VectorKind::Externref | VectorKind::NamedExternref(_),
-                    ..
-                } | OptionVectorLoad {
-                    kind: VectorKind::Externref | VectorKind::NamedExternref(_),
-                    ..
-                } | View {
-                    kind: VectorKind::Externref | VectorKind::NamedExternref(_),
-                    ..
-                } | OptionView {
-                    kind: VectorKind::Externref | VectorKind::NamedExternref(_),
-                    ..
+        let mut needed = false;
+        visit_instructions(instructions, &mut |instr| {
+            needed |= match &instr.instr {
+                VectorToMemory { kind, .. }
+                | MutableSliceToMemory { kind, .. }
+                | OptionVector { kind, .. }
+                | VectorLoad { kind, .. }
+                | OptionVectorLoad { kind, .. }
+                | View { kind, .. }
+                | OptionView { kind, .. } => {
+                    matches!(kind, VectorKind::Externref | VectorKind::NamedExternref(_))
                 }
-            )
-        })
+                EncodedSliceStore { elem, .. } | EncodedSliceLoad { elem, .. } => {
+                    let mut handle = false;
+                    visit_instructions(elem, &mut |instr| {
+                        handle |= matches!(
+                            instr.instr,
+                            I32FromExternrefOwned
+                                | I32FromOptionExternref { .. }
+                                | ExternrefLoadOwned { .. }
+                        );
+                    });
+                    handle
+                }
+                _ => false,
+            };
+        });
+        needed
     })
 }
 

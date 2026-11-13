@@ -20,6 +20,7 @@ use wasm_bindgen::prelude::*;
 
 #[path = "3944.rs"]
 pub mod _3944;
+pub mod abi_cells;
 pub mod api;
 pub mod arg_leaks;
 pub mod arg_names;
@@ -33,6 +34,7 @@ pub mod closures;
 pub mod comments;
 pub mod duplicate_deps;
 pub mod duplicates;
+pub mod element_matrix;
 pub mod enum_vecs;
 pub mod enums;
 #[path = "final.rs"]
@@ -67,12 +69,14 @@ pub mod memory_growth;
 pub mod no_shims;
 pub mod node;
 pub mod nullable;
+pub mod nullable_elements;
 pub mod nullable_type;
 pub mod option;
 pub mod option_null;
 pub mod optional_primitives;
 pub mod primitive_union_traits;
 pub mod reexport;
+pub mod rejected_values;
 pub mod result;
 pub mod result_jserror;
 pub mod rethrow;
@@ -84,10 +88,12 @@ pub mod slice_elements;
 pub mod slice_jsvalue;
 pub mod slice_modes;
 pub mod slice_to_array;
+pub mod staged_vectors;
 pub mod static_string;
 pub mod string_vecs;
 pub mod struct_vecs;
 pub mod structural;
+pub mod third_party_abi;
 pub mod truthy_falsy;
 pub mod try_from_js_value;
 #[cfg(all(panic = "unwind", feature = "std"))]
