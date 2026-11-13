@@ -3811,6 +3811,22 @@ fn emscripten_end_to_end() {
             }
 
             #[wasm_bindgen]
+            extern "C" {
+                #[wasm_bindgen(js_name = "rustAbortHook")]
+                fn rust_abort_hook();
+            }
+
+            #[wasm_bindgen]
+            pub fn install_abort_hook() {
+                wasm_bindgen::handler::set_on_abort(|| rust_abort_hook());
+            }
+
+            #[wasm_bindgen]
+            pub fn panic_now() {
+                panic!("abort strategy");
+            }
+
+            #[wasm_bindgen]
             pub fn now_secs() -> f64 {
                 std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
@@ -3948,6 +3964,21 @@ fn emscripten_end_to_end() {
         js.display()
     );
 
+    // The `set_on_abort` hook is wired into `Module.onAbort` before the
+    // start function runs, so a handler registered from
+    // `#[wasm_bindgen(start)]` covers aborts during startup.
+    let glue = fs::read_to_string(&js).unwrap();
+    let hook_at = glue
+        .find("Module['onAbort'] = ")
+        .expect("abort hook installed in the glue");
+    let start_at = glue
+        .find("___wbindgen_start();")
+        .expect("start function called from the glue");
+    assert!(
+        hook_at < start_at,
+        "the abort hook must be installed before the start function runs"
+    );
+
     let out_dir = project.root.join("pkg");
     fs::create_dir_all(&out_dir).unwrap();
     fs::copy(&js, out_dir.join("emscripten_end_to_end.js")).unwrap();
@@ -4040,6 +4071,18 @@ fn emscripten_end_to_end() {
             });
             assert((await Promise.all(nested)).join() === '2,2,1', 'nested schedules');
         }
+
+        // With `panic=abort` a panic goes through libc abort to emscripten's
+        // abort(); `set_on_abort` is hooked into Module.onAbort, so it fires
+        // here too, even though this build has no exception handling and no
+        // embedder onAbort was passed.
+        let hookCalls = 0;
+        globalThis.rustAbortHook = () => { hookCalls++; };
+        m.install_abort_hook();
+        let panicked;
+        try { m.panic_now(); } catch (e) { panicked = e; }
+        assert(panicked instanceof WebAssembly.RuntimeError, `panic=abort panic surfaces as RuntimeError, got ${panicked}`);
+        assert(hookCalls === 1, `rust abort hook calls ${hookCalls}`);
 
         console.log('ok');
         "#,
@@ -4235,6 +4278,27 @@ fn emscripten_unwind_end_to_end(name: &str, dialect: EhDialect) {
             #[wasm_bindgen]
             pub fn call_abort() {
                 std::process::abort()
+            }
+
+            #[wasm_bindgen]
+            extern "C" {
+                #[wasm_bindgen(js_name = "rustAbortHook")]
+                fn rust_abort_hook();
+            }
+
+            #[wasm_bindgen]
+            pub fn install_abort_hook() -> bool {
+                wasm_bindgen::handler::set_on_abort(|| rust_abort_hook()).is_none()
+            }
+
+            /// A handler that itself aborts, which must not recurse through
+            /// `Module.onAbort`.
+            #[wasm_bindgen]
+            pub fn install_aborting_abort_hook() {
+                wasm_bindgen::handler::set_on_abort(|| {
+                    rust_abort_hook();
+                    std::process::abort()
+                });
             }
 
             // Emscripten's exit path unwinds (it throws an `ExitStatus` from
@@ -4483,30 +4547,75 @@ fn emscripten_unwind_end_to_end(name: &str, dialect: EhDialect) {
         assert(process.exitCode === 3, `process.exitCode ${{process.exitCode}}`);
         process.exitCode = 0;
 
+        // `set_on_abort` is driven by Emscripten's abort(): the glue wraps
+        // the embedder's Module.onAbort (passed to Module() above) so the
+        // Rust handler runs first and the embedder's still runs.
+        let hookCalls = 0;
+        globalThis.rustAbortHook = () => {{
+            hookCalls++;
+            assert(aborts.length === 0, 'rust abort hook runs before the embedder onAbort');
+        }};
+        assert(m.install_abort_hook() === true, 'set_on_abort returns None the first time');
+        assert(m.install_abort_hook() === false, 'set_on_abort returns the previous handler');
+
         // `std::process::abort()` reaches Emscripten's abort() through libc,
         // which runs Module.onAbort, sets ABORT and re-traps; the trap that
         // comes back out through the export must not be aborted a second
-        // time, so onAbort fires exactly once.
+        // time, so onAbort (and the Rust hook) fire exactly once.
         let abortErr;
         try {{ m.call_abort(); }} catch (e) {{ abortErr = e; }}
         assert(abortErr instanceof WebAssembly.RuntimeError, `abort surfaces as RuntimeError, got ${{abortErr}}`);
         assert(aborts.length === 1, `onAbort calls after abort(): ${{aborts.length}}`);
         assert(typeof aborts[0] === 'string', `onAbort got libc abort's message, not the re-trap: ${{aborts[0]}}`);
-        // ABORT is now set, so later traps won't call onAbort again; the
-        // trap test below is run against a fresh instance.
-        const m2 = await Module({{ printErr() {{}}, onAbort(what) {{ aborts.push(what); }} }});
-        aborts.length = 0;
+        assert(hookCalls === 1, `rust abort hook calls after abort(): ${{hookCalls}}`);
 
-        // A trap is handed to Emscripten's abort(): Module.onAbort sees the
-        // original RuntimeError, and abort() then re-traps through the
+        // ABORT is now set, so later traps won't call onAbort again; each
+        // of the following runs against a fresh instance.
+
+        // A trap is handed to Emscripten's abort(): the embedder's onAbort
+        // sees the original RuntimeError, abort() re-traps through the
         // module's `__trap` export (a real trap, which no wasm `catch_all`
-        // on the way out can swallow) so the caller gets a RuntimeError.
-        assert(aborts.length === 0, 'no abort so far');
-        let trap;
-        try {{ m2.trap(); }} catch (e) {{ trap = e; }}
-        assert(trap instanceof WebAssembly.RuntimeError, `abort surfaces as RuntimeError, got ${{trap}}`);
-        assert(aborts.length === 1, `onAbort calls ${{aborts.length}}`);
-        assert(aborts[0] instanceof WebAssembly.RuntimeError && /unreachable/.test(aborts[0].message), `onAbort gets the trap, got ${{aborts[0]}}`);
+        // on the way out can swallow) so the caller gets a RuntimeError, and
+        // the Rust hook fires once along the way.
+        {{
+            const trapAborts = [];
+            const m2 = await Module({{ printErr() {{}}, onAbort(what) {{ trapAborts.push(what); }} }});
+            hookCalls = 0;
+            globalThis.rustAbortHook = () => {{ hookCalls++; }};
+            m2.install_abort_hook();
+            let trap;
+            try {{ m2.trap(); }} catch (e) {{ trap = e; }}
+            assert(trap instanceof WebAssembly.RuntimeError, `abort surfaces as RuntimeError, got ${{trap}}`);
+            assert(hookCalls === 1, `rust abort hook calls after trap: ${{hookCalls}}`);
+            assert(trapAborts.length === 1, `onAbort calls after trap: ${{trapAborts.length}}`);
+            assert(trapAborts[0] instanceof WebAssembly.RuntimeError && /unreachable/.test(trapAborts[0].message), `onAbort gets the trap, got ${{trapAborts[0]}}`);
+            assert(aborts.length === 1, 'embedder onAbort of the first instance untouched');
+        }}
+
+        // With no embedder onAbort the glue installs one itself.
+        {{
+            const m3 = await Module({{ printErr() {{}} }});
+            hookCalls = 0;
+            m3.install_abort_hook();
+            try {{ m3.trap(); }} catch (_) {{}}
+            assert(hookCalls === 1, `rust abort hook calls without embedder onAbort: ${{hookCalls}}`);
+        }}
+
+        // A handler that aborts must not recurse: abort() runs onAbort
+        // before setting ABORT, so without a re-entry guard the chain
+        // abort -> onAbort -> handler -> abort -> ... would overflow the
+        // stack and run the embedder's onAbort once per level.
+        {{
+            const nestedAborts = [];
+            const m4 = await Module({{ printErr() {{}}, onAbort(what) {{ nestedAborts.push(what); }} }});
+            hookCalls = 0;
+            m4.install_aborting_abort_hook();
+            let err;
+            try {{ m4.trap(); }} catch (e) {{ err = e; }}
+            assert(err instanceof WebAssembly.RuntimeError, `aborting handler surfaces as RuntimeError, got ${{err}}`);
+            assert(hookCalls === 1, `aborting handler ran ${{hookCalls}} times`);
+            assert(nestedAborts.length === 1, `onAbort calls with an aborting handler: ${{nestedAborts.length}}`);
+        }}
 
         console.log('ok');
         "#
