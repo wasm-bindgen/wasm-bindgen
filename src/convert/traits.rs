@@ -1,6 +1,4 @@
 use core::borrow::Borrow;
-use core::marker::PhantomData;
-use core::mem;
 use core::ops::{Deref, DerefMut};
 use core::panic::AssertUnwindSafe;
 
@@ -449,105 +447,65 @@ pub trait WasmAbi {
     fn join(prim1: Self::Prim1, prim2: Self::Prim2, prim3: Self::Prim3, prim4: Self::Prim4)
         -> Self;
 
-    /// The layout of this type's cell: the type as stored in memory, which a
-    /// sequence holds one of per element. By default the cell is the
-    /// `#[repr(C)]` record of the four primitives, the same split as the wasm
-    /// signature, which is how the CLI lays out the cell's words. An ABI that
-    /// is wider than its primitives stores a record of the cells it is made
-    /// of instead, and overrides this with both cell methods.
+    /// This type as stored in memory: the cell a sequence holds one of per
+    /// element, and that a value wider than its primitives crosses as a
+    /// pointer to. rustc lays it out, so the cell's size and alignment are
+    /// the type's, and the CLI lays out the same words as the `#[repr(C)]`
+    /// record they are.
+    ///
+    /// Most ABIs store the record of their primitives, the same split as the
+    /// wasm signature: [`AbiCell<Self>`](AbiCell). An ABI that is wider than
+    /// its primitives stores the `#[repr(C)]` record of its parts' cells.
     #[doc(hidden)]
-    const CELL: CellLayout<Self> = CellLayout::PRIMS;
+    type Cell;
 
     /// Stores this type in its cell.
-    ///
-    /// # Safety
-    ///
-    /// `cell` must be valid for a write of `CELL`'s size, at its alignment.
     #[doc(hidden)]
-    #[inline]
-    unsafe fn write_cell(self, cell: *mut u8)
-    where
-        Self: Sized,
-    {
-        let (prim1, prim2, prim3, prim4) = self.split();
-        cell.cast::<AbiCell<Self>>()
-            .write(AbiCell(prim1, prim2, prim3, prim4));
-    }
+    fn into_cell(self) -> Self::Cell;
 
     /// Takes this type out of its cell.
-    ///
-    /// # Safety
-    ///
-    /// `cell` must hold a cell that [`write_cell`](Self::write_cell), or the
-    /// moral equivalent in JS, stored.
     #[doc(hidden)]
-    #[inline]
-    unsafe fn read_cell(cell: *const u8) -> Self
-    where
-        Self: Sized,
-    {
-        let AbiCell(prim1, prim2, prim3, prim4) = cell.cast::<AbiCell<Self>>().read();
-        Self::join(prim1, prim2, prim3, prim4)
-    }
+    fn from_cell(cell: Self::Cell) -> Self;
 }
 
-#[repr(C)]
-struct AbiCell<A: WasmAbi + ?Sized>(A::Prim1, A::Prim2, A::Prim3, A::Prim4);
-
-/// The size and alignment of `A`'s cell. It names `A`, invariantly, so that
-/// one ABI's can't stand in for another's, a subtype's included, and is other
-/// than the record of `A`'s primitives only through [`CellLayout::new`].
+/// The record of an ABI's primitives, in order: the cell of every ABI that
+/// stores its wasm signature's split.
 #[doc(hidden)]
-pub struct CellLayout<A: ?Sized> {
-    size: usize,
-    align: usize,
-    abi: PhantomData<fn(*const A) -> *const A>,
-}
+#[repr(C)]
+pub struct AbiCell<A: WasmAbi>(A::Prim1, A::Prim2, A::Prim3, A::Prim4);
 
-impl<A: ?Sized> Clone for CellLayout<A> {
-    fn clone(&self) -> Self {
-        *self
+impl<A: WasmAbi> AbiCell<A> {
+    /// The cell of `abi`'s primitives.
+    #[inline]
+    pub fn split(abi: A) -> Self {
+        let (prim1, prim2, prim3, prim4) = abi.split();
+        AbiCell(prim1, prim2, prim3, prim4)
+    }
+
+    /// The ABI these primitives are the split of.
+    #[inline]
+    pub fn join(self) -> A {
+        A::join(self.0, self.1, self.2, self.3)
     }
 }
 
-impl<A: ?Sized> Copy for CellLayout<A> {}
+/// The cell of an ABI that stores the record of its primitives.
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __wbindgen_abi_cell {
+    () => {
+        type Cell = $crate::convert::AbiCell<Self>;
 
-impl<A: WasmAbi + ?Sized> CellLayout<A> {
-    pub const PRIMS: Self = Self {
-        size: mem::size_of::<AbiCell<A>>(),
-        align: mem::align_of::<AbiCell<A>>(),
-        abi: PhantomData,
-    };
-}
-
-impl<A: ?Sized> CellLayout<A> {
-    /// # Safety
-    ///
-    /// This is a layout promise: `A::write_cell` and `A::read_cell` stay
-    /// within `size` bytes at `align`, storing the words the CLI lays out
-    /// for the type's descriptor. `align` is a power of two and `size` a
-    /// multiple of it, as a sequence's cells are `size` apart.
-    pub const unsafe fn new(size: usize, align: usize) -> Self {
-        assert!(
-            align.is_power_of_two() && size % align == 0,
-            "a cell's size is a multiple of its alignment, a power of two"
-        );
-        Self {
-            size,
-            align,
-            abi: PhantomData,
+        #[inline]
+        fn into_cell(self) -> Self::Cell {
+            $crate::convert::AbiCell::split(self)
         }
-    }
 
-    #[inline]
-    pub const fn size(self) -> usize {
-        self.size
-    }
-
-    #[inline]
-    pub const fn align(self) -> usize {
-        self.align
-    }
+        #[inline]
+        fn from_cell(cell: Self::Cell) -> Self {
+            cell.join()
+        }
+    };
 }
 
 /// A trait representing how to interpret the return value of a function for
@@ -1046,22 +1004,15 @@ pub trait FromCaughtException {
 
 #[cfg(test)]
 mod tests {
-    use super::{CellLayout, WasmAbi};
+    use super::{AbiCell, WasmAbi};
     use crate::__rt::WasmWord;
     use crate::convert::WasmSlice;
-    use alloc::alloc::{alloc, dealloc, Layout};
+    use alloc::boxed::Box;
+    use core::mem::{align_of, offset_of, size_of};
 
-    const fn round_up(n: usize, align: usize) -> usize {
-        (n + align - 1) & !(align - 1)
-    }
-
-    const fn max(a: usize, b: usize) -> usize {
-        if a > b {
-            a
-        } else {
-            b
-        }
-    }
+    /// A pair's cell: the `#[repr(C)]` record of its parts' cells.
+    #[repr(C)]
+    pub struct PairCell<A, B>(A, B);
 
     // A pair is wider than the primitives, so it crosses as a pointer to its
     // cell, which is the record of its parts' cells. This is generic over
@@ -1073,53 +1024,32 @@ mod tests {
         type Prim2 = ();
         type Prim3 = ();
         type Prim4 = ();
-
-        const CELL: CellLayout<Self> = {
-            let align = max(A::CELL.align(), B::CELL.align());
-            unsafe { CellLayout::new(round_up(second::<A, B>() + B::CELL.size(), align), align) }
-        };
+        type Cell = PairCell<A::Cell, B::Cell>;
 
         fn split(self) -> (Self::Prim1, (), (), ()) {
-            unsafe {
-                let cell = alloc(layout::<Self>());
-                self.write_cell(cell);
-                WasmWord::from_usize(cell as usize).split()
-            }
+            let cell = Box::into_raw(Box::new(self.into_cell()));
+            WasmWord::from_usize(cell as usize).split()
         }
 
         fn join(ptr: Self::Prim1, _: (), _: (), _: ()) -> Self {
-            let cell = WasmWord::join(ptr, (), (), ()).into_usize() as *mut u8;
-            unsafe {
-                let pair = Self::read_cell(cell);
-                dealloc(cell, layout::<Self>());
-                pair
-            }
+            let cell = WasmWord::join(ptr, (), (), ()).into_usize() as *mut Self::Cell;
+            Self::from_cell(*unsafe { Box::from_raw(cell) })
         }
 
-        unsafe fn write_cell(self, cell: *mut u8) {
-            self.0.write_cell(cell);
-            self.1.write_cell(cell.add(second::<A, B>()));
+        fn into_cell(self) -> Self::Cell {
+            PairCell(self.0.into_cell(), self.1.into_cell())
         }
 
-        unsafe fn read_cell(cell: *const u8) -> Self {
-            (A::read_cell(cell), B::read_cell(cell.add(second::<A, B>())))
+        fn from_cell(cell: Self::Cell) -> Self {
+            (A::from_cell(cell.0), B::from_cell(cell.1))
         }
-    }
-
-    /// The offset of a pair's second part in its cell.
-    const fn second<A: WasmAbi, B: WasmAbi>() -> usize {
-        round_up(A::CELL.size(), B::CELL.align())
     }
 
     fn cell<A: WasmAbi>() -> (usize, usize) {
-        (A::CELL.size(), A::CELL.align())
+        (size_of::<A::Cell>(), align_of::<A::Cell>())
     }
 
-    fn layout<A: WasmAbi>() -> Layout {
-        Layout::from_size_align(A::CELL.size(), A::CELL.align()).unwrap()
-    }
-
-    // An ABI written against the trait before it had a cell.
+    // An ABI written against the trait with the default cell.
     struct External(u32, f64);
 
     impl WasmAbi for External {
@@ -1135,6 +1065,8 @@ mod tests {
         fn join(a: u32, b: f64, _: (), _: ()) -> Self {
             Self(a, b)
         }
+
+        crate::__wbindgen_abi_cell!();
     }
 
     #[test]
@@ -1146,18 +1078,9 @@ mod tests {
         assert_eq!(cell::<()>().0, 0);
         assert_eq!(cell::<External>(), (16, 8));
 
-        let mut cell = [0u64; 2];
-        let External(a, b) = unsafe {
-            External(7, 1.5).write_cell(cell.as_mut_ptr().cast());
-            External::read_cell(cell.as_ptr().cast())
-        };
+        let External(a, b) = External::from_cell(External(7, 1.5).into_cell());
         assert_eq!((a, b), (7, 1.5));
-    }
-
-    #[test]
-    #[should_panic(expected = "multiple of its alignment")]
-    fn cell_strides_by_its_size() {
-        unsafe { CellLayout::<f64>::new(12, 8) };
+        let _: AbiCell<External> = External(0, 0.0).into_cell();
     }
 
     // Laid out for a 32-bit pointer word, which wasm32 and a native host
@@ -1168,25 +1091,20 @@ mod tests {
         // `{ ptr, len, n }`
         type Named = (WasmSlice, u32);
         assert_eq!(cell::<Named>(), (12, 4));
-        assert_eq!(second::<WasmSlice, u32>(), 8);
+        assert_eq!(offset_of!(<Named as WasmAbi>::Cell, 1), 8);
 
         // `{ { ptr, len, n }, pad, x }`: nested, not the flat run of words.
         type Nested = (Named, f64);
         assert_eq!(cell::<Nested>(), (24, 8));
-        assert_eq!(second::<Named, f64>(), 16);
+        assert_eq!(offset_of!(<Nested as WasmAbi>::Cell, 1), 16);
 
         // `{ n, pad, { x, m } }` keeps the inner record's padding.
         type Padded = (u32, (f64, u32));
         assert_eq!(cell::<Padded>().0, 24);
-        assert_eq!(second::<u32, (f64, u32)>(), 8);
+        assert_eq!(offset_of!(<Padded as WasmAbi>::Cell, 1), 8);
 
         let abi: Nested = ((WasmSlice::from_usize(8, 2), 7), 1.5);
-        let mut cell = [0u64; 3];
-        let ((slice, n), x) = unsafe {
-            abi.write_cell(cell.as_mut_ptr().cast());
-            Nested::read_cell(cell.as_ptr().cast())
-        };
-        assert_eq!(cell[2], 1.5f64.to_bits());
+        let ((slice, n), x) = Nested::from_cell(abi.into_cell());
         assert_eq!(
             (slice.ptr.into_usize(), slice.len.into_usize(), n, x),
             (8, 2, 7, 1.5)

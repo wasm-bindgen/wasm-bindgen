@@ -32,6 +32,8 @@ impl<T: WasmPrimitive> WasmAbi for T {
     fn join(prim: Self, _: (), _: (), _: ()) -> Self {
         prim
     }
+
+    crate::__wbindgen_abi_cell!();
 }
 
 impl WasmAbi for i128 {
@@ -51,6 +53,8 @@ impl WasmAbi for i128 {
     fn join(low: u64, high: u64, _: (), _: ()) -> Self {
         (((high as u128) << 64) | low as u128) as i128
     }
+
+    crate::__wbindgen_abi_cell!();
 }
 impl WasmAbi for u128 {
     type Prim1 = u64;
@@ -69,6 +73,8 @@ impl WasmAbi for u128 {
     fn join(low: u64, high: u64, _: (), _: ()) -> Self {
         ((high as u128) << 64) | low as u128
     }
+
+    crate::__wbindgen_abi_cell!();
 }
 
 /// The ABI of `Option<T>`, `Nullable<T>` and `Nullable<Option<T>>` for a `T`
@@ -100,6 +106,8 @@ impl<T: WasmAbi<Prim4 = ()>> WasmAbi for MaybeAbi<T> {
             value: T::join(prim1, prim2, prim3, ()),
         }
     }
+
+    crate::__wbindgen_abi_cell!();
 }
 
 macro_rules! type_wasm_native {
@@ -1003,6 +1011,8 @@ impl<T: WasmAbi<Prim3 = (), Prim4 = ()>> WasmAbi for Result<T, u32> {
             Err(err)
         }
     }
+
+    crate::__wbindgen_abi_cell!();
 }
 
 impl<T, E> ReturnWasmAbi for Result<T, E>

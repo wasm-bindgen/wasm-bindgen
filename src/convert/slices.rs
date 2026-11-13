@@ -3,8 +3,7 @@ use alloc::borrow::Cow;
 use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::vec::Vec;
-use core::marker::PhantomData;
-use core::mem::{self, MaybeUninit};
+use core::mem::{self, align_of, size_of, MaybeUninit};
 use core::ops::{Deref, DerefMut};
 use core::str;
 
@@ -66,6 +65,8 @@ impl WasmAbi for WasmSlice {
             len: WasmWord::join(len, (), (), ()),
         }
     }
+
+    crate::__wbindgen_abi_cell!();
 }
 
 #[inline]
@@ -112,6 +113,8 @@ impl WasmAbi for WasmMutSlice {
             idx,
         }
     }
+
+    crate::__wbindgen_abi_cell!();
 }
 
 /// The representation of a mutable slice passed from JS to Rust.
@@ -361,53 +364,52 @@ optional_lent_sequences!([T] Vec<T> Box<[T]>);
 
 // A `(ptr, len)` cell is two pointer words, which are `f64`s on memory64.
 #[cfg(target_arch = "wasm64")]
-const _: () = assert!(WasmSlice::CELL.size() == 16 && WasmSlice::CELL.align() == 8);
+const _: () = assert!(
+    size_of::<<WasmSlice as WasmAbi>::Cell>() == 16
+        && align_of::<<WasmSlice as WasmAbi>::Cell>() == 8
+);
 #[cfg(not(target_arch = "wasm64"))]
-const _: () = assert!(WasmSlice::CELL.size() == 8 && WasmSlice::CELL.align() == 4);
+const _: () = assert!(
+    size_of::<<WasmSlice as WasmAbi>::Cell>() == 8
+        && align_of::<<WasmSlice as WasmAbi>::Cell>() == 4
+);
 
 /// A buffer of `len` cells of `A`, freed on drop.
 struct Cells<A: WasmAbi> {
-    ptr: *mut u8,
+    ptr: *mut A::Cell,
     len: usize,
-    abi: PhantomData<A>,
 }
 
 impl<A: WasmAbi> Cells<A> {
     const HOLDS_A_WORD: () = assert!(
-        A::CELL.size() != 0,
+        size_of::<A::Cell>() != 0,
         "a sequence's element must cross as at least one word"
     );
 
     fn layout(len: usize) -> Layout {
         let () = Self::HOLDS_A_WORD;
-        len.checked_mul(A::CELL.size())
-            .and_then(|size| Layout::from_size_align(size, A::CELL.align()).ok())
-            .expect("capacity overflow")
+        Layout::array::<A::Cell>(len).expect("capacity overflow")
     }
 
     /// An empty buffer is dangling, as `__wbindgen_malloc` gives JS.
     fn new(len: usize) -> Self {
         let layout = Self::layout(len);
         let ptr = if layout.size() == 0 {
-            layout.align() as *mut u8
+            core::ptr::NonNull::<A::Cell>::dangling().as_ptr()
         } else {
             let ptr = unsafe { alloc(layout) };
             if ptr.is_null() {
                 handle_alloc_error(layout);
             }
-            ptr
+            ptr.cast()
         };
-        Self {
-            ptr,
-            len,
-            abi: PhantomData,
-        }
+        Self { ptr, len }
     }
 
     fn encode(elems: impl ExactSizeIterator<Item = A>) -> WasmSlice {
         let cells = Self::new(elems.len());
         for (i, elem) in elems.enumerate() {
-            unsafe { elem.write_cell(cells.ptr.add(i * A::CELL.size())) }
+            unsafe { cells.ptr.add(i).write(elem.into_cell()) }
         }
         let slice = WasmSlice::from_usize(cells.ptr as usize, cells.len);
         mem::forget(cells);
@@ -419,7 +421,7 @@ impl<A: WasmAbi> Drop for Cells<A> {
     fn drop(&mut self) {
         let layout = Self::layout(self.len);
         if layout.size() != 0 {
-            unsafe { dealloc(self.ptr, layout) }
+            unsafe { dealloc(self.ptr.cast(), layout) }
         }
     }
 }
@@ -461,19 +463,18 @@ impl WasmSlice {
     )]
     pub unsafe fn try_decode<T: FromWasmAbi>(self) -> Result<Box<[T]>, &'static str> {
         let cells = Cells::<T::Abi> {
-            ptr: self.ptr.into_usize() as *mut u8,
+            ptr: self.ptr.into_usize() as *mut <T::Abi as WasmAbi>::Cell,
             len: self.len.into_usize(),
-            abi: PhantomData,
         };
         let mut elems = Vec::with_capacity(cells.len);
         let mut rejected = None;
         let mut unwound = None;
         for i in 0..cells.len {
-            let cell = cells.ptr.add(i * T::Abi::CELL.size());
+            let cell = cells.ptr.add(i);
             let failed = rejected.is_some() || unwound.is_some();
             // Past a failure the element is dropped where it's converted.
             let converted = catch_conversion(|| {
-                unsafe { T::try_from_abi(T::Abi::read_cell(cell)) }
+                unsafe { T::try_from_abi(T::Abi::from_cell(cell.read())) }
                     .map(|elem| (!failed).then_some(elem))
             });
             match converted {

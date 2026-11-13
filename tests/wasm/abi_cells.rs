@@ -2,10 +2,10 @@
 //! sequence stores one of per element, while the value itself crosses as a
 //! pointer to that record.
 
-use std::alloc::{alloc, dealloc, Layout};
+use std::mem::{align_of, offset_of, size_of};
 
 use wasm_bindgen::__rt::WasmWord;
-use wasm_bindgen::convert::{CellLayout, FromWasmAbi, IntoWasmAbi, WasmAbi, WasmSlice};
+use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, WasmAbi, WasmSlice};
 use wasm_bindgen::describe::WasmDescribe;
 use wasm_bindgen_test::*;
 
@@ -17,61 +17,37 @@ struct Named {
 
 struct NamedAbi(WasmSlice, u32);
 
-impl NamedAbi {
-    /// `{ ptr, len, n }`
-    const N: usize = WasmSlice::CELL.size();
-    const LAYOUT: Layout = match Layout::from_size_align(Self::CELL.size(), Self::CELL.align()) {
-        Ok(layout) => layout,
-        Err(_) => panic!(),
-    };
-}
+/// `{ ptr, len, n }`, laid out by rustc as the record of the parts' cells.
+#[repr(C)]
+struct NamedCell(<WasmSlice as WasmAbi>::Cell, <u32 as WasmAbi>::Cell);
 
 impl WasmAbi for NamedAbi {
     type Prim1 = <WasmWord as WasmAbi>::Prim1;
     type Prim2 = ();
     type Prim3 = ();
     type Prim4 = ();
-
-    // The cell methods store the record `{ ptr, len, n }`, padded to its
-    // alignment as a `#[repr(C)]` record is.
-    const CELL: CellLayout<Self> = {
-        let align = WasmSlice::CELL.align();
-        let size = (Self::N + u32::CELL.size()).next_multiple_of(align);
-        unsafe { CellLayout::new(size, align) }
-    };
+    type Cell = NamedCell;
 
     fn split(self) -> (Self::Prim1, (), (), ()) {
-        unsafe {
-            let cell = alloc(Self::LAYOUT);
-            self.write_cell(cell);
-            WasmWord::from_usize(cell as usize).split()
-        }
+        let cell = Box::into_raw(Box::new(self.into_cell()));
+        WasmWord::from_usize(cell as usize).split()
     }
 
     fn join(ptr: Self::Prim1, _: (), _: (), _: ()) -> Self {
-        let cell = WasmWord::join(ptr, (), (), ()).into_usize() as *mut u8;
-        unsafe {
-            let abi = Self::read_cell(cell);
-            dealloc(cell, Self::LAYOUT);
-            abi
-        }
+        let cell = WasmWord::join(ptr, (), (), ()).into_usize() as *mut NamedCell;
+        Self::from_cell(*unsafe { Box::from_raw(cell) })
     }
 
-    unsafe fn write_cell(self, cell: *mut u8) {
-        self.0.write_cell(cell);
-        self.1.write_cell(cell.add(Self::N));
+    fn into_cell(self) -> NamedCell {
+        NamedCell(self.0.into_cell(), self.1.into_cell())
     }
 
-    unsafe fn read_cell(cell: *const u8) -> Self {
-        NamedAbi(
-            WasmSlice::read_cell(cell),
-            u32::read_cell(cell.add(Self::N)),
-        )
+    fn from_cell(cell: NamedCell) -> Self {
+        NamedAbi(WasmSlice::from_cell(cell.0), u32::from_cell(cell.1))
     }
 }
 
-/// An ABI written against `WasmAbi` before it had a cell, whose cell is the
-/// record of its primitives.
+/// An ABI that stores the record of its primitives.
 struct Flat(u32, f64);
 
 impl WasmAbi for Flat {
@@ -87,6 +63,8 @@ impl WasmAbi for Flat {
     fn join(a: u32, b: f64, _: (), _: ()) -> Self {
         Flat(a, b)
     }
+
+    wasm_bindgen::__wbindgen_abi_cell!();
 }
 
 struct Sample(u32, f64);
@@ -155,15 +133,21 @@ fn items() -> Vec<Named> {
 fn wide_cell_layout() {
     let word = core::mem::size_of::<usize>();
     assert_eq!(
-        (NamedAbi::CELL.size(), NamedAbi::CELL.align()),
+        (size_of::<NamedCell>(), align_of::<NamedCell>()),
         (3 * word, word)
     );
-    assert_eq!(NamedAbi::N, 2 * word);
+    assert_eq!(offset_of!(NamedCell, 1), 2 * word);
 }
 
 #[wasm_bindgen_test]
 fn default_cells_round_trip_as_a_sequence() {
-    assert_eq!((Flat::CELL.size(), Flat::CELL.align()), (16, 8));
+    assert_eq!(
+        (
+            size_of::<<Flat as WasmAbi>::Cell>(),
+            align_of::<<Flat as WasmAbi>::Cell>()
+        ),
+        (16, 8)
+    );
     let slice = WasmSlice::encode_owned(
         vec![Sample(1, 0.5), Sample(2, 1.5)].into_boxed_slice(),
         Sample::into_abi,
@@ -181,7 +165,7 @@ fn wide_cells_round_trip_as_a_sequence() {
 
     // The buffer is the cells in order, three words each, with `n` third.
     let cells = slice.ptr.into_usize() as *const u32;
-    let (n, stride) = (NamedAbi::N / 4, NamedAbi::CELL.size() / 4);
+    let (n, stride) = (offset_of!(NamedCell, 1) / 4, size_of::<NamedCell>() / 4);
     assert_eq!(unsafe { *cells.add(n) }, 1);
     assert_eq!(unsafe { *cells.add(stride + n) }, 0);
     assert_eq!(unsafe { *cells.add(2 * stride + n) }, u32::MAX);

@@ -57,6 +57,13 @@ a Rust value to a JS one. There's a few points here:
   Since we can't return multiple values, when returning a `WasmSlice` we instead
   put the two `u32`s into a `#[repr(C)]` struct and return that.
 
+  A `WasmAbi` also names its `Cell`: the type as stored in memory, such as one
+  element of a `Vec` that crosses by its elements' ABI. Most ABIs store the same
+  `#[repr(C)]` record of their primitives (`AbiCell<Self>`, which the
+  `__wbindgen_abi_cell!()` macro fills in). An ABI wider than its primitives
+  stores the `#[repr(C)]` record of its parts' cells instead, and rustc lays
+  that out, so a cell's size and alignment are its type's.
+
 * And finally we have the `into_abi` function, returning the `Abi` associated
   type which will be actually passed to JS.
 

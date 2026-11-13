@@ -70,6 +70,13 @@
 
 ### Changed
 
+* **Breaking (unstable `convert` API):** `WasmAbi` has a required `Cell`
+  associated type, the ABI as stored in memory, with `into_cell` and
+  `from_cell`. An ABI that stores the record of its primitives, as every
+  existing one does, adds `wasm_bindgen::__wbindgen_abi_cell!();` to its
+  impl.
+  [#5471](https://github.com/wasm-bindgen/wasm-bindgen/pull/5471)
+
 * `VectorIntoWasmAbi`, `VectorFromWasmAbi` and `WasmDescribeVector` are
   soft-deprecated and no longer read: a vector crosses by its element's
   `IntoWasmAbi` / `FromWasmAbi`. Existing impls still compile. A type that

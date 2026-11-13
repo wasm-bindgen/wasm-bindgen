@@ -377,6 +377,8 @@ impl WasmAbi for WasmWord {
     fn join(prim1: Self::Prim1, _: (), _: (), _: ()) -> Self {
         Self(prim1)
     }
+
+    crate::__wbindgen_abi_cell!();
 }
 
 /// A typed raw pointer using the JS-number ABI on wasm64.
@@ -459,6 +461,8 @@ impl<T> WasmAbi for WasmPtr<T> {
             _marker: PhantomData,
         }
     }
+
+    crate::__wbindgen_abi_cell!();
 }
 
 // The wasm64 representation of `WasmWord` is `f64`, which has enough
