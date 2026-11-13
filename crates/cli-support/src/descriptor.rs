@@ -471,6 +471,8 @@ impl Descriptor {
                 kind,
                 VectorKind::String | VectorKind::Externref | VectorKind::NamedExternref(_)
             )
+        }) || d.sequence_elem().is_some_and(|elem| {
+            matches!(elem.sequence_cell(), SequenceCell::Encoded(cell) if cell.typed_cell().is_some())
         });
         let owned = matches!(d, Descriptor::Vector(_));
         let misfit = if mode.vec && borrowed {
@@ -492,6 +494,17 @@ impl Descriptor {
             Err(misfit)
         } else {
             Ok(false)
+        }
+    }
+
+    fn sequence_elem(&self) -> Option<&Descriptor> {
+        match self {
+            Descriptor::Vector(d) | Descriptor::Slice(d) => Some(d),
+            Descriptor::Ref(d) | Descriptor::RefMut(d) => match &**d {
+                Descriptor::Slice(d) => Some(d),
+                _ => None,
+            },
+            _ => None,
         }
     }
 

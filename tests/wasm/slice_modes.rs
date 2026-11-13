@@ -42,6 +42,7 @@ use js_sys::JsString;
 use wasm_bindgen::convert::{IntoWasmAbi, RefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::Clamped;
+use wasm_bindgen::SafeInteger;
 use wasm_bindgen_test::*;
 
 #[wasm_bindgen(module = "tests/wasm/slice_modes.js")]
@@ -418,4 +419,37 @@ fn per_mono_per_arg_modes_resolve_per_instantiation() {
     );
     let s = ["a".to_string()];
     assert_eq!(kinds_generic_explicit_array(&s, s.to_vec()), "Array,Array");
+}
+
+#[wasm_bindgen(module = "tests/wasm/slice_modes.js")]
+extern "C" {
+    #[wasm_bindgen(js_name = kindOf)]
+    fn kind_of_safe_vec(v: Vec<SafeInteger<u64>>) -> String;
+    #[wasm_bindgen(vec = array, js_name = kindOf)]
+    fn kind_of_array_safe_vec(v: Vec<SafeInteger<u64>>) -> String;
+    #[wasm_bindgen(vec = array, js_name = kindOf)]
+    fn kind_of_array_opt_safe_vec(v: Option<Vec<SafeInteger<u64>>>) -> String;
+    #[wasm_bindgen(js_name = kindOf)]
+    fn kind_of_safe_slice(v: &[SafeInteger<u64>]) -> String;
+    #[wasm_bindgen(slice = copy, js_name = kindOf)]
+    fn kind_of_copy_safe_slice(v: &[SafeInteger<u64>]) -> String;
+    #[wasm_bindgen(slice = array, js_name = joined)]
+    fn joined_array_safe_slice(v: &[SafeInteger<u64>]) -> String;
+    #[wasm_bindgen(slice_to_array, js_name = kindOf)]
+    fn kind_of_alias_safe_slice(v: &[SafeInteger<u64>]) -> String;
+}
+
+// A sequence of an element that crosses as an `f64` is a `Float64Array`,
+// which the modes apply to as they do to one of `f64`.
+#[wasm_bindgen_test]
+fn modes_apply_to_a_typed_cell() {
+    let safe = || vec![SafeInteger::<u64>::from(1), SafeInteger::from(2)];
+    assert_eq!(kind_of_safe_vec(safe()), "Float64Array");
+    assert_eq!(kind_of_array_safe_vec(safe()), "Array");
+    assert_eq!(kind_of_array_opt_safe_vec(Some(safe())), "Array");
+    assert_eq!(kind_of_array_opt_safe_vec(None), "undefined");
+    assert_eq!(kind_of_safe_slice(&safe()), "Float64Array");
+    assert_eq!(kind_of_copy_safe_slice(&safe()), "Float64Array");
+    assert_eq!(joined_array_safe_slice(&safe()), "Array:1,2");
+    assert_eq!(kind_of_alias_safe_slice(&safe()), "Array");
 }

@@ -18,6 +18,15 @@ export function __wbg_js_fn_keys_1ccf98d6a63ca6c5(arg0, arg1, arg2, arg3) {
     wasm.__wbindgen_free(arg2, arg3 * 1, 1);
     js_fn_keys(getArrayU8FromWasm0(arg0, arg1).slice(), v0);
 }
+export function __wbg_js_safe_integers_09bf93739842c15f(arg0, arg1, arg2, arg3, arg4, arg5) {
+    var v0 = Array.from(getArrayF64FromWasm0(arg0, arg1));
+    wasm.__wbindgen_free(arg0, arg1 * 8, 8);
+    var v1 = Array.from(getArrayF64FromWasm0(arg2, arg3));
+    wasm.__wbindgen_free(arg2, arg3 * 8, 8);
+    var v2 = getArrayF64FromWasm0(arg4, arg5).slice();
+    wasm.__wbindgen_free(arg4, arg5 * 8, 8);
+    js_safe_integers(v0, v1, v2);
+}
 export function __wbg_js_shapes_bd63f6912e6d4d8c(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7) {
     var v0 = getArrayU8FromWasm0(arg0, arg1).slice();
     wasm.__wbindgen_free(arg0, arg1 * 1, 1);

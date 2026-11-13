@@ -12,6 +12,7 @@
 use wasm_bindgen::convert::RefIntoWasmAbi;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::Clamped;
+use wasm_bindgen::SafeInteger;
 
 #[wasm_bindgen]
 extern "C" {
@@ -65,6 +66,17 @@ extern "C" {
     fn js_generic_opt<T: RefIntoWasmAbi>(#[wasm_bindgen(slice = copy)] v: Option<&[T]>);
 }
 
+// A sequence of an element that crosses as an `f64` is a `Float64Array`,
+// which the modes apply to as well.
+#[wasm_bindgen(vec = array)]
+extern "C" {
+    fn js_safe_integers(
+        owned: Vec<SafeInteger<u64>>,
+        #[wasm_bindgen(slice_to_array)] borrowed: &[SafeInteger<u64>],
+        default: &[SafeInteger<u64>],
+    );
+}
+
 #[wasm_bindgen]
 pub fn driver() {
     let v = vec![1u8, 2, 3];
@@ -82,6 +94,9 @@ pub fn driver() {
     js_shapes(v.clone(), Box::new([1.5]), Clamped(&v), &["a".to_string()]);
     js_vec_block(&v, v.clone(), v.clone());
     js_fn_keys(&v, v.clone());
+
+    let safe = vec![SafeInteger::<u64>::from(1)];
+    js_safe_integers(safe.clone(), &safe, &safe);
 
     js_generic_slice(&[1u16, 2]);
     js_generic_slice(&["a".to_string()]);
