@@ -51,6 +51,15 @@ fn next() {
 
 #[cfg(not(js_sys_unstable_apis))]
 #[wasm_bindgen_test]
+fn next_iterator() {
+    let gen = dummy_generator();
+    let result = gen.next_iterator(&JsValue::undefined()).unwrap();
+    assert!(!result.done());
+    assert_eq!(result.value(), "2 * 2");
+}
+
+#[cfg(not(js_sys_unstable_apis))]
+#[wasm_bindgen_test]
 fn throw() {
     let gen = one_two_generator();
     gen.next(&JsValue::undefined()).unwrap();

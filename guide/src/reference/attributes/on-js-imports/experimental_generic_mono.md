@@ -77,9 +77,9 @@ everything a caller has to satisfy:
 
 These traits live in `wasm_bindgen::convert`. `WasmDescribe` is a supertrait of
 `IntoWasmAbi` and `FromWasmAbi`, so it never needs stating. `RefIntoWasmAbi`
-holds for every `T` with `for<'a> &'a T: IntoWasmAbi`, and stands in for that
-higher-ranked bound, which generic callers could not otherwise rely on. A trait
-whose supertraits include the right ABI trait satisfies the bound too, as with
+holds for every type whose shared references cross the ABI, and is the bound
+generic callers forward for a `&T` argument. A trait whose supertraits include
+the right ABI trait satisfies the bound too, as with
 [`JsStringLike`](#string-bounds).
 
 The bound is on the type in that position, so a compound type is bounded as a
@@ -609,9 +609,10 @@ different signatures.
 ## Note on `&T` arguments
 
 A bare `&T` argument is supported, declared with the bound
-`T: RefIntoWasmAbi`, which holds for `JsValue` and JS handle types, `String`,
-`str`, numbers, `bool`, `char`, and `Option<T>` or `Nullable<T>` of any of
-them; a borrowed number crosses by copy. It also holds for a `Vec<T>` or
+`T: RefIntoWasmAbi`. It holds for `JsValue` and JS handle types, which cross as
+the handle, for `bool`, `char` and every number, which cross as the value, for
+`String`, `str`, `Box<str>` and `Cow<str>`, which cross as a string, and for
+`Option<T>` or `Nullable<T>` of any of them. It also holds for a `Vec<T>` or
 `Box<[T]>` of these, and for a reference to one (`T = &str`, `T = &[u8]`),
 which is lent as itself; a sequence of numbers behind the `&T` reaches JS as
 a copy. Passing `&SomeStruct` for a plain Rust struct is rejected, since

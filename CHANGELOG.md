@@ -63,6 +63,25 @@
   `ArrayBuffer` through unchanged.
   [#5445](https://github.com/wasm-bindgen/wasm-bindgen/pull/5445)
 
+* Under `js_sys_unstable_apis`, the element APIs of `Array<T>`, `Map<K, V>`,
+  `Set<T>`, `Iterator<T>`, `AsyncIterator<T>` and `Promise<T>` are
+  `experimental_generic_mono` imports, so element types can be Rust types
+  such as `String`, `bool` and `f64`, each crossing as itself. Writes take
+  `&T`, so borrows still deref-coerce to the element type. `Array<T>`
+  implements `From<Vec<T>>` and `From<&[T]>`, and `FromIterator` / `Extend`
+  collect `T` or `&T` items into a typed `Array<T>`. Writes are bounded by
+  `T: RefIntoWasmAbi` and reads by `FromWasmAbi`.
+  [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
+
+* Under `js_sys_unstable_apis`, `Function` signatures, `ArrayTuple` elements
+  and element callbacks also take Rust types: `Function<fn(String) -> u32>`
+  calls, binds and converts closures with each argument crossing as itself,
+  `ArrayTuple<(String, f64)>` gets and sets its elements, and the callbacks of
+  the `Array` methods, `Promise::then` / `catch`, generators and `Map` / `Set`
+  iteration receive and return Rust element types. `WeakMap` values can be
+  Rust types, while its keys stay JS objects.
+  [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
+
 * Added `aarch64-pc-windows-msvc` release artifacts.
   [#5439](https://github.com/wasm-bindgen/wasm-bindgen/pull/5439)
 
@@ -111,6 +130,46 @@
   thrown from the export that called it, and that a call rejected for an
   argument of the wrong class now leaves its other arguments untouched.
   [#5471](https://github.com/wasm-bindgen/wasm-bindgen/pull/5471)
+
+* **Breaking (experimental):** under `js_sys_unstable_apis`, `FromIterator`
+  and `Extend` for `Array` keep the items' type rather than erasing any
+  `AsRef<JsValue>` items into an `Array<JsValue>`: `Array::from_iter([obj])`
+  is an `Array<Object>`, and collecting `JsString` or `&Object` items into an
+  `Array<JsValue>` needs them converted to `JsValue` first. `Array::of1` to
+  `Array::of5` are generic, taking all arguments as `&T` of one type and
+  returning `Array<T>`, so mixed arguments need converting to a common type
+  such as `JsValue`. `Promise::resolve` takes its value by value rather than
+  by reference, though references still work as the value. `Array::flat_map`
+  and `try_flat_map` callbacks return an `Array<U>` rather than a `Vec<U>`, as
+  `flatMap()` flattens arrays only and a `Vec` of numbers crosses as a typed
+  array.
+  `Array::from_iter_typed` and `extend_typed` are deprecated under the cfg, as
+  `collect()` and `extend()` give the typed array directly.
+  [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
+
+* **Breaking (experimental):** under `js_sys_unstable_apis`,
+  `Function::call0` to `call9`, `bind1` to `bind9` and
+  `ArrayTuple::get0` to `get7` / `set0` to `set7` no longer have type
+  parameter defaults. A generic callback return in a `Result`, as in
+  `Promise::then`, `Array::try_map` and `Array::try_reduce`, needs
+  `Result<R, JsError>: ReturnWasmAbi` stated by generic callers not bounding
+  `R` by `JsGeneric`, which implies it. `Array::from_iterable_map`
+  and `from_async_map` bound their input by `RefIntoWasmAbi` and its items by
+  `FromWasmAbi`, and `Generator::next` and `return_` bound `T` by
+  `RefIntoWasmAbi`.
+  [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
+
+* `JsGeneric` now has `IntoWasmAbi`, `FromWasmAbi`, `RefIntoWasmAbi` and
+  `OptionFromWasmAbi` as supertraits, and bounds its `IntoWasmAbi::Abi` to
+  fit a `Result` return, so generic code bounded only by `T: JsGeneric` can
+  call the `experimental_generic_mono` element APIs. This applies without
+  `js_sys_unstable_apis`. As `IntoWasmAbi`, `FromWasmAbi` and
+  `RefIntoWasmAbi` each declare an `Abi` type, `T::Abi` under a `JsGeneric`
+  bound is now ambiguous and needs writing as `<T as IntoWasmAbi>::Abi`.
+  `Promising` is now implemented for `&T` where `T: Promising`, and for
+  `String`, `str` and every number type, so a downstream `Promising` impl for a
+  reference to its own type now conflicts.
+  [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
 
 * Stabilized the `js_sys::Temporal` bindings and `Date::to_temporal_instant`,
   previously behind `js_sys_unstable_apis`, now that Temporal is Stage 4 and
@@ -219,6 +278,14 @@
   an iterator over values. This changes the typed return type of e.g.
   `XrInputSourceArray::entries()` in web-sys.
   [#5458](https://github.com/wasm-bindgen/wasm-bindgen/pull/5458)
+
+* Under `js_sys_unstable_apis`, iterating an `Array` by value no longer stops
+  at the first `undefined` element.
+  [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
+
+* `Generator::next_iterator` calls the generator's `next` method rather than a
+  nonexistent `next_iterator`.
+  [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
 
 ### Removed
 
