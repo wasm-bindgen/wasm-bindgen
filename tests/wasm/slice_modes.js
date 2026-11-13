@@ -99,3 +99,12 @@ exports.js_kept_is = (value) => {
     const all = typedArrays(kept);
     return all.length > 0 && all.every(a => a.length > 0 && a.every(x => x === value));
 };
+
+let keptValue;
+exports.keep = (v) => { keptValue = v; };
+exports.kept = () => {
+    const v = keptValue;
+    if (v === undefined || v === null) return 'none';
+    const bytes = v instanceof ArrayBuffer ? new Uint8Array(v) : new Uint8Array(v.buffer, v.byteOffset, v.byteLength);
+    return `${v.constructor.name}:${Array.from(bytes)}`;
+};
