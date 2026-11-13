@@ -3847,6 +3847,7 @@ fn instruction(
                             "
                         ));
                     } else {
+                        // Memory a getter grows under the view only throws.
                         js.prelude(&format!(
                             "
                             const {view} = {memory};
