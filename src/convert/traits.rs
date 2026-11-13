@@ -489,14 +489,14 @@ pub trait WasmAbi {
 #[repr(C)]
 struct AbiCell<A: WasmAbi + ?Sized>(A::Prim1, A::Prim2, A::Prim3, A::Prim4);
 
-/// The size and alignment of `A`'s cell. It names `A` so that one ABI's can't
-/// stand in for another's, and is other than the record of `A`'s primitives
-/// only through [`CellLayout::new`].
+/// The size and alignment of `A`'s cell. It names `A`, invariantly, so that
+/// one ABI's can't stand in for another's, a subtype's included, and is other
+/// than the record of `A`'s primitives only through [`CellLayout::new`].
 #[doc(hidden)]
 pub struct CellLayout<A: ?Sized> {
     size: usize,
     align: usize,
-    abi: PhantomData<fn(&A)>,
+    abi: PhantomData<fn(*const A) -> *const A>,
 }
 
 impl<A: ?Sized> Clone for CellLayout<A> {

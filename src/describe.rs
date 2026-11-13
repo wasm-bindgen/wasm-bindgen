@@ -75,10 +75,11 @@ pub trait WasmDescribe {
     fn describe();
 }
 
-/// Whether a `[T]` crosses in place. It names `T` so that one type's can't
-/// stand in for another's, and is set only through [`AbiTransparent::yes`].
+/// Whether a `[T]` crosses in place. It names `T`, invariantly, so that one
+/// type's can't stand in for another's, a subtype's included, and is set
+/// only through [`AbiTransparent::yes`].
 #[doc(hidden)]
-pub struct AbiTransparent<T: ?Sized>(bool, PhantomData<fn(&T)>);
+pub struct AbiTransparent<T: ?Sized>(bool, PhantomData<fn(*const T) -> *const T>);
 
 impl<T: ?Sized> AbiTransparent<T> {
     pub const NO: Self = Self(false, PhantomData);
