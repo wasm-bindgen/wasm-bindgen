@@ -14,7 +14,10 @@ receives:
 * `copy`: a fresh typed array.
 * `array`: a fresh plain `Array`.
 
-Owned data is freed once the call returns, so it is never a view.
+Owned data is freed once the call returns, so it is never a view. Nor is a
+slice of numbers that another sequence holds, such as each `&[u8]` of a
+`Vec<&[u8]>`: only the argument itself is a view, and these are copied. A
+sequence can't hold a `&mut [T]`, whose copy JS's writes would never leave.
 
 Only numeric elements have a choice. A sequence of anything else
 (`String`, `&str`, `bool`, `char`, exported enums, `JsValue` or imported

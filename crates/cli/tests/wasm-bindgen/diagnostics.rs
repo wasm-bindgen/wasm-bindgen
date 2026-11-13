@@ -824,3 +824,30 @@ fn returned_sequence_cannot_lend_a_closure() {
         "a closure can't be lent by a value that Rust returns"
     );
 }
+
+/// Only the argument itself is a view of wasm memory, so a sequence would
+/// hold a copy of a `&mut [T]`, which JS's writes never leave.
+#[test]
+fn sequence_cannot_hold_a_mutable_slice() {
+    let err = Project::new("sequence_cannot_hold_a_mutable_slice")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen]
+                extern "C" {
+                    fn take(v: Vec<&mut [u32]>);
+                }
+
+                #[wasm_bindgen]
+                pub fn run() {
+                    take(Vec::new());
+                }
+            "#,
+        )
+        .wasm_bindgen("")
+        .unwrap_err();
+
+    assert_contains!(format!("{err:?}"), "a `&mut [T]` can't be an element");
+}

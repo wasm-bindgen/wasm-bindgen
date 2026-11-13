@@ -262,6 +262,11 @@ matrix! {
     of_string         [+  +  +  +  +  +  +  +]: String                   = [s("a"), s(""), s("🌍")] => r#"["a","","🌍"]"#;
     // A borrowed string is lent, so it only goes to JS.
     of_str            [-  +  +  -  +  -  +  -]: &'static str             = ["a", "", "🌍"] => r#"["a","","🌍"]"#;
+    // As is a borrowed slice of numbers, which each reach JS as a copy.
+    // hole: of_bytes sl, `&[u8]: RefIntoWasmAbi` is not satisfied
+    of_bytes          [-  +  +  -  -  -  +  -]: &'static [u8]            = [&[1, 2][..], &[], &[3]] => "[Uint8Array[1,2],Uint8Array[],Uint8Array[3]]";
+    // hole: of_floats sl, `&[f64]: RefIntoWasmAbi` is not satisfied
+    of_floats         [-  +  +  -  -  -  +  -]: &'static [f64]           = [&[0.5][..], &[], &[-1.0, 2.0]] => "[Float64Array[0.5],Float64Array[],Float64Array[-1,2]]";
     of_js_value       [+  +  +  +  +  +  +  -]: JsValue                  = [1.into(), JsValue::NULL, "a".into(), JsValue::UNDEFINED] => r#"[1,null,"a",undefined]"#;
     of_imported       [+  +  +  +  +  +  +  -]: MatrixThing              = [thing(1), thing(2), thing(3)] => r#"[{"thing":1},{"thing":2},{"thing":3}]"#;
     of_js_string      [+  +  +  +  +  +  +  -]: JsString                 = [js("a"), js(""), js("c")] => r#"["a","","c"]"#;

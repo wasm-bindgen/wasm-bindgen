@@ -469,14 +469,41 @@ pub fn nested_lent_floats() -> Vec<Vec<&'static [f64]>> {
     vec![vec![&[1.5]], vec![]]
 }
 
+#[wasm_bindgen(js_name = slice_modes_async_lent_bytes)]
+pub async fn async_lent_bytes() -> Vec<&'static [u8]> {
+    vec![&[1, 2], &[3]]
+}
+
 #[wasm_bindgen(module = "tests/wasm/slice_modes.js")]
 extern "C" {
     fn js_returned_bytes_are_copies();
-    fn js_lent_bytes_are_views(bytes: Vec<&[u8]>) -> bool;
+    #[wasm_bindgen(catch)]
+    async fn js_async_returned_bytes_are_copies() -> Result<(), JsValue>;
+    fn js_lent_bytes_are_copies(bytes: Vec<&[u8]>) -> bool;
+    fn js_holds_no_view(v: &JsValue) -> bool;
+    fn js_fill(v: &JsValue, byte: u8);
 }
 
+// A numeric slice is a view of wasm memory only as the argument itself. One
+// that a sequence holds is copied, as nothing ties the sequence to its lender.
 #[wasm_bindgen_test]
-fn a_return_lends_nothing() {
+async fn an_element_lends_no_view() {
     js_returned_bytes_are_copies();
-    assert!(js_lent_bytes_are_views(vec![&[1, 2], &[3]]));
+    js_async_returned_bytes_are_copies().await.unwrap();
+    assert!(js_lent_bytes_are_copies(vec![&[1, 2], &[3]]));
+
+    let bytes = vec![0x41u8; 64];
+    let floats = [1.5f64];
+    let held: JsValue = vec![&bytes[..]].into();
+    assert!(js_holds_no_view(&held));
+    js_fill(&held, 0xff);
+    assert_eq!(bytes, [0x41; 64]);
+
+    assert!(js_holds_no_view(&vec![&bytes].into()));
+    assert!(js_holds_no_view(&vec![Some(&bytes[..]), None].into()));
+    assert!(js_holds_no_view(&vec![vec![&bytes[..]]].into()));
+    assert!(js_holds_no_view(&vec![Clamped(&bytes[..])].into()));
+    assert!(js_holds_no_view(
+        &vec![&floats[..]].into_boxed_slice().into()
+    ));
 }

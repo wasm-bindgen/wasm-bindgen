@@ -276,12 +276,13 @@ impl InstructionBuilder<'_, '_> {
                 };
                 let mem = self.cx.memory()?;
                 let ptr_ty = self.outgoing_internal_word_ty();
+                let mode = self.lent_mode(mutable)?;
                 self.instruction(
                     &[ptr_ty.clone(), ptr_ty],
                     Instruction::View {
                         kind: kind.clone(),
                         mem,
-                        mode: self.lent_mode(),
+                        mode,
                     },
                     &[AdapterType::Vector(kind)],
                 );
@@ -735,7 +736,7 @@ impl InstructionBuilder<'_, '_> {
 
     fn outgoing_option_ref(
         &mut self,
-        _mutable: bool,
+        mutable: bool,
         arg: &Descriptor,
         option_kind: OptionKind,
     ) -> Result<(), Error> {
@@ -769,23 +770,27 @@ impl InstructionBuilder<'_, '_> {
                 };
                 let mem = self.cx.memory()?;
                 let ptr_ty = self.outgoing_internal_word_ty();
+                let mode = match arg {
+                    Descriptor::Slice(_) => self.lent_mode(mutable)?,
+                    _ => self.seq_value,
+                };
                 self.instruction(
                     &[ptr_ty.clone(), ptr_ty],
                     Instruction::OptionView {
                         kind: kind.clone(),
                         mem,
-                        mode: self.lent_mode(),
+                        mode,
                         option_kind,
                     },
                     &[AdapterType::Vector(kind).option_kind(option_kind)],
                 );
             }
-            Descriptor::Ref(d) => self.outgoing_option_ref(_mutable, d, option_kind)?,
+            Descriptor::Ref(d) => self.outgoing_option_ref(mutable, d, option_kind)?,
             Descriptor::Option(d) => {
                 if option_kind != OptionKind::Nullable {
                     bail!("unsupported nested optional type for calling JS function from Rust: {arg:?}");
                 }
-                self.outgoing_option_ref(_mutable, d, OptionKind::OptionNullable)?
+                self.outgoing_option_ref(mutable, d, OptionKind::OptionNullable)?
             }
             Descriptor::I8
             | Descriptor::U8
@@ -1019,13 +1024,20 @@ impl InstructionBuilder<'_, '_> {
         );
     }
 
-    /// The mode a lent numeric sequence reaches JS in. One held by a value
-    /// that Rust returns is copied, as the value outlives what lent it.
-    fn lent_mode(&self) -> SeqValue {
-        match self.seq_value {
-            SeqValue::View if self.stored && self.returned => SeqValue::Copy,
-            mode => mode,
+    /// The mode a lent numeric sequence reaches JS in. Only the argument
+    /// itself is a view: one that a cell holds is copied, as nothing ties
+    /// the value holding it to what lent it.
+    fn lent_mode(&self, mutable: bool) -> Result<SeqValue, Error> {
+        if !self.stored {
+            return Ok(self.seq_value);
         }
+        if mutable {
+            bail!("a `&mut [T]` can't be an element: JS would receive a copy, whose writes never reach it");
+        }
+        Ok(match self.seq_value {
+            SeqValue::View => SeqValue::Copy,
+            mode => mode,
+        })
     }
 
     fn outgoing_internal_word_ty(&self) -> AdapterType {

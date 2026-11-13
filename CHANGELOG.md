@@ -21,7 +21,9 @@
   `&[T]` for every `T` whose `&T` does, by the element's own
   `IntoWasmAbi` / `FromWasmAbi`. `Vec<Option<T>>`, `Vec<Nullable<T>>`,
   `Vec<Vec<T>>`, `&[Closure<T>]` and vectors of types with hand-written
-  conversions newly cross, in arguments, returns and `JsValue::from`.
+  conversions newly cross, in arguments, returns and `JsValue::from`. A
+  borrowed slice of numbers held by a sequence, such as each `&[u8]` of a
+  `Vec<&[u8]>`, reaches JS as a copy and never as a view of wasm memory.
 
 * A dynamic-union enum is a `Vec<T>` / `Box<[T]>` element in both
   directions, crossing as a JS array whose elements are each converted as a

@@ -13,7 +13,8 @@ passed on its own, including:
 - C-style exported enums and string enums.
 - `String`s.
 - `bool`s and `char`s.
-- `&str`s, to JS only.
+- `&str`s and borrowed slices of numbers (`&[u8]`), to JS only. Each slice
+  reaches JS as a copy.
 - `Option<T>` and `Nullable<T>` of any of these, and of numbers.
 - Other `Vec`s.
 

@@ -59,7 +59,7 @@ exports.Sink = class Sink {
 
 const isView = (v) => v.buffer.byteLength > v.byteLength;
 
-// What Rust returns is JS's, so nothing in it is a view of what Rust lent.
+// A sequence Rust gives holds copies of the numeric slices lent to it.
 exports.js_returned_bytes_are_copies = () => {
     const bytes = wasm.slice_modes_lent_bytes();
     assert.deepStrictEqual(bytes.map(b => Array.from(b)), [[1, 2], [3]]);
@@ -73,6 +73,21 @@ exports.js_returned_bytes_are_copies = () => {
     assert.ok(nested[0][0] instanceof Float64Array && !isView(nested[0][0]));
 };
 
-// While an argument's elements are lent as the argument itself would be.
-exports.js_lent_bytes_are_views = (bytes) =>
-    bytes.length === 2 && bytes.every(b => b instanceof Uint8Array && isView(b));
+exports.js_async_returned_bytes_are_copies = async () => {
+    const bytes = await wasm.slice_modes_async_lent_bytes();
+    assert.deepStrictEqual(bytes.map(b => Array.from(b)), [[1, 2], [3]]);
+    assert.ok(bytes.every(b => b instanceof Uint8Array && !isView(b)));
+};
+
+exports.js_lent_bytes_are_copies = (bytes) =>
+    bytes.length === 2 && bytes.every(b => b instanceof Uint8Array && !isView(b));
+
+const typedArrays = (v) =>
+    Array.isArray(v) ? v.flatMap(typedArrays) : ArrayBuffer.isView(v) ? [v] : [];
+
+exports.js_holds_no_view = (v) => {
+    const all = typedArrays(v);
+    return all.length > 0 && !all.some(isView);
+};
+
+exports.js_fill = (v, byte) => typedArrays(v).forEach(a => a.fill(byte));
