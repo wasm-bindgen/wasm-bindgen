@@ -447,7 +447,8 @@ export function echo_option_vec_struct(a) {
         p4 = p4 >>> 0;
         const view4 = getDataViewMemory0();
         for (const end4 = p4 + ret[1] * 4; p4 < end4; p4 += 4) {
-            v4.push(Foo.__wrap(view4.getInt32(p4 + 0, true)));
+            const w4_0 = view4.getInt32(p4 + 0, true);
+            v4.push(Foo.__wrap(w4_0));
         }
         wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
     }
@@ -870,7 +871,8 @@ export function echo_vec_struct(a) {
     p4 = p4 >>> 0;
     const view4 = getDataViewMemory0();
     for (const end4 = p4 + ret[1] * 4; p4 < end4; p4 += 4) {
-        v4.push(Foo.__wrap(view4.getInt32(p4 + 0, true)));
+        const w4_0 = view4.getInt32(p4 + 0, true);
+        v4.push(Foo.__wrap(w4_0));
     }
     wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
     return v4;

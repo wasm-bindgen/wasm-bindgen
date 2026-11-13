@@ -18,7 +18,8 @@ export function __wbg_js_bools_9e72c19b74d918e2(arg0, arg1) {
     p0 = p0 >>> 0;
     const view0 = getDataViewMemory0();
     for (const end0 = p0 + arg1 * 4; p0 < end0; p0 += 4) {
-        v0.push(view0.getInt32(p0 + 0, true) !== 0);
+        const w0_0 = view0.getInt32(p0 + 0, true);
+        v0.push(w0_0 !== 0);
     }
     wasm.__wbindgen_free(arg0, arg1 * 4, 4);
     js_bools(v0);
@@ -32,7 +33,8 @@ export function __wbg_js_levels_92d6261cd8377562(arg0, arg1) {
     p0 = p0 >>> 0;
     const view0 = getDataViewMemory0();
     for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
-        v0.push(view0.getFloat64(p0 + 0, true));
+        const w0_0 = view0.getFloat64(p0 + 0, true);
+        v0.push(w0_0);
     }
     wasm.__wbindgen_free(arg0, arg1 * 8, 8);
     js_levels(v0);
@@ -43,7 +45,8 @@ export function __wbg_js_modes_bb53fb3d0fbfa09c(arg0, arg1) {
     p0 = p0 >>> 0;
     const view0 = getDataViewMemory0();
     for (const end0 = p0 + arg1 * 4; p0 < end0; p0 += 4) {
-        v0.push(__wbindgen_enum_Mode[view0.getInt32(p0 + 0, true)]);
+        const w0_0 = view0.getInt32(p0 + 0, true);
+        v0.push(__wbindgen_enum_Mode[w0_0]);
     }
     wasm.__wbindgen_free(arg0, arg1 * 4, 4);
     js_modes(v0);
@@ -56,7 +59,8 @@ export function __wbg_js_opt_chars_43eba37f0b6dc71f(arg0, arg1) {
         p0 = p0 >>> 0;
         const view0 = getDataViewMemory0();
         for (const end0 = p0 + arg1 * 4; p0 < end0; p0 += 4) {
-            v0.push(String.fromCodePoint(view0.getInt32(p0 + 0, true)));
+            const w0_0 = view0.getInt32(p0 + 0, true);
+            v0.push(String.fromCodePoint(w0_0));
         }
         wasm.__wbindgen_free(arg0, arg1 * 4, 4);
     }
@@ -68,7 +72,9 @@ export function __wbg_js_strings_2558d2768768ed5f(arg0, arg1) {
     p0 = p0 >>> 0;
     const view0 = getDataViewMemory0();
     for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
-        v0.push(getStringFromWasm0(view0.getInt32(p0 + 0, true), view0.getInt32(p0 + 4, true)));
+        const w0_0 = view0.getInt32(p0 + 0, true);
+        const w0_1 = view0.getInt32(p0 + 4, true);
+        v0.push(getStringFromWasm0(w0_0, w0_1));
     }
     wasm.__wbindgen_free(arg0, arg1 * 8, 4);
     js_strings(v0);
@@ -79,7 +85,9 @@ export function __wbg_js_strs_4204ef305fb644c2(arg0, arg1) {
     p0 = p0 >>> 0;
     const view0 = getDataViewMemory0();
     for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
-        v0.push(getStringFromWasm0(view0.getInt32(p0 + 0, true), view0.getInt32(p0 + 4, true)));
+        const w0_0 = view0.getInt32(p0 + 0, true);
+        const w0_1 = view0.getInt32(p0 + 4, true);
+        v0.push(getStringFromWasm0(w0_0, w0_1));
     }
     wasm.__wbindgen_free(arg0, arg1 * 8, 4);
     js_strs(v0);

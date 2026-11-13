@@ -26,7 +26,8 @@ export class NamespaceConsumer {
         p1 = p1 >>> 0;
         const view1 = getDataViewMemory0();
         for (const end1 = p1 + ret[1] * 4; p1 < end1; p1 += 4) {
-            v1.push(bar__Point.__wrap(view1.getInt32(p1 + 0, true)));
+            const w1_0 = view1.getInt32(p1 + 0, true);
+            v1.push(bar__Point.__wrap(w1_0));
         }
         wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
         return v1;
@@ -73,7 +74,8 @@ export class NamespaceConsumer {
         p4 = p4 >>> 0;
         const view4 = getDataViewMemory0();
         for (const end4 = p4 + ret[1] * 4; p4 < end4; p4 += 4) {
-            v4.push(bar__Point.__wrap(view4.getInt32(p4 + 0, true)));
+            const w4_0 = view4.getInt32(p4 + 0, true);
+            v4.push(bar__Point.__wrap(w4_0));
         }
         wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
         return v4;
@@ -113,7 +115,8 @@ export class NamespaceConsumer {
         p4 = p4 >>> 0;
         const view4 = getDataViewMemory0();
         for (const end4 = p4 + ret[1] * 4; p4 < end4; p4 += 4) {
-            v4.push(foo__Point.__wrap(view4.getInt32(p4 + 0, true)));
+            const w4_0 = view4.getInt32(p4 + 0, true);
+            v4.push(foo__Point.__wrap(w4_0));
         }
         wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
         return v4;
@@ -135,7 +138,8 @@ export class NamespaceConsumer {
         p1 = p1 >>> 0;
         const view1 = getDataViewMemory0();
         for (const end1 = p1 + ret[1] * 4; p1 < end1; p1 += 4) {
-            v1.push(foo__Point.__wrap(view1.getInt32(p1 + 0, true)));
+            const w1_0 = view1.getInt32(p1 + 0, true);
+            v1.push(foo__Point.__wrap(w1_0));
         }
         wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
         return v1;

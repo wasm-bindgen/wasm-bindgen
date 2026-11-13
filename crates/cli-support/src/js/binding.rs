@@ -3093,38 +3093,25 @@ fn instruction(
                 .map(|(offset, ty)| format!("{view}.get{ty}({p} + {offset}, true)"))
                 .collect::<Vec<_>>();
             // Decode one element from its words with its own instructions,
-            // into the loop body. Glue that neither calls into wasm nor
-            // defers reads its words in place, through one view of the
-            // whole buffer.
-            let tmp = js.tmp;
-            let in_place = reads
+            // into the loop body, which reads the cell's words ahead of
+            // them.
+            let mut bind = String::new();
+            let words = reads
                 .iter()
-                .map(|expr| Value::Expr {
-                    expr: expr.clone(),
-                    pure: false,
+                .enumerate()
+                .map(|(n, read)| {
+                    let word = js.local(format!("w{i}_{n}"));
+                    writeln!(bind, "const {word} = {read};").unwrap();
+                    Value::Local(word)
                 })
                 .collect();
-            let (mut element, mut value) =
-                encoded_element(js, elem, in_place, log_error, constructor)?;
+            let (element, value) = encoded_element(js, elem, words, log_error, constructor)?;
+            // Glue that calls into wasm may grow memory under the loop, so
+            // each iteration then reads through the memory as it is.
             let effects =
                 element.calls_wasm || !element.pre_try.is_empty() || !element.finally.is_empty();
-            let mut bind = String::new();
             if effects {
-                // Otherwise memory may grow under the loop, so each iteration
-                // reads the cell's words ahead of its glue, which is
-                // translated again over them.
-                js.tmp = tmp;
-                writeln!(bind, "const {view} = {memory};").unwrap();
-                let words = reads
-                    .iter()
-                    .enumerate()
-                    .map(|(n, read)| {
-                        let word = js.local(format!("w{i}_{n}"));
-                        writeln!(bind, "const {word} = {read};").unwrap();
-                        Value::Local(word)
-                    })
-                    .collect();
-                (element, value) = encoded_element(js, elem, words, log_error, constructor)?;
+                bind.insert_str(0, &format!("const {view} = {memory};\n"));
             }
             let v = js.local(format!("v{i}"));
             let free = js.cx.wasm_export_of(*free);

@@ -23,7 +23,8 @@ export function bools(v) {
     p2 = p2 >>> 0;
     const view2 = getDataViewMemory0();
     for (const end2 = p2 + ret[1] * 4; p2 < end2; p2 += 4) {
-        v2.push(view2.getInt32(p2 + 0, true) !== 0);
+        const w2_0 = view2.getInt32(p2 + 0, true);
+        v2.push(w2_0 !== 0);
     }
     wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
     return v2;
@@ -58,7 +59,8 @@ export function modes(v) {
     p2 = p2 >>> 0;
     const view2 = getDataViewMemory0();
     for (const end2 = p2 + ret[1] * 4; p2 < end2; p2 += 4) {
-        v2.push(__wbindgen_enum_Mode[view2.getInt32(p2 + 0, true)]);
+        const w2_0 = view2.getInt32(p2 + 0, true);
+        v2.push(__wbindgen_enum_Mode[w2_0]);
     }
     wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
     return v2;
@@ -95,7 +97,8 @@ export function opt_chars(v) {
         p3 = p3 >>> 0;
         const view3 = getDataViewMemory0();
         for (const end3 = p3 + ret[1] * 4; p3 < end3; p3 += 4) {
-            v3.push(String.fromCodePoint(view3.getInt32(p3 + 0, true)));
+            const w3_0 = view3.getInt32(p3 + 0, true);
+            v3.push(String.fromCodePoint(w3_0));
         }
         wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
     }
@@ -110,7 +113,8 @@ export function __wbg_js_bools_30fc8a2bc11a9f84(arg0, arg1, arg2) {
     p0 = p0 >>> 0;
     const view0 = getDataViewMemory0();
     for (const end0 = p0 + arg2 * 4; p0 < end0; p0 += 4) {
-        v0.push(view0.getInt32(p0 + 0, true) !== 0);
+        const w0_0 = view0.getInt32(p0 + 0, true);
+        v0.push(w0_0 !== 0);
     }
     wasm.__wbindgen_free(arg1, arg2 * 4, 4);
     const ret = js_bools(v0);

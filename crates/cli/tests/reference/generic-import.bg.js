@@ -303,7 +303,9 @@ export function __wbindgen_generic_0000000000000023(arg0, arg1, arg2) {
         p0 = p0 >>> 0;
         const view0 = getDataViewMemory0();
         for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
-            v0.push(getStringFromWasm0(view0.getInt32(p0 + 0, true), view0.getInt32(p0 + 4, true)));
+            const w0_0 = view0.getInt32(p0 + 0, true);
+            const w0_1 = view0.getInt32(p0 + 4, true);
+            v0.push(getStringFromWasm0(w0_0, w0_1));
         }
         wasm.__wbindgen_free(arg0, arg1 * 8, 4);
     }
@@ -328,7 +330,9 @@ export function __wbindgen_generic_0000000000000027(arg0, arg1, arg2) {
     p0 = p0 >>> 0;
     const view0 = getDataViewMemory0();
     for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
-        v0.push(getStringFromWasm0(view0.getInt32(p0 + 0, true), view0.getInt32(p0 + 4, true)));
+        const w0_0 = view0.getInt32(p0 + 0, true);
+        const w0_1 = view0.getInt32(p0 + 4, true);
+        v0.push(getStringFromWasm0(w0_0, w0_1));
     }
     wasm.__wbindgen_free(arg0, arg1 * 8, 4);
     // generic import `logStrSlice`: [Ref(Slice(Cell(String))), U32] -> Unit

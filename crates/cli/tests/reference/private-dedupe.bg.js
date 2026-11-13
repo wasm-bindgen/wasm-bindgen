@@ -120,7 +120,8 @@ export function a_levels() {
     p1 = p1 >>> 0;
     const view1 = getDataViewMemory0();
     for (const end1 = p1 + ret[1] * 8; p1 < end1; p1 += 8) {
-        v1.push(view1.getFloat64(p1 + 0, true));
+        const w1_0 = view1.getFloat64(p1 + 0, true);
+        v1.push(w1_0);
     }
     wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
     return v1;
@@ -136,7 +137,8 @@ export function b_levels() {
     p1 = p1 >>> 0;
     const view1 = getDataViewMemory0();
     for (const end1 = p1 + ret[1] * 8; p1 < end1; p1 += 8) {
-        v1.push(view1.getFloat64(p1 + 0, true));
+        const w1_0 = view1.getFloat64(p1 + 0, true);
+        v1.push(w1_0);
     }
     wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
     return v1;
@@ -152,7 +154,8 @@ export function b_statuses() {
     p1 = p1 >>> 0;
     const view1 = getDataViewMemory0();
     for (const end1 = p1 + ret[1] * 4; p1 < end1; p1 += 4) {
-        v1.push(Status2.__wrap(view1.getInt32(p1 + 0, true)));
+        const w1_0 = view1.getInt32(p1 + 0, true);
+        v1.push(Status2.__wrap(w1_0));
     }
     wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
     return v1;

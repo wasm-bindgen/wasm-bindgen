@@ -69,7 +69,8 @@ export function flags(v) {
     p2 = p2 >>> 0;
     const view2 = getDataViewMemory0();
     for (const end2 = p2 + ret[1] * 4; p2 < end2; p2 += 4) {
-        v2.push(view2.getInt32(p2 + 0, true) !== 0);
+        const w2_0 = view2.getInt32(p2 + 0, true);
+        v2.push(w2_0 !== 0);
     }
     wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
     return v2;
@@ -212,7 +213,8 @@ export function opt_bytes(v) {
     p2 = p2 >>> 0;
     const view2 = getDataViewMemory0();
     for (const end2 = p2 + ret[1] * 4; p2 < end2; p2 += 4) {
-        v2.push(view2.getInt32(p2 + 0, true) === 0xFFFFFF ? undefined : view2.getInt32(p2 + 0, true));
+        const w2_0 = view2.getInt32(p2 + 0, true);
+        v2.push(w2_0 === 0xFFFFFF ? undefined : w2_0);
     }
     wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
     return v2;
@@ -293,7 +295,8 @@ export function points(v) {
     p4 = p4 >>> 0;
     const view4 = getDataViewMemory0();
     for (const end4 = p4 + ret[1] * 4; p4 < end4; p4 += 4) {
-        v4.push(Point.__wrap(view4.getInt32(p4 + 0, true)));
+        const w4_0 = view4.getInt32(p4 + 0, true);
+        v4.push(Point.__wrap(w4_0));
     }
     wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
     return v4;
@@ -391,7 +394,9 @@ export function wide(v) {
     p2 = p2 >>> 0;
     const view2 = getDataViewMemory0();
     for (const end2 = p2 + ret[1] * 16; p2 < end2; p2 += 16) {
-        v2.push((BigInt.asUintN(64, view2.getBigInt64(p2 + 0, true)) | (BigInt.asUintN(64, view2.getBigInt64(p2 + 8, true)) << BigInt(64))));
+        const w2_0 = view2.getBigInt64(p2 + 0, true);
+        const w2_1 = view2.getBigInt64(p2 + 8, true);
+        v2.push((BigInt.asUintN(64, w2_0) | (BigInt.asUintN(64, w2_1) << BigInt(64))));
     }
     wasm.__wbindgen_free(ret[0], ret[1] * 16, 8);
     return v2;
@@ -502,7 +507,8 @@ export function __wbg_take_borrowed_closures_ecfd86a190534640(arg0, arg1) {
     p0 = p0 >>> 0;
     const view0 = getDataViewMemory0();
     for (const end0 = p0 + arg1 * 4; p0 < end0; p0 += 4) {
-        v0.push(wasm.__wbindgen_externrefs.get(view0.getInt32(p0 + 0, true)));
+        const w0_0 = view0.getInt32(p0 + 0, true);
+        v0.push(wasm.__wbindgen_externrefs.get(w0_0));
     }
     wasm.__wbindgen_free(arg0, arg1 * 4, 4);
     take_borrowed_closures(v0);
@@ -519,7 +525,9 @@ export function __wbg_take_borrowed_strings_d2f788fd08c3a59d(arg0, arg1) {
     p0 = p0 >>> 0;
     const view0 = getDataViewMemory0();
     for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
-        v0.push(getStringFromWasm0(view0.getInt32(p0 + 0, true), view0.getInt32(p0 + 4, true)));
+        const w0_0 = view0.getInt32(p0 + 0, true);
+        const w0_1 = view0.getInt32(p0 + 4, true);
+        v0.push(getStringFromWasm0(w0_0, w0_1));
     }
     wasm.__wbindgen_free(arg0, arg1 * 8, 4);
     take_borrowed_strings(v0);
@@ -543,7 +551,8 @@ export function __wbg_take_opt_bytes_f444cd63983812da(arg0, arg1) {
     p0 = p0 >>> 0;
     const view0 = getDataViewMemory0();
     for (const end0 = p0 + arg1 * 4; p0 < end0; p0 += 4) {
-        v0.push(view0.getInt32(p0 + 0, true) === 0xFFFFFF ? undefined : view0.getInt32(p0 + 0, true));
+        const w0_0 = view0.getInt32(p0 + 0, true);
+        v0.push(w0_0 === 0xFFFFFF ? undefined : w0_0);
     }
     wasm.__wbindgen_free(arg0, arg1 * 4, 4);
     take_opt_bytes(v0);

@@ -16,7 +16,8 @@ export function __wbg_nullable_js_strings_4d25a7d2d74571c9(arg0, arg1) {
     p0 = p0 >>> 0;
     const view0 = getDataViewMemory0();
     for (const end0 = p0 + arg1 * 4; p0 < end0; p0 += 4) {
-        v0.push(wasm.__wbindgen_externrefs.get(view0.getInt32(p0 + 0, true)));
+        const w0_0 = view0.getInt32(p0 + 0, true);
+        v0.push(wasm.__wbindgen_externrefs.get(w0_0));
     }
     wasm.__wbindgen_free(arg0, arg1 * 4, 4);
     nullable_js_strings(v0);
@@ -27,7 +28,9 @@ export function __wbg_nullable_strings_e1dfa29465202c22(arg0, arg1) {
     p0 = p0 >>> 0;
     const view0 = getDataViewMemory0();
     for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
-        v0.push(view0.getInt32(p0 + 0, true) === 0 ? null : getStringFromWasm0(view0.getInt32(p0 + 0, true), view0.getInt32(p0 + 4, true)));
+        const w0_0 = view0.getInt32(p0 + 0, true);
+        const w0_1 = view0.getInt32(p0 + 4, true);
+        v0.push(w0_0 === 0 ? null : getStringFromWasm0(w0_0, w0_1));
     }
     wasm.__wbindgen_free(arg0, arg1 * 8, 4);
     nullable_strings(v0);
@@ -38,7 +41,9 @@ export function __wbg_opt_f64s_95d8affd5b395def(arg0, arg1) {
     p0 = p0 >>> 0;
     const view0 = getDataViewMemory0();
     for (const end0 = p0 + arg1 * 16; p0 < end0; p0 += 16) {
-        v0.push(view0.getInt32(p0 + 0, true) === 0 ? undefined : view0.getFloat64(p0 + 8, true));
+        const w0_0 = view0.getInt32(p0 + 0, true);
+        const w0_1 = view0.getFloat64(p0 + 8, true);
+        v0.push(w0_0 === 0 ? undefined : w0_1);
     }
     wasm.__wbindgen_free(arg0, arg1 * 16, 8);
     opt_f64s(v0);
