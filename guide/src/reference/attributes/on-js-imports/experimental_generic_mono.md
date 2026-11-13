@@ -67,7 +67,8 @@ everything a caller has to satisfy:
 |---|---|
 | argument `T` | `T: IntoWasmAbi` |
 | argument `&T` | `T: RefIntoWasmAbi` |
-| argument `&[T]` or `Option<&[T]>` | `T: VectorRefIntoWasmAbi` |
+| argument `&[T]` or `Option<&[T]>` | `T: RefIntoWasmAbi` |
+| argument `Vec<T>` or `Option<Vec<T>>` | `T: IntoWasmAbi` |
 | return `T` | `T: FromWasmAbi` |
 | `async` return `T` | `T: FromWasmAbi + 'static` |
 | callback argument `A` (`&dyn Fn(A)`) | `A: FromWasmAbi` |
@@ -152,8 +153,9 @@ native wire format — UTF-8 buffers for the Rust strings, a handle for
 `JsString` — all arriving in JS as a string value. Optional positions
 (`Option<T>`, `Nullable<T>`) and slices (`&[T]`, arriving as an `Array` of
 strings) work under the same bound, since the trait carries
-`NullableIntoWasmAbi` and `VectorRefIntoWasmAbi` as supertraits. So a plain Rust function bounded by
-`JsStringLike` alone can forward a `&[T]` to such an import. The trait is
+`NullableIntoWasmAbi` and `RefIntoWasmAbi` as supertraits. So a plain Rust
+function bounded by `JsStringLike` alone can forward a `&[T]` to such an
+import. The trait is
 sealed to exactly these string shapes. Like
 `experimental_generic_mono` itself, the trait is experimental and may change
 as the feature stabilizes.
@@ -248,14 +250,13 @@ synthesized parameter:
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(experimental_generic_mono)]
-    fn mix<T: IntoWasmAbi>(label: T, value: Option<impl Clone + OptionIntoWasmAbi>);
+    fn mix<T: IntoWasmAbi>(label: T, value: Option<impl Clone + MaybeIntoWasmAbi>);
 }
 ```
 
 A synthesized parameter has no name to bound its containing type by, so a
 nested `impl Trait` carries whatever bound makes the container marshal:
-`OptionIntoWasmAbi` for `Option`, or `VectorIntoWasmAbi<Abi = WasmSlice>` for
-`Vec`.
+`MaybeIntoWasmAbi` for `Option`, or `IntoWasmAbi` for `Vec`.
 
 Bounds on a synthesized parameter are enforced exactly as if you had written
 them out by hand: a caller that violates one gets a diagnostic pointing at the

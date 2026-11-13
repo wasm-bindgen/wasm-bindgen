@@ -17,6 +17,12 @@
   provide its own.
   [#5446](https://github.com/wasm-bindgen/wasm-bindgen/pull/5446)
 
+* `Vec<T>` and `Box<[T]>` cross for every `T` that crosses on its own, and
+  `&[T]` for every `T` whose `&T` does, by the element's own
+  `IntoWasmAbi` / `FromWasmAbi`. `Vec<Option<T>>`, `Vec<Nullable<T>>`,
+  `Vec<Vec<T>>`, `&[Closure<T>]` and vectors of types with hand-written
+  conversions newly cross, in arguments, returns and `JsValue::from`.
+
 * Added `aarch64-pc-windows-msvc` release artifacts.
   [#5439](https://github.com/wasm-bindgen/wasm-bindgen/pull/5439)
 
@@ -45,6 +51,19 @@
   [#5457](https://github.com/wasm-bindgen/wasm-bindgen/pull/5457)
 
 ### Changed
+
+* `VectorIntoWasmAbi`, `VectorFromWasmAbi` and `WasmDescribeVector` are
+  soft-deprecated and no longer read: a vector crosses by its element's
+  `IntoWasmAbi` / `FromWasmAbi`. Existing impls still compile. A type that
+  implemented them without `IntoWasmAbi` / `FromWasmAbi` no longer crosses in
+  a `Vec`, and generic code bounded by them alone needs `T: IntoWasmAbi` /
+  `T: FromWasmAbi` to pass a `Vec<T>`. `OptionIntoWasmAbi` and
+  `OptionFromWasmAbi` are soft-deprecated in favour of `MaybeIntoWasmAbi` and
+  `MaybeFromWasmAbi`. All five will be removed in 0.3.0.
+
+* A `Vec<String>` and a `Vec` of an exported Rust type reach the generated JS
+  as each element's own ABI rather than as a list of JS handles. What JS
+  passes and receives is unchanged.
 
 * Stabilized the `js_sys::Temporal` bindings and `Date::to_temporal_instant`,
   previously behind `js_sys_unstable_apis`, now that Temporal is Stage 4 and
@@ -155,6 +174,10 @@
   [#5458](https://github.com/wasm-bindgen/wasm-bindgen/pull/5458)
 
 ### Removed
+
+* Removed `convert::VectorRefIntoWasmAbi`. A `&[T]` crosses for every
+  `T: RefIntoWasmAbi`, which is the bound to declare on an
+  `experimental_generic_mono` import in its place.
 
 * `Vec<&str>` and `Box<[&str]>` no longer cross by value, to JS as an argument
   or a return, which 0.2.130 added in

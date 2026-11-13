@@ -4,7 +4,8 @@
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | Yes | No | No | Yes | Yes | Yes | A JavaScript `Array` object |
 
-You can pass boxed slices and `Vec`s of several different types to and from JS:
+You can pass boxed slices and `Vec`s to and from JS of any type that can be
+passed on its own, including:
 
 - `JsValue`s.
 - Imported JavaScript types.
@@ -12,15 +13,17 @@ You can pass boxed slices and `Vec`s of several different types to and from JS:
 - C-style exported enums and string enums.
 - `String`s.
 - `bool`s and `char`s.
+- `Option<T>` and `Nullable<T>` of any of these, and of numbers.
+- Other `Vec`s.
 
-Imported JS types and `JsValue`s are passed as their handles. `bool`s,
-`char`s and C-style and string enums are converted element by
-element, the same way a single value of that type is. `String`s and
-exported Rust types are passed as JS values, and each is checked as it
-comes into Rust, so an element of the wrong type throws.
+Imported JS types and `JsValue`s are passed as their handles. Every other
+element is converted the same way a single value of that type is. A `String`
+or an exported Rust type is checked as it comes into Rust, so an element of
+the wrong type throws.
 
-Borrowed slices (`&[T]`) of the same element types, apart from exported Rust
-types, and of `&str`s, can be passed to imported JS functions; see
+Borrowed slices (`&[T]`) can be passed to imported JS functions for every
+element type that can be passed by reference on its own, which exported Rust
+types can't be, and of `&str`s; see
 [`slice` and `vec`](../attributes/on-js-imports/slice.md).
 
 [You can also pass boxed slices of numbers to JS](boxed-number-slices.html),
