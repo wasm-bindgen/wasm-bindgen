@@ -220,6 +220,12 @@ pub fn rejected_units_then_point_names(v: Vec<()>, _a: Kept, _names: Vec<String>
 }
 
 #[wasm_bindgen]
+pub fn rejected_point_unit_names(_a: Kept, unit: (), names: Vec<String>) -> usize {
+    let () = unit;
+    names.len()
+}
+
+#[wasm_bindgen]
 pub fn rejected_returned_long_names() -> bool {
     js_long_names().is_err()
 }
@@ -328,6 +334,8 @@ extern "C" {
     fn rejected_changing(memory: JsValue);
     #[wasm_bindgen(js_name = rejectedUnits)]
     fn rejected_unit_values(memory: JsValue);
+    #[wasm_bindgen(js_name = rejectedUnitArguments)]
+    fn rejected_unit_arguments(memory: JsValue);
     #[wasm_bindgen(catch, js_name = jsGrownUnits)]
     fn js_grown_units(past: JsValue) -> Result<Vec<()>, JsValue>;
     #[wasm_bindgen(catch, js_name = jsLongNames)]
@@ -429,6 +437,11 @@ fn units() {
     // each of them checked there.
     assert_eq!(js_grown_units(JsValue::UNDEFINED).unwrap().len(), 5);
     assert!(js_grown_units(JsValue::NULL).is_err());
+}
+
+#[wasm_bindgen_test]
+fn unit_arguments() {
+    rejected_unit_arguments(wasm_bindgen::memory());
 }
 
 #[wasm_bindgen_test]

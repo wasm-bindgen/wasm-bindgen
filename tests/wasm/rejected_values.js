@@ -488,6 +488,29 @@ exports.rejectedUnits = (memory) => {
 
 exports.jsGrownUnits = (past) => grown([undefined, undefined], 5, past);
 
+// A `()` argument is checked by a debug build, ahead of anything being
+// taken.
+exports.rejectedUnitArguments = (memory) => {
+    const debug = process.env.WASM_BINDGEN_NO_DEBUG == null;
+    const before = live();
+    const a = new wasm.Kept(1);
+    assert.strictEqual(wasm.rejected_point_unit_names(new wasm.Kept(2), undefined, ['x']), 1);
+    for (const unit of [null, 0, []]) {
+        if (debug) {
+            assertFlat(memory, () => assert.throws(
+                () => wasm.rejected_point_unit_names(a, unit, [big, big]),
+                /expected undefined, found/,
+            ));
+        } else {
+            assert.strictEqual(wasm.rejected_point_unit_names(new wasm.Kept(2), unit, ['x']), 1);
+        }
+        assert.strictEqual(a.value, 1);
+        assert.strictEqual(live(), before + 1);
+    }
+    a.free();
+    assert.strictEqual(live(), before);
+};
+
 function seeded(a) {
     return () => {
         a = (a + 0x6D2B79F5) | 0;
