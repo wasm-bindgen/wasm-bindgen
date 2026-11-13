@@ -127,6 +127,10 @@ pub struct Context<'a> {
     /// `binding::JsBuilder::new`.
     pub(crate) body_refs: HashSet<String>,
 
+    /// How many times the glue has named an exported function, which is the
+    /// only way it calls into wasm.
+    pub(crate) wasm_refs: usize,
+
     /// A set of all (tracked) symbols referenced from within type definitions,
     /// function signatures, etc.
     typescript_refs: HashSet<TsReference>,
@@ -360,6 +364,7 @@ impl<'a> Context<'a> {
             js_imports: Default::default(),
             defined_identifiers: Default::default(),
             body_refs: Default::default(),
+            wasm_refs: 0,
             wasm_import_definitions: Default::default(),
             typescript_refs: Default::default(),
             used_string_enums: Default::default(),
@@ -7323,6 +7328,9 @@ if (require('worker_threads').isMainThread) {{
         use walrus::ExportItem::*;
 
         let id = id.into();
+        if let Function(_) = id {
+            self.wasm_refs += 1;
+        }
         let export = self.module.exports.iter().find(|e| match (e.item, id) {
             (Function(a), Function(b)) => a == b,
             (Table(a), Table(b)) => a == b,

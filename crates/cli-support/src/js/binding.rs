@@ -16,6 +16,7 @@ use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::fmt::Write;
+use std::rc::Rc;
 use walrus::{Module, ValType};
 use wasm_bindgen_shared::identifier::is_valid_ident;
 
@@ -71,6 +72,12 @@ pub struct JsBuilder<'a, 'b> {
 
     /// What the arguments have allocated so far, until Rust is called.
     guard: Option<ArgGuard>,
+
+    /// The words on the stack that own what they refer to.
+    given: Vec<Given>,
+
+    /// Whether an owned word was popped, so its owner is no longer known.
+    moved: bool,
 
     /// An index used to manage allocation of temporary indices, used to name
     /// variables to ensure nothing clashes with anything else.
@@ -207,6 +214,87 @@ struct ArgGuard {
     tail: bool,
     /// Statements releasing each allocation, in allocation order.
     releases: Vec<String>,
+}
+
+/// What a word pushed for Rust owns, which is how it's released should JS
+/// throw before Rust takes it.
+#[derive(Clone)]
+enum Owner {
+    /// The address of a buffer of `kind` elements, followed by its length.
+    Vector {
+        kind: VectorKind,
+        mem: walrus::MemoryId,
+        free: walrus::FunctionId,
+    },
+    /// The address of a buffer of cells, followed by its length.
+    Cells(Rc<Cells>),
+    /// A pointer to an instance of an exported class, where 0 and, when
+    /// `nullable`, 1 are no instance.
+    Class { class: String, nullable: bool },
+    /// A handle to a JS value.
+    Handle,
+}
+
+impl Owner {
+    fn words(&self) -> usize {
+        match self {
+            Owner::Vector { .. } | Owner::Cells(_) => 2,
+            Owner::Class { .. } | Owner::Handle => 1,
+        }
+    }
+}
+
+/// A buffer of cells, with what each cell's words own.
+struct Cells {
+    fields: Vec<(usize, &'static str)>,
+    stride: usize,
+    align: usize,
+    mem: walrus::MemoryId,
+    free: walrus::FunctionId,
+    given: Vec<Given>,
+}
+
+/// An owner at its first word's index: on the stack, or in a cell.
+#[derive(Clone)]
+struct Given {
+    word: usize,
+    owner: Owner,
+}
+
+/// The builder's state around an encoded element's glue, which runs in a
+/// scope of its own.
+struct Scope {
+    stack: Vec<Value>,
+    prelude: Vec<Stmt>,
+    pre_try: String,
+    finally: String,
+    guard: Option<ArgGuard>,
+    given: Vec<Given>,
+    moved: bool,
+    instr: InstrState,
+    wasm_refs: usize,
+}
+
+/// What an element's glue did in its scope.
+struct Element {
+    body: String,
+    /// What it deferred, to run when the element is done with.
+    pre_try: String,
+    finally: String,
+    /// What its words own.
+    given: Vec<Given>,
+    /// Whether it may have called into wasm, which may grow memory.
+    calls_wasm: bool,
+}
+
+/// `body` with what it deferred: `pre_try` ahead of it, and `finally` however
+/// it ends.
+fn with_deferred(pre_try: &str, body: &str, finally: &str) -> String {
+    if finally.is_empty() {
+        format!("{pre_try}{body}")
+    } else {
+        format!("{pre_try}try {{\n{body}}} finally {{\n{finally}}}\n")
+    }
 }
 
 pub struct JsFunction {
@@ -548,16 +636,7 @@ impl<'a, 'b> Builder<'a, 'b> {
         }
         code.push_str(") {\n");
 
-        let prelude = render(&js.prelude);
-        let call = if !js.finally.is_empty() {
-            format!(
-                "{pre_try}try {{\n{prelude}}} finally {{\n{finally}}}\n",
-                pre_try = js.pre_try,
-                finally = js.finally
-            )
-        } else {
-            js.pre_try + &prelude
-        };
+        let call = with_deferred(&js.pre_try, &render(&js.prelude), &js.finally);
 
         // Generate a try/catch block in debug mode which handles unexpected and
         // unhandled exceptions, typically used on imports. This currently just
@@ -1067,6 +1146,8 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             finally: String::new(),
             instr: InstrState::default(),
             guard: None,
+            given: Vec::new(),
+            moved: false,
             prelude: Vec::new(),
             stack: Vec::new(),
         }
@@ -1185,11 +1266,158 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             .push(stmt);
     }
 
+    /// Pushes `words`, which `owner` says how to release until Rust takes
+    /// them.
+    fn give(&mut self, owner: Owner, words: &[String]) {
+        self.give_written(owner, words, None);
+    }
+
+    /// [`Self::give`] of a buffer of cells whose first `written` hold their
+    /// elements so far.
+    fn give_written(&mut self, owner: Owner, words: &[String], written: Option<&str>) {
+        assert_eq!(words.len(), owner.words());
+        let release = self.release_stmt(&owner, words, written);
+        self.release(release);
+        self.given.push(Given {
+            word: self.stack.len(),
+            owner,
+        });
+        for word in words {
+            self.push(word.clone());
+        }
+    }
+
+    /// The statement releasing what `owner` holds through `words`.
+    fn release_stmt(&mut self, owner: &Owner, words: &[String], written: Option<&str>) -> String {
+        let ptr = &words[0];
+        match owner {
+            Owner::Vector { kind, mem, free } => {
+                self.vector_release(kind, *mem, *free, ptr, &words[1])
+            }
+            Owner::Class { class, nullable } => {
+                let free = self.class_free(class);
+                let owned = if *nullable { "> 1" } else { "" };
+                format!("if ({ptr}{owned}) {free}({ptr}, 1);")
+            }
+            Owner::Handle => {
+                let drop = match (self.cx.aux.externref_table, self.cx.aux.externref_drop) {
+                    (Some(_), Some(drop)) => self.cx.wasm_export_of(drop),
+                    _ => {
+                        self.cx.expose_drop_ref();
+                        "dropObject".into()
+                    }
+                };
+                format!("{drop}({ptr});")
+            }
+            Owner::Cells(cells) => {
+                let Cells {
+                    fields,
+                    stride,
+                    align,
+                    mem,
+                    free,
+                    given,
+                } = &**cells;
+                let len = &words[1];
+                let free = self.cx.wasm_export_of(*free);
+                let free = format!("{free}({ptr}, {len} * {stride}, {align});");
+                if given.is_empty() {
+                    return format!("if ({ptr}) {free}");
+                }
+                // The releases call into wasm, so each word is read through
+                // the memory as it is then.
+                let memory = self.dataview(*mem);
+                let coerce = self.cx.coerce_ptr_suffix();
+                let i = self.tmp();
+                let k = self.local(format!("k{i}"));
+                let cell = self.local(format!("cell{i}"));
+                let mut elems = String::new();
+                for Given { word, owner } in given {
+                    let words = (*word..word + owner.words())
+                        .map(|n| {
+                            let (offset, ty) = fields[n];
+                            let name = self.local(format!("w{i}_{n}"));
+                            writeln!(
+                                elems,
+                                "const {name} = {memory}.get{ty}({cell} + {offset}, true){coerce};"
+                            )
+                            .unwrap();
+                            name
+                        })
+                        .collect::<Vec<_>>();
+                    elems.push_str(&self.release_stmt(owner, &words, None));
+                    elems.push('\n');
+                }
+                let written = written.unwrap_or(len);
+                format!(
+                    "if ({ptr}) {{\n\
+                     for (let {k} = 0; {k} < {written}; {k}++) {{\n\
+                     const {cell} = {ptr} + {k} * {stride};\n\
+                     {elems}}}\n\
+                     {free}\n\
+                     }}"
+                )
+            }
+        }
+    }
+
+    /// A `DataView` of `mem` as it is now: a call into wasm may grow it,
+    /// which detaches a view taken earlier.
+    fn dataview(&mut self, mem: walrus::MemoryId) -> String {
+        let view = self.cx.expose_dataview_memory(mem);
+        if self.cx.config.mode.emscripten() {
+            view.name.to_string()
+        } else {
+            format!("{view}()")
+        }
+    }
+
+    /// Runs an encoded element's glue in a scope of its own, over `stack`.
+    fn enter_scope(&mut self, stack: Vec<Value>) -> Scope {
+        Scope {
+            stack: std::mem::replace(&mut self.stack, stack),
+            prelude: std::mem::take(&mut self.prelude),
+            pre_try: std::mem::take(&mut self.pre_try),
+            finally: std::mem::take(&mut self.finally),
+            guard: self.guard.take(),
+            given: std::mem::take(&mut self.given),
+            moved: std::mem::take(&mut self.moved),
+            instr: std::mem::take(&mut self.instr),
+            wasm_refs: self.cx.wasm_refs,
+        }
+    }
+
+    /// Leaves the element's scope, whose values and guard its glue's caller
+    /// has taken.
+    fn exit_scope(&mut self, scope: Scope) -> Result<Element, Error> {
+        assert!(self.guard.is_none() && self.stack.is_empty());
+        if self.moved {
+            bail!("an encoded element's glue consumed a word it owns");
+        }
+        let element = Element {
+            body: render(&std::mem::replace(&mut self.prelude, scope.prelude)),
+            pre_try: std::mem::replace(&mut self.pre_try, scope.pre_try),
+            finally: std::mem::replace(&mut self.finally, scope.finally),
+            given: std::mem::replace(&mut self.given, scope.given),
+            calls_wasm: self.cx.wasm_refs != scope.wasm_refs,
+        };
+        self.stack = scope.stack;
+        self.guard = scope.guard;
+        self.moved = scope.moved;
+        self.instr = scope.instr;
+        Ok(element)
+    }
+
     fn push_safe(&mut self, arg: String) {
         self.stack.push(Value::Safe(arg));
     }
 
+    /// Pushes a handle that `arg` allocates when evaluated.
     fn push_alloc(&mut self, arg: String) {
+        self.given.push(Given {
+            word: self.stack.len(),
+            owner: Owner::Handle,
+        });
         self.stack.push(Value::Alloc(arg));
     }
 
@@ -1333,10 +1561,14 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     }
 
     fn pop_value(&mut self) -> Value {
-        match self.stack.pop() {
-            Some(value) => value,
-            None => panic!("popping an empty stack in {}", self.debug_name),
-        }
+        let Some(value) = self.stack.pop() else {
+            panic!("popping an empty stack in {}", self.debug_name)
+        };
+        let len = self.stack.len();
+        let given = self.given.len();
+        self.given.retain(|g| g.word + g.owner.words() <= len);
+        self.moved |= self.given.len() != given;
+        value
     }
 
     fn pop(&mut self) -> String {
@@ -1625,10 +1857,8 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             format!("{pass}({val}, {malloc}{realloc})"),
         );
         let len = self.declare("const", format!("len{i}"), "WASM_VECTOR_LEN".into());
-        let release = self.vector_release(&VectorKind::String, mem, free, &ptr, &len);
-        self.release(release);
-        self.push(ptr);
-        self.push(len);
+        let kind = VectorKind::String;
+        self.give(Owner::Vector { kind, mem, free }, &[ptr, len]);
     }
 
     /// Releases a vector JS allocated at `ptr`, unless it's absent.
@@ -1654,12 +1884,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
                     }
                     _ => {
                         self.cx.expose_drop_ref();
-                        let view = self.cx.expose_dataview_memory(mem);
-                        let view = if self.cx.config.mode.emscripten() {
-                            view.name.to_string()
-                        } else {
-                            format!("{view}()")
-                        };
+                        let view = self.dataview(mem);
                         format!(
                             "for (let i = 0; i < {len}; i++) dropObject({view}.getUint32({ptr} + 4 * i, true)); "
                         )
@@ -2074,12 +2299,28 @@ fn instruction(
         }
 
         Instruction::I32FromExternrefOwned => {
-            js.cx.expose_add_heap_object();
             let val = js.pop();
-            js.push_alloc(format!("addHeapObject({val})"));
+            // With externref the pass sinks every argument's into wasm,
+            // leaving only an encoded cell's, written to memory in JS.
+            let alloc = match (js.cx.aux.externref_table, js.cx.aux.externref_alloc) {
+                (Some(table), Some(alloc)) => js
+                    .cx
+                    .expose_add_to_externref_table(table, alloc)
+                    .to_string(),
+                _ => {
+                    js.cx.expose_add_heap_object();
+                    "addHeapObject".to_string()
+                }
+            };
+            js.push_alloc(format!("{alloc}({val})"));
         }
 
         Instruction::I32FromExternrefBorrow => {
+            // With externref the pass sinks every argument's into wasm, and
+            // an encoded cell has no table stack to borrow on.
+            if js.cx.config.externref {
+                bail!("an element of a vector passed to Rust can't be lent");
+            }
             js.cx.expose_borrowed_objects();
             js.cx.expose_global_stack_pointer();
             let val = js.pop();
@@ -2102,9 +2343,9 @@ fn instruction(
                 format!("ptr{i}"),
                 format!("{val}.__destroy_into_raw()"),
             );
-            let free = js.class_free(class);
-            js.release(format!("if ({ptr}) {free}({ptr}, 1);"));
-            js.push(ptr);
+            let class = class.clone();
+            let nullable = false;
+            js.give(Owner::Class { class, nullable }, &[ptr]);
         }
 
         Instruction::I32FromExternrefRustBorrow { class } => {
@@ -2141,10 +2382,11 @@ fn instruction(
             let val = js.pop();
             let i = js.tmp();
             // `Nullable::Null` is the pointer `1`, which no instance can have.
-            let (empty, owned) = if kind.nullable() {
-                (format!("{val} === null ? 1 : 0"), "> 1")
+            let nullable = kind.nullable();
+            let empty = if nullable {
+                format!("{val} === null ? 1 : 0")
             } else {
-                ("0".into(), "")
+                "0".into()
             };
             let ptr = js.declare("let", format!("ptr{i}"), empty);
             let some = js.is_some(&val, *kind);
@@ -2153,9 +2395,8 @@ fn instruction(
             js.assert_not_moved(&val);
             js.prelude(&format!("{ptr} = {val}.__destroy_into_raw();"));
             js.prelude("}");
-            let free = js.class_free(class);
-            js.release(format!("if ({ptr}{owned}) {free}({ptr}, 1);"));
-            js.push(ptr);
+            let class = class.clone();
+            js.give(Owner::Class { class, nullable }, &[ptr]);
         }
 
         Instruction::I32FromOptionExternref {
@@ -2343,10 +2584,8 @@ fn instruction(
                 format!("{func}({val}, {malloc})"),
             );
             let len = js.declare("const", format!("len{i}"), "WASM_VECTOR_LEN".into());
-            let release = js.vector_release(kind, *mem, *free, &ptr, &len);
-            js.release(release);
-            js.push(ptr);
-            js.push(len);
+            let (kind, mem, free) = (kind.clone(), *mem, *free);
+            js.give(Owner::Vector { kind, mem, free }, &[ptr, len]);
         }
 
         Instruction::UnwrapResult { table_and_drop } => {
@@ -2425,10 +2664,8 @@ fn instruction(
             );
             let len = js.vector_len(&val, *kind);
             let len = js.declare("var", format!("len{i}"), len);
-            let release = js.vector_release(&VectorKind::String, *mem, *free, &ptr, &len);
-            js.release(release);
-            js.push(ptr);
-            js.push(len);
+            let (kind, mem, free) = (VectorKind::String, *mem, *free);
+            js.give(Owner::Vector { kind, mem, free }, &[ptr, len]);
         }
 
         Instruction::OptionVector {
@@ -2451,10 +2688,8 @@ fn instruction(
             );
             let len = js.vector_len(&val, *option_kind);
             let len = js.declare("var", format!("len{i}"), len);
-            let release = js.vector_release(kind, *mem, *free, &ptr, &len);
-            js.release(release);
-            js.push(ptr);
-            js.push(len);
+            let (kind, mem, free) = (kind.clone(), *mem, *free);
+            js.give(Owner::Vector { kind, mem, free }, &[ptr, len]);
         }
 
         Instruction::MutableSliceToMemory {
@@ -2472,10 +2707,8 @@ fn instruction(
             let ptr = js.declare("var", format!("ptr{i}"), format!("{func}({val}, {malloc})"));
             let len = js.declare("var", format!("len{i}"), "WASM_VECTOR_LEN".into());
             // Then pass it the pointer and the length of where we copied it.
-            let release = js.vector_release(kind, *mem, *free, &ptr, &len);
-            js.release(release);
-            js.push(ptr);
-            js.push(len);
+            let (kind, mem, free) = (kind.clone(), *mem, *free);
+            js.give(Owner::Vector { kind, mem, free }, &[ptr, len]);
             // Then we give Wasm a reference to the original typed array, so that it can
             // update it with modifications made on the Wasm side before returning.
             js.push(val);
@@ -2817,14 +3050,7 @@ fn instruction(
             let i = js.tmp();
             let p = js.local(format!("p{i}"));
             let end = js.local(format!("end{i}"));
-            let memory = js.cx.expose_dataview_memory(*mem);
-            let memory = if js.cx.config.mode.emscripten() {
-                memory.name.to_string()
-            } else {
-                format!("{memory}()")
-            };
-            // Decoding never calls into wasm, so memory cannot grow under the
-            // loop and one view serves the whole buffer.
+            let memory = js.dataview(*mem);
             let view = js.local(format!("view{i}"));
             let (fields, stride, align) = encoded_slice_layout(words)?;
             let reads = fields
@@ -2832,19 +3058,39 @@ fn instruction(
                 .map(|(offset, ty)| format!("{view}.get{ty}({p} + {offset}, true)"))
                 .collect::<Vec<_>>();
             // Decode one element from its words with its own instructions,
-            // into the loop body.
-            let reads = reads
-                .into_iter()
-                .map(|expr| Value::Expr { expr, pure: false })
+            // into the loop body. Glue that neither calls into wasm nor
+            // defers reads its words in place, through one view of the
+            // whole buffer.
+            let tmp = js.tmp;
+            let in_place = reads
+                .iter()
+                .map(|expr| Value::Expr {
+                    expr: expr.clone(),
+                    pure: false,
+                })
                 .collect();
-            let stack = std::mem::replace(&mut js.stack, reads);
-            let prelude = std::mem::take(&mut js.prelude);
-            for instr in elem {
-                instruction(js, &instr.instr, log_error, constructor)?;
+            let (mut element, mut value) =
+                encoded_element(js, elem, in_place, log_error, constructor)?;
+            let effects =
+                element.calls_wasm || !element.pre_try.is_empty() || !element.finally.is_empty();
+            let mut bind = String::new();
+            if effects {
+                // Otherwise memory may grow under the loop, so each iteration
+                // reads the cell's words ahead of its glue, which is
+                // translated again over them.
+                js.tmp = tmp;
+                writeln!(bind, "const {view} = {memory};").unwrap();
+                let words = reads
+                    .iter()
+                    .enumerate()
+                    .map(|(n, read)| {
+                        let word = js.local(format!("w{i}_{n}"));
+                        writeln!(bind, "const {word} = {read};").unwrap();
+                        Value::Local(word)
+                    })
+                    .collect();
+                (element, value) = encoded_element(js, elem, words, log_error, constructor)?;
             }
-            let value = js.pop();
-            let body = render(&std::mem::replace(&mut js.prelude, prelude));
-            js.stack = stack;
             let v = js.local(format!("v{i}"));
             let free = js.cx.wasm_export_of(*free);
             let coerce = js.cx.coerce_ptr_assign(&p);
@@ -2854,14 +3100,24 @@ fn instruction(
             } else {
                 js.prelude(&format!("const {v} = [];"));
             }
+            // What the element deferred runs at the end of its iteration.
+            let body = with_deferred(
+                &element.pre_try,
+                &format!("{}{v}.push({value});\n", element.body),
+                &element.finally,
+            );
+            let view = if effects {
+                String::new()
+            } else {
+                format!("const {view} = {memory};")
+            };
             js.prelude(&format!(
                 "
                 let {p} = {ptr};
                 {coerce}
-                const {view} = {memory};
+                {view}
                 for (const {end} = {p} + {len} * {stride}; {p} < {end}; {p} += {stride}) {{
-                {body}{v}.push({value});
-                }}
+                {bind}{body}}}
                 {free}({ptr}, {len} * {stride}, {align});
                 "
             ));
@@ -2887,37 +3143,58 @@ fn instruction(
             let j = js.local(format!("j{i}"));
             let p = js.local(format!("p{i}"));
             let e = js.local(format!("e{i}"));
-            let memory = js.cx.expose_dataview_memory(*mem);
-            let memory = if js.cx.config.mode.emscripten() {
-                memory.name.to_string()
-            } else {
-                format!("{memory}()")
-            };
-            // Encoding never calls into wasm, so the view taken after the
-            // allocation serves the whole buffer.
+            let memory = js.dataview(*mem);
             let view = js.local(format!("view{i}"));
             let (fields, stride, align) = encoded_slice_layout(words)?;
             // Encode one element into its words with its own instructions,
-            // into the loop body.
-            // The element reads the loop's local, so it's never hoisted
-            // ahead of it; the guard belongs to the enclosing arguments.
-            let guard = js.guard.take();
-            let stack = std::mem::replace(&mut js.stack, vec![Value::Local(e.clone())]);
-            let prelude = std::mem::take(&mut js.prelude);
+            // into the loop body. The buffer takes the words as a call takes
+            // its arguments: what the element allocated is released should
+            // the rest of its glue throw, and the writes that follow can't.
+            let scope = js.enter_scope(vec![Value::Local(e.clone())]);
             for instr in elem {
+                js.begin_instr();
                 instruction(js, &instr.instr, log_error, constructor)?;
+                js.end_instr();
             }
-            let values = std::mem::replace(&mut js.stack, stack);
-            let mut body = render(&std::mem::replace(&mut js.prelude, prelude));
-            debug_assert!(js.guard.is_none(), "an encoded element allocated");
-            js.guard = guard;
-            for ((offset, ty), value) in fields.iter().zip(values) {
-                body.push_str(&format!("{view}.set{ty}({p} + {offset}, {value}, true);\n"));
+            let values = std::mem::take(&mut js.stack);
+            let allocs = values
+                .iter()
+                .map(|value| matches!(value, Value::Alloc(_)))
+                .collect::<Vec<_>>();
+            let tys = words
+                .iter()
+                .map(AdapterType::to_wasm)
+                .collect::<Option<Vec<_>>>();
+            let values = js.take_args(values, tys.as_deref());
+            assert_eq!(values.len(), fields.len());
+            let mut writes = String::new();
+            for (n, (((offset, ty), value), alloc)) in
+                fields.iter().zip(values).zip(allocs).enumerate()
+            {
+                // An allocation may grow memory, so it's made ahead of the
+                // view the words are written through.
+                let value = if alloc {
+                    js.declare("const", format!("w{i}_{n}"), value)
+                } else {
+                    value
+                };
+                writeln!(writes, "{view}.set{ty}({p} + {offset}, {value}, true);").unwrap();
             }
+            let element = js.exit_scope(scope)?;
+            if !element.pre_try.is_empty() || !element.finally.is_empty() {
+                // What it lends would have to stay until Rust returns, past
+                // the element's own iteration.
+                bail!("an element of a vector passed to Rust can't be lent");
+            }
+            let effects = element.calls_wasm || !element.given.is_empty();
             let malloc = js.cx.wasm_export_of(*malloc);
-            let free = js.cx.wasm_export_of(*free);
             let coerce = js.cx.coerce_ptr_suffix();
             let alloc = format!("{malloc}({len} * {stride}, {align}){coerce}");
+            // With elements that own something, how many the buffer holds so
+            // far is kept for releasing them.
+            if effects {
+                js.declare("let", j.clone(), "0".into());
+            }
             if *optional {
                 js.declare("let", ptr.clone(), "0".into());
                 // A nullable `null` buffer is the null pointer with the
@@ -2937,24 +3214,45 @@ fn instruction(
                 js.declare("const", ptr.clone(), alloc);
             }
             // An element encoder may throw (an invalid `char`, say), which
-            // the guard frees the buffer for.
-            js.release(format!(
-                "if ({ptr}) {free}({ptr}, {len} * {stride}, {align});"
-            ));
-            js.prelude(&format!(
-                "
-                const {view} = {memory};
-                for (let {j} = 0; {j} < {len}; {j}++) {{
-                const {e} = {val}[{j}];
-                const {p} = {ptr} + {j} * {stride};
-                {body}}}
-                "
-            ));
+            // the guard releases the buffer and the elements written for.
+            let cells = Cells {
+                fields,
+                stride,
+                align,
+                mem: *mem,
+                free: *free,
+                given: element.given,
+            };
+            js.give_written(
+                Owner::Cells(Rc::new(cells)),
+                &[ptr.clone(), len.clone()],
+                Some(&j),
+            );
+            let body = element.body;
+            if effects {
+                js.prelude(&format!(
+                    "
+                    for (; {j} < {len}; {j}++) {{
+                    const {e} = {val}[{j}];
+                    {body}const {view} = {memory};
+                    const {p} = {ptr} + {j} * {stride};
+                    {writes}}}
+                    "
+                ));
+            } else {
+                js.prelude(&format!(
+                    "
+                    const {view} = {memory};
+                    for (let {j} = 0; {j} < {len}; {j}++) {{
+                    const {e} = {val}[{j}];
+                    const {p} = {ptr} + {j} * {stride};
+                    {body}{writes}}}
+                    "
+                ));
+            }
             if *optional {
                 js.prelude("}");
             }
-            js.push(ptr);
-            js.push(len);
         }
 
         Instruction::View { kind, mem, mode } => {
@@ -3071,6 +3369,31 @@ fn instruction(
 
 /// The helper reading borrowed vector data of `kind`; for externref kinds, the
 /// version that doesn't take ownership of the handles.
+/// Translates the glue decoding one encoded element from `words`, giving
+/// what it did and the element's value.
+fn encoded_element(
+    js: &mut JsBuilder,
+    elem: &[InstructionData],
+    words: Vec<Value>,
+    log_error: &mut bool,
+    constructor: &Option<String>,
+) -> Result<(Element, String), Error> {
+    let scope = js.enter_scope(words);
+    for instr in elem {
+        js.begin_instr();
+        instruction(js, &instr.instr, log_error, constructor)?;
+        js.end_instr();
+    }
+    let value = js.pop();
+    // Nothing takes what the glue allocated but the element's value.
+    if let Some(guard) = js.guard.take() {
+        let (rest, _) = js.split_guard(&guard);
+        let tail = guard.tail;
+        js.close_guard(guard, rest, tail);
+    }
+    Ok((js.exit_scope(scope)?, value))
+}
+
 fn view_from_wasm(js: &mut JsBuilder, kind: &VectorKind, mem: walrus::MemoryId) -> MemView {
     match kind {
         VectorKind::Externref | VectorKind::NamedExternref(_) => {

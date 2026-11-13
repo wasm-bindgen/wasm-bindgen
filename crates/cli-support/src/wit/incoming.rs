@@ -630,11 +630,11 @@ impl InstructionBuilder<'_, '_> {
         );
     }
 
-    /// An owned vector with encoded cells is a buffer of its elements'
-    /// scalar ABIs, the mirror of `outgoing_encoded_slice`. JS encodes each
-    /// element with the element's own instructions, as for an argument of the
-    /// element type, and writes its ABI words into the buffer, which Rust
-    /// takes ownership of.
+    /// An owned vector with encoded cells is a buffer of its elements' cells,
+    /// the mirror of `outgoing_encoded_slice`. JS encodes each element with
+    /// the element's own instructions, as for a value of the element type,
+    /// and writes its ABI words into the buffer, which Rust takes ownership
+    /// of along with what the elements give.
     fn incoming_encoded_vector(
         &mut self,
         elem: &Descriptor,
@@ -651,19 +651,10 @@ impl InstructionBuilder<'_, '_> {
             return_position: true,
             seq_value: SeqValue::View,
         };
-        // Every element that isn't in place reaches here, so this is what
-        // rejects one the glue can't encode. Element encoders must not call
-        // into wasm: the glue writes the whole buffer through one view after
-        // allocating it. That rules out elements that own memory, such as a
-        // string.
-        match elem {
-            Descriptor::Boolean
-            | Descriptor::Char
-            | Descriptor::Enum { .. }
-            | Descriptor::StringEnum { .. } => encode._incoming(elem)?,
-            _ => {
-                bail!("unsupported vector element type for calling Rust function from JS: {elem:?}")
-            }
+        encode._incoming(elem)?;
+        // A cell holds one value, in at least one word.
+        if encode.input.len() != 1 || encode.output.is_empty() {
+            bail!("unsupported vector element type for calling Rust function from JS: {elem:?}")
         }
         let InstructionBuilder {
             mut input,

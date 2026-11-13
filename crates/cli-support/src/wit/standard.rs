@@ -462,8 +462,8 @@ pub enum Instruction {
     },
     /// pops an array (or, `optional`, `undefined`), encodes each element with
     /// `elem` into the `words` of its ABI in a buffer allocated with `malloc`
-    /// (freed with `free` if an element throws), pushes the buffer's
-    /// ptr/length (ptr 0 for `undefined`)
+    /// (freed with `free`, after what its elements own, if an element
+    /// throws), pushes the buffer's ptr/length (ptr 0 for `undefined`)
     EncodedSliceStore {
         words: Vec<AdapterType>,
         elem: Vec<InstructionData>,
@@ -615,14 +615,12 @@ impl NonstandardWitSection {
             AdapterKind::Local { instructions } => instructions,
             AdapterKind::Import { .. } => return,
         };
-        for instr in instructions {
-            match instr.instr {
-                Instruction::Closure { adapter, .. } | Instruction::CallAdapter(adapter) => {
-                    self.add_live(adapter, live);
-                }
-                _ => {}
+        visit_instructions(instructions, &mut |instr| match instr.instr {
+            Instruction::Closure { adapter, .. } | Instruction::CallAdapter(adapter) => {
+                self.add_live(adapter, live);
             }
-        }
+            _ => {}
+        });
     }
 }
 
