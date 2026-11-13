@@ -438,8 +438,10 @@ impl WasmSlice {
 
     /// Takes an encoded sequence from JS, converting each element from its
     /// cell's ABI with `FromWasmAbi::try_from_abi`. Every cell is received
-    /// whether or not one before it was rejected, as Rust owns them all, and
-    /// a rejected element drops the buffer and every other element.
+    /// whether or not one before it was rejected or its conversion unwound,
+    /// as Rust owns them all. A rejected element drops the buffer and every
+    /// other element, and the first conversion to unwind goes on unwinding
+    /// once the rest are received.
     ///
     /// # Safety
     ///
@@ -453,16 +455,19 @@ impl WasmSlice {
         };
         let mut elems = Vec::with_capacity(cells.len);
         let mut rejected = None;
-        let mut rest = Rest::<T> {
-            cells: &cells,
-            next: 0,
-        };
-        while let Some(elem) = rest.receive() {
-            match elem {
-                Ok(elem) if rejected.is_none() => elems.push(elem),
-                Ok(_) => {}
-                Err(msg) => rejected = rejected.or(Some(msg)),
+        let mut unwound = None;
+        for i in 0..cells.len {
+            let cell = cells.ptr.add(i * T::Abi::CELL.size());
+            match catch_conversion(|| unsafe { T::try_from_abi(T::Abi::read_cell(cell)) }) {
+                Ok(Ok(elem)) if rejected.is_none() && unwound.is_none() => elems.push(elem),
+                Ok(Ok(_)) => {}
+                Ok(Err(msg)) => rejected = rejected.or(Some(msg)),
+                Err(payload) => unwound = unwound.or(Some(payload)),
             }
+        }
+        if let Some(payload) = unwound {
+            drop((elems, cells));
+            resume_conversion(payload);
         }
         match rejected {
             Some(msg) => Err(msg),
@@ -471,27 +476,31 @@ impl WasmSlice {
     }
 }
 
-/// The cells of a sequence JS gave that are yet to be received. Dropping it
-/// receives them, so that a conversion that unwinds leaves none behind.
-struct Rest<'a, T: FromWasmAbi> {
-    cells: &'a Cells<T::Abi>,
-    next: usize,
-}
+cfg_if! {
+    if #[cfg(all(feature = "std", panic = "unwind"))] {
+        type Unwound = Box<dyn core::any::Any + Send>;
 
-impl<T: FromWasmAbi> Rest<'_, T> {
-    fn receive(&mut self) -> Option<Result<T, &'static str>> {
-        if self.next == self.cells.len {
-            return None;
+        // A guard that received the rest while unwinding would abort on a
+        // second element that panics, so each conversion is caught instead.
+        #[inline]
+        fn catch_conversion<R>(f: impl FnOnce() -> R) -> Result<R, Unwound> {
+            std::panic::catch_unwind(core::panic::AssertUnwindSafe(f))
         }
-        let cell = unsafe { self.cells.ptr.add(self.next * T::Abi::CELL.size()) };
-        self.next += 1;
-        Some(unsafe { T::try_from_abi(T::Abi::read_cell(cell)) })
-    }
-}
 
-impl<T: FromWasmAbi> Drop for Rest<'_, T> {
-    fn drop(&mut self) {
-        while self.receive().is_some() {}
+        fn resume_conversion(payload: Unwound) -> ! {
+            std::panic::resume_unwind(payload)
+        }
+    } else {
+        type Unwound = core::convert::Infallible;
+
+        #[inline]
+        fn catch_conversion<R>(f: impl FnOnce() -> R) -> Result<R, Unwound> {
+            Ok(f())
+        }
+
+        fn resume_conversion(payload: Unwound) -> ! {
+            match payload {}
+        }
     }
 }
 

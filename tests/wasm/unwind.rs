@@ -501,9 +501,12 @@ mod sequences {
     use std::sync::atomic::{AtomicU32, Ordering::Relaxed};
     use wasm_bindgen::convert::{FromWasmAbi, WasmSlice};
     use wasm_bindgen::describe::WasmDescribe;
+    use wasm_bindgen::prelude::*;
+    use wasm_bindgen::SafeInteger;
     use wasm_bindgen_test::wasm_bindgen_test;
 
     static RECEIVED: AtomicU32 = AtomicU32::new(0);
+    static LIVE: AtomicU32 = AtomicU32::new(0);
 
     struct Probe;
 
@@ -516,18 +519,53 @@ mod sequences {
 
         unsafe fn from_abi(js: u32) -> Self {
             RECEIVED.fetch_add(1, Relaxed);
-            assert_ne!(js, 1, "expected panic");
+            assert!(js % 2 == 0, "element {js}");
+            LIVE.fetch_add(1, Relaxed);
             Probe
         }
     }
 
-    /// Rust owns every cell JS gave it, so the ones after an element whose
-    /// conversion unwinds are still received.
+    impl Drop for Probe {
+        fn drop(&mut self) {
+            LIVE.fetch_sub(1, Relaxed);
+        }
+    }
+
+    /// Rust owns every cell JS gave it, so each is received whichever
+    /// elements' conversions unwind, and the first of them is what unwinds
+    /// the sequence's.
     #[wasm_bindgen_test]
-    fn a_sequence_is_received_whole_when_an_element_unwinds() {
-        let cells = WasmSlice::encode(&[0u32, 1, 2, 3], |n| *n);
-        let decoded = catch_unwind(AssertUnwindSafe(|| unsafe { cells.try_decode::<Probe>() }));
-        assert!(decoded.is_err());
-        assert_eq!(RECEIVED.load(Relaxed), 4);
+    fn a_sequence_is_received_whole_when_elements_unwind() {
+        for (cells, first) in [
+            (&[0u32, 1, 2, 4][..], "element 1"),
+            (&[0, 3, 2, 1], "element 3"),
+            (&[5, 7, 9, 11], "element 5"),
+        ] {
+            RECEIVED.store(0, Relaxed);
+            let cells = WasmSlice::encode(cells, |n| *n);
+            let decoded = catch_unwind(AssertUnwindSafe(|| unsafe { cells.try_decode::<Probe>() }));
+            let payload = decoded.err().expect("a conversion panicked");
+            assert_eq!(payload.downcast_ref::<String>().unwrap(), first);
+            assert_eq!(RECEIVED.load(Relaxed), 4);
+            assert_eq!(LIVE.load(Relaxed), 0);
+        }
+    }
+
+    #[wasm_bindgen]
+    pub fn unwind_safe_integers(v: Vec<SafeInteger<u64>>) -> usize {
+        v.len()
+    }
+
+    #[wasm_bindgen(module = "tests/wasm/unwind.js")]
+    extern "C" {
+        fn js_unsafe_integers_message() -> String;
+    }
+
+    // An unsafe integer is a debug assertion's panic, one per element.
+    #[cfg(debug_assertions)]
+    #[wasm_bindgen_test]
+    fn two_elements_that_panic_leave_the_module_alive() {
+        assert_eq!(js_unsafe_integers_message(), "1.5 is not a safe integer");
+        assert_eq!(unwind_safe_integers(vec![SafeInteger::from(1u64)]), 1);
     }
 }
