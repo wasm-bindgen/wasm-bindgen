@@ -52,6 +52,11 @@ impl Kept {
         String::new()
     }
 
+    /// How many instances it was given.
+    pub fn eat(self, _other: Kept, third: Option<Kept>) -> u32 {
+        2 + third.is_some() as u32
+    }
+
     pub fn label(&self, _other: &Kept) -> String {
         String::new()
     }
@@ -81,6 +86,9 @@ pub fn rejected_point_then_point(_a: Kept, _b: Kept) {}
 
 #[wasm_bindgen]
 pub fn rejected_point_then_maybe_point(_a: Kept, _b: Option<Kept>) {}
+
+#[wasm_bindgen]
+pub fn rejected_point_then_borrowed(_a: Kept, _b: &Kept) {}
 
 #[wasm_bindgen]
 pub fn rejected_point_then_nested(_a: Kept, _b: Vec<Vec<String>>) {}
@@ -282,6 +290,8 @@ extern "C" {
     fn rejected_by_rust();
     #[wasm_bindgen(js_name = rejectedKeepsTheStack)]
     fn rejected_keeps_the_stack();
+    #[wasm_bindgen(js_name = rejectedMoved)]
+    fn rejected_moved();
     #[wasm_bindgen(js_name = rejectedChangedValues)]
     fn rejected_changed_values(memory: JsValue);
     #[wasm_bindgen(js_name = rejectedNotArrays)]
@@ -340,6 +350,11 @@ fn arguments_rust_rejects() {
 #[wasm_bindgen_test]
 fn arguments_keep_the_stack() {
     rejected_keeps_the_stack();
+}
+
+#[wasm_bindgen_test]
+fn arguments_moved() {
+    rejected_moved();
 }
 
 #[wasm_bindgen_test]

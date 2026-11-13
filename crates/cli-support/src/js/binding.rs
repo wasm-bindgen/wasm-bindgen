@@ -122,11 +122,13 @@ enum StmtKind {
     /// A statement that only throws unless a value is what Rust takes it
     /// as. Without `inputs_only` it reads what its instruction bound. One
     /// that is `repeated` where its value is taken runs only ahead of what
-    /// holds the value being taken.
+    /// holds the value being taken. What a value taken ahead of this one
+    /// may have changed of it is checked `again` where the check stood.
     Check {
         text: String,
         inputs_only: bool,
         repeated: bool,
+        again: Option<String>,
     },
     /// `keyword` declares the binding, or is `None` once lifted.
     Decl {
@@ -134,6 +136,15 @@ enum StmtKind {
         name: String,
         expr: String,
     },
+}
+
+fn moved_assert(arg: &str) -> String {
+    format!(
+        "\
+        if ({arg}.__wbg_ptr === 0) {{
+            throw new Error('Attempt to use a moved value');
+        }}\n"
+    )
 }
 
 /// `code` with each line trimmed and the empty ones dropped.
@@ -1361,8 +1372,24 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
                     text,
                     inputs_only,
                     repeated,
+                    again: None,
                 },
             });
+        }
+    }
+
+    /// Has the check just emitted run `again` where it stood, once a value
+    /// ahead of it in the call has been taken.
+    fn check_again(&mut self, again: Option<String>) {
+        if again.is_none() {
+            return;
+        }
+        if let Some(Stmt {
+            kind: StmtKind::Check { again: slot, .. },
+            ..
+        }) = self.prelude.last_mut()
+        {
+            *slot = again;
         }
     }
 
@@ -1812,12 +1839,25 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     /// returning the rest and whether anything after the allocation is left
     /// to throw.
     fn split_guard(&mut self, guard: &ArgGuard) -> (Vec<Stmt>, bool) {
-        let (pure, rest): (Vec<_>, Vec<_>) = self
-            .prelude
-            .split_off(guard.start)
-            .into_iter()
-            .partition(|stmt| stmt.pure);
-        self.prelude.extend(pure);
+        let mut rest = Vec::new();
+        for stmt in self.prelude.split_off(guard.start) {
+            if !stmt.pure {
+                rest.push(stmt);
+                continue;
+            }
+            if let StmtKind::Check {
+                again: Some(again), ..
+            } = &stmt.kind
+            {
+                if rest.len() >= guard.first {
+                    rest.push(Stmt {
+                        pure: false,
+                        kind: StmtKind::Raw(again.clone()),
+                    });
+                }
+            }
+            self.prelude.push(stmt);
+        }
         let guarded = rest.len() > guard.first;
         (rest, guarded)
     }
@@ -2000,8 +2040,10 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     /// takes the instance to repeat.
     fn assert_owned_class(&mut self, arg: &str, class: &str, some: Option<&str>) -> String {
         let assert = self.owned_class_assert(arg, class, some.is_some());
+        let again = self.moved_again(arg, some);
         let Some(some) = some else {
             self.check(&assert);
+            self.check_again(again);
             return String::new();
         };
         let inputs_only = !self.instr.reads_local && !self.instr.binds_local;
@@ -2010,6 +2052,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             inputs_only,
             self.stored,
         );
+        self.check_again(again);
         if self.stored {
             assert
         } else {
@@ -2214,7 +2257,24 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
 
     fn assert_not_moved(&mut self, arg: &str) {
         let assert = self.not_moved_assert(arg);
+        let again = self.moved_again(arg, None);
         self.check(&assert);
+        self.check_again(again);
+    }
+
+    /// A debug build's check that the instance `arg` wasn't moved, when
+    /// `some`, for where an argument ahead of it has been taken: the same
+    /// instance has no pointer from then. A stored instance's check is
+    /// already made where it's taken.
+    fn moved_again(&self, arg: &str, some: Option<&str>) -> Option<String> {
+        if !self.cx.config.debug || self.stored {
+            return None;
+        }
+        let moved = moved_assert(arg);
+        Some(match some {
+            Some(some) => lines(&format!("if ({some}) {{\n{moved}}}")),
+            None => lines(&moved),
+        })
     }
 
     fn not_moved_assert(&mut self, arg: &str) -> String {
@@ -2232,14 +2292,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         }
         if self.cx.config.debug {
             // Debug mode only checks for moved values
-            writeln!(
-                assert,
-                "\
-                if ({arg}.__wbg_ptr === 0) {{
-                    throw new Error('Attempt to use a moved value');
-                }}"
-            )
-            .unwrap();
+            assert.push_str(&moved_assert(arg));
         }
         assert
     }

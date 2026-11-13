@@ -162,6 +162,45 @@ exports.rejectedKeepsTheStack = () => {
     assert.strictEqual(live(), before);
 };
 
+// A debug build's glue knows an instance that an argument ahead of it has
+// taken, where it comes to take or lend it again.
+exports.rejectedMoved = () => {
+    const before = live();
+    const moved = /Attempt to use a moved value/;
+    let a = new wasm.Kept(1);
+    let b = new wasm.Kept(2);
+    assert.strictEqual(a.eat(b, new wasm.Kept(3)), 3);
+    a = new wasm.Kept(1);
+    b = new wasm.Kept(2);
+    if (process.env.WASM_BINDGEN_NO_DEBUG != null) {
+        // Rust is otherwise given it as no instance.
+        assert.strictEqual(a.eat(b, b), 2);
+        assert.strictEqual(live(), before);
+        return;
+    }
+    assert.throws(() => a.eat(b, b), moved);
+    assert.strictEqual(a.__wbg_ptr, 0);
+    assert.strictEqual(b.__wbg_ptr, 0);
+    assert.strictEqual(live(), before);
+
+    a = new wasm.Kept(1);
+    assert.throws(() => a.eat(a, null), moved);
+    assert.strictEqual(live(), before);
+    a = new wasm.Kept(1);
+    assert.throws(() => a.mergeMaybe(a), moved);
+    assert.strictEqual(live(), before);
+    a = new wasm.Kept(1);
+    assert.throws(() => wasm.rejected_point_then_point(a, a), moved);
+    assert.throws(() => wasm.rejected_point_then_maybe_point(a, a), moved);
+    assert.strictEqual(live(), before);
+    a = new wasm.Kept(1);
+    assert.throws(() => wasm.rejected_point_then_borrowed(a, a), moved);
+    assert.strictEqual(live(), before);
+    a = new wasm.Kept(1);
+    assert.throws(() => wasm.rejected_points_then_point([a], a), moved);
+    assert.strictEqual(live(), before);
+};
+
 // What holds the values is read again to take them, and may answer
 // differently then: a value is checked where it's taken too.
 exports.rejectedChangedValues = (memory) => {
