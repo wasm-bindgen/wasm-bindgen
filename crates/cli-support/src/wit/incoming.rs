@@ -742,6 +742,7 @@ impl InstructionBuilder<'_, '_> {
             // The value is pushed onto the stack by what holds the cell, not
             // fetched as an argument.
             return_position: true,
+            returned: self.returned,
             stored: true,
             seq_value: SeqValue::View,
         };

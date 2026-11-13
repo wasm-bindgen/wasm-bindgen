@@ -3189,7 +3189,10 @@ fn instruction(
                 // Borrowed closure without destructor
                 let i = js.tmp();
                 js.local(format!("state{i}"));
-                js.prelude(&format!("var state{i} = {{a: {a}, b: {b}}};"));
+                // A stored closure is one of many its glue makes, each
+                // with a state of its own.
+                let decl = if js.stored { "const" } else { "var" };
+                js.prelude(&format!("{decl} state{i} = {{a: {a}, b: {b}}};"));
                 let args = (0..*nargs)
                     .map(|i| format!("arg{i}"))
                     .collect::<Vec<_>>()
@@ -3199,7 +3202,7 @@ fn instruction(
                     // recursively, so ensure that we clear out one of the
                     // internal pointers while it's being invoked.
                     js.prelude(&format!(
-                        "var cb{i} = ({args}) => {{
+                        "{decl} cb{i} = ({args}) => {{
                             const a = state{i}.a;
                             state{i}.a = 0;
                             try {{
@@ -3211,7 +3214,7 @@ fn instruction(
                     ));
                 } else {
                     js.prelude(&format!(
-                        "var cb{i} = ({args}) => {wrapper}(state{i}.a, state{i}.b, {args});",
+                        "{decl} cb{i} = ({args}) => {wrapper}(state{i}.a, state{i}.b, {args});",
                     ));
                 }
 
@@ -3433,12 +3436,16 @@ fn instruction(
                     "",
                 ),
             };
-            // What the element deferred runs at the end of its iteration.
-            let body = with_deferred(
-                &element.pre_try,
-                &format!("{}{take}\n", element.body),
-                &element.finally,
-            );
+            // What an element lends is JS's until this glue is done with
+            // the sequence, so what the element deferred is kept for what
+            // this glue defers.
+            let mut body = format!("{}{}{take}\n", element.pre_try, element.body);
+            if !element.finally.is_empty() {
+                let lent = js.local(format!("lent{i}"));
+                writeln!(js.pre_try, "const {lent} = [];").unwrap();
+                writeln!(body, "{lent}.push(() => {{\n{}}});", element.finally).unwrap();
+                js.finally(&format!("for (const f of {lent}) f();"));
+            }
             let view = if effects {
                 String::new()
             } else {

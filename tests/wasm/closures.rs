@@ -1272,6 +1272,34 @@ mod slices {
     #[wasm_bindgen(module = "tests/wasm/closures.js")]
     extern "C" {
         fn call_each(fs: &[Closure<dyn Fn(u32)>]) -> u32;
+        fn map_each(fs: Vec<&dyn Fn(u32) -> u32>) -> Vec<u32>;
+        fn map_each_nested(fs: Vec<Vec<&dyn Fn(u32) -> u32>>) -> Vec<u32>;
+        fn count_each(fs: Vec<&mut dyn FnMut()>);
+        fn keep_each(fs: Vec<&dyn Fn(u32) -> u32>);
+        fn kept_each_are_dead() -> bool;
+    }
+
+    // Each lent closure is its own, and is JS's to call until the call that
+    // lent it returns.
+    #[wasm_bindgen_test]
+    fn lent_closures() {
+        let add = |x: u32| x + 1;
+        let scale = |x: u32| x * 10;
+        let square = |x: u32| x * x;
+        assert_eq!(map_each(vec![&add, &scale, &square]), [4, 30, 9]);
+        assert_eq!(
+            map_each_nested(vec![vec![&add, &scale], vec![], vec![&square]]),
+            [4, 30, 9]
+        );
+        assert!(map_each(vec![]).is_empty());
+
+        let mut a = 0;
+        let mut b = 0;
+        count_each(vec![&mut || a += 1, &mut || b += 2]);
+        assert_eq!((a, b), (1, 2));
+
+        keep_each(vec![&add, &scale]);
+        assert!(kept_each_are_dead());
     }
 
     #[wasm_bindgen_test]

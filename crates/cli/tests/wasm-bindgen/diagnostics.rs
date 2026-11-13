@@ -799,3 +799,28 @@ fn seq_modes_are_validated_when_explicit() {
     )
     .unwrap();
 }
+
+/// A value Rust returns is JS's for good, so it can't hold a closure that is
+/// only lent for a call.
+#[test]
+fn returned_sequence_cannot_lend_a_closure() {
+    let err = Project::new("returned_sequence_cannot_lend_a_closure")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen]
+                pub fn lent() -> Vec<&'static dyn Fn()> {
+                    Vec::new()
+                }
+            "#,
+        )
+        .wasm_bindgen("")
+        .unwrap_err();
+
+    assert_contains!(
+        format!("{err:?}"),
+        "a closure can't be lent by a value that Rust returns"
+    );
+}

@@ -391,8 +391,16 @@ impl InstructionBuilder<'_, '_> {
             Some(false) => ClosureDtor::Borrowed,
             Some(true) => ClosureDtor::OwnClosure,
         };
+        if self.stored && self.returned && owned_closure.is_none() {
+            bail!("a closure can't be lent by a value that Rust returns, which outlives the call");
+        }
         let adapter = self.cx.export_adapter(shim, descriptor)?;
-        let ptr_ty = self.ptr_ty();
+        // A stored word is the `f64` that `WasmWord` is in memory on memory64.
+        let ptr_ty = if self.stored {
+            self.outgoing_internal_word_ty()
+        } else {
+            self.ptr_ty()
+        };
         self.instruction(
             &[ptr_ty.clone(), ptr_ty],
             Instruction::Closure {
@@ -903,6 +911,7 @@ impl InstructionBuilder<'_, '_> {
             // `WasmWord` is in memory on memory64, so the words' layout
             // matches the Rust ABI type in the cell.
             return_position: true,
+            returned: self.returned,
             stored: true,
             seq_value: SeqValue::View,
         };

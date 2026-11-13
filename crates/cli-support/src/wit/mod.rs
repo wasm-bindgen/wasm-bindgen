@@ -149,6 +149,9 @@ struct InstructionBuilder<'a, 'b> {
     instructions: Vec<InstructionData>,
     cx: &'a mut Context<'b>,
     return_position: bool,
+    /// Whether the value is, or is held by, what a call into Rust returns,
+    /// which is given whole: nothing in it can stay Rust's.
+    returned: bool,
     /// Whether the value is held in a cell, where it's lowered and lifted
     /// as it is across a call unless a type says otherwise.
     stored: bool,
@@ -2845,6 +2848,7 @@ impl<'a> Context<'a> {
             output: Vec::new(),
             instructions: Vec::new(),
             return_position,
+            returned: return_position,
             stored: false,
             seq_value: SeqValue::View,
         }
