@@ -254,6 +254,202 @@ exports.rejectedSizes = () => {
     assert.strictEqual(wasm.rejected_nested_maybe_strings([['a'], [undefined]]), 2);
 };
 
+// `values`, answering `then` for their length once each was read and the
+// reading stopped at the length they have.
+function grown(values, then) {
+    let read = 0;
+    return new Proxy(values, {
+        get(target, key) {
+            if (key === 'length') {
+                if (read > 1) return then;
+                if (read) read++;
+                return target.length;
+            }
+            if (key === String(target.length - 1)) read = read || 1;
+            if (Number(key) >= target.length) throw new Error('read past the values');
+            return target[key];
+        },
+    });
+}
+
+// The length is read again where the values are taken, and what it is then
+// is what is allocated for.
+exports.rejectedChangedLengths = (memory) => {
+    const tooBig = /invalid malloc request/;
+    const before = live();
+    for (const then of [2 ** 28, 2 ** 29, 2 ** 32 - 1]) {
+        assertFlat(memory, () => assert.throws(
+            () => wasm.rejected_maybe_strings(grown([big, undefined], then)),
+            tooBig,
+        ));
+        assertFlat(memory, () => assert.throws(
+            () => wasm.rejected_maybe_maybe_strings(grown([big, undefined], then)),
+            tooBig,
+        ));
+        assertFlat(memory, () => assert.throws(
+            () => wasm.rejected_nested_maybe_strings([[big], grown([big, undefined], then)]),
+            tooBig,
+        ));
+        // What was taken ahead of them is Rust's by then, and is freed.
+        const a = new wasm.Kept(1);
+        assert.throws(() => wasm.rejected_named(a, grown(['x'], then)), tooBig);
+        assert.strictEqual(a.__wbg_ptr, 0);
+        assert.strictEqual(live(), before);
+    }
+    // An array an earlier argument's getter lengthens, the second time it's
+    // read.
+    assertFlat(memory, () => {
+        const numbers = [1n, undefined];
+        const names = [big];
+        let reads = 0;
+        Object.defineProperty(names, 0, {
+            get() {
+                if (++reads === 2) numbers.length = 2 ** 28;
+                return big;
+            },
+        });
+        assert.throws(() => wasm.rejected_names_then_maybe_numbers(names, numbers), tooBig);
+    });
+    assert.strictEqual(wasm.rejected_returned_long_names(), true);
+    // A length that isn't a whole number takes the values below it.
+    assert.strictEqual(wasm.rejected_maybe_strings({ length: 1.5, 0: 'a', 1: 'b' }), 1);
+    assert.throws(() => wasm.rejected_maybe_strings({ length: -1, 0: 'a' }), tooBig);
+};
+
+exports.jsLongNames = () => grown(['a', undefined], 2 ** 29);
+
+function seeded(a) {
+    return () => {
+        a = (a + 0x6D2B79F5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 2 ** 32;
+    };
+}
+
+// Each call's sequences answer through a `Proxy`, and on one read of one of
+// them something of the call changes: an element, a length, an instance's
+// pointer or its class. However far the call then got, every instance is
+// either still with JS or freed, and nothing else is left allocated.
+exports.rejectedChanging = (memory) => {
+    const calls = [
+        ['rejected_names', () => [[big, 'b', 'c']]],
+        ['rejected_boxed_names', () => [[big, 'b']]],
+        ['rejected_maybe_names', () => [[big, 'b']]],
+        ['rejected_maybe_strings', () => [[big, undefined, 'c']]],
+        ['rejected_maybe_maybe_strings', () => [[big, undefined]]],
+        ['rejected_nested_maybe_strings', () => [[[big], [undefined, 'c']]]],
+        ['rejected_maybe_nested', () => [[[big], undefined, ['c']]]],
+        ['rejected_points', k => [[k(), k(), k()]]],
+        ['rejected_maybe_points', k => [[k(), undefined, k()]]],
+        ['rejected_nested_points', k => [[[k()], [k(), k()]]]],
+        ['rejected_chars', () => [['a', 'b']]],
+        ['rejected_maybe_chars', () => [['a', 'b']]],
+        ['rejected_bools', () => [[true, false]]],
+        ['rejected_levels', () => [[1, 2]]],
+        ['rejected_level_names', () => [['a', 'b']]],
+        ['rejected_names_then_maybe_numbers', () => [[big], [1n, undefined]]],
+        ['rejected_names_then_point', (k, flat) => [[big, 'b'], flat()]],
+        ['rejected_nested_names_then_point', (k, flat) => [[[big], ['b']], flat()]],
+        ['rejected_points_then_point', (k, flat) => [[k(), k()], flat()]],
+        ['rejected_point_then_names', (k, flat) => [flat(), [big, 'b']]],
+        ['rejected_point_then_nested', (k, flat) => [flat(), [[big], ['b']]]],
+        ['rejected_points_then_chars', (k, flat) => [[k()], flat(), ['a', 'b']]],
+        ['rejected_points_then_maybe_chars', k => [[k(), k()], [undefined, 'a']]],
+        ['rejected_named', (k, flat) => [flat(), [big]]],
+    ];
+    const random = seeded(1);
+    const pick = values => values[Math.floor(random() * values.length)];
+    const before = live();
+    let settled;
+    for (let i = 0; i < 3000; i++) {
+        if (i === 300) settled = memory.buffer.byteLength;
+        // The instances of sequences, and every instance of the call.
+        const stored = [];
+        const all = [];
+        const instance = () => {
+            const k = new wasm.Kept(all.length);
+            all.push(k);
+            return k;
+        };
+        const sequences = [];
+        const wrap = value => {
+            if (!Array.isArray(value)) return value;
+            const sequence = { target: value.map(wrap), reads: new Map(), answers: new Map() };
+            sequences.push(sequence);
+            return new Proxy(sequence.target, {
+                get(target, key) {
+                    if (typeof key !== 'string') return target[key];
+                    const nth = (sequence.reads.get(key) || 0) + 1;
+                    sequence.reads.set(key, nth);
+                    if (sequence === change.on && key === change.key && nth === change.nth) {
+                        change.make();
+                    }
+                    if (sequence.answers.has(key)) return sequence.answers.get(key);
+                    // A length that never ends is only read so far.
+                    if (Number(key) >= target.length + 8) throw new Error('read past the values');
+                    return target[key];
+                },
+            });
+        };
+        const [name, make] = pick(calls);
+        const args = make(
+            () => {
+                const k = instance();
+                stored.push(k);
+                return k;
+            },
+            instance,
+        ).map(wrap);
+
+        const on = pick(sequences);
+        const of = pick(sequences);
+        const length = of.target.length;
+        const index = String(Math.floor(random() * (length + 1)));
+        const changes = {
+            element: () => of.answers.set(index, pick([
+                42, 'x', 1n, true, undefined, null, {}, ['x'], Symbol(), big,
+                { __wbg_ptr: 1 }, Object.create(wasm.Kept.prototype),
+                stored.length ? pick(stored) : instance(),
+            ])),
+            length: () => of.answers.set('length', pick([
+                0, length - 1, length + 1, length + 3, length + 0.5, 1.5, -1,
+                2 ** 31, 2 ** 32 - 1,
+            ])),
+            shorter: () => { of.target.length = Math.floor(random() * length); },
+            pointer: () => {
+                const k = stored.length ? pick(stored) : instance();
+                if (k.__wbg_ptr) wasm.Kept.prototype.free.call(k);
+            },
+            class: () => Object.setPrototypeOf(pick(all.length ? all : [instance()]), Object.prototype),
+        };
+        const kind = pick(Object.keys(changes));
+        const change = {
+            on,
+            key: random() < 0.3 ? 'length' : String(Math.floor(random() * on.target.length)),
+            nth: 1 + Math.floor(random() * 3),
+            make: changes[kind],
+        };
+        const what = `${i}: ${name}, ${kind} on read ${change.nth} of ${change.key}`;
+
+        try {
+            wasm[name](...args);
+        } catch (e) {
+            // Neither a trap nor a write outside the memory.
+            assert.ok(!(e instanceof WebAssembly.RuntimeError || e instanceof RangeError), `${what}: ${e}`);
+        }
+        const held = all.filter(k => k.__wbg_ptr !== 0);
+        assert.strictEqual(live(), before + held.length, what);
+        for (const k of held) {
+            Object.setPrototypeOf(k, wasm.Kept.prototype);
+            assert.strictEqual(typeof k.value, 'number', what);
+            k.free();
+        }
+        assert.strictEqual(live(), before, what);
+    }
+    assert.ok(memory.buffer.byteLength - settled < MAX_GROWTH);
+};
+
 exports.jsNotNames = () => 'notarray';
 
 exports.jsTakesMixed = (points) => points.forEach(point => point.free());

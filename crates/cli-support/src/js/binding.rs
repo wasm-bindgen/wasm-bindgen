@@ -3738,17 +3738,25 @@ fn instruction(
             let (fields, stride, align) = encoded_slice_layout(layout)?;
             // More cells than can be allocated are rejected here, as the
             // allocator rejects them: on wasm32 their size would otherwise
-            // wrap to one it accepts, for fewer cells than are written.
-            if !js.cx.memory64 && matches!(count, CellCount::Word) {
-                let most = i32::MAX as usize / stride;
+            // wrap to one it accepts, for fewer cells than are written. The
+            // length is read again where the values are taken, and what it
+            // is by then is checked there.
+            let most = (!js.cx.memory64 && matches!(count, CellCount::Word))
+                .then(|| i32::MAX as usize / stride);
+            if let Some(most) = most {
                 let some = if *optional {
                     format!("{} && ", js.is_some(&val, *option_kind))
                 } else {
                     String::new()
                 };
-                js.check(&format!(
-                    "if ({some}{val}.length > {most}) throw new Error('invalid malloc request');"
-                ));
+                let inputs_only = !js.instr.reads_local && !js.instr.binds_local;
+                js.check_of(
+                    &format!(
+                        "if ({some}{val}.length > {most}) throw new Error('invalid malloc request');"
+                    ),
+                    inputs_only,
+                    true,
+                );
             }
             let i = js.tmp();
             let ptr = js.local(format!("ptr{i}"));
@@ -3842,6 +3850,19 @@ fn instruction(
                     let len = js.local(format!("len{i}"));
                     let j = js.local(format!("j{i}"));
                     let alloc = format!("{malloc}({len} * {stride}, {align}){coerce}");
+                    // As many cells are written as are allocated for: a
+                    // whole number of them, read once.
+                    let length = if js.cx.memory64 {
+                        format!("Math.trunc({val}.length)")
+                    } else {
+                        format!("{val}.length >>> 0")
+                    };
+                    let fits = match most {
+                        Some(most) => format!(
+                            "if ({len} > {most}) throw new Error('invalid malloc request');"
+                        ),
+                        None => String::new(),
+                    };
                     // With elements that own something, how many the buffer
                     // holds so far is kept for releasing them.
                     if effects {
@@ -3859,10 +3880,11 @@ fn instruction(
                         js.declare("let", len.clone(), empty_len);
                         let some = js.is_some(&val, *option_kind);
                         js.prelude(&format!(
-                            "if ({some}) {{\n{len} = {val}.length;\n{ptr} = {alloc};"
+                            "if ({some}) {{\n{len} = {length};\n{fits}\n{ptr} = {alloc};"
                         ));
                     } else {
-                        js.declare("const", len.clone(), format!("{val}.length"));
+                        js.declare("const", len.clone(), length);
+                        js.prelude(&fits);
                         js.declare("const", ptr.clone(), alloc);
                     }
                     // An element encoder may throw (an invalid `char`, say),

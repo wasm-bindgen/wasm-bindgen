@@ -30,7 +30,8 @@ export function maybe_bytes(v) {
     if (v.length > 536870911) throw new Error('invalid malloc request');
     let len0, ptr0;
     try {
-        len0 = v.length;
+        len0 = v.length >>> 0;
+        if (len0 > 536870911) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         const view0 = getDataViewMemory0();
         for (let j0 = 0; j0 < len0; j0++) {
@@ -67,7 +68,8 @@ export function maybe_foos(v) {
     if (v.length > 536870911) throw new Error('invalid malloc request');
     let j0 = 0, len0, ptr0;
     try {
-        len0 = v.length;
+        len0 = v.length >>> 0;
+        if (len0 > 536870911) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = v[j0];
@@ -130,7 +132,8 @@ export function maybe_names(v) {
     let j0 = 0, ptr0 = 0, len0 = 0;
     try {
         if (!isLikeNone(v)) {
-            len0 = v.length;
+            len0 = v.length >>> 0;
+            if (len0 > 268435455) throw new Error('invalid malloc request');
             ptr0 = wasm.__wbindgen_malloc(len0 * 8, 4) >>> 0;
             for (; j0 < len0; j0++) {
                 const e0 = v[j0];
@@ -211,7 +214,8 @@ export function maybe_nullable_points(v) {
     }
     let j0 = 0, len0, ptr0;
     try {
-        len0 = v.length;
+        len0 = v.length >>> 0;
+        if (len0 > 536870911) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = v[j0];
@@ -285,7 +289,8 @@ export function maybe_points(v) {
     }
     let j0 = 0, len0, ptr0;
     try {
-        len0 = v.length;
+        len0 = v.length >>> 0;
+        if (len0 > 536870911) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = v[j0];
@@ -356,7 +361,8 @@ export function names(v) {
     }
     let j0 = 0, len0, ptr0;
     try {
-        len0 = v.length;
+        len0 = v.length >>> 0;
+        if (len0 > 268435455) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 8, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = v[j0];
@@ -427,16 +433,17 @@ export function nested_maybe_foos(v) {
     }
     let j0 = 0, len0, ptr0;
     try {
-        len0 = v.length;
+        len0 = v.length >>> 0;
+        if (len0 > 268435455) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 8, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = v[j0];
             if (!isLikeNone(e0) && !Array.isArray(e0) && !ArrayBuffer.isView(e0)) throw new Error('array contains a value of the wrong type');
-            if (!isLikeNone(e0) && e0.length > 536870911) throw new Error('invalid malloc request');
             let j1 = 0, ptr1 = 0, len1 = 0;
             try {
                 if (!isLikeNone(e0)) {
-                    len1 = e0.length;
+                    len1 = e0.length >>> 0;
+                    if (len1 > 536870911) throw new Error('invalid malloc request');
                     ptr1 = wasm.__wbindgen_malloc(len1 * 4, 4) >>> 0;
                     for (; j1 < len1; j1++) {
                         const e1 = e0[j1];
@@ -552,15 +559,16 @@ export function nested_names(v) {
     }
     let j0 = 0, len0, ptr0;
     try {
-        len0 = v.length;
+        len0 = v.length >>> 0;
+        if (len0 > 268435455) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 8, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = v[j0];
             if (!Array.isArray(e0) && !ArrayBuffer.isView(e0)) throw new Error('array contains a value of the wrong type');
-            if (e0.length > 268435455) throw new Error('invalid malloc request');
             let j1 = 0, len1, ptr1;
             try {
-                len1 = e0.length;
+                len1 = e0.length >>> 0;
+                if (len1 > 268435455) throw new Error('invalid malloc request');
                 ptr1 = wasm.__wbindgen_malloc(len1 * 8, 4) >>> 0;
                 for (; j1 < len1; j1++) {
                     const e1 = e0[j1];
@@ -676,7 +684,8 @@ export function nullable_foos(v) {
     if (v.length > 536870911) throw new Error('invalid malloc request');
     let j0 = 0, len0, ptr0;
     try {
-        len0 = v.length;
+        len0 = v.length >>> 0;
+        if (len0 > 536870911) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = v[j0];
@@ -739,7 +748,8 @@ export function nullable_points(v) {
     }
     let j0 = 0, len0, ptr0;
     try {
-        len0 = v.length;
+        len0 = v.length >>> 0;
+        if (len0 > 536870911) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = v[j0];
@@ -814,7 +824,8 @@ export function __wbg_js_maybe_foos_0a6988fff2da253a(arg0, arg1, arg2) {
         let j3 = 0, len3, ptr3;
         try {
             if (ret.length > 536870911) throw new Error('invalid malloc request');
-            len3 = ret.length;
+            len3 = ret.length >>> 0;
+            if (len3 > 536870911) throw new Error('invalid malloc request');
             ptr3 = wasm.__wbindgen_malloc(len3 * 4, 4) >>> 0;
             for (; j3 < len3; j3++) {
                 const e3 = ret[j3];
@@ -874,7 +885,8 @@ export function __wbg_js_maybe_points_a502c96988d34bc0(arg0, arg1, arg2) {
                     if (!e4.__wbg_ptr) throw new Error('array contains a value of the wrong type');
                 }
             }
-            len4 = ret.length;
+            len4 = ret.length >>> 0;
+            if (len4 > 536870911) throw new Error('invalid malloc request');
             ptr4 = wasm.__wbindgen_malloc(len4 * 4, 4) >>> 0;
             for (; j4 < len4; j4++) {
                 const e4 = ret[j4];
@@ -939,7 +951,8 @@ export function __wbg_js_names_8202f1528d646c9a(arg0, arg1, arg2) {
                 const e3 = ret[n3];
                 if (typeof e3 !== 'string') throw new Error('array contains a value of the wrong type');
             }
-            len3 = ret.length;
+            len3 = ret.length >>> 0;
+            if (len3 > 268435455) throw new Error('invalid malloc request');
             ptr3 = wasm.__wbindgen_malloc(len3 * 8, 4) >>> 0;
             for (; j3 < len3; j3++) {
                 const e3 = ret[j3];

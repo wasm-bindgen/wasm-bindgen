@@ -376,7 +376,8 @@ export function readAnimals(animals) {
     }
     let j0 = 0, len0, ptr0;
     try {
-        len0 = animals.length;
+        len0 = animals.length >>> 0;
+        if (len0 > 536870911) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = animals[j0];
@@ -419,7 +420,8 @@ export function readBases(bases) {
     }
     let j0 = 0, len0, ptr0;
     try {
-        len0 = bases.length;
+        len0 = bases.length >>> 0;
+        if (len0 > 536870911) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = bases[j0];
@@ -462,7 +464,8 @@ export function readCars(cars) {
     }
     let j0 = 0, len0, ptr0;
     try {
-        len0 = cars.length;
+        len0 = cars.length >>> 0;
+        if (len0 > 536870911) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = cars[j0];
@@ -505,7 +508,8 @@ export function readDeriveds(deriveds) {
     }
     let j0 = 0, len0, ptr0;
     try {
-        len0 = deriveds.length;
+        len0 = deriveds.length >>> 0;
+        if (len0 > 536870911) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = deriveds[j0];
@@ -560,7 +564,8 @@ export function readDogs(dogs) {
     }
     let j0 = 0, len0, ptr0;
     try {
-        len0 = dogs.length;
+        len0 = dogs.length >>> 0;
+        if (len0 > 536870911) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = dogs[j0];
@@ -603,7 +608,8 @@ export function readHabitats(habitats) {
     }
     let j0 = 0, len0, ptr0;
     try {
-        len0 = habitats.length;
+        len0 = habitats.length >>> 0;
+        if (len0 > 536870911) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = habitats[j0];
@@ -646,7 +652,8 @@ export function readReserves(reserves) {
     }
     let j0 = 0, len0, ptr0;
     try {
-        len0 = reserves.length;
+        len0 = reserves.length >>> 0;
+        if (len0 > 536870911) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = reserves[j0];
@@ -689,7 +696,8 @@ export function readVehicles(vehicles) {
     }
     let j0 = 0, len0, ptr0;
     try {
-        len0 = vehicles.length;
+        len0 = vehicles.length >>> 0;
+        if (len0 > 536870911) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = vehicles[j0];
@@ -742,7 +750,8 @@ export function readWidgets(widgets) {
     }
     let j0 = 0, len0, ptr0;
     try {
-        len0 = widgets.length;
+        len0 = widgets.length >>> 0;
+        if (len0 > 536870911) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = widgets[j0];

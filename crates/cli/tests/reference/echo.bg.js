@@ -367,7 +367,8 @@ export function echo_option_vec_string(a) {
     let j0 = 0, ptr0 = 0, len0 = 0;
     try {
         if (!isLikeNone(a)) {
-            len0 = a.length;
+            len0 = a.length >>> 0;
+            if (len0 > 268435455) throw new Error('invalid malloc request');
             ptr0 = wasm.__wbindgen_malloc(len0 * 8, 4) >>> 0;
             for (; j0 < len0; j0++) {
                 const e0 = a[j0];
@@ -444,7 +445,8 @@ export function echo_option_vec_struct(a) {
     let j0 = 0, ptr0 = 0, len0 = 0;
     try {
         if (!isLikeNone(a)) {
-            len0 = a.length;
+            len0 = a.length >>> 0;
+            if (len0 > 536870911) throw new Error('invalid malloc request');
             ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
             for (; j0 < len0; j0++) {
                 const e0 = a[j0];
@@ -843,7 +845,8 @@ export function echo_vec_string(a) {
     }
     let j0 = 0, len0, ptr0;
     try {
-        len0 = a.length;
+        len0 = a.length >>> 0;
+        if (len0 > 268435455) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 8, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = a[j0];
@@ -913,7 +916,8 @@ export function echo_vec_struct(a) {
     }
     let j0 = 0, len0, ptr0;
     try {
-        len0 = a.length;
+        len0 = a.length >>> 0;
+        if (len0 > 536870911) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = a[j0];

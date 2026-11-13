@@ -293,7 +293,8 @@ export function take_non_numbers(a, b, c) {
     try {
         ptr0 = passArrayJsValueToWasm0(a, wasm.__wbindgen_malloc);
         len0 = WASM_VECTOR_LEN;
-        len1 = b.length;
+        len1 = b.length >>> 0;
+        if (len1 > 268435455) throw new Error('invalid malloc request');
         ptr1 = wasm.__wbindgen_malloc(len1 * 8, 4) >>> 0;
         for (; j1 < len1; j1++) {
             const e1 = b[j1];
@@ -305,7 +306,8 @@ export function take_non_numbers(a, b, c) {
             view1.setInt32(p1 + 0, ptr2, true);
             view1.setInt32(p1 + 4, len2, true);
         }
-        len4 = c.length;
+        len4 = c.length >>> 0;
+        if (len4 > 536870911) throw new Error('invalid malloc request');
         ptr4 = wasm.__wbindgen_malloc(len4 * 4, 4) >>> 0;
         for (; j4 < len4; j4++) {
             const e4 = c[j4];

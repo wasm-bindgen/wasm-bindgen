@@ -55,7 +55,8 @@ export function readRenameds(renameds) {
     }
     let j0 = 0, len0, ptr0;
     try {
-        len0 = renameds.length;
+        len0 = renameds.length >>> 0;
+        if (len0 > 536870911) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = renameds[j0];

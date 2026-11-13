@@ -31,7 +31,8 @@ export function enum_vec_echo(values) {
     if (values.length > 268435455) throw new Error('invalid malloc request');
     let len0, ptr0;
     try {
-        len0 = values.length;
+        len0 = values.length >>> 0;
+        if (len0 > 268435455) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 8, 8) >>> 0;
         const view0 = getDataViewMemory0();
         for (let j0 = 0; j0 < len0; j0++) {
@@ -68,7 +69,8 @@ export function hidden_err_vec_echo(values) {
     if (values.length > 268435455) throw new Error('invalid malloc request');
     let len0, ptr0;
     try {
-        len0 = values.length;
+        len0 = values.length >>> 0;
+        if (len0 > 268435455) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 8, 8) >>> 0;
         const view0 = getDataViewMemory0();
         for (let j0 = 0; j0 < len0; j0++) {
@@ -116,7 +118,8 @@ export function ns_err_vec_echo(values) {
     if (values.length > 268435455) throw new Error('invalid malloc request');
     let len0, ptr0;
     try {
-        len0 = values.length;
+        len0 = values.length >>> 0;
+        if (len0 > 268435455) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 8, 8) >>> 0;
         const view0 = getDataViewMemory0();
         for (let j0 = 0; j0 < len0; j0++) {
@@ -154,7 +157,8 @@ export function option_enum_vec_echo(values) {
     let ptr0 = 0, len0 = 0;
     try {
         if (!isLikeNone(values)) {
-            len0 = values.length;
+            len0 = values.length >>> 0;
+            if (len0 > 268435455) throw new Error('invalid malloc request');
             ptr0 = wasm.__wbindgen_malloc(len0 * 8, 8) >>> 0;
             const view0 = getDataViewMemory0();
             for (let j0 = 0; j0 < len0; j0++) {
@@ -195,7 +199,8 @@ export function renamed_err_vec_echo(values) {
     if (values.length > 268435455) throw new Error('invalid malloc request');
     let len0, ptr0;
     try {
-        len0 = values.length;
+        len0 = values.length >>> 0;
+        if (len0 > 268435455) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 8, 8) >>> 0;
         const view0 = getDataViewMemory0();
         for (let j0 = 0; j0 < len0; j0++) {

@@ -183,6 +183,16 @@ pub fn rejected_level_names(v: Option<Vec<RejectedName>>) -> Option<Vec<Rejected
 }
 
 #[wasm_bindgen]
+pub fn rejected_names_then_maybe_numbers(_a: Vec<String>, v: Vec<Option<i64>>) -> usize {
+    v.len()
+}
+
+#[wasm_bindgen]
+pub fn rejected_returned_long_names() -> bool {
+    js_long_names().is_err()
+}
+
+#[wasm_bindgen]
 pub fn rejected_returned_names() -> bool {
     js_not_names().is_err()
 }
@@ -278,6 +288,12 @@ extern "C" {
     fn rejected_not_arrays();
     #[wasm_bindgen(js_name = rejectedSizes)]
     fn rejected_sizes();
+    #[wasm_bindgen(js_name = rejectedChangedLengths)]
+    fn rejected_changed_lengths(memory: JsValue);
+    #[wasm_bindgen(js_name = rejectedChanging)]
+    fn rejected_changing(memory: JsValue);
+    #[wasm_bindgen(catch, js_name = jsLongNames)]
+    fn js_long_names() -> Result<Vec<Option<String>>, JsValue>;
     #[wasm_bindgen(js_name = takenNotArrays)]
     fn taken_not_arrays();
     #[wasm_bindgen(catch, js_name = jsNotNames)]
@@ -346,6 +362,21 @@ fn arguments_not_arrays_taken() {
 #[wasm_bindgen_test]
 fn arguments_too_long() {
     rejected_sizes();
+}
+
+// As is a length that is one by the time its values are taken.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen_test]
+fn arguments_grown() {
+    rejected_changed_lengths(wasm_bindgen::memory());
+}
+
+// And whatever else of a call changes between its values being checked and
+// taken.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen_test]
+fn arguments_changing() {
+    rejected_changing(wasm_bindgen::memory());
 }
 
 #[wasm_bindgen_test]

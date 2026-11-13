@@ -6,7 +6,8 @@ export function bools(v) {
     if (v.length > 536870911) throw new Error('invalid malloc request');
     let len0, ptr0;
     try {
-        len0 = v.length;
+        len0 = v.length >>> 0;
+        if (len0 > 536870911) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         const view0 = getDataViewMemory0();
         for (let j0 = 0; j0 < len0; j0++) {
@@ -47,7 +48,8 @@ export function modes(v) {
     if (v.length > 536870911) throw new Error('invalid malloc request');
     let len0, ptr0;
     try {
-        len0 = v.length;
+        len0 = v.length >>> 0;
+        if (len0 > 536870911) throw new Error('invalid malloc request');
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         const view0 = getDataViewMemory0();
         for (let j0 = 0; j0 < len0; j0++) {
@@ -92,7 +94,8 @@ export function opt_chars(v) {
     let ptr0 = 0, len0 = 0;
     try {
         if (!isLikeNone(v)) {
-            len0 = v.length;
+            len0 = v.length >>> 0;
+            if (len0 > 536870911) throw new Error('invalid malloc request');
             ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
             const view0 = getDataViewMemory0();
             for (let j0 = 0; j0 < len0; j0++) {
@@ -165,7 +168,8 @@ export function __wbg_js_bools_30fc8a2bc11a9f84(arg0, arg1, arg2) {
         let len2, ptr2;
         try {
             if (ret.length > 536870911) throw new Error('invalid malloc request');
-            len2 = ret.length;
+            len2 = ret.length >>> 0;
+            if (len2 > 536870911) throw new Error('invalid malloc request');
             ptr2 = wasm.__wbindgen_malloc(len2 * 4, 4) >>> 0;
             const view2 = getDataViewMemory0();
             for (let j2 = 0; j2 < len2; j2++) {
