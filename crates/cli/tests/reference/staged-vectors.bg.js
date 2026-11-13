@@ -99,6 +99,12 @@ export function maybe_foos(v) {
  * @returns {(string | undefined)[] | undefined}
  */
 export function maybe_names(v) {
+    if (!isLikeNone(v)) {
+        for (let n0 = 0; n0 < v.length; n0++) {
+            const e0 = v[n0];
+            if (!(isLikeNone(e0)) && typeof e0 !== 'string') throw new Error('array contains a value of the wrong type');
+        }
+    }
     let j0 = 0, ptr0 = 0, len0 = 0;
     try {
         if (!isLikeNone(v)) {
@@ -106,7 +112,6 @@ export function maybe_names(v) {
             ptr0 = wasm.__wbindgen_malloc(len0 * 8, 4) >>> 0;
             for (; j0 < len0; j0++) {
                 const e0 = v[j0];
-                if (!(isLikeNone(e0)) && typeof e0 !== 'string') throw new Error('array contains a value of the wrong type');
                 var ptr1 = isLikeNone(e0) ? 0 : passStringToWasm0(e0, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
                 var len1 = WASM_VECTOR_LEN;
                 const view0 = getDataViewMemory0();
@@ -154,6 +159,12 @@ export function maybe_names(v) {
  * @returns {(Point | null | undefined)[]}
  */
 export function maybe_nullable_points(v) {
+    for (let n0 = 0; n0 < v.length; n0++) {
+        const e0 = v[n0];
+        if (!isLikeNone(e0)) {
+            _assertClass(e0, Point);
+        }
+    }
     let j0 = 0, len0, ptr0;
     try {
         len0 = v.length;
@@ -198,6 +209,12 @@ export function maybe_nullable_points(v) {
  * @returns {(Point | undefined)[]}
  */
 export function maybe_points(v) {
+    for (let n0 = 0; n0 < v.length; n0++) {
+        const e0 = v[n0];
+        if (!isLikeNone(e0)) {
+            _assertClass(e0, Point);
+        }
+    }
     let j0 = 0, len0, ptr0;
     try {
         len0 = v.length;
@@ -242,13 +259,16 @@ export function maybe_points(v) {
  * @returns {string[]}
  */
 export function names(v) {
+    for (let n0 = 0; n0 < v.length; n0++) {
+        const e0 = v[n0];
+        if (typeof e0 !== 'string') throw new Error('array contains a value of the wrong type');
+    }
     let j0 = 0, len0, ptr0;
     try {
         len0 = v.length;
         ptr0 = wasm.__wbindgen_malloc(len0 * 8, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = v[j0];
-            if (typeof e0 !== 'string') throw new Error('array contains a value of the wrong type');
             const ptr1 = passStringToWasm0(e0, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
             const len1 = WASM_VECTOR_LEN;
             const view0 = getDataViewMemory0();
@@ -295,6 +315,10 @@ export function names(v) {
  * @returns {((any | undefined)[] | undefined)[]}
  */
 export function nested_maybe_foos(v) {
+    for (let n0 = 0; n0 < v.length; n0++) {
+        const e0 = v[n0];
+        if (!isLikeNone(e0) && !Array.isArray(e0) && !ArrayBuffer.isView(e0)) throw new Error('array contains a value of the wrong type');
+    }
     let j0 = 0, len0, ptr0;
     try {
         len0 = v.length;
@@ -380,6 +404,14 @@ export function nested_maybe_foos(v) {
  * @returns {(string[])[]}
  */
 export function nested_names(v) {
+    for (let n0 = 0; n0 < v.length; n0++) {
+        const e0 = v[n0];
+        if (!Array.isArray(e0) && !ArrayBuffer.isView(e0)) throw new Error('array contains a value of the wrong type');
+        for (let n1 = 0; n1 < e0.length; n1++) {
+            const e1 = e0[n1];
+            if (typeof e1 !== 'string') throw new Error('array contains a value of the wrong type');
+        }
+    }
     let j0 = 0, len0, ptr0;
     try {
         len0 = v.length;
@@ -392,7 +424,6 @@ export function nested_names(v) {
                 ptr1 = wasm.__wbindgen_malloc(len1 * 8, 4) >>> 0;
                 for (; j1 < len1; j1++) {
                     const e1 = e0[j1];
-                    if (typeof e1 !== 'string') throw new Error('array contains a value of the wrong type');
                     const ptr2 = passStringToWasm0(e1, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
                     const len2 = WASM_VECTOR_LEN;
                     const view1 = getDataViewMemory0();
@@ -514,6 +545,12 @@ export function nullable_foos(v) {
  * @returns {(Point | null)[]}
  */
 export function nullable_points(v) {
+    for (let n0 = 0; n0 < v.length; n0++) {
+        const e0 = v[n0];
+        if (e0 !== null) {
+            _assertClass(e0, Point);
+        }
+    }
     let j0 = 0, len0, ptr0;
     try {
         len0 = v.length;
@@ -604,6 +641,12 @@ export function __wbg_js_maybe_points_a502c96988d34bc0(arg0, arg1, arg2) {
     const ret = js_maybe_points(v0);
     let j2 = 0, len2, ptr2;
     try {
+        for (let n2 = 0; n2 < ret.length; n2++) {
+            const e2 = ret[n2];
+            if (!isLikeNone(e2)) {
+                _assertClass(e2, Point);
+            }
+        }
         len2 = ret.length;
         ptr2 = wasm.__wbindgen_malloc(len2 * 4, 4) >>> 0;
         for (; j2 < len2; j2++) {
@@ -653,11 +696,14 @@ export function __wbg_js_names_8202f1528d646c9a(arg0, arg1, arg2) {
     const ret = js_names(v0);
     let j3 = 0, len3, ptr3;
     try {
+        for (let n3 = 0; n3 < ret.length; n3++) {
+            const e3 = ret[n3];
+            if (typeof e3 !== 'string') throw new Error('array contains a value of the wrong type');
+        }
         len3 = ret.length;
         ptr3 = wasm.__wbindgen_malloc(len3 * 8, 4) >>> 0;
         for (; j3 < len3; j3++) {
             const e3 = ret[j3];
-            if (typeof e3 !== 'string') throw new Error('array contains a value of the wrong type');
             const ptr4 = passStringToWasm0(e3, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
             const len4 = WASM_VECTOR_LEN;
             const view3 = getDataViewMemory0();

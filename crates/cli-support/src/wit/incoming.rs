@@ -176,6 +176,7 @@ impl InstructionBuilder<'_, '_> {
             }
 
             Descriptor::Vector(cell) => {
+                self.stored_check(StoredCheck::Sequence(None));
                 let kind = match cell.sequence_cell() {
                     SequenceCell::InPlace(kind) => kind,
                     SequenceCell::Encoded(elem) => {
@@ -463,6 +464,7 @@ impl InstructionBuilder<'_, '_> {
             }
 
             Descriptor::Vector(cell) => {
+                self.stored_check(StoredCheck::Sequence(Some(option_kind)));
                 let kind = match cell.sequence_cell() {
                     SequenceCell::InPlace(kind) => kind,
                     SequenceCell::Encoded(elem) => {
@@ -761,6 +763,7 @@ impl InstructionBuilder<'_, '_> {
     /// a `Vec<String>` and a `Vec` of exported structs have always rejected
     /// an element of the wrong type, and a string's glue would read anything
     /// else as a string's bytes.
+    // Next major: validate an argument in every build too, as an element is.
     fn stored_check(&mut self, check: StoredCheck) {
         if self.stored {
             self.instructions.push(InstructionData {

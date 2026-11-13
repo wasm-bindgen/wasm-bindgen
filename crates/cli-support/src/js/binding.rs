@@ -79,6 +79,9 @@ pub struct JsBuilder<'a, 'b> {
     /// Whether an owned word was popped, so its owner is no longer known.
     moved: bool,
 
+    /// Whether the glue is a stored value's, running in a scope.
+    stored: bool,
+
     /// An index used to manage allocation of temporary indices, used to name
     /// variables to ensure nothing clashes with anything else.
     tmp: usize,
@@ -109,6 +112,13 @@ struct Stmt {
 /// lift them out as a `let`.
 enum StmtKind {
     Raw(String),
+    /// A statement that only throws unless a value is what Rust takes it
+    /// as. With `inputs_only` it reads nothing but its scope's inputs, so
+    /// it can run ahead of whatever holds them being taken.
+    Check {
+        text: String,
+        inputs_only: bool,
+    },
     /// `keyword` declares the binding, or is `None` once lifted.
     Decl {
         keyword: Option<&'static str>,
@@ -117,11 +127,23 @@ enum StmtKind {
     },
 }
 
+/// `code` with each line trimmed and the empty ones dropped.
+fn lines(code: &str) -> String {
+    let mut text = String::new();
+    for line in code.trim().lines().map(|l| l.trim()) {
+        if !line.is_empty() {
+            text.push_str(line);
+            text.push('\n');
+        }
+    }
+    text
+}
+
 fn render(stmts: &[Stmt]) -> String {
     let mut code = String::new();
     for stmt in stmts {
         match &stmt.kind {
-            StmtKind::Raw(text) => code.push_str(text),
+            StmtKind::Raw(text) | StmtKind::Check { text, .. } => code.push_str(text),
             StmtKind::Decl {
                 keyword: Some(keyword),
                 name,
@@ -280,6 +302,7 @@ struct Scope {
     guard: Option<ArgGuard>,
     given: Vec<Given>,
     moved: bool,
+    stored: bool,
     instr: InstrState,
     wasm_refs: usize,
 }
@@ -1157,6 +1180,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             guard: None,
             given: Vec::new(),
             moved: false,
+            stored: false,
             prelude: Vec::new(),
             stack: Vec::new(),
         }
@@ -1183,8 +1207,11 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             ..
         } = self.instr;
         if reads_local || effects {
+            // A check was tagged by what it read when it was emitted.
             for stmt in &mut self.prelude[start..] {
-                stmt.pure = false;
+                if !matches!(stmt.kind, StmtKind::Check { .. }) {
+                    stmt.pure = false;
+                }
             }
         }
         if let (Some(at), Some(guard)) = (allocated_at, &mut self.guard) {
@@ -1235,16 +1262,47 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     }
 
     pub fn prelude(&mut self, prelude: &str) {
-        let mut text = String::new();
-        for line in prelude.trim().lines().map(|l| l.trim()) {
-            if !line.is_empty() {
-                text.push_str(line);
-                text.push('\n');
-            }
-        }
+        let text = lines(prelude);
         if !text.is_empty() {
             self.stmt(StmtKind::Raw(text));
         }
+    }
+
+    /// Emits `check`, which only throws unless the value the instruction
+    /// popped is what Rust takes it as. Reading nothing the prelude bound,
+    /// it runs ahead of the first allocation, which is ahead of anything
+    /// being taken from JS: a value JS rejects leaves the others as they
+    /// were.
+    fn check(&mut self, check: &str) {
+        let inputs_only = !self.instr.reads_local && !self.instr.binds_local;
+        self.check_of(check, inputs_only);
+    }
+
+    fn check_of(&mut self, check: &str, inputs_only: bool) {
+        let text = lines(check);
+        if !text.is_empty() {
+            self.prelude.push(Stmt {
+                pure: !self.instr.reads_local,
+                kind: StmtKind::Check { text, inputs_only },
+            });
+        }
+    }
+
+    /// Takes the checks of the scope that read only its inputs, for what
+    /// holds the stored value to run ahead of taking any of it.
+    fn take_checks(&mut self) -> String {
+        let mut checks = String::new();
+        self.prelude.retain(|stmt| match &stmt.kind {
+            StmtKind::Check {
+                text,
+                inputs_only: true,
+            } => {
+                checks.push_str(text);
+                false
+            }
+            _ => true,
+        });
+        checks
     }
 
     pub fn finally(&mut self, finally: &str) {
@@ -1264,10 +1322,15 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         self.instr.effects = true;
         let (start, len) = (self.instr.start, self.prelude.len());
         self.instr.allocated_at = Some(len);
+        // The checks run ahead of the allocation, whatever else it emitted.
+        let checks = self.prelude[start..]
+            .iter()
+            .filter(|stmt| stmt.pure && matches!(stmt.kind, StmtKind::Check { .. }))
+            .count();
         self.guard
             .get_or_insert_with(|| ArgGuard {
                 start,
-                first: len - start,
+                first: len - start - checks,
                 tail: false,
                 releases: Vec::new(),
             })
@@ -1406,6 +1469,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             guard: self.guard.take(),
             given: std::mem::take(&mut self.given),
             moved: std::mem::take(&mut self.moved),
+            stored: std::mem::replace(&mut self.stored, true),
             instr: std::mem::take(&mut self.instr),
             wasm_refs: self.cx.wasm_refs,
         }
@@ -1435,6 +1499,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         self.stack = scope.stack;
         self.guard = scope.guard;
         self.moved = scope.moved;
+        self.stored = scope.stored;
         self.instr = scope.instr;
         Ok(element)
     }
@@ -1632,9 +1697,14 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     }
 
     fn assert_class(&mut self, arg: &str, class: &str) {
+        let assert = self.class_assert(arg, class);
+        self.check(&assert);
+    }
+
+    fn class_assert(&mut self, arg: &str, class: &str) -> String {
         self.cx.expose_assert_class();
         let identifier = self.cx.require_class_reference(class);
-        self.prelude(&format!("_assertClass({arg}, {identifier});"));
+        format!("_assertClass({arg}, {identifier});\n")
     }
 
     /// `assert_class` for boundaries that take the receiver by value
@@ -1648,8 +1718,8 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     /// (or a user-written JS-only subclass) those agree; for a Rust
     /// descendant the per-class slot holds the upcasted ancestor pointer
     /// and differs from `__wbg_ptr`, so we throw.
-    fn assert_owned_class(&mut self, arg: &str, class: &str) {
-        self.assert_class(arg, class);
+    fn owned_class_assert(&mut self, arg: &str, class: &str) -> String {
+        let mut assert = self.class_assert(arg, class);
         let resolved = self.cx.resolve_class_name(class).to_string();
         let participates = self
             .cx
@@ -1658,13 +1728,49 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             .is_some_and(|c| c.participates_in_inheritance);
         if participates {
             let identifier = self.cx.require_class_identifier(class);
-            self.prelude(&format!(
+            writeln!(
+                assert,
                 "if ({arg}.__wbg_ptr !== {arg}.__wbg_ptr_{identifier}) {{ \
                     throw new TypeError('expected exact instance of {identifier}; \
                     a wasm-bindgen descendant cannot be consumed by-value as its ancestor'); \
                 }}"
-            ));
+            )
+            .unwrap();
         }
+        assert.push_str(&self.not_moved_assert(arg));
+        assert
+    }
+
+    /// Checks `arg`, when `some`, as an instance of `class` that Rust takes
+    /// by value. A stored value's check is returned to be repeated where the
+    /// instance is taken: what holds the value is read again there, and Rust
+    /// must never be handed another class's pointer.
+    fn assert_owned_class(&mut self, arg: &str, class: &str, some: Option<&str>) -> String {
+        let assert = self.owned_class_assert(arg, class);
+        match some {
+            Some(some) => self.check(&format!("if ({some}) {{\n{assert}}}")),
+            None => self.check(&assert),
+        }
+        if self.stored {
+            assert
+        } else {
+            String::new()
+        }
+    }
+
+    /// The check a debug build's string encoder makes, ahead of anything
+    /// being taken. A stored string is checked in every build.
+    fn assert_string(&mut self, arg: &str, kind: Option<OptionKind>) {
+        if !self.cx.config.debug || self.stored {
+            return;
+        }
+        let some = match kind {
+            Some(kind) => format!("{} && ", self.is_some(arg, kind)),
+            None => String::new(),
+        };
+        self.check(&format!(
+            "if ({some}typeof({arg}) !== 'string') throw new Error(`expected a string argument, found ${{typeof({arg})}}`);"
+        ));
     }
 
     fn assert_number(&mut self, arg: &str) {
@@ -1672,7 +1778,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             return;
         }
         self.cx.expose_assert_num();
-        self.prelude(&format!("_assertNum({arg});"));
+        self.check(&format!("_assertNum({arg});"));
     }
 
     fn assert_bigint(&mut self, arg: &str) {
@@ -1680,7 +1786,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             return;
         }
         self.cx.expose_assert_bigint();
-        self.prelude(&format!("_assertBigInt({arg});"));
+        self.check(&format!("_assertBigInt({arg});"));
     }
 
     fn assert_bool(&mut self, arg: &str) {
@@ -1688,7 +1794,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             return;
         }
         self.cx.expose_assert_bool();
-        self.prelude(&format!("_assertBoolean({arg});"));
+        self.check(&format!("_assertBoolean({arg});"));
     }
 
     /// The test for an incoming option holding no value: only `null` for a
@@ -1762,19 +1868,18 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             return;
         }
         let some = self.is_some(arg, kind);
-        self.prelude(&format!("if ({some}) {{"));
-        self.assert_number(arg);
-        self.prelude("}");
+        self.cx.expose_assert_num();
+        self.check(&format!("if ({some}) {{\n_assertNum({arg});\n}}"));
     }
 
     fn assert_non_null(&mut self, arg: &str) {
         self.cx.expose_assert_non_null();
-        self.prelude(&format!("_assertNonNull({arg});"));
+        self.check(&format!("_assertNonNull({arg});"));
     }
 
     fn assert_char(&mut self, arg: &str) {
         self.cx.expose_assert_char();
-        self.prelude(&format!("_assertChar({arg});"));
+        self.check(&format!("_assertChar({arg});"));
     }
 
     fn assert_optional_bigint(&mut self, arg: &str, kind: OptionKind) {
@@ -1782,9 +1887,8 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             return;
         }
         let some = self.is_some(arg, kind);
-        self.prelude(&format!("if ({some}) {{"));
-        self.assert_bigint(arg);
-        self.prelude("}");
+        self.cx.expose_assert_bigint();
+        self.check(&format!("if ({some}) {{\n_assertBigInt({arg});\n}}"));
     }
 
     fn assert_optional_bool(&mut self, arg: &str, kind: OptionKind) {
@@ -1792,9 +1896,8 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             return;
         }
         let some = self.is_some(arg, kind);
-        self.prelude(&format!("if ({some}) {{"));
-        self.assert_bool(arg);
-        self.prelude("}");
+        self.cx.expose_assert_bool();
+        self.check(&format!("if ({some}) {{\n_assertBoolean({arg});\n}}"));
     }
 
     /// Values that are not objects with a numeric `length`, such as an
@@ -1804,14 +1907,19 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         if !self.cx.config.debug {
             return;
         }
+        let assert = self.array_like_assert(arg, kind);
+        self.check(&assert);
+    }
+
+    fn array_like_assert(&mut self, arg: &str, kind: &VectorKind) -> String {
         self.cx.expose_assert_array_like();
         match kind {
             VectorKind::Externref | VectorKind::NamedExternref(_) => {
-                self.prelude(&format!("_assertArrayLike({arg});"));
+                format!("_assertArrayLike({arg});")
             }
             _ => {
                 let typed_array = kind.js_ty();
-                self.prelude(&format!("_assertArrayLike({arg}, '{typed_array}');"));
+                format!("_assertArrayLike({arg}, '{typed_array}');")
             }
         }
     }
@@ -1826,9 +1934,8 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             return;
         }
         let some = self.is_some(arg, option_kind);
-        self.prelude(&format!("if ({some}) {{"));
-        self.assert_array_like(arg, kind);
-        self.prelude("}");
+        let assert = self.array_like_assert(arg, kind);
+        self.check(&format!("if ({some}) {{\n{assert}\n}}"));
     }
 
     /// Mutable slices are copied back into the buffer of the original typed
@@ -1841,32 +1948,41 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         self.cx.expose_assert_typed_array();
         let typed_array = kind.js_ty();
         let size = kind.size();
-        self.prelude(&format!(
+        self.check(&format!(
             "_assertTypedArray({arg}, '{typed_array}', {size});"
         ));
     }
 
     fn assert_not_moved(&mut self, arg: &str) {
+        let assert = self.not_moved_assert(arg);
+        self.check(&assert);
+    }
+
+    fn not_moved_assert(&mut self, arg: &str) -> String {
+        let mut assert = String::new();
         if self.cx.generate_reinit {
             // Under reset state, we need comprehensive validation
-            self.prelude(&format!(
+            writeln!(
+                assert,
                 "\
                 if (({arg}).__wbg_inst !== undefined && ({arg}).__wbg_inst !== __wbg_instance_id) {{
                     throw new Error('Invalid stale object from previous Wasm instance');
-                }}
-                "
-            ));
+                }}"
+            )
+            .unwrap();
         }
         if self.cx.config.debug {
             // Debug mode only checks for moved values
-            self.prelude(&format!(
+            writeln!(
+                assert,
                 "\
                 if ({arg}.__wbg_ptr === 0) {{
                     throw new Error('Attempt to use a moved value');
-                }}
-                ",
-            ));
+                }}"
+            )
+            .unwrap();
         }
+        assert
     }
 
     fn string_to_memory(
@@ -1878,6 +1994,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     ) {
         let pass = self.cx.expose_pass_string_to_wasm(mem);
         let val = self.pop();
+        self.assert_string(&val, None);
         let malloc = self.cx.export_name_of(malloc);
         let i = self.tmp();
         let malloc = self.cx.wasm_export_ref(&malloc);
@@ -2366,8 +2483,8 @@ fn instruction(
 
         Instruction::I32FromExternrefRustOwned { class } => {
             let val = js.pop();
-            js.assert_owned_class(&val, class);
-            js.assert_not_moved(&val);
+            let assert = js.assert_owned_class(&val, class, None);
+            js.prelude(&assert);
             let i = js.tmp();
             let ptr = js.declare(
                 "var",
@@ -2419,13 +2536,12 @@ fn instruction(
             } else {
                 "0".into()
             };
-            let ptr = js.declare("let", format!("ptr{i}"), empty);
             let some = js.is_some(&val, *kind);
-            js.prelude(&format!("if ({some}) {{"));
-            js.assert_owned_class(&val, class);
-            js.assert_not_moved(&val);
-            js.prelude(&format!("{ptr} = {val}.__destroy_into_raw();"));
-            js.prelude("}");
+            let assert = js.assert_owned_class(&val, class, Some(&some));
+            let ptr = js.declare("let", format!("ptr{i}"), empty);
+            js.prelude(&format!(
+                "if ({some}) {{\n{assert}{ptr} = {val}.__destroy_into_raw();\n}}"
+            ));
             let class = class.clone();
             js.give(Owner::Class { class, nullable }, &[ptr]);
         }
@@ -2686,6 +2802,7 @@ fn instruction(
             let i = js.tmp();
             let malloc = js.cx.wasm_export_of(*malloc);
             let val = js.pop();
+            js.assert_string(&val, Some(*kind));
             let realloc = js.cx.optional_func_arg(*realloc);
             let none = js.is_none(&val, *kind);
             let ptr = js.declare(
@@ -3190,6 +3307,8 @@ fn instruction(
             count,
         } => {
             let val = js.pop();
+            // Whether the values are held by an input of this glue's scope.
+            let held_by_input = !js.instr.reads_local;
             let i = js.tmp();
             let ptr = js.local(format!("ptr{i}"));
             let e = js.local(format!("e{i}"));
@@ -3224,6 +3343,7 @@ fn instruction(
                 .collect::<Option<Vec<_>>>();
             let values = js.take_args(values, tys.as_deref());
             assert_eq!(values.len(), fields.len());
+            let checks = js.take_checks();
             let mut writes = String::new();
             for (n, (((offset, ty), value), alloc)) in
                 fields.iter().zip(values).zip(allocs).enumerate()
@@ -3244,6 +3364,27 @@ fn instruction(
                 bail!("an element of a vector passed to Rust can't be lent");
             }
             let effects = element.calls_wasm || !element.given.is_empty();
+            // Every value is checked before any is taken, or anything is
+            // allocated for one: a value that is rejected leaves the others
+            // with JS, and what holds them as it was.
+            if !checks.is_empty() {
+                let n = js.local(format!("n{i}"));
+                let checks = match count {
+                    CellCount::Word => format!(
+                        "for (let {n} = 0; {n} < {val}.length; {n}++) {{\n\
+                         const {e} = {val}[{n}];\n\
+                         {checks}}}"
+                    ),
+                    CellCount::One => format!("{{\nconst {e} = {val};\n{checks}}}"),
+                };
+                let checks = if *optional {
+                    let some = js.is_some(&val, *option_kind);
+                    format!("if ({some}) {{\n{checks}\n}}")
+                } else {
+                    checks
+                };
+                js.check_of(&checks, held_by_input);
+            }
             let malloc = js.cx.wasm_export_of(*malloc);
             let coerce = js.cx.coerce_ptr_suffix();
             let body = element.body;
@@ -3359,8 +3500,18 @@ fn instruction(
                     let class = js.cx.require_class_reference(class);
                     format!("!({val} instanceof {class})")
                 }
+                StoredCheck::Sequence(kind) => {
+                    let sequence = format!("!Array.isArray({val}) && !ArrayBuffer.isView({val})");
+                    match kind {
+                        Some(kind) => {
+                            let some = js.is_some(&val, *kind);
+                            format!("{some} && {sequence}")
+                        }
+                        None => sequence,
+                    }
+                }
             };
-            js.prelude(&format!(
+            js.check(&format!(
                 "if ({misplaced}) throw new Error('array contains a value of the wrong type');"
             ));
             js.push(val);

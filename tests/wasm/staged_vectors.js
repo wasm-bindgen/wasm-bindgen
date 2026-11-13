@@ -136,32 +136,28 @@ exports.pointRoundTrips = () => {
 
 exports.rejectedPoints = () => {
     const before = live();
-    // A later element that throws frees the points encoded before it: Rust
-    // was handed them, so they are no longer the caller's.
+    // An element that is rejected leaves the points before it with the
+    // caller: none is taken until every element has been checked.
     const a = new wasm.StagedPoint(1);
     const b = new wasm.StagedPoint(2);
+    const kept = () => {
+        assert.strictEqual(a.value, 1);
+        assert.strictEqual(b.value, 2);
+        assert.strictEqual(live(), before + 2);
+    };
     assert.throws(() => wasm.staged_maybe_points([a, b, {}]), /expected instance of StagedPoint/);
-    assert.strictEqual(a.__wbg_ptr, 0);
-    assert.strictEqual(b.__wbg_ptr, 0);
-    assert.strictEqual(live(), before);
-    const c = new wasm.StagedPoint(3);
-    assert.throws(() => wasm.staged_nullable_points([c, null, 1]));
-    assert.strictEqual(c.__wbg_ptr, 0);
-    assert.strictEqual(live(), before);
-    const d = new wasm.StagedPoint(4);
-    assert.throws(() => wasm.staged_maybe_nullable_points([d, undefined, 'x']));
-    assert.strictEqual(d.__wbg_ptr, 0);
-    assert.strictEqual(live(), before);
-    // As does a later argument that throws.
-    const e = new wasm.StagedPoint(5);
-    assert.throws(() => wasm.staged_points_then_names([e, undefined], [Symbol()]));
-    assert.strictEqual(e.__wbg_ptr, 0);
-    assert.strictEqual(live(), before);
-    // An element rejected before any point was taken leaves the caller's.
-    const f = new wasm.StagedPoint(6);
-    assert.throws(() => wasm.staged_maybe_points([{}, f]));
-    assert.strictEqual(f.value, 6);
-    f.free();
+    kept();
+    assert.throws(() => wasm.staged_nullable_points([a, null, 1]));
+    kept();
+    assert.throws(() => wasm.staged_maybe_nullable_points([b, undefined, 'x']));
+    kept();
+    // As does a later argument that is.
+    assert.throws(() => wasm.staged_points_then_names([a, undefined], [Symbol()]));
+    kept();
+    assert.throws(() => wasm.staged_maybe_points([{}, b]));
+    kept();
+    a.free();
+    b.free();
     assert.strictEqual(live(), before);
 };
 

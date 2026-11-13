@@ -147,6 +147,10 @@ export function imports() {
  * @returns {Uint8Array[]}
  */
 export function nested(v) {
+    for (let n0 = 0; n0 < v.length; n0++) {
+        const e0 = v[n0];
+        if (!Array.isArray(e0) && !ArrayBuffer.isView(e0)) throw new Error('array contains a value of the wrong type');
+    }
     let j0 = 0, len0, ptr0;
     try {
         len0 = v.length;
@@ -265,13 +269,17 @@ export function opt_foos(v) {
  * @returns {Point[]}
  */
 export function points(v) {
+    for (let n0 = 0; n0 < v.length; n0++) {
+        const e0 = v[n0];
+        if (!(e0 instanceof Point)) throw new Error('array contains a value of the wrong type');
+        _assertClass(e0, Point);
+    }
     let j0 = 0, len0, ptr0;
     try {
         len0 = v.length;
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = v[j0];
-            if (!(e0 instanceof Point)) throw new Error('array contains a value of the wrong type');
             _assertClass(e0, Point);
             var ptr1 = e0.__destroy_into_raw();
             const view0 = getDataViewMemory0();
@@ -307,13 +315,16 @@ export function points(v) {
  * @returns {string[]}
  */
 export function strings(v) {
+    for (let n0 = 0; n0 < v.length; n0++) {
+        const e0 = v[n0];
+        if (typeof e0 !== 'string') throw new Error('array contains a value of the wrong type');
+    }
     let j0 = 0, len0, ptr0;
     try {
         len0 = v.length;
         ptr0 = wasm.__wbindgen_malloc(len0 * 8, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = v[j0];
-            if (typeof e0 !== 'string') throw new Error('array contains a value of the wrong type');
             const ptr1 = passStringToWasm0(e0, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
             const len1 = WASM_VECTOR_LEN;
             const view0 = getDataViewMemory0();
@@ -471,11 +482,14 @@ export function __wbg_give_strings_6da2627b8b5e4e91(arg0) {
     const ret = give_strings();
     let j1 = 0, len1, ptr1;
     try {
+        for (let n1 = 0; n1 < ret.length; n1++) {
+            const e1 = ret[n1];
+            if (typeof e1 !== 'string') throw new Error('array contains a value of the wrong type');
+        }
         len1 = ret.length;
         ptr1 = wasm.__wbindgen_malloc(len1 * 8, 4) >>> 0;
         for (; j1 < len1; j1++) {
             const e1 = ret[j1];
-            if (typeof e1 !== 'string') throw new Error('array contains a value of the wrong type');
             const ptr2 = passStringToWasm0(e1, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
             const len2 = WASM_VECTOR_LEN;
             const view1 = getDataViewMemory0();

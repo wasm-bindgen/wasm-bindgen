@@ -48,13 +48,17 @@ export function makeRenamed(value) {
  * @returns {number}
  */
 export function readRenameds(renameds) {
+    for (let n0 = 0; n0 < renameds.length; n0++) {
+        const e0 = renameds[n0];
+        if (!(e0 instanceof Renamed)) throw new Error('array contains a value of the wrong type');
+        _assertClass(e0, Renamed);
+    }
     let j0 = 0, len0, ptr0;
     try {
         len0 = renameds.length;
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
         for (; j0 < len0; j0++) {
             const e0 = renameds[j0];
-            if (!(e0 instanceof Renamed)) throw new Error('array contains a value of the wrong type');
             _assertClass(e0, Renamed);
             var ptr1 = e0.__destroy_into_raw();
             const view0 = getDataViewMemory0();

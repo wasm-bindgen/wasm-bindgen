@@ -44,13 +44,17 @@ export class NamespaceConsumer {
      * @returns {bar__Point[]}
      */
     duplicate_bar_points(points) {
+        for (let n0 = 0; n0 < points.length; n0++) {
+            const e0 = points[n0];
+            if (!(e0 instanceof bar__Point)) throw new Error('array contains a value of the wrong type');
+            _assertClass(e0, bar__Point);
+        }
         let j0 = 0, len0, ptr0;
         try {
             len0 = points.length;
             ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
             for (; j0 < len0; j0++) {
                 const e0 = points[j0];
-                if (!(e0 instanceof bar__Point)) throw new Error('array contains a value of the wrong type');
                 _assertClass(e0, bar__Point);
                 var ptr1 = e0.__destroy_into_raw();
                 const view0 = getDataViewMemory0();
@@ -85,13 +89,17 @@ export class NamespaceConsumer {
      * @returns {foo__Point[]}
      */
     duplicate_foo_points(points) {
+        for (let n0 = 0; n0 < points.length; n0++) {
+            const e0 = points[n0];
+            if (!(e0 instanceof foo__Point)) throw new Error('array contains a value of the wrong type');
+            _assertClass(e0, foo__Point);
+        }
         let j0 = 0, len0, ptr0;
         try {
             len0 = points.length;
             ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
             for (; j0 < len0; j0++) {
                 const e0 = points[j0];
-                if (!(e0 instanceof foo__Point)) throw new Error('array contains a value of the wrong type');
                 _assertClass(e0, foo__Point);
                 var ptr1 = e0.__destroy_into_raw();
                 const view0 = getDataViewMemory0();
@@ -158,13 +166,13 @@ export class NamespaceConsumer {
      * @param {bar__Status} bar_status
      */
     constructor(foo_point, bar_point, foo_status, bar_status) {
+        _assertClass(foo_point, foo__Point);
+        _assertClass(bar_point, bar__Point);
         const val3 = +foo_status;
         const val4 = +bar_status;
         let ptr0, ptr1;
         try {
-            _assertClass(foo_point, foo__Point);
             ptr0 = foo_point.__destroy_into_raw();
-            _assertClass(bar_point, bar__Point);
             ptr1 = bar_point.__destroy_into_raw();
         } catch (e) {
             if (ptr1) wasm.__wbg_bar__point_free(ptr1, 1);
@@ -224,13 +232,17 @@ export class NamespaceConsumer {
      * @param {bar__Point[]} bar_points
      */
     set bar_points(bar_points) {
+        for (let n0 = 0; n0 < bar_points.length; n0++) {
+            const e0 = bar_points[n0];
+            if (!(e0 instanceof bar__Point)) throw new Error('array contains a value of the wrong type');
+            _assertClass(e0, bar__Point);
+        }
         let j0 = 0, len0, ptr0;
         try {
             len0 = bar_points.length;
             ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
             for (; j0 < len0; j0++) {
                 const e0 = bar_points[j0];
-                if (!(e0 instanceof bar__Point)) throw new Error('array contains a value of the wrong type');
                 _assertClass(e0, bar__Point);
                 var ptr1 = e0.__destroy_into_raw();
                 const view0 = getDataViewMemory0();
@@ -268,13 +280,17 @@ export class NamespaceConsumer {
      * @param {foo__Point[]} foo_points
      */
     set foo_points(foo_points) {
+        for (let n0 = 0; n0 < foo_points.length; n0++) {
+            const e0 = foo_points[n0];
+            if (!(e0 instanceof foo__Point)) throw new Error('array contains a value of the wrong type');
+            _assertClass(e0, foo__Point);
+        }
         let j0 = 0, len0, ptr0;
         try {
             len0 = foo_points.length;
             ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
             for (; j0 < len0; j0++) {
                 const e0 = foo_points[j0];
-                if (!(e0 instanceof foo__Point)) throw new Error('array contains a value of the wrong type');
                 _assertClass(e0, foo__Point);
                 var ptr1 = e0.__destroy_into_raw();
                 const view0 = getDataViewMemory0();
@@ -437,8 +453,8 @@ class bar__RefToFoo {
      * @param {foo__Status} foo_status
      */
     constructor(foo_point, foo_status) {
-        const val2 = +foo_status;
         _assertClass(foo_point, foo__Point);
+        const val2 = +foo_status;
         var ptr0 = foo_point.__destroy_into_raw();
         const ret = wasm.bar__reftofoo_new(ptr0, val2);
         this.__wbg_ptr = ret;
@@ -624,8 +640,8 @@ class foo__RefToBar {
      * @param {bar__Status} bar_status
      */
     constructor(bar_point, bar_status) {
-        const val2 = +bar_status;
         _assertClass(bar_point, bar__Point);
+        const val2 = +bar_status;
         var ptr0 = bar_point.__destroy_into_raw();
         const ret = wasm.foo__reftobar_new(ptr0, val2);
         this.__wbg_ptr = ret;

@@ -76,6 +76,7 @@ pub mod option_null;
 pub mod optional_primitives;
 pub mod primitive_union_traits;
 pub mod reexport;
+pub mod rejected_values;
 pub mod result;
 pub mod result_jserror;
 pub mod rethrow;

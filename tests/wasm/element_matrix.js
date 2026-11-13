@@ -36,6 +36,16 @@ exports.exportArg = row => {
     take([], 2);
 };
 
+// A value no row takes, after values the row does: the call throws, and
+// what came before the rejected value is still the caller's to pass.
+exports.exportBad = row => {
+    const give = wasm[`em_${row}_give`];
+    const take = wasm[`em_${row}_take`];
+    const good = give(0);
+    assert.throws(() => take([...good, Symbol()], 0));
+    take(good, 0);
+};
+
 exports.exportOption = (row, view) => {
     const opt = wasm[`em_${row}_opt`];
     const given = opt(undefined, 0);
