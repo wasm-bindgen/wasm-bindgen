@@ -29,10 +29,10 @@ error[E0277]: the trait bound `Nullable<u32>: OptionIntoWasmAbi` is not satisfie
             &'__wbg_ref JsOption<T>
             &'__wbg_ref Undefined
             &'__wbg_ref wasm_bindgen::sys::Null
+            &'a [T]
             &'a mut [MaybeUninit<f32>]
             &'a mut [MaybeUninit<f64>]
             &'a mut [MaybeUninit<i16>]
-            &'a mut [MaybeUninit<i32>]
           and $N others
   = note: required for `Nullable<u32>` to implement `MaybeIntoWasmAbi`
   = note: required for `Option<Nullable<u32>>` to implement `IntoWasmAbi`
@@ -69,10 +69,10 @@ error[E0277]: the trait bound `Nullable<u32>: OptionIntoWasmAbi` is not satisfie
             &'__wbg_ref JsOption<T>
             &'__wbg_ref Undefined
             &'__wbg_ref wasm_bindgen::sys::Null
+            &'a [T]
             &'a mut [MaybeUninit<f32>]
             &'a mut [MaybeUninit<f64>]
             &'a mut [MaybeUninit<i16>]
-            &'a mut [MaybeUninit<i32>]
           and $N others
   = note: required for `Nullable<u32>` to implement `MaybeIntoWasmAbi`
   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)

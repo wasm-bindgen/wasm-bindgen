@@ -23,7 +23,7 @@ use js_sys::{
     JsNumberOrStringLike, JsString, Number, PropertyKey, Symbol,
 };
 use std::borrow::Cow;
-use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, RefIntoWasmAbi, VectorRefIntoWasmAbi};
+use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, RefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsStringLike;
 use wasm_bindgen::SafeInteger;
@@ -92,12 +92,12 @@ extern "C" {
     ) -> String;
 
     // A shared slice with a *generic* element type, bounded by
-    // `T: VectorRefIntoWasmAbi`: each element type gets its own typed-array
+    // `T: RefIntoWasmAbi`: each element type gets its own typed-array
     // view.
     #[wasm_bindgen(experimental_generic_mono, js_name = sumSlice)]
     fn sum_slice<T>(xs: &[T]) -> f64
     where
-        T: VectorRefIntoWasmAbi;
+        T: RefIntoWasmAbi;
 
     // `JsStringLike` bound: every string shape crosses at its native wire
     // format (UTF-8 buffer vs handle) but must arrive in JS as a string *value*.
@@ -472,7 +472,7 @@ extern "C" {
     #[wasm_bindgen(experimental_generic_mono, variadic, js_name = variadicJoin)]
     fn variadic_join_slice<T>(first: u32, rest: &[T]) -> String
     where
-        T: VectorRefIntoWasmAbi;
+        T: RefIntoWasmAbi;
 }
 
 #[wasm_bindgen_test]

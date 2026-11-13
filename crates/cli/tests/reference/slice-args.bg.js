@@ -1,10 +1,4 @@
 export class Point {
-    static __unwrap(jsValue) {
-        if (!(jsValue instanceof Point)) {
-            return 0;
-        }
-        return jsValue.__destroy_into_raw();
-    }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
@@ -285,21 +279,55 @@ export function take_mut_usize(a) {
  * @param {Point[]} c
  */
 export function take_non_numbers(a, b, c) {
-    let ptr0, len0, ptr1, len1, ptr2, len2;
+    let ptr0, len0, j1 = 0, len1, ptr1, j4 = 0, len4, ptr4;
     try {
         ptr0 = passArrayJsValueToWasm0(a, wasm.__wbindgen_malloc);
         len0 = WASM_VECTOR_LEN;
-        ptr1 = passArrayJsValueToWasm0(b, wasm.__wbindgen_malloc);
-        len1 = WASM_VECTOR_LEN;
-        ptr2 = passArrayJsValueToWasm0(c, wasm.__wbindgen_malloc);
-        len2 = WASM_VECTOR_LEN;
+        len1 = b.length;
+        ptr1 = wasm.__wbindgen_malloc(len1 * 8, 4) >>> 0;
+        for (; j1 < len1; j1++) {
+            const e1 = b[j1];
+            if (typeof e1 !== 'string') throw new Error('array contains a value of the wrong type');
+            const ptr2 = passStringToWasm0(e1, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            const len2 = WASM_VECTOR_LEN;
+            const view1 = getDataViewMemory0();
+            const p1 = ptr1 + j1 * 8;
+            view1.setInt32(p1 + 0, ptr2, true);
+            view1.setInt32(p1 + 4, len2, true);
+        }
+        len4 = c.length;
+        ptr4 = wasm.__wbindgen_malloc(len4 * 4, 4) >>> 0;
+        for (; j4 < len4; j4++) {
+            const e4 = c[j4];
+            if (!(e4 instanceof Point)) throw new Error('array contains a value of the wrong type');
+            _assertClass(e4, Point);
+            var ptr5 = e4.__destroy_into_raw();
+            const view4 = getDataViewMemory0();
+            const p4 = ptr4 + j4 * 4;
+            view4.setInt32(p4 + 0, ptr5, true);
+        }
     } catch (e) {
-        if (ptr2) { wasm.__externref_drop_slice(ptr2, len2); wasm.__wbindgen_free(ptr2, len2 * 4, 4); }
-        if (ptr1) { wasm.__externref_drop_slice(ptr1, len1); wasm.__wbindgen_free(ptr1, len1 * 4, 4); }
+        if (ptr4) {
+            for (let k6 = 0; k6 < j4; k6++) {
+                const cell6 = ptr4 + k6 * 4;
+                const w6_0 = getDataViewMemory0().getInt32(cell6 + 0, true) >>> 0;
+                if (w6_0) wasm.__wbg_point_free(w6_0, 1);
+            }
+            wasm.__wbindgen_free(ptr4, len4 * 4, 4);
+        }
+        if (ptr1) {
+            for (let k3 = 0; k3 < j1; k3++) {
+                const cell3 = ptr1 + k3 * 8;
+                const w3_0 = getDataViewMemory0().getInt32(cell3 + 0, true) >>> 0;
+                const w3_1 = getDataViewMemory0().getInt32(cell3 + 4, true) >>> 0;
+                if (w3_0) { wasm.__wbindgen_free(w3_0, w3_1 * 1, 1); }
+            }
+            wasm.__wbindgen_free(ptr1, len1 * 8, 4);
+        }
         if (ptr0) { wasm.__externref_drop_slice(ptr0, len0); wasm.__wbindgen_free(ptr0, len0 * 4, 4); }
         throw e;
     }
-    wasm.take_non_numbers(ptr0, len0, ptr1, len1, ptr2, len2);
+    wasm.take_non_numbers(ptr0, len0, ptr1, len1, ptr4, len4);
 }
 
 /**
@@ -389,20 +417,8 @@ export function take_usize(a) {
 export function __wbg___wbindgen_copy_to_typed_array_680b191e71920dc1(arg0, arg1, arg2) {
     new Uint8Array(arg2.buffer, arg2.byteOffset, arg2.byteLength).set(getArrayU8FromWasm0(arg0, arg1));
 }
-export function __wbg___wbindgen_string_get_7ce8eee7fd327545(arg0, arg1) {
-    const obj = arg1;
-    const ret = typeof(obj) === 'string' ? obj : undefined;
-    var ptr1 = isLikeNone(ret) ? 0 : passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len1 = WASM_VECTOR_LEN;
-    getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 1, len1, true);
-    getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 0, ptr1, true);
-}
 export function __wbg___wbindgen_throw_4c88d8bf264fd984(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
-}
-export function __wbg_point_unwrap(arg0) {
-    const ret = Point.__unwrap(arg0);
-    return ret;
 }
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_externrefs;
@@ -423,6 +439,12 @@ function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
     wasm.__wbindgen_externrefs.set(idx, obj);
     return idx;
+}
+
+function _assertClass(instance, klass) {
+    if (!(instance instanceof klass)) {
+        throw new Error(`expected instance of ${klass.name}`);
+    }
 }
 
 function getArrayF64FromWasm0(ptr, len) {

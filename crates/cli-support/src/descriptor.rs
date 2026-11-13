@@ -96,6 +96,9 @@ pub enum Descriptor {
     /// that applies to it, or that was written on it, for the binding to
     /// validate (see [`Descriptor::seq_mode_fit`]).
     SeqMode(SeqMode, Box<Descriptor>),
+    /// A sequence element whose memory isn't the cell its descriptor implies,
+    /// so the sequence holds a cell of its ABI instead.
+    Cell(Box<Descriptor>),
 }
 
 /// How a sequence's cells hold its elements, which the element's descriptor
@@ -255,6 +258,7 @@ impl Descriptor {
             VECTOR => Descriptor::Vector(Box::new(Descriptor::_decode(data, clamped))),
             OPTIONAL => Descriptor::Option(Box::new(Descriptor::_decode(data, clamped))),
             NULLABLE => Descriptor::Nullable(Box::new(Descriptor::_decode(data, clamped))),
+            ABI_CELL => Descriptor::Cell(Box::new(Descriptor::_decode(data, clamped))),
             RESULT => Descriptor::Result(Box::new(Descriptor::_decode(data, clamped))),
             CACHED_STRING => Descriptor::CachedString,
             STRING => Descriptor::String,
@@ -361,7 +365,8 @@ impl Descriptor {
             | Descriptor::RefMut(d)
             | Descriptor::Slice(d)
             | Descriptor::Vector(d)
-            | Descriptor::Result(d) => d.visit_named_types_mut(f),
+            | Descriptor::Result(d)
+            | Descriptor::Cell(d) => d.visit_named_types_mut(f),
             Descriptor::Option(inner) | Descriptor::Nullable(inner) => {
                 inner.visit_named_types_mut(f)
             }
@@ -513,9 +518,24 @@ impl Descriptor {
     /// a number or a JS handle, and its scalar ABI for anything else, which
     /// the binding rejects if it has no glue for it.
     pub fn sequence_cell(&self) -> SequenceCell<'_> {
+        if let Descriptor::Cell(d) = self {
+            return SequenceCell::Encoded(d);
+        }
         match self.in_place_kind() {
             Some(kind) => SequenceCell::InPlace(kind),
             None => SequenceCell::Encoded(self),
+        }
+    }
+
+    /// The typed array that a buffer of this encoded element's cells already
+    /// is. An `f64` cell is laid out as a `Float64Array` element, so a
+    /// sequence of an element that crosses as an `f64`, such as
+    /// `SafeInteger<T>`, crosses as the same `Float64Array` as when it is in
+    /// place.
+    pub fn typed_cell(&self) -> Option<VectorKind> {
+        match self {
+            Descriptor::F64 => Some(VectorKind::F64),
+            _ => None,
         }
     }
 
@@ -603,6 +623,25 @@ fn sequence_cells() {
     assert_eq!(
         Descriptor::decode(&[REF, SLICE, BOOLEAN]).vector_kind(),
         None
+    );
+    // An `ABI_CELL` element is encoded even where its descriptor is in place.
+    let cell = Descriptor::decode(&[VECTOR, ABI_CELL, U8]);
+    assert_eq!(cell.vector_kind(), None);
+    let Descriptor::Vector(elem) = &cell else {
+        unreachable!()
+    };
+    assert_eq!(elem.sequence_cell(), SequenceCell::Encoded(&Descriptor::U8));
+    let cell = Descriptor::decode(&[REF, SLICE, ABI_CELL, EXTERNREF]);
+    assert_eq!(cell.vector_kind(), None);
+    let Descriptor::Ref(slice) = &cell else {
+        unreachable!()
+    };
+    let Descriptor::Slice(elem) = &**slice else {
+        unreachable!()
+    };
+    assert_eq!(
+        elem.sequence_cell(),
+        SequenceCell::Encoded(&Descriptor::Externref)
     );
 }
 

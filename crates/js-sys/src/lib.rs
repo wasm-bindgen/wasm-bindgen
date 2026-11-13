@@ -10962,8 +10962,15 @@ impl wasm_bindgen::__rt::marker::JsStringLikeSealed for &JsString {}
 impl wasm_bindgen::JsStringLike for JsString {}
 impl wasm_bindgen::JsStringLike for &JsString {}
 
-// Each cell is the borrowed handle, which JS reads back without taking it.
-wasm_bindgen::__wbindgen_encoded_sequence!(&JsString, |s| (*s).into_abi(), [ref_into]);
+// A borrowed `&JsString` crosses by copy, so a `&[&JsString]` lends each.
+impl wasm_bindgen::convert::IntoWasmAbi for &&JsString {
+    type Abi = <&'static JsString as wasm_bindgen::convert::IntoWasmAbi>::Abi;
+
+    #[inline]
+    fn into_abi(self) -> Self::Abi {
+        wasm_bindgen::convert::IntoWasmAbi::into_abi(*self)
+    }
+}
 
 impl JsString {
     /// Returns the `JsString` value of this JS value if it's an instance of a

@@ -21,7 +21,13 @@ export class NamespaceConsumer {
      */
     get bar_points() {
         const ret = wasm.namespaceconsumer_bar_points(this.__wbg_ptr);
-        var v1 = getArrayJsValueFromWasm0(ret[0], ret[1]);
+        const v1 = [];
+        let p1 = ret[0];
+        p1 = p1 >>> 0;
+        const view1 = getDataViewMemory0();
+        for (const end1 = p1 + ret[1] * 4; p1 < end1; p1 += 4) {
+            v1.push(bar__Point.__wrap(view1.getInt32(p1 + 0, true)));
+        }
         wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
         return v1;
     }
@@ -37,24 +43,80 @@ export class NamespaceConsumer {
      * @returns {bar__Point[]}
      */
     duplicate_bar_points(points) {
-        const ptr0 = passArrayJsValueToWasm0(points, wasm.__wbindgen_malloc);
-        const len0 = WASM_VECTOR_LEN;
+        let j0 = 0, len0, ptr0;
+        try {
+            len0 = points.length;
+            ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
+            for (; j0 < len0; j0++) {
+                const e0 = points[j0];
+                if (!(e0 instanceof bar__Point)) throw new Error('array contains a value of the wrong type');
+                _assertClass(e0, bar__Point);
+                var ptr1 = e0.__destroy_into_raw();
+                const view0 = getDataViewMemory0();
+                const p0 = ptr0 + j0 * 4;
+                view0.setInt32(p0 + 0, ptr1, true);
+            }
+        } catch (e) {
+            if (ptr0) {
+                for (let k2 = 0; k2 < j0; k2++) {
+                    const cell2 = ptr0 + k2 * 4;
+                    const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
+                    if (w2_0) wasm.__wbg_bar__point_free(w2_0, 1);
+                }
+                wasm.__wbindgen_free(ptr0, len0 * 4, 4);
+            }
+            throw e;
+        }
         const ret = wasm.namespaceconsumer_duplicate_bar_points(this.__wbg_ptr, ptr0, len0);
-        var v2 = getArrayJsValueFromWasm0(ret[0], ret[1]);
+        const v4 = [];
+        let p4 = ret[0];
+        p4 = p4 >>> 0;
+        const view4 = getDataViewMemory0();
+        for (const end4 = p4 + ret[1] * 4; p4 < end4; p4 += 4) {
+            v4.push(bar__Point.__wrap(view4.getInt32(p4 + 0, true)));
+        }
         wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
-        return v2;
+        return v4;
     }
     /**
      * @param {foo__Point[]} points
      * @returns {foo__Point[]}
      */
     duplicate_foo_points(points) {
-        const ptr0 = passArrayJsValueToWasm0(points, wasm.__wbindgen_malloc);
-        const len0 = WASM_VECTOR_LEN;
+        let j0 = 0, len0, ptr0;
+        try {
+            len0 = points.length;
+            ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
+            for (; j0 < len0; j0++) {
+                const e0 = points[j0];
+                if (!(e0 instanceof foo__Point)) throw new Error('array contains a value of the wrong type');
+                _assertClass(e0, foo__Point);
+                var ptr1 = e0.__destroy_into_raw();
+                const view0 = getDataViewMemory0();
+                const p0 = ptr0 + j0 * 4;
+                view0.setInt32(p0 + 0, ptr1, true);
+            }
+        } catch (e) {
+            if (ptr0) {
+                for (let k2 = 0; k2 < j0; k2++) {
+                    const cell2 = ptr0 + k2 * 4;
+                    const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
+                    if (w2_0) wasm.__wbg_foo__point_free(w2_0, 1);
+                }
+                wasm.__wbindgen_free(ptr0, len0 * 4, 4);
+            }
+            throw e;
+        }
         const ret = wasm.namespaceconsumer_duplicate_foo_points(this.__wbg_ptr, ptr0, len0);
-        var v2 = getArrayJsValueFromWasm0(ret[0], ret[1]);
+        const v4 = [];
+        let p4 = ret[0];
+        p4 = p4 >>> 0;
+        const view4 = getDataViewMemory0();
+        for (const end4 = p4 + ret[1] * 4; p4 < end4; p4 += 4) {
+            v4.push(foo__Point.__wrap(view4.getInt32(p4 + 0, true)));
+        }
         wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
-        return v2;
+        return v4;
     }
     /**
      * @returns {foo__Point}
@@ -68,7 +130,13 @@ export class NamespaceConsumer {
      */
     get foo_points() {
         const ret = wasm.namespaceconsumer_foo_points(this.__wbg_ptr);
-        var v1 = getArrayJsValueFromWasm0(ret[0], ret[1]);
+        const v1 = [];
+        let p1 = ret[0];
+        p1 = p1 >>> 0;
+        const view1 = getDataViewMemory0();
+        for (const end1 = p1 + ret[1] * 4; p1 < end1; p1 += 4) {
+            v1.push(foo__Point.__wrap(view1.getInt32(p1 + 0, true)));
+        }
         wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
         return v1;
     }
@@ -152,8 +220,30 @@ export class NamespaceConsumer {
      * @param {bar__Point[]} bar_points
      */
     set bar_points(bar_points) {
-        const ptr0 = passArrayJsValueToWasm0(bar_points, wasm.__wbindgen_malloc);
-        const len0 = WASM_VECTOR_LEN;
+        let j0 = 0, len0, ptr0;
+        try {
+            len0 = bar_points.length;
+            ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
+            for (; j0 < len0; j0++) {
+                const e0 = bar_points[j0];
+                if (!(e0 instanceof bar__Point)) throw new Error('array contains a value of the wrong type');
+                _assertClass(e0, bar__Point);
+                var ptr1 = e0.__destroy_into_raw();
+                const view0 = getDataViewMemory0();
+                const p0 = ptr0 + j0 * 4;
+                view0.setInt32(p0 + 0, ptr1, true);
+            }
+        } catch (e) {
+            if (ptr0) {
+                for (let k2 = 0; k2 < j0; k2++) {
+                    const cell2 = ptr0 + k2 * 4;
+                    const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
+                    if (w2_0) wasm.__wbg_bar__point_free(w2_0, 1);
+                }
+                wasm.__wbindgen_free(ptr0, len0 * 4, 4);
+            }
+            throw e;
+        }
         wasm.namespaceconsumer_set_bar_points(this.__wbg_ptr, ptr0, len0);
     }
     /**
@@ -174,8 +264,30 @@ export class NamespaceConsumer {
      * @param {foo__Point[]} foo_points
      */
     set foo_points(foo_points) {
-        const ptr0 = passArrayJsValueToWasm0(foo_points, wasm.__wbindgen_malloc);
-        const len0 = WASM_VECTOR_LEN;
+        let j0 = 0, len0, ptr0;
+        try {
+            len0 = foo_points.length;
+            ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
+            for (; j0 < len0; j0++) {
+                const e0 = foo_points[j0];
+                if (!(e0 instanceof foo__Point)) throw new Error('array contains a value of the wrong type');
+                _assertClass(e0, foo__Point);
+                var ptr1 = e0.__destroy_into_raw();
+                const view0 = getDataViewMemory0();
+                const p0 = ptr0 + j0 * 4;
+                view0.setInt32(p0 + 0, ptr1, true);
+            }
+        } catch (e) {
+            if (ptr0) {
+                for (let k2 = 0; k2 < j0; k2++) {
+                    const cell2 = ptr0 + k2 * 4;
+                    const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
+                    if (w2_0) wasm.__wbg_foo__point_free(w2_0, 1);
+                }
+                wasm.__wbindgen_free(ptr0, len0 * 4, 4);
+            }
+            throw e;
+        }
         wasm.namespaceconsumer_set_foo_points(this.__wbg_ptr, ptr0, len0);
     }
     /**
@@ -241,12 +353,6 @@ class bar__Point {
         obj.__wbg_ptr = ptr;
         bar__PointFinalization.register(obj, obj.__wbg_ptr, obj);
         return obj;
-    }
-    static __unwrap(jsValue) {
-        if (!(jsValue instanceof bar__Point)) {
-            return 0;
-        }
-        return jsValue.__destroy_into_raw();
     }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
@@ -448,12 +554,6 @@ class foo__Point {
         obj.__wbg_ptr = ptr;
         foo__PointFinalization.register(obj, obj.__wbg_ptr, obj);
         return obj;
-    }
-    static __unwrap(jsValue) {
-        if (!(jsValue instanceof foo__Point)) {
-            return 0;
-        }
-        return jsValue.__destroy_into_raw();
     }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
@@ -701,22 +801,6 @@ export function greet() {
 export function __wbg___wbindgen_throw_4c88d8bf264fd984(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
-export function __wbg_bar__point_new(arg0) {
-    const ret = bar__Point.__wrap(arg0);
-    return ret;
-}
-export function __wbg_bar__point_unwrap(arg0) {
-    const ret = bar__Point.__unwrap(arg0);
-    return ret;
-}
-export function __wbg_foo__point_new(arg0) {
-    const ret = foo__Point.__wrap(arg0);
-    return ret;
-}
-export function __wbg_foo__point_unwrap(arg0) {
-    const ret = foo__Point.__unwrap(arg0);
-    return ret;
-}
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_externrefs;
     table.set(0, undefined);
@@ -750,27 +834,10 @@ const foo__nested__PointFinalization = (typeof FinalizationRegistry === 'undefin
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_foo__nested__point_free(ptr, 1));
 
-function addToExternrefTable0(obj) {
-    const idx = wasm.__externref_table_alloc();
-    wasm.__wbindgen_externrefs.set(idx, obj);
-    return idx;
-}
-
 function _assertClass(instance, klass) {
     if (!(instance instanceof klass)) {
         throw new Error(`expected instance of ${klass.name}`);
     }
-}
-
-function getArrayJsValueFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    const mem = getDataViewMemory0();
-    const result = [];
-    for (let i = ptr; i < ptr + 4 * len; i += 4) {
-        result.push(wasm.__wbindgen_externrefs.get(mem.getUint32(i, true)));
-    }
-    wasm.__externref_drop_slice(ptr, len);
-    return result;
 }
 
 let cachedDataViewMemory0 = null;
@@ -794,16 +861,6 @@ function getUint8ArrayMemory0() {
     return cachedUint8ArrayMemory0;
 }
 
-function passArrayJsValueToWasm0(array, malloc) {
-    const ptr = malloc(array.length * 4, 4) >>> 0;
-    for (let i = 0; i < array.length; i++) {
-        const add = addToExternrefTable0(array[i]);
-        getDataViewMemory0().setUint32(ptr + 4 * i, add, true);
-    }
-    WASM_VECTOR_LEN = array.length;
-    return ptr;
-}
-
 let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true });
 cachedTextDecoder.decode();
 const MAX_SAFARI_DECODE_BYTES = 2146435072;
@@ -817,8 +874,6 @@ function decodeText(bytes) {
     }
     return cachedTextDecoder.decode(bytes);
 }
-
-let WASM_VECTOR_LEN = 0;
 
 
 let wasm;

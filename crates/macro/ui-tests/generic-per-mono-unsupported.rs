@@ -24,7 +24,7 @@ extern "C" {
     fn nested_ref_to_generic<T>(x: Option<&T>);
 
     // Slices (`Option<&[T]>` included — not a "nested reference", since only
-    // the element's `VectorRefIntoWasmAbi` is needed; see the pass tests) are
+    // the element's `RefIntoWasmAbi` is needed; see the pass tests) are
     // supported, but a `&mut` slice is not: its element has no borrowed wire
     // for JS to write back through.
     #[wasm_bindgen(experimental_generic_mono)]

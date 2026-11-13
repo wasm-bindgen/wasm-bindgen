@@ -204,7 +204,7 @@ impl InstructionBuilder<'_, '_> {
                 self.outgoing_function(false, descriptor, None)?;
             }
 
-            Descriptor::Slice(_) => {
+            Descriptor::Slice(_) | Descriptor::Cell(_) => {
                 bail!("unsupported argument type for calling JS function from Rust: {arg:?}")
             }
 
@@ -716,6 +716,7 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::Closure(_)
             | Descriptor::Slice(_)
             | Descriptor::SeqMode(..)
+            | Descriptor::Cell(_)
             | Descriptor::Result(_) => {
                 bail!("unsupported Result type for returning from exported Rust function: {arg:?}")
             }
@@ -812,6 +813,37 @@ impl InstructionBuilder<'_, '_> {
         owned: bool,
         optional: Option<OptionKind>,
     ) -> Result<(), Error> {
+        // The buffer is freshly encoded whether it gives or lends its
+        // elements, so it's freed like an owned vector's.
+        if let Some(kind) = elem.typed_cell() {
+            let mem = self.cx.memory()?;
+            let free = self.cx.free()?;
+            let ptr_ty = self.outgoing_internal_word_ty();
+            let mode = self.seq_value;
+            let (instr, ty) = match optional {
+                Some(option_kind) => (
+                    Instruction::OptionVectorLoad {
+                        kind: kind.clone(),
+                        mem,
+                        free,
+                        mode,
+                        option_kind,
+                    },
+                    AdapterType::Vector(kind).option_kind(option_kind),
+                ),
+                None => (
+                    Instruction::VectorLoad {
+                        kind: kind.clone(),
+                        mem,
+                        free,
+                        mode,
+                    },
+                    AdapterType::Vector(kind),
+                ),
+            };
+            self.instruction(&[ptr_ty.clone(), ptr_ty], instr, &[ty]);
+            return Ok(());
+        }
         let mut decode = InstructionBuilder {
             input: Vec::new(),
             output: Vec::new(),

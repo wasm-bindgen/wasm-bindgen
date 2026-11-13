@@ -37,12 +37,15 @@ pub trait IntoWasmAbi: WasmDescribe {
 /// argument through it, so `T: RefIntoWasmAbi` is the bound they declare. It
 /// is sealed, holding exactly where the higher-ranked bound does.
 ///
+/// A slice lends each of its elements, so `&[T]` crosses for every
+/// `T: RefIntoWasmAbi`.
+///
 /// # ⚠️ Unstable
 ///
 /// This is part of the internal [`convert`](crate::convert) module, **no
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
-pub trait RefIntoWasmAbi: ref_into_wasm_abi::Sealed {
+pub trait RefIntoWasmAbi: WasmDescribe + ref_into_wasm_abi::Sealed {
     /// The Wasm ABI type that `&Self` converts into.
     type Abi: WasmAbi;
 
@@ -61,7 +64,7 @@ mod ref_into_wasm_abi {
     impl<T: ?Sized> Sealed for T where for<'a> &'a T: IntoWasmAbi {}
 }
 
-impl<T: ?Sized, A: WasmAbi> RefIntoWasmAbi for T
+impl<T: WasmDescribe + ?Sized, A: WasmAbi> RefIntoWasmAbi for T
 where
     for<'a> &'a T: IntoWasmAbi<Abi = A>,
 {
@@ -242,6 +245,9 @@ pub trait RefMutFromWasmAbi: WasmDescribe {
 /// through; a type whose ABI has no spare value implements that trait
 /// directly instead.
 ///
+/// Soft-deprecated: new code should bound on and implement
+/// [`MaybeIntoWasmAbi`]. This trait will be removed in 0.3.0.
+///
 /// # ⚠️ Unstable
 ///
 /// This is part of the internal [`convert`](crate::convert) module, **no
@@ -258,6 +264,9 @@ pub trait OptionIntoWasmAbi: IntoWasmAbi {
 
 /// Indicates that this type can be received from JS as `Option<Self>` over
 /// its own ABI. See [`OptionIntoWasmAbi`].
+///
+/// Soft-deprecated: new code should bound on and implement
+/// [`MaybeFromWasmAbi`]. This trait will be removed in 0.3.0.
 ///
 /// # ⚠️ Unstable
 ///
@@ -512,6 +521,9 @@ use core::marker::Sized;
 /// Trait for element types to implement IntoWasmAbi for vectors of
 /// themselves.
 ///
+/// Soft-deprecated and unused: `Vec<T>` and `Box<[T]>` cross for every
+/// `T: IntoWasmAbi`, by the element's own ABI. It will be removed in 0.3.0.
+///
 /// # ⚠️ Unstable
 ///
 /// This is part of the internal [`convert`](crate::convert) module, **no
@@ -525,6 +537,9 @@ pub trait VectorIntoWasmAbi: WasmDescribeVector + Sized {
 
 /// Trait for element types to implement FromWasmAbi for vectors of
 /// themselves.
+///
+/// Soft-deprecated and unused: `Vec<T>` and `Box<[T]>` cross for every
+/// `T: FromWasmAbi`, by the element's own ABI. It will be removed in 0.3.0.
 ///
 /// # ⚠️ Unstable
 ///
@@ -923,9 +938,10 @@ impl<T: IntoJsGeneric + Clone> IntoJsGeneric for &T {
 /// This trait is sealed: it is implemented only for the string shapes above,
 /// each of which is guaranteed to produce a JS string on the other side.
 ///
-/// `OptionIntoWasmAbi`, `NullableIntoWasmAbi` and `VectorRefIntoWasmAbi` are
+/// `OptionIntoWasmAbi`, `NullableIntoWasmAbi` and `RefIntoWasmAbi` are
 /// supertraits so that optional and nullable string positions (`Option<T>`,
-/// `Nullable<T>`) and string slices (`&[T]`) work under the same bound. A slice arrives in JS as an `Array` of strings.
+/// `Nullable<T>`) and string slices (`&[T]`) work under the same bound. A
+/// slice arrives in JS as an `Array` of strings.
 ///
 /// This trait is experimental, like `experimental_generic_mono` itself, and
 /// may change or be removed as that feature stabilizes.
@@ -933,7 +949,7 @@ pub trait JsStringLike:
     IntoWasmAbi
     + OptionIntoWasmAbi
     + NullableIntoWasmAbi
-    + crate::convert::VectorRefIntoWasmAbi
+    + RefIntoWasmAbi
     + crate::__rt::marker::JsStringLikeSealed
 {
 }

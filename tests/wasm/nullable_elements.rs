@@ -9,7 +9,7 @@ use std::panic::AssertUnwindSafe;
 use std::rc::Rc;
 
 use js_sys::{Array, Function, JsString, Map, Number, Promise, Undefined};
-use wasm_bindgen::convert::{IntoWasmAbi, RefIntoWasmAbi, VectorRefIntoWasmAbi};
+use wasm_bindgen::convert::{IntoWasmAbi, RefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
@@ -60,7 +60,7 @@ extern "C" {
     #[wasm_bindgen(js_name = describe)]
     fn opt_nullable_strings_slice(v: Option<&[Nullable<String>]>) -> String;
     #[wasm_bindgen(experimental_generic_mono, js_name = describe)]
-    fn mono_slice<T: VectorRefIntoWasmAbi>(v: &[T]) -> String;
+    fn mono_slice<T: RefIntoWasmAbi>(v: &[T]) -> String;
 
     #[wasm_bindgen(js_name = echo)]
     fn echo_ref_nullable_opt_string(v: &Nullable<Option<String>>) -> JsValue;

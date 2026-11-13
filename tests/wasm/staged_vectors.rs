@@ -1,11 +1,9 @@
 //! Vectors whose elements own memory or JS handles, or are sequences
 //! themselves, whose glue calls into Wasm for each element. Each wrapper
-//! crosses as the type it wraps, with its vectors encoded.
+//! crosses as the type it wraps.
 
-use wasm_bindgen::convert::{
-    FromWasmAbi, IntoWasmAbi, VectorFromWasmAbi, VectorIntoWasmAbi, VectorRefIntoWasmAbi, WasmSlice,
-};
-use wasm_bindgen::describe::{inform, WasmDescribe, WasmDescribeVector, VECTOR};
+use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, WasmSlice};
+use wasm_bindgen::describe::WasmDescribe;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
@@ -37,29 +35,6 @@ macro_rules! encoded {
                 $name(<$t>::from_abi(js))
             }
         }
-
-        impl WasmDescribeVector for $name {
-            fn describe_vector() {
-                inform(VECTOR);
-                <$t>::describe();
-            }
-        }
-
-        impl VectorIntoWasmAbi for $name {
-            type Abi = WasmSlice;
-
-            fn vector_into_abi(vector: Box<[Self]>) -> WasmSlice {
-                WasmSlice::encode_owned(vector, IntoWasmAbi::into_abi)
-            }
-        }
-
-        impl VectorFromWasmAbi for $name {
-            type Abi = WasmSlice;
-
-            unsafe fn vector_from_abi(js: WasmSlice) -> Box<[Self]> {
-                js.try_decode().unwrap_or_else(|msg| wasm_bindgen::throw_str(msg))
-            }
-        }
     )*)
 }
 
@@ -87,19 +62,11 @@ impl WasmDescribe for Row {
     }
 }
 
-impl IntoWasmAbi for Row {
+impl IntoWasmAbi for &Row {
     type Abi = WasmSlice;
 
     fn into_abi(self) -> WasmSlice {
         self.0.as_slice().into_abi()
-    }
-}
-
-impl wasm_bindgen::__rt::marker::VectorRefIntoWasmAbiSealed for Row {}
-
-impl VectorRefIntoWasmAbi for Row {
-    fn slice_into_abi(slice: &[Self]) -> WasmSlice {
-        WasmSlice::encode(slice, |row| row.0.as_slice().into_abi())
     }
 }
 

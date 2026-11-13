@@ -9,7 +9,7 @@
 use std::borrow::Cow;
 
 use js_sys::JsString;
-use wasm_bindgen::convert::VectorRefIntoWasmAbi;
+use wasm_bindgen::convert::RefIntoWasmAbi;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsStringLike;
 use wasm_bindgen_test::*;
@@ -111,17 +111,17 @@ extern "C" {
     #[wasm_bindgen(js_name = thingIds, slice = array)]
     fn thing_ids_array(v: &[Thing]) -> String;
     #[wasm_bindgen(experimental_generic_mono, js_name = thingIds)]
-    fn generic_thing_ids<T: VectorRefIntoWasmAbi>(v: &[T]) -> String;
+    fn generic_thing_ids<T: RefIntoWasmAbi>(v: &[T]) -> String;
 }
 
 // Per instantiation, through the same element impls.
 #[wasm_bindgen(module = "tests/wasm/slice_elements.js")]
 extern "C" {
     #[wasm_bindgen(experimental_generic_mono, js_name = describe)]
-    fn generic<T: VectorRefIntoWasmAbi>(v: &[T]) -> String;
+    fn generic<T: RefIntoWasmAbi>(v: &[T]) -> String;
 
     #[wasm_bindgen(experimental_generic_mono, js_name = describe)]
-    fn generic_opt<T: VectorRefIntoWasmAbi>(v: Option<&[T]>) -> String;
+    fn generic_opt<T: RefIntoWasmAbi>(v: Option<&[T]>) -> String;
 
     #[wasm_bindgen(experimental_generic_mono, js_name = describe)]
     fn js_strings(v: &[impl JsStringLike]) -> String;

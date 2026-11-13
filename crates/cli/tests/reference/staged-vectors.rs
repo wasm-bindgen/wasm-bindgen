@@ -2,12 +2,10 @@
 // themselves. An element's own glue calls into Wasm, so JS reads and writes
 // each cell through the memory as it is then, and releases what the cells
 // already written own should a later element throw. Each wrapper crosses as
-// the type it wraps, with its vectors encoded.
+// the type it wraps.
 
-use wasm_bindgen::convert::{
-    FromWasmAbi, IntoWasmAbi, VectorFromWasmAbi, VectorIntoWasmAbi, WasmSlice,
-};
-use wasm_bindgen::describe::{inform, WasmDescribe, WasmDescribeVector, VECTOR};
+use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi};
+use wasm_bindgen::describe::WasmDescribe;
 use wasm_bindgen::prelude::*;
 
 macro_rules! encoded {
@@ -33,29 +31,6 @@ macro_rules! encoded {
 
             unsafe fn from_abi(js: Self::Abi) -> Self {
                 $name(<$t>::from_abi(js))
-            }
-        }
-
-        impl WasmDescribeVector for $name {
-            fn describe_vector() {
-                inform(VECTOR);
-                <$t>::describe();
-            }
-        }
-
-        impl VectorIntoWasmAbi for $name {
-            type Abi = WasmSlice;
-
-            fn vector_into_abi(vector: Box<[Self]>) -> WasmSlice {
-                WasmSlice::encode_owned(vector, IntoWasmAbi::into_abi)
-            }
-        }
-
-        impl VectorFromWasmAbi for $name {
-            type Abi = WasmSlice;
-
-            unsafe fn vector_from_abi(js: WasmSlice) -> Box<[Self]> {
-                js.try_decode().unwrap_or_else(|msg| wasm_bindgen::throw_str(msg))
             }
         }
     )*)

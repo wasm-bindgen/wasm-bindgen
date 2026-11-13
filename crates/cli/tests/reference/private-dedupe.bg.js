@@ -147,7 +147,13 @@ export function b_levels() {
  */
 export function b_statuses() {
     const ret = wasm.b_statuses();
-    var v1 = getArrayJsValueFromWasm0(ret[0], ret[1]);
+    const v1 = [];
+    let p1 = ret[0];
+    p1 = p1 >>> 0;
+    const view1 = getDataViewMemory0();
+    for (const end1 = p1 + ret[1] * 4; p1 < end1; p1 += 4) {
+        v1.push(Status2.__wrap(view1.getInt32(p1 + 0, true)));
+    }
     wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
     return v1;
 }

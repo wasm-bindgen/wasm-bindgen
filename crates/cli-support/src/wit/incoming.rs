@@ -200,6 +200,8 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Result(_) |
             // Only on imported function arguments
             Descriptor::SeqMode(..) |
+            // Only on sequence elements
+            Descriptor::Cell(_) |
             // Always behind a `Ref`
             Descriptor::Slice(_) => bail!(
                 "unsupported argument type for calling Rust function from JS: {arg:?}"
@@ -271,7 +273,12 @@ impl InstructionBuilder<'_, '_> {
                     &[ptr_ty.clone(), ptr_ty],
                 );
             }
-            Descriptor::Slice(_) => {
+            Descriptor::Slice(inner) => {
+                // An encoded element's slice is received as the owned vector
+                // it anchors in, so it crosses like one.
+                if let (false, Descriptor::Cell(elem)) = (mutable, &**inner) {
+                    return self.incoming_encoded_vector(elem, false, OptionKind::Option);
+                }
                 // like strings, this allocation is cleaned up after being
                 // received in Rust.
                 let kind = arg.vector_kind().ok_or_else(|| {
@@ -641,6 +648,36 @@ impl InstructionBuilder<'_, '_> {
         optional: bool,
         option_kind: OptionKind,
     ) -> Result<(), Error> {
+        if let Some(kind) = elem.typed_cell() {
+            let malloc = self.cx.malloc()?;
+            let free = self.cx.free()?;
+            let mem = self.cx.memory()?;
+            let ptr_ty = self.incoming_internal_word_ty();
+            let (ty, instr) = if optional {
+                (
+                    AdapterType::Vector(kind.clone()).option_kind(option_kind),
+                    Instruction::OptionVector {
+                        kind,
+                        malloc,
+                        free,
+                        mem,
+                        option_kind,
+                    },
+                )
+            } else {
+                (
+                    AdapterType::Vector(kind.clone()),
+                    Instruction::VectorToMemory {
+                        kind,
+                        malloc,
+                        free,
+                        mem,
+                    },
+                )
+            };
+            self.instruction(&[ty], instr, &[ptr_ty.clone(), ptr_ty]);
+            return Ok(());
+        }
         let mut encode = InstructionBuilder {
             input: Vec::new(),
             output: Vec::new(),

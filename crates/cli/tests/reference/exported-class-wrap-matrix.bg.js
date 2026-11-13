@@ -7,12 +7,6 @@ export class Animal {
         AnimalFinalization.register(obj, { __wbg_ptr_Animal: obj.__wbg_ptr_Animal }, obj);
         return obj;
     }
-    static __unwrap(jsValue) {
-        if (jsValue.__wbg_ptr !== jsValue.__wbg_ptr_Animal) {
-            return 0;
-        }
-        return jsValue.__destroy_into_raw();
-    }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
@@ -56,12 +50,6 @@ export class Dog extends Animal {
 
         DogFinalization.register(obj, { __wbg_ptr_Dog: obj.__wbg_ptr_Dog, __wbg_ptr_Animal: obj.__wbg_ptr_Animal }, obj);
         return obj;
-    }
-    static __unwrap(jsValue) {
-        if (jsValue.__wbg_ptr !== jsValue.__wbg_ptr_Dog) {
-            return 0;
-        }
-        return jsValue.__destroy_into_raw();
     }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
@@ -114,12 +102,6 @@ export class Reserve extends wild__Habitat {
         ReserveFinalization.register(obj, { __wbg_ptr_Reserve: obj.__wbg_ptr_Reserve, __wbg_ptr_wild__Habitat: obj.__wbg_ptr_wild__Habitat }, obj);
         return obj;
     }
-    static __unwrap(jsValue) {
-        if (jsValue.__wbg_ptr !== jsValue.__wbg_ptr_Reserve) {
-            return 0;
-        }
-        return jsValue.__destroy_into_raw();
-    }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
@@ -169,12 +151,6 @@ export class Vehicle {
         VehicleFinalization.register(obj, { __wbg_ptr_Vehicle: obj.__wbg_ptr_Vehicle }, obj);
         return obj;
     }
-    static __unwrap(jsValue) {
-        if (jsValue.__wbg_ptr !== jsValue.__wbg_ptr_Vehicle) {
-            return 0;
-        }
-        return jsValue.__destroy_into_raw();
-    }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
@@ -218,12 +194,6 @@ class garden__Derived extends zoo__Base {
 
         garden__DerivedFinalization.register(obj, { __wbg_ptr_garden__Derived: obj.__wbg_ptr_garden__Derived, __wbg_ptr_zoo__Base: obj.__wbg_ptr_zoo__Base }, obj);
         return obj;
-    }
-    static __unwrap(jsValue) {
-        if (jsValue.__wbg_ptr !== jsValue.__wbg_ptr_garden__Derived) {
-            return 0;
-        }
-        return jsValue.__destroy_into_raw();
     }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
@@ -360,12 +330,6 @@ class nsa__Widget {
         nsa__WidgetFinalization.register(obj, obj.__wbg_ptr, obj);
         return obj;
     }
-    static __unwrap(jsValue) {
-        if (!(jsValue instanceof nsa__Widget)) {
-            return 0;
-        }
-        return jsValue.__destroy_into_raw();
-    }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
@@ -404,8 +368,31 @@ nsa.Widget = nsa__Widget;
  * @returns {number}
  */
 export function readAnimals(animals) {
-    const ptr0 = passArrayJsValueToWasm0(animals, wasm.__wbindgen_malloc);
-    const len0 = WASM_VECTOR_LEN;
+    let j0 = 0, len0, ptr0;
+    try {
+        len0 = animals.length;
+        ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
+        for (; j0 < len0; j0++) {
+            const e0 = animals[j0];
+            if (!(e0 instanceof Animal)) throw new Error('array contains a value of the wrong type');
+            _assertClass(e0, Animal);
+            if (e0.__wbg_ptr !== e0.__wbg_ptr_Animal) { throw new TypeError('expected exact instance of Animal; a wasm-bindgen descendant cannot be consumed by-value as its ancestor'); }
+            var ptr1 = e0.__destroy_into_raw();
+            const view0 = getDataViewMemory0();
+            const p0 = ptr0 + j0 * 4;
+            view0.setInt32(p0 + 0, ptr1, true);
+        }
+    } catch (e) {
+        if (ptr0) {
+            for (let k2 = 0; k2 < j0; k2++) {
+                const cell2 = ptr0 + k2 * 4;
+                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
+                if (w2_0) wasm.__wbg_animal_free(w2_0, 1);
+            }
+            wasm.__wbindgen_free(ptr0, len0 * 4, 4);
+        }
+        throw e;
+    }
     const ret = wasm.readAnimals(ptr0, len0);
     return ret >>> 0;
 }
@@ -415,8 +402,31 @@ export function readAnimals(animals) {
  * @returns {number}
  */
 export function readBases(bases) {
-    const ptr0 = passArrayJsValueToWasm0(bases, wasm.__wbindgen_malloc);
-    const len0 = WASM_VECTOR_LEN;
+    let j0 = 0, len0, ptr0;
+    try {
+        len0 = bases.length;
+        ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
+        for (; j0 < len0; j0++) {
+            const e0 = bases[j0];
+            if (!(e0 instanceof zoo__Base)) throw new Error('array contains a value of the wrong type');
+            _assertClass(e0, zoo__Base);
+            if (e0.__wbg_ptr !== e0.__wbg_ptr_zoo__Base) { throw new TypeError('expected exact instance of zoo__Base; a wasm-bindgen descendant cannot be consumed by-value as its ancestor'); }
+            var ptr1 = e0.__destroy_into_raw();
+            const view0 = getDataViewMemory0();
+            const p0 = ptr0 + j0 * 4;
+            view0.setInt32(p0 + 0, ptr1, true);
+        }
+    } catch (e) {
+        if (ptr0) {
+            for (let k2 = 0; k2 < j0; k2++) {
+                const cell2 = ptr0 + k2 * 4;
+                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
+                if (w2_0) wasm.__wbg_zoo__base_free(w2_0, 1);
+            }
+            wasm.__wbindgen_free(ptr0, len0 * 4, 4);
+        }
+        throw e;
+    }
     const ret = wasm.readBases(ptr0, len0);
     return ret >>> 0;
 }
@@ -426,8 +436,31 @@ export function readBases(bases) {
  * @returns {number}
  */
 export function readCars(cars) {
-    const ptr0 = passArrayJsValueToWasm0(cars, wasm.__wbindgen_malloc);
-    const len0 = WASM_VECTOR_LEN;
+    let j0 = 0, len0, ptr0;
+    try {
+        len0 = cars.length;
+        ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
+        for (; j0 < len0; j0++) {
+            const e0 = cars[j0];
+            if (!(e0 instanceof Car)) throw new Error('array contains a value of the wrong type');
+            _assertClass(e0, Car);
+            if (e0.__wbg_ptr !== e0.__wbg_ptr_Car) { throw new TypeError('expected exact instance of Car; a wasm-bindgen descendant cannot be consumed by-value as its ancestor'); }
+            var ptr1 = e0.__destroy_into_raw();
+            const view0 = getDataViewMemory0();
+            const p0 = ptr0 + j0 * 4;
+            view0.setInt32(p0 + 0, ptr1, true);
+        }
+    } catch (e) {
+        if (ptr0) {
+            for (let k2 = 0; k2 < j0; k2++) {
+                const cell2 = ptr0 + k2 * 4;
+                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
+                if (w2_0) wasm.__wbg_car_free(w2_0, 1);
+            }
+            wasm.__wbindgen_free(ptr0, len0 * 4, 4);
+        }
+        throw e;
+    }
     const ret = wasm.readCars(ptr0, len0);
     return ret >>> 0;
 }
@@ -437,8 +470,31 @@ export function readCars(cars) {
  * @returns {number}
  */
 export function readDeriveds(deriveds) {
-    const ptr0 = passArrayJsValueToWasm0(deriveds, wasm.__wbindgen_malloc);
-    const len0 = WASM_VECTOR_LEN;
+    let j0 = 0, len0, ptr0;
+    try {
+        len0 = deriveds.length;
+        ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
+        for (; j0 < len0; j0++) {
+            const e0 = deriveds[j0];
+            if (!(e0 instanceof garden__Derived)) throw new Error('array contains a value of the wrong type');
+            _assertClass(e0, garden__Derived);
+            if (e0.__wbg_ptr !== e0.__wbg_ptr_garden__Derived) { throw new TypeError('expected exact instance of garden__Derived; a wasm-bindgen descendant cannot be consumed by-value as its ancestor'); }
+            var ptr1 = e0.__destroy_into_raw();
+            const view0 = getDataViewMemory0();
+            const p0 = ptr0 + j0 * 4;
+            view0.setInt32(p0 + 0, ptr1, true);
+        }
+    } catch (e) {
+        if (ptr0) {
+            for (let k2 = 0; k2 < j0; k2++) {
+                const cell2 = ptr0 + k2 * 4;
+                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
+                if (w2_0) wasm.__wbg_garden__derived_free(w2_0, 1);
+            }
+            wasm.__wbindgen_free(ptr0, len0 * 4, 4);
+        }
+        throw e;
+    }
     const ret = wasm.readDeriveds(ptr0, len0);
     return ret >>> 0;
 }
@@ -460,8 +516,31 @@ export function readDog(d) {
  * @returns {number}
  */
 export function readDogs(dogs) {
-    const ptr0 = passArrayJsValueToWasm0(dogs, wasm.__wbindgen_malloc);
-    const len0 = WASM_VECTOR_LEN;
+    let j0 = 0, len0, ptr0;
+    try {
+        len0 = dogs.length;
+        ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
+        for (; j0 < len0; j0++) {
+            const e0 = dogs[j0];
+            if (!(e0 instanceof Dog)) throw new Error('array contains a value of the wrong type');
+            _assertClass(e0, Dog);
+            if (e0.__wbg_ptr !== e0.__wbg_ptr_Dog) { throw new TypeError('expected exact instance of Dog; a wasm-bindgen descendant cannot be consumed by-value as its ancestor'); }
+            var ptr1 = e0.__destroy_into_raw();
+            const view0 = getDataViewMemory0();
+            const p0 = ptr0 + j0 * 4;
+            view0.setInt32(p0 + 0, ptr1, true);
+        }
+    } catch (e) {
+        if (ptr0) {
+            for (let k2 = 0; k2 < j0; k2++) {
+                const cell2 = ptr0 + k2 * 4;
+                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
+                if (w2_0) wasm.__wbg_dog_free(w2_0, 1);
+            }
+            wasm.__wbindgen_free(ptr0, len0 * 4, 4);
+        }
+        throw e;
+    }
     const ret = wasm.readDogs(ptr0, len0);
     return ret >>> 0;
 }
@@ -471,8 +550,31 @@ export function readDogs(dogs) {
  * @returns {number}
  */
 export function readHabitats(habitats) {
-    const ptr0 = passArrayJsValueToWasm0(habitats, wasm.__wbindgen_malloc);
-    const len0 = WASM_VECTOR_LEN;
+    let j0 = 0, len0, ptr0;
+    try {
+        len0 = habitats.length;
+        ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
+        for (; j0 < len0; j0++) {
+            const e0 = habitats[j0];
+            if (!(e0 instanceof wild__Habitat)) throw new Error('array contains a value of the wrong type');
+            _assertClass(e0, wild__Habitat);
+            if (e0.__wbg_ptr !== e0.__wbg_ptr_wild__Habitat) { throw new TypeError('expected exact instance of wild__Habitat; a wasm-bindgen descendant cannot be consumed by-value as its ancestor'); }
+            var ptr1 = e0.__destroy_into_raw();
+            const view0 = getDataViewMemory0();
+            const p0 = ptr0 + j0 * 4;
+            view0.setInt32(p0 + 0, ptr1, true);
+        }
+    } catch (e) {
+        if (ptr0) {
+            for (let k2 = 0; k2 < j0; k2++) {
+                const cell2 = ptr0 + k2 * 4;
+                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
+                if (w2_0) wasm.__wbg_wild__habitat_free(w2_0, 1);
+            }
+            wasm.__wbindgen_free(ptr0, len0 * 4, 4);
+        }
+        throw e;
+    }
     const ret = wasm.readHabitats(ptr0, len0);
     return ret >>> 0;
 }
@@ -482,8 +584,31 @@ export function readHabitats(habitats) {
  * @returns {number}
  */
 export function readReserves(reserves) {
-    const ptr0 = passArrayJsValueToWasm0(reserves, wasm.__wbindgen_malloc);
-    const len0 = WASM_VECTOR_LEN;
+    let j0 = 0, len0, ptr0;
+    try {
+        len0 = reserves.length;
+        ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
+        for (; j0 < len0; j0++) {
+            const e0 = reserves[j0];
+            if (!(e0 instanceof Reserve)) throw new Error('array contains a value of the wrong type');
+            _assertClass(e0, Reserve);
+            if (e0.__wbg_ptr !== e0.__wbg_ptr_Reserve) { throw new TypeError('expected exact instance of Reserve; a wasm-bindgen descendant cannot be consumed by-value as its ancestor'); }
+            var ptr1 = e0.__destroy_into_raw();
+            const view0 = getDataViewMemory0();
+            const p0 = ptr0 + j0 * 4;
+            view0.setInt32(p0 + 0, ptr1, true);
+        }
+    } catch (e) {
+        if (ptr0) {
+            for (let k2 = 0; k2 < j0; k2++) {
+                const cell2 = ptr0 + k2 * 4;
+                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
+                if (w2_0) wasm.__wbg_reserve_free(w2_0, 1);
+            }
+            wasm.__wbindgen_free(ptr0, len0 * 4, 4);
+        }
+        throw e;
+    }
     const ret = wasm.readReserves(ptr0, len0);
     return ret >>> 0;
 }
@@ -493,8 +618,31 @@ export function readReserves(reserves) {
  * @returns {number}
  */
 export function readVehicles(vehicles) {
-    const ptr0 = passArrayJsValueToWasm0(vehicles, wasm.__wbindgen_malloc);
-    const len0 = WASM_VECTOR_LEN;
+    let j0 = 0, len0, ptr0;
+    try {
+        len0 = vehicles.length;
+        ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
+        for (; j0 < len0; j0++) {
+            const e0 = vehicles[j0];
+            if (!(e0 instanceof Vehicle)) throw new Error('array contains a value of the wrong type');
+            _assertClass(e0, Vehicle);
+            if (e0.__wbg_ptr !== e0.__wbg_ptr_Vehicle) { throw new TypeError('expected exact instance of Vehicle; a wasm-bindgen descendant cannot be consumed by-value as its ancestor'); }
+            var ptr1 = e0.__destroy_into_raw();
+            const view0 = getDataViewMemory0();
+            const p0 = ptr0 + j0 * 4;
+            view0.setInt32(p0 + 0, ptr1, true);
+        }
+    } catch (e) {
+        if (ptr0) {
+            for (let k2 = 0; k2 < j0; k2++) {
+                const cell2 = ptr0 + k2 * 4;
+                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
+                if (w2_0) wasm.__wbg_vehicle_free(w2_0, 1);
+            }
+            wasm.__wbindgen_free(ptr0, len0 * 4, 4);
+        }
+        throw e;
+    }
     const ret = wasm.readVehicles(ptr0, len0);
     return ret >>> 0;
 }
@@ -515,8 +663,30 @@ export function readWidget(w) {
  * @returns {number}
  */
 export function readWidgets(widgets) {
-    const ptr0 = passArrayJsValueToWasm0(widgets, wasm.__wbindgen_malloc);
-    const len0 = WASM_VECTOR_LEN;
+    let j0 = 0, len0, ptr0;
+    try {
+        len0 = widgets.length;
+        ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
+        for (; j0 < len0; j0++) {
+            const e0 = widgets[j0];
+            if (!(e0 instanceof nsa__Widget)) throw new Error('array contains a value of the wrong type');
+            _assertClass(e0, nsa__Widget);
+            var ptr1 = e0.__destroy_into_raw();
+            const view0 = getDataViewMemory0();
+            const p0 = ptr0 + j0 * 4;
+            view0.setInt32(p0 + 0, ptr1, true);
+        }
+    } catch (e) {
+        if (ptr0) {
+            for (let k2 = 0; k2 < j0; k2++) {
+                const cell2 = ptr0 + k2 * 4;
+                const w2_0 = getDataViewMemory0().getInt32(cell2 + 0, true) >>> 0;
+                if (w2_0) wasm.__wbg_nsa__widget_free(w2_0, 1);
+            }
+            wasm.__wbindgen_free(ptr0, len0 * 4, 4);
+        }
+        throw e;
+    }
     const ret = wasm.readWidgets(ptr0, len0);
     return ret >>> 0;
 }
@@ -529,12 +699,6 @@ class wild__Habitat {
 
         wild__HabitatFinalization.register(obj, { __wbg_ptr_wild__Habitat: obj.__wbg_ptr_wild__Habitat }, obj);
         return obj;
-    }
-    static __unwrap(jsValue) {
-        if (jsValue.__wbg_ptr !== jsValue.__wbg_ptr_wild__Habitat) {
-            return 0;
-        }
-        return jsValue.__destroy_into_raw();
     }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
@@ -580,12 +744,6 @@ class zoo__Base {
 
         zoo__BaseFinalization.register(obj, { __wbg_ptr_zoo__Base: obj.__wbg_ptr_zoo__Base }, obj);
         return obj;
-    }
-    static __unwrap(jsValue) {
-        if (jsValue.__wbg_ptr !== jsValue.__wbg_ptr_zoo__Base) {
-            return 0;
-        }
-        return jsValue.__destroy_into_raw();
     }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
@@ -634,12 +792,6 @@ export class Car extends Vehicle {
         CarFinalization.register(obj, { __wbg_ptr_Car: obj.__wbg_ptr_Car, __wbg_ptr_Vehicle: obj.__wbg_ptr_Vehicle }, obj);
         return obj;
     }
-    static __unwrap(jsValue) {
-        if (jsValue.__wbg_ptr !== jsValue.__wbg_ptr_Car) {
-            return 0;
-        }
-        return jsValue.__destroy_into_raw();
-    }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
@@ -686,72 +838,36 @@ export function __wbg_animal_new(arg0) {
     const ret = Animal.__wrap(arg0);
     return ret;
 }
-export function __wbg_animal_unwrap(arg0) {
-    const ret = Animal.__unwrap(arg0);
-    return ret;
-}
 export function __wbg_car_new(arg0) {
     const ret = Car.__wrap(arg0);
-    return ret;
-}
-export function __wbg_car_unwrap(arg0) {
-    const ret = Car.__unwrap(arg0);
     return ret;
 }
 export function __wbg_dog_new(arg0) {
     const ret = Dog.__wrap(arg0);
     return ret;
 }
-export function __wbg_dog_unwrap(arg0) {
-    const ret = Dog.__unwrap(arg0);
-    return ret;
-}
 export function __wbg_garden__derived_new(arg0) {
     const ret = garden__Derived.__wrap(arg0);
-    return ret;
-}
-export function __wbg_garden__derived_unwrap(arg0) {
-    const ret = garden__Derived.__unwrap(arg0);
     return ret;
 }
 export function __wbg_nsa__widget_new(arg0) {
     const ret = nsa__Widget.__wrap(arg0);
     return ret;
 }
-export function __wbg_nsa__widget_unwrap(arg0) {
-    const ret = nsa__Widget.__unwrap(arg0);
-    return ret;
-}
 export function __wbg_reserve_new(arg0) {
     const ret = Reserve.__wrap(arg0);
-    return ret;
-}
-export function __wbg_reserve_unwrap(arg0) {
-    const ret = Reserve.__unwrap(arg0);
     return ret;
 }
 export function __wbg_vehicle_new(arg0) {
     const ret = Vehicle.__wrap(arg0);
     return ret;
 }
-export function __wbg_vehicle_unwrap(arg0) {
-    const ret = Vehicle.__unwrap(arg0);
-    return ret;
-}
 export function __wbg_wild__habitat_new(arg0) {
     const ret = wild__Habitat.__wrap(arg0);
     return ret;
 }
-export function __wbg_wild__habitat_unwrap(arg0) {
-    const ret = wild__Habitat.__unwrap(arg0);
-    return ret;
-}
 export function __wbg_zoo__base_new(arg0) {
     const ret = zoo__Base.__wrap(arg0);
-    return ret;
-}
-export function __wbg_zoo__base_unwrap(arg0) {
-    const ret = zoo__Base.__unwrap(arg0);
     return ret;
 }
 export function __wbindgen_init_externref_table() {
@@ -803,12 +919,6 @@ const zoo__BaseFinalization = (typeof FinalizationRegistry === 'undefined')
     : new FinalizationRegistry((tok) => { wasm.__wbg_zoo__base_free(tok.__wbg_ptr_zoo__Base >>> 0, 1);
 });
 
-function addToExternrefTable0(obj) {
-    const idx = wasm.__externref_table_alloc();
-    wasm.__wbindgen_externrefs.set(idx, obj);
-    return idx;
-}
-
 function _assertClass(instance, klass) {
     if (!(instance instanceof klass)) {
         throw new Error(`expected instance of ${klass.name}`);
@@ -836,16 +946,6 @@ function getUint8ArrayMemory0() {
     return cachedUint8ArrayMemory0;
 }
 
-function passArrayJsValueToWasm0(array, malloc) {
-    const ptr = malloc(array.length * 4, 4) >>> 0;
-    for (let i = 0; i < array.length; i++) {
-        const add = addToExternrefTable0(array[i]);
-        getDataViewMemory0().setUint32(ptr + 4 * i, add, true);
-    }
-    WASM_VECTOR_LEN = array.length;
-    return ptr;
-}
-
 let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true });
 cachedTextDecoder.decode();
 const MAX_SAFARI_DECODE_BYTES = 2146435072;
@@ -859,8 +959,6 @@ function decodeText(bytes) {
     }
     return cachedTextDecoder.decode(bytes);
 }
-
-let WASM_VECTOR_LEN = 0;
 
 
 let wasm;

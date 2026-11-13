@@ -3337,10 +3337,19 @@ fn emscripten_private_class_references_are_deps() {
                  Secret { value }.into()
              }",
         ),
-        // `Vec<Secret>` from JS goes through an import shim that calls
+        // `Secret::try_from_js_value` goes through an import shim that calls
         // `Secret.__unwrap`.
         (
             "import_unwrap",
+            "#[wasm_bindgen]
+             pub fn unwrap_secret(secret: JsValue) -> Option<u32> {
+                 use wasm_bindgen::convert::TryFromJsValue;
+                 Secret::try_from_js_value(secret).ok().map(|s| s.value)
+             }",
+        ),
+        // A `Vec<Secret>` from JS checks each element against the class.
+        (
+            "export_vec",
             "#[wasm_bindgen]
              pub fn sum_secrets(secrets: Vec<Secret>) -> u32 {
                  secrets.iter().map(|s| s.value).sum()
