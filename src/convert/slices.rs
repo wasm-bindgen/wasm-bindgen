@@ -596,8 +596,8 @@ macro_rules! __wbindgen_encoded_sequence {
 }
 
 // Under `wasm_bindgen_unstable_generic_vec`, every sequence crosses by its
-// element's own ABI, so a borrowed element only needs `&T` to cross, which
-// `$encode` gives.
+// element's own ABI, so a borrowed element only needs `&T` to cross, which an
+// enum declares itself.
 #[cfg(wasm_bindgen_unstable_generic_vec)]
 #[macro_export]
 #[doc(hidden)]
@@ -616,18 +616,7 @@ macro_rules! __wbindgen_encoded_sequence {
     ($t:ty, $encode:expr, [$($side:ident),+ $(,)?]) => {
         $($crate::__wbindgen_encoded_sequence!(@$side $t, $encode);)+
     };
-    (@ref_into $t:ty, $encode:expr) => {
-        #[automatically_derived]
-        impl<'a> $crate::convert::IntoWasmAbi for &'a $t {
-            type Abi = <$t as $crate::convert::IntoWasmAbi>::Abi;
-
-            #[inline]
-            fn into_abi(self) -> Self::Abi {
-                let encode: fn(&'a $t) -> Self::Abi = $encode;
-                encode(self)
-            }
-        }
-    };
+    (@ref_into $t:ty, $encode:expr) => {};
     (@into $t:ty, $encode:expr) => {};
     (@from $t:ty, $encode:expr) => {};
 }

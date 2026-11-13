@@ -281,7 +281,7 @@ mod owned {
         #[wasm_bindgen(js_name = describe)]
         fn nullable_strings(v: Vec<Nullable<String>>) -> String;
         #[wasm_bindgen(js_name = describe)]
-        fn opt_nullable_u8s(v: Vec<Option<Nullable<u8>>>) -> String;
+        fn nullable_opt_u8s(v: Vec<Nullable<Option<u8>>>) -> String;
         #[wasm_bindgen(js_name = echo)]
         fn echo_opt_f64s(v: Vec<Option<f64>>) -> Vec<Option<f64>>;
         #[wasm_bindgen(js_name = echo)]
@@ -291,11 +291,11 @@ mod owned {
         #[wasm_bindgen(js_name = echo)]
         fn echo_nullable_opaques(v: Vec<Nullable<Opaque>>) -> Vec<Nullable<Opaque>>;
         #[wasm_bindgen(js_name = echo)]
-        fn echo_opt_nullable_opaques(
-            v: Vec<Option<Nullable<Opaque>>>,
-        ) -> Vec<Option<Nullable<Opaque>>>;
+        fn echo_nullable_opt_opaques(
+            v: Vec<Nullable<Option<Opaque>>>,
+        ) -> Vec<Nullable<Option<Opaque>>>;
         #[wasm_bindgen(js_name = describe)]
-        fn describe_opt_nullable_opaques(v: Vec<Option<Nullable<Opaque>>>) -> String;
+        fn describe_nullable_opt_opaques(v: Vec<Nullable<Option<Opaque>>>) -> String;
         #[wasm_bindgen(js_name = echo)]
         fn echo_opt_byte_vecs(v: Vec<Option<Vec<u8>>>) -> Vec<Option<Vec<u8>>>;
     }
@@ -319,7 +319,11 @@ mod owned {
             "Array:[\"a\",null]"
         );
         assert_eq!(
-            opt_nullable_u8s(vec![Some(Nullable::Value(7)), Some(Nullable::Null), None]),
+            nullable_opt_u8s(vec![
+                Nullable::Value(Some(7)),
+                Nullable::Null,
+                Nullable::Value(None)
+            ]),
             "Array:[7,null,\"undefined\"]"
         );
         assert_eq!(echo_opt_f64s(vec![Some(1.5), None]), vec![Some(1.5), None]);
@@ -344,16 +348,16 @@ mod owned {
         assert!(matches!(v[0], Nullable::Null));
         assert!(matches!(&v[1], Nullable::Value(o) if text(o) == "b"));
 
-        let v = echo_opt_nullable_opaques(vec![
-            Some(Nullable::Value(opaque("c"))),
-            Some(Nullable::Null),
-            None,
+        let v = echo_nullable_opt_opaques(vec![
+            Nullable::Value(Some(opaque("c"))),
+            Nullable::Null,
+            Nullable::Value(None),
         ]);
-        assert!(matches!(&v[0], Some(Nullable::Value(o)) if text(o) == "c"));
-        assert!(matches!(v[1], Some(Nullable::Null)));
-        assert!(v[2].is_none());
+        assert!(matches!(&v[0], Nullable::Value(Some(o)) if text(o) == "c"));
+        assert!(matches!(v[1], Nullable::Null));
+        assert!(matches!(v[2], Nullable::Value(None)));
         assert_eq!(
-            describe_opt_nullable_opaques(vec![Some(Nullable::Null), None]),
+            describe_nullable_opt_opaques(vec![Nullable::Null, Nullable::Value(None)]),
             "Array:[null,\"undefined\"]"
         );
     }
