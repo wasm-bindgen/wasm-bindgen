@@ -49,6 +49,7 @@ export function bytes(v) {
  * @returns {boolean[]}
  */
 export function flags(v) {
+    if (v.length > 536870911) throw new Error('invalid malloc request');
     let len0, ptr0;
     try {
         len0 = v.length;
@@ -172,6 +173,7 @@ export function imports() {
  * @returns {Uint8Array[]}
  */
 export function nested(v) {
+    if (v.length > 268435455) throw new Error('invalid malloc request');
     for (let n0 = 0; n0 < v.length; n0++) {
         const e0 = v[n0];
         if (!Array.isArray(e0) && !ArrayBuffer.isView(e0)) throw new Error('array contains a value of the wrong type');
@@ -241,6 +243,7 @@ export function nested(v) {
  * @returns {(number | undefined)[]}
  */
 export function opt_bytes(v) {
+    if (v.length > 536870911) throw new Error('invalid malloc request');
     let len0, ptr0;
     try {
         len0 = v.length;
@@ -277,6 +280,7 @@ export function opt_bytes(v) {
  * @returns {(any | undefined)[]}
  */
 export function opt_foos(v) {
+    if (v.length > 536870911) throw new Error('invalid malloc request');
     let j0 = 0, len0, ptr0;
     try {
         len0 = v.length;
@@ -332,6 +336,7 @@ export function opt_foos(v) {
  * @returns {Point[]}
  */
 export function points(v) {
+    if (v.length > 536870911) throw new Error('invalid malloc request');
     for (let n0 = 0; n0 < v.length; n0++) {
         const e0 = v[n0];
         if (!(e0 instanceof Point) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
@@ -398,6 +403,7 @@ export function points(v) {
  * @returns {string[]}
  */
 export function strings(v) {
+    if (v.length > 268435455) throw new Error('invalid malloc request');
     for (let n0 = 0; n0 < v.length; n0++) {
         const e0 = v[n0];
         if (typeof e0 !== 'string') throw new Error('array contains a value of the wrong type');
@@ -484,6 +490,7 @@ export function values(v) {
  * @returns {bigint[]}
  */
 export function wide(v) {
+    if (v.length > 134217727) throw new Error('invalid malloc request');
     let len0, ptr0;
     try {
         len0 = v.length;
@@ -540,6 +547,7 @@ export function __wbg_give_opt_bytes_60d73cb3d49a34f5(arg0) {
     const ret = give_opt_bytes();
     let len1, ptr1;
     try {
+        if (ret.length > 536870911) throw new Error('invalid malloc request');
         len1 = ret.length;
         ptr1 = wasm.__wbindgen_malloc(len1 * 4, 4) >>> 0;
         const view1 = getDataViewMemory0();
@@ -559,6 +567,7 @@ export function __wbg_give_opt_foos_89f792e16b863db6(arg0) {
     const ret = give_opt_foos();
     let j1 = 0, len1, ptr1;
     try {
+        if (ret.length > 536870911) throw new Error('invalid malloc request');
         len1 = ret.length;
         ptr1 = wasm.__wbindgen_malloc(len1 * 4, 4) >>> 0;
         for (; j1 < len1; j1++) {
@@ -588,6 +597,7 @@ export function __wbg_give_strings_6da2627b8b5e4e91(arg0) {
     const ret = give_strings();
     let j1 = 0, len1, ptr1;
     try {
+        if (ret.length > 268435455) throw new Error('invalid malloc request');
         for (let n1 = 0; n1 < ret.length; n1++) {
             const e1 = ret[n1];
             if (typeof e1 !== 'string') throw new Error('array contains a value of the wrong type');

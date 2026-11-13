@@ -27,6 +27,7 @@ export function driver() {
  * @returns {(number | undefined)[]}
  */
 export function maybe_bytes(v) {
+    if (v.length > 536870911) throw new Error('invalid malloc request');
     let len0, ptr0;
     try {
         len0 = v.length;
@@ -63,6 +64,7 @@ export function maybe_bytes(v) {
  * @returns {(any | undefined)[]}
  */
 export function maybe_foos(v) {
+    if (v.length > 536870911) throw new Error('invalid malloc request');
     let j0 = 0, len0, ptr0;
     try {
         len0 = v.length;
@@ -118,6 +120,7 @@ export function maybe_foos(v) {
  * @returns {(string | undefined)[] | undefined}
  */
 export function maybe_names(v) {
+    if (!isLikeNone(v) && v.length > 268435455) throw new Error('invalid malloc request');
     if (!isLikeNone(v)) {
         for (let n0 = 0; n0 < v.length; n0++) {
             const e0 = v[n0];
@@ -198,6 +201,7 @@ export function maybe_names(v) {
  * @returns {(Point | null | undefined)[]}
  */
 export function maybe_nullable_points(v) {
+    if (v.length > 536870911) throw new Error('invalid malloc request');
     for (let n0 = 0; n0 < v.length; n0++) {
         const e0 = v[n0];
         if (!isLikeNone(e0)) {
@@ -271,6 +275,7 @@ export function maybe_nullable_points(v) {
  * @returns {(Point | undefined)[]}
  */
 export function maybe_points(v) {
+    if (v.length > 536870911) throw new Error('invalid malloc request');
     for (let n0 = 0; n0 < v.length; n0++) {
         const e0 = v[n0];
         if (!isLikeNone(e0)) {
@@ -344,6 +349,7 @@ export function maybe_points(v) {
  * @returns {string[]}
  */
 export function names(v) {
+    if (v.length > 268435455) throw new Error('invalid malloc request');
     for (let n0 = 0; n0 < v.length; n0++) {
         const e0 = v[n0];
         if (typeof e0 !== 'string') throw new Error('array contains a value of the wrong type');
@@ -413,9 +419,11 @@ export function names(v) {
  * @returns {((any | undefined)[] | undefined)[]}
  */
 export function nested_maybe_foos(v) {
+    if (v.length > 268435455) throw new Error('invalid malloc request');
     for (let n0 = 0; n0 < v.length; n0++) {
         const e0 = v[n0];
         if (!isLikeNone(e0) && !Array.isArray(e0) && !ArrayBuffer.isView(e0)) throw new Error('array contains a value of the wrong type');
+        if (!isLikeNone(e0) && e0.length > 536870911) throw new Error('invalid malloc request');
     }
     let j0 = 0, len0, ptr0;
     try {
@@ -424,6 +432,7 @@ export function nested_maybe_foos(v) {
         for (; j0 < len0; j0++) {
             const e0 = v[j0];
             if (!isLikeNone(e0) && !Array.isArray(e0) && !ArrayBuffer.isView(e0)) throw new Error('array contains a value of the wrong type');
+            if (!isLikeNone(e0) && e0.length > 536870911) throw new Error('invalid malloc request');
             let j1 = 0, ptr1 = 0, len1 = 0;
             try {
                 if (!isLikeNone(e0)) {
@@ -531,9 +540,11 @@ export function nested_maybe_foos(v) {
  * @returns {(string[])[]}
  */
 export function nested_names(v) {
+    if (v.length > 268435455) throw new Error('invalid malloc request');
     for (let n0 = 0; n0 < v.length; n0++) {
         const e0 = v[n0];
         if (!Array.isArray(e0) && !ArrayBuffer.isView(e0)) throw new Error('array contains a value of the wrong type');
+        if (e0.length > 268435455) throw new Error('invalid malloc request');
         for (let n1 = 0; n1 < e0.length; n1++) {
             const e1 = e0[n1];
             if (typeof e1 !== 'string') throw new Error('array contains a value of the wrong type');
@@ -546,6 +557,7 @@ export function nested_names(v) {
         for (; j0 < len0; j0++) {
             const e0 = v[j0];
             if (!Array.isArray(e0) && !ArrayBuffer.isView(e0)) throw new Error('array contains a value of the wrong type');
+            if (e0.length > 268435455) throw new Error('invalid malloc request');
             let j1 = 0, len1, ptr1;
             try {
                 len1 = e0.length;
@@ -661,6 +673,7 @@ export function nested_names(v) {
  * @returns {(any | null)[]}
  */
 export function nullable_foos(v) {
+    if (v.length > 536870911) throw new Error('invalid malloc request');
     let j0 = 0, len0, ptr0;
     try {
         len0 = v.length;
@@ -716,6 +729,7 @@ export function nullable_foos(v) {
  * @returns {(Point | null)[]}
  */
 export function nullable_points(v) {
+    if (v.length > 536870911) throw new Error('invalid malloc request');
     for (let n0 = 0; n0 < v.length; n0++) {
         const e0 = v[n0];
         if (e0 !== null) {
@@ -799,6 +813,7 @@ export function __wbg_js_maybe_foos_0a6988fff2da253a(arg0, arg1, arg2) {
         const ret = js_maybe_foos(v0);
         let j3 = 0, len3, ptr3;
         try {
+            if (ret.length > 536870911) throw new Error('invalid malloc request');
             len3 = ret.length;
             ptr3 = wasm.__wbindgen_malloc(len3 * 4, 4) >>> 0;
             for (; j3 < len3; j3++) {
@@ -851,6 +866,7 @@ export function __wbg_js_maybe_points_a502c96988d34bc0(arg0, arg1, arg2) {
         const ret = js_maybe_points(v0);
         let j4 = 0, len4, ptr4;
         try {
+            if (ret.length > 536870911) throw new Error('invalid malloc request');
             for (let n4 = 0; n4 < ret.length; n4++) {
                 const e4 = ret[n4];
                 if (!isLikeNone(e4)) {
@@ -918,6 +934,7 @@ export function __wbg_js_names_8202f1528d646c9a(arg0, arg1, arg2) {
         const ret = js_names(v0);
         let j3 = 0, len3, ptr3;
         try {
+            if (ret.length > 268435455) throw new Error('invalid malloc request');
             for (let n3 = 0; n3 < ret.length; n3++) {
                 const e3 = ret[n3];
                 if (typeof e3 !== 'string') throw new Error('array contains a value of the wrong type');

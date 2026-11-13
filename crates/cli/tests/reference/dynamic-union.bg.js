@@ -95,6 +95,7 @@ export function echo_wrapper(w) {
  * @returns {Wrapper[]}
  */
 export function echo_wrappers(list) {
+    if (list.length > 536870911) throw new Error('invalid malloc request');
     let j0 = 0, len0, ptr0;
     try {
         len0 = list.length;

@@ -61,6 +61,7 @@ export class NamespaceConsumer {
      * @returns {bar__Point[]}
      */
     duplicate_bar_points(points) {
+        if (points.length > 536870911) throw new Error('invalid malloc request');
         for (let n0 = 0; n0 < points.length; n0++) {
             const e0 = points[n0];
             if (!(e0 instanceof bar__Point) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
@@ -126,6 +127,7 @@ export class NamespaceConsumer {
      * @returns {foo__Point[]}
      */
     duplicate_foo_points(points) {
+        if (points.length > 536870911) throw new Error('invalid malloc request');
         for (let n0 = 0; n0 < points.length; n0++) {
             const e0 = points[n0];
             if (!(e0 instanceof foo__Point) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
@@ -306,6 +308,7 @@ export class NamespaceConsumer {
      * @param {bar__Point[]} bar_points
      */
     set bar_points(bar_points) {
+        if (bar_points.length > 536870911) throw new Error('invalid malloc request');
         for (let n0 = 0; n0 < bar_points.length; n0++) {
             const e0 = bar_points[n0];
             if (!(e0 instanceof bar__Point) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
@@ -357,6 +360,7 @@ export class NamespaceConsumer {
      * @param {foo__Point[]} foo_points
      */
     set foo_points(foo_points) {
+        if (foo_points.length > 536870911) throw new Error('invalid malloc request');
         for (let n0 = 0; n0 < foo_points.length; n0++) {
             const e0 = foo_points[n0];
             if (!(e0 instanceof foo__Point) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');

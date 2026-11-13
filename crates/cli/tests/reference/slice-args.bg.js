@@ -279,10 +279,12 @@ export function take_mut_usize(a) {
  * @param {Point[]} c
  */
 export function take_non_numbers(a, b, c) {
+    if (b.length > 268435455) throw new Error('invalid malloc request');
     for (let n1 = 0; n1 < b.length; n1++) {
         const e1 = b[n1];
         if (typeof e1 !== 'string') throw new Error('array contains a value of the wrong type');
     }
+    if (c.length > 536870911) throw new Error('invalid malloc request');
     for (let n4 = 0; n4 < c.length; n4++) {
         const e4 = c[n4];
         if (!(e4 instanceof Point) || !e4.__wbg_ptr) throw new Error('array contains a value of the wrong type');

@@ -368,6 +368,7 @@ nsa.Widget = nsa__Widget;
  * @returns {number}
  */
 export function readAnimals(animals) {
+    if (animals.length > 536870911) throw new Error('invalid malloc request');
     for (let n0 = 0; n0 < animals.length; n0++) {
         const e0 = animals[n0];
         if (!(e0 instanceof Animal) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
@@ -410,6 +411,7 @@ export function readAnimals(animals) {
  * @returns {number}
  */
 export function readBases(bases) {
+    if (bases.length > 536870911) throw new Error('invalid malloc request');
     for (let n0 = 0; n0 < bases.length; n0++) {
         const e0 = bases[n0];
         if (!(e0 instanceof zoo__Base) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
@@ -452,6 +454,7 @@ export function readBases(bases) {
  * @returns {number}
  */
 export function readCars(cars) {
+    if (cars.length > 536870911) throw new Error('invalid malloc request');
     for (let n0 = 0; n0 < cars.length; n0++) {
         const e0 = cars[n0];
         if (!(e0 instanceof Car) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
@@ -494,6 +497,7 @@ export function readCars(cars) {
  * @returns {number}
  */
 export function readDeriveds(deriveds) {
+    if (deriveds.length > 536870911) throw new Error('invalid malloc request');
     for (let n0 = 0; n0 < deriveds.length; n0++) {
         const e0 = deriveds[n0];
         if (!(e0 instanceof garden__Derived) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
@@ -548,6 +552,7 @@ export function readDog(d) {
  * @returns {number}
  */
 export function readDogs(dogs) {
+    if (dogs.length > 536870911) throw new Error('invalid malloc request');
     for (let n0 = 0; n0 < dogs.length; n0++) {
         const e0 = dogs[n0];
         if (!(e0 instanceof Dog) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
@@ -590,6 +595,7 @@ export function readDogs(dogs) {
  * @returns {number}
  */
 export function readHabitats(habitats) {
+    if (habitats.length > 536870911) throw new Error('invalid malloc request');
     for (let n0 = 0; n0 < habitats.length; n0++) {
         const e0 = habitats[n0];
         if (!(e0 instanceof wild__Habitat) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
@@ -632,6 +638,7 @@ export function readHabitats(habitats) {
  * @returns {number}
  */
 export function readReserves(reserves) {
+    if (reserves.length > 536870911) throw new Error('invalid malloc request');
     for (let n0 = 0; n0 < reserves.length; n0++) {
         const e0 = reserves[n0];
         if (!(e0 instanceof Reserve) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
@@ -674,6 +681,7 @@ export function readReserves(reserves) {
  * @returns {number}
  */
 export function readVehicles(vehicles) {
+    if (vehicles.length > 536870911) throw new Error('invalid malloc request');
     for (let n0 = 0; n0 < vehicles.length; n0++) {
         const e0 = vehicles[n0];
         if (!(e0 instanceof Vehicle) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
@@ -727,6 +735,7 @@ export function readWidget(w) {
  * @returns {number}
  */
 export function readWidgets(widgets) {
+    if (widgets.length > 536870911) throw new Error('invalid malloc request');
     for (let n0 = 0; n0 < widgets.length; n0++) {
         const e0 = widgets[n0];
         if (!(e0 instanceof nsa__Widget) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');

@@ -28,6 +28,7 @@ export const RenamedErr = Object.freeze({
  * @returns {Color[]}
  */
 export function enum_vec_echo(values) {
+    if (values.length > 268435455) throw new Error('invalid malloc request');
     let len0, ptr0;
     try {
         len0 = values.length;
@@ -64,6 +65,7 @@ export function enum_vec_echo(values) {
  * @returns {HiddenErr[]}
  */
 export function hidden_err_vec_echo(values) {
+    if (values.length > 268435455) throw new Error('invalid malloc request');
     let len0, ptr0;
     try {
         len0 = values.length;
@@ -111,6 +113,7 @@ ns.NsErr = ns__NsErr;
  * @returns {ns__NsErr[]}
  */
 export function ns_err_vec_echo(values) {
+    if (values.length > 268435455) throw new Error('invalid malloc request');
     let len0, ptr0;
     try {
         len0 = values.length;
@@ -147,6 +150,7 @@ export function ns_err_vec_echo(values) {
  * @returns {Color[] | undefined}
  */
 export function option_enum_vec_echo(values) {
+    if (!isLikeNone(values) && values.length > 268435455) throw new Error('invalid malloc request');
     let ptr0 = 0, len0 = 0;
     try {
         if (!isLikeNone(values)) {
@@ -188,6 +192,7 @@ export function option_enum_vec_echo(values) {
  * @returns {RenamedErr[]}
  */
 export function renamed_err_vec_echo(values) {
+    if (values.length > 268435455) throw new Error('invalid malloc request');
     let len0, ptr0;
     try {
         len0 = values.length;

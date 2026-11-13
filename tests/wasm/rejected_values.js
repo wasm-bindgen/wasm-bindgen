@@ -219,6 +219,26 @@ exports.rejectedNotArrays = () => {
     assert.strictEqual(wasm.rejected_returned_names(), true);
 };
 
+// A sequence whose cells come to more bytes than can be allocated is
+// rejected before anything is taken, where the size would otherwise wrap to
+// one that can.
+exports.rejectedSizes = () => {
+    const tooBig = /invalid malloc request/;
+    const a = new wasm.Kept(1);
+    for (const length of [2 ** 28, 2 ** 29, 2 ** 32 - 1]) {
+        const huge = new Array(length);
+        assert.throws(() => wasm.rejected_maybe_strings(huge), tooBig);
+        assert.throws(() => wasm.rejected_maybe_maybe_strings(huge), tooBig);
+        assert.throws(() => wasm.rejected_nested_maybe_strings([['a'], huge]), tooBig);
+        assert.throws(() => wasm.rejected_named(a, huge), tooBig);
+        assert.strictEqual(a.value, 1);
+    }
+    a.free();
+    assert.strictEqual(wasm.rejected_maybe_strings(['a', undefined]), 2);
+    assert.strictEqual(wasm.rejected_maybe_maybe_strings(['a', undefined]), 2);
+    assert.strictEqual(wasm.rejected_nested_maybe_strings([['a'], [undefined]]), 2);
+};
+
 exports.jsNotNames = () => 'notarray';
 
 exports.jsTakesMixed = (points) => points.forEach(point => point.free());

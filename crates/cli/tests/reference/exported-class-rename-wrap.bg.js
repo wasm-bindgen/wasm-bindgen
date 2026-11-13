@@ -48,6 +48,7 @@ export function makeRenamed(value) {
  * @returns {number}
  */
 export function readRenameds(renameds) {
+    if (renameds.length > 536870911) throw new Error('invalid malloc request');
     for (let n0 = 0; n0 < renameds.length; n0++) {
         const e0 = renameds[n0];
         if (!(e0 instanceof Renamed) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');

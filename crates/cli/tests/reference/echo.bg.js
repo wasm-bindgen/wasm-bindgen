@@ -357,6 +357,7 @@ export function echo_option_vec_i8(a) {
  * @returns {string[] | undefined}
  */
 export function echo_option_vec_string(a) {
+    if (!isLikeNone(a) && a.length > 268435455) throw new Error('invalid malloc request');
     if (!isLikeNone(a)) {
         for (let n0 = 0; n0 < a.length; n0++) {
             const e0 = a[n0];
@@ -433,6 +434,7 @@ export function echo_option_vec_string(a) {
  * @returns {Foo[] | undefined}
  */
 export function echo_option_vec_struct(a) {
+    if (!isLikeNone(a) && a.length > 536870911) throw new Error('invalid malloc request');
     if (!isLikeNone(a)) {
         for (let n0 = 0; n0 < a.length; n0++) {
             const e0 = a[n0];
@@ -834,6 +836,7 @@ export function echo_vec_i8(a) {
  * @returns {string[]}
  */
 export function echo_vec_string(a) {
+    if (a.length > 268435455) throw new Error('invalid malloc request');
     for (let n0 = 0; n0 < a.length; n0++) {
         const e0 = a[n0];
         if (typeof e0 !== 'string') throw new Error('array contains a value of the wrong type');
@@ -903,6 +906,7 @@ export function echo_vec_string(a) {
  * @returns {Foo[]}
  */
 export function echo_vec_struct(a) {
+    if (a.length > 536870911) throw new Error('invalid malloc request');
     for (let n0 = 0; n0 < a.length; n0++) {
         const e0 = a[n0];
         if (!(e0 instanceof Foo) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');

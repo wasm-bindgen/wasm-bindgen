@@ -67,6 +67,7 @@ export function roundtrip(borrowed, owned) {
  * @returns {string[]}
  */
 export function strings(input) {
+    if (input.length > 268435455) throw new Error('invalid malloc request');
     for (let n0 = 0; n0 < input.length; n0++) {
         const e0 = input[n0];
         if (typeof e0 !== 'string') throw new Error('array contains a value of the wrong type');

@@ -3715,6 +3715,21 @@ fn instruction(
                     js.check(&assert);
                 }
             }
+            let (fields, stride, align) = encoded_slice_layout(layout)?;
+            // More cells than can be allocated are rejected here, as the
+            // allocator rejects them: on wasm32 their size would otherwise
+            // wrap to one it accepts, for fewer cells than are written.
+            if !js.cx.memory64 && matches!(count, CellCount::Word) {
+                let most = i32::MAX as usize / stride;
+                let some = if *optional {
+                    format!("{} && ", js.is_some(&val, *option_kind))
+                } else {
+                    String::new()
+                };
+                js.check(&format!(
+                    "if ({some}{val}.length > {most}) throw new Error('invalid malloc request');"
+                ));
+            }
             let i = js.tmp();
             let ptr = js.local(format!("ptr{i}"));
             let e = js.local(format!("e{i}"));
@@ -3725,7 +3740,6 @@ fn instruction(
             };
             let memory = js.dataview(*mem);
             let view = js.local(format!("view{i}"));
-            let (fields, stride, align) = encoded_slice_layout(layout)?;
             // Encode one element into its words with its own instructions.
             // The buffer takes the words as a call takes its arguments: what
             // the element allocated is released should the rest of its glue
