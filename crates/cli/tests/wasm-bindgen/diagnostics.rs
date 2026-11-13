@@ -851,3 +851,24 @@ fn sequence_cannot_hold_a_mutable_slice() {
 
     assert_contains!(format!("{err:?}"), "a `&mut [T]` can't be an element");
 }
+
+/// `()` crosses as nothing, so a sequence has no cell to hold one in, which
+/// the build finds where it lays the element out.
+#[test]
+fn sequence_cannot_hold_unit() {
+    let err = Project::new("sequence_cannot_hold_unit")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen]
+                pub fn units() -> JsValue {
+                    JsValue::from(vec![(), ()])
+                }
+            "#,
+        )
+        .build_err();
+
+    assert_contains!(err, "a sequence's element must cross as at least one word");
+}

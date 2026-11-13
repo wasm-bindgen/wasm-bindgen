@@ -5,7 +5,7 @@
 | Yes | No | No | Yes | Yes | Yes | A JavaScript `Array` object |
 
 You can pass boxed slices and `Vec`s to and from JS of any type that can be
-passed on its own, other than `()`, which crosses as nothing, including:
+passed on its own, including:
 
 - `JsValue`s.
 - Imported JavaScript types.
@@ -17,6 +17,11 @@ passed on its own, other than `()`, which crosses as nothing, including:
   reaches JS as a copy.
 - `Option<T>` and `Nullable<T>` of any of these, and of numbers.
 - Other `Vec`s.
+
+Three types that can be passed on their own can't be an element: `()`, which
+crosses as nothing, a `&mut [T]`, whose copy JS's writes would never leave,
+and a borrowed closure (`&dyn Fn()`) in a value Rust returns, which outlives
+the call the closure is lent for.
 
 Imported JS types and `JsValue`s are passed as their handles. Every other
 element is converted the same way a single value of that type is. A `String`
