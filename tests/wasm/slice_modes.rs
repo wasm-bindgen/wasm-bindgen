@@ -453,3 +453,30 @@ fn modes_apply_to_a_typed_cell() {
     assert_eq!(joined_array_safe_slice(&safe()), "Array:1,2");
     assert_eq!(kind_of_alias_safe_slice(&safe()), "Array");
 }
+
+#[wasm_bindgen(js_name = slice_modes_lent_bytes)]
+pub fn lent_bytes() -> Vec<&'static [u8]> {
+    vec![&[1, 2], &[3]]
+}
+
+#[wasm_bindgen(js_name = slice_modes_maybe_lent_bytes)]
+pub fn maybe_lent_bytes() -> Vec<Option<&'static [u8]>> {
+    vec![Some(&[1, 2]), None]
+}
+
+#[wasm_bindgen(js_name = slice_modes_nested_lent_floats)]
+pub fn nested_lent_floats() -> Vec<Vec<&'static [f64]>> {
+    vec![vec![&[1.5]], vec![]]
+}
+
+#[wasm_bindgen(module = "tests/wasm/slice_modes.js")]
+extern "C" {
+    fn js_returned_bytes_are_copies();
+    fn js_lent_bytes_are_views(bytes: Vec<&[u8]>) -> bool;
+}
+
+#[wasm_bindgen_test]
+fn a_return_lends_nothing() {
+    js_returned_bytes_are_copies();
+    assert!(js_lent_bytes_are_views(vec![&[1, 2], &[3]]));
+}

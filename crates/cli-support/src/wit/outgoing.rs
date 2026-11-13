@@ -281,7 +281,7 @@ impl InstructionBuilder<'_, '_> {
                     Instruction::View {
                         kind: kind.clone(),
                         mem,
-                        mode: self.seq_value,
+                        mode: self.lent_mode(),
                     },
                     &[AdapterType::Vector(kind)],
                 );
@@ -774,7 +774,7 @@ impl InstructionBuilder<'_, '_> {
                     Instruction::OptionView {
                         kind: kind.clone(),
                         mem,
-                        mode: self.seq_value,
+                        mode: self.lent_mode(),
                         option_kind,
                     },
                     &[AdapterType::Vector(kind).option_kind(option_kind)],
@@ -1017,6 +1017,15 @@ impl InstructionBuilder<'_, '_> {
             Instruction::OptionF64Sentinel { kind },
             &[ty.option_kind(kind)],
         );
+    }
+
+    /// The mode a lent numeric sequence reaches JS in. One held by a value
+    /// that Rust returns is copied, as the value outlives what lent it.
+    fn lent_mode(&self) -> SeqValue {
+        match self.seq_value {
+            SeqValue::View if self.stored && self.returned => SeqValue::Copy,
+            mode => mode,
+        }
     }
 
     fn outgoing_internal_word_ty(&self) -> AdapterType {

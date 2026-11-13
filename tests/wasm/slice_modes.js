@@ -1,3 +1,4 @@
+const wasm = require('wasm-bindgen-test.js');
 const assert = require('assert');
 
 // `:fresh` means the value owns its entire backing buffer (a copy), `:view`
@@ -55,3 +56,23 @@ exports.Sink = class Sink {
         return describe(v);
     }
 };
+
+const isView = (v) => v.buffer.byteLength > v.byteLength;
+
+// What Rust returns is JS's, so nothing in it is a view of what Rust lent.
+exports.js_returned_bytes_are_copies = () => {
+    const bytes = wasm.slice_modes_lent_bytes();
+    assert.deepStrictEqual(bytes.map(b => Array.from(b)), [[1, 2], [3]]);
+    assert.ok(bytes.every(b => b instanceof Uint8Array && !isView(b)));
+    const maybe = wasm.slice_modes_maybe_lent_bytes();
+    assert.deepStrictEqual(Array.from(maybe[0]), [1, 2]);
+    assert.strictEqual(maybe[1], undefined);
+    assert.ok(!isView(maybe[0]));
+    const nested = wasm.slice_modes_nested_lent_floats();
+    assert.deepStrictEqual(nested.map(v => v.map(f => Array.from(f))), [[[1.5]], []]);
+    assert.ok(nested[0][0] instanceof Float64Array && !isView(nested[0][0]));
+};
+
+// While an argument's elements are lent as the argument itself would be.
+exports.js_lent_bytes_are_views = (bytes) =>
+    bytes.length === 2 && bytes.every(b => b instanceof Uint8Array && isView(b));
