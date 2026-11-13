@@ -114,6 +114,26 @@ pub fn rejected_points_then_chars(_a: Vec<Kept>, _b: &Kept, _c: Vec<char>) {}
 pub fn rejected_points_then_maybe_chars(_a: Vec<Kept>, _b: Vec<Option<char>>) {}
 
 #[wasm_bindgen]
+pub fn rejected_names(v: Vec<String>) -> usize {
+    v.len()
+}
+
+#[wasm_bindgen]
+pub fn rejected_boxed_names(v: Box<[String]>) -> usize {
+    v.len()
+}
+
+#[wasm_bindgen]
+pub fn rejected_maybe_names(v: Option<Vec<String>>) -> usize {
+    v.map_or(0, |v| v.len())
+}
+
+#[wasm_bindgen]
+pub fn rejected_returned_names() -> bool {
+    js_not_names().is_err()
+}
+
+#[wasm_bindgen]
 pub fn rejected_named(_a: Kept, _names: Vec<String>) -> String {
     String::new()
 }
@@ -174,6 +194,10 @@ extern "C" {
     fn rejected_keeps_the_stack();
     #[wasm_bindgen(js_name = rejectedChangedValues)]
     fn rejected_changed_values(memory: JsValue);
+    #[wasm_bindgen(js_name = rejectedNotArrays)]
+    fn rejected_not_arrays();
+    #[wasm_bindgen(catch, js_name = jsNotNames)]
+    fn js_not_names() -> Result<Vec<String>, JsValue>;
     #[wasm_bindgen(js_name = failedDecodes)]
     fn failed_decodes(memory: JsValue);
     #[wasm_bindgen(catch, js_name = jsBadPoints)]
@@ -208,6 +232,11 @@ fn arguments_keep_the_stack() {
 #[wasm_bindgen_test]
 fn arguments_read_again() {
     rejected_changed_values(wasm_bindgen::memory());
+}
+
+#[wasm_bindgen_test]
+fn arguments_not_arrays() {
+    rejected_not_arrays();
 }
 
 #[wasm_bindgen_test]

@@ -194,6 +194,26 @@ exports.rejectedChangedValues = (memory) => {
     assert.strictEqual(live(), before);
 };
 
+// A debug build's glue rejects what isn't an array, where a string would
+// otherwise be taken as its characters and a number as no values.
+exports.rejectedNotArrays = () => {
+    if (process.env.WASM_BINDGEN_NO_DEBUG != null) return;
+    const notArray = /expected an array, found/;
+    for (const v of ['ab', 5, {}, true]) {
+        assert.throws(() => wasm.rejected_names(v), notArray);
+        assert.throws(() => wasm.rejected_boxed_names(v), notArray);
+        assert.throws(() => wasm.rejected_maybe_names(v), notArray);
+        assert.throws(() => wasm.rejected_points(v), notArray);
+    }
+    assert.throws(() => wasm.rejected_names(null), notArray);
+    assert.strictEqual(wasm.rejected_maybe_names(undefined), 0);
+    assert.strictEqual(wasm.rejected_maybe_names(null), 0);
+    assert.strictEqual(wasm.rejected_maybe_names(['a']), 1);
+    assert.strictEqual(wasm.rejected_returned_names(), true);
+};
+
+exports.jsNotNames = () => 'notarray';
+
 let returned = [];
 
 exports.jsBadPoints = () => {

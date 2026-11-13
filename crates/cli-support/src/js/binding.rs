@@ -3526,6 +3526,17 @@ fn instruction(
             let val = js.pop();
             // Whether the values are held by an input of this glue's scope.
             let held_by_input = !js.instr.reads_local;
+            // A held sequence is checked as one in every build.
+            if js.cx.config.debug && !js.stored && matches!(count, CellCount::Word) {
+                js.cx.expose_assert_array_like();
+                let assert = format!("_assertArrayLike({val});");
+                if *optional {
+                    let some = js.is_some(&val, *option_kind);
+                    js.check(&format!("if ({some}) {{\n{assert}\n}}"));
+                } else {
+                    js.check(&assert);
+                }
+            }
             let i = js.tmp();
             let ptr = js.local(format!("ptr{i}"));
             let e = js.local(format!("e{i}"));
