@@ -70,3 +70,8 @@ exports.callFailedDecodes = () => {
         TextDecoder.prototype.decode = decode;
     }
 };
+
+exports.callRejectedBeside = () => {
+    const item = new wasm.HighItem(5);
+    assert.throws(() => wasm.high_takes_beside(item, [item]), /wrong type/);
+};

@@ -235,7 +235,7 @@ export function maybe_nullable_points(v) {
             for (let k2 = 0; k2 < j0; k2++) {
                 const cell2 = ptr0 + k2 * 4;
                 const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
-                if (w2_0> 1) {
+                if (w2_0 >>> 0 > 1) {
                     wasm.__wbg_point_free(w2_0, 1);
                     view2 = getDataViewMemory0();
                 }
@@ -263,7 +263,7 @@ export function maybe_nullable_points(v) {
             for (let k6 = 0; k6 < ret[1]; k6++) {
                 const cell6 = b4 + k6 * 4;
                 const w6_0 = view6.getInt32(cell6 + 0, true) >>> 0;
-                if (w6_0> 1) {
+                if (w6_0 >>> 0 > 1) {
                     wasm.__wbg_point_free(w6_0, 1);
                     view6 = getDataViewMemory0();
                 }
@@ -769,7 +769,7 @@ export function nullable_points(v) {
             for (let k2 = 0; k2 < j0; k2++) {
                 const cell2 = ptr0 + k2 * 4;
                 const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
-                if (w2_0> 1) {
+                if (w2_0 >>> 0 > 1) {
                     wasm.__wbg_point_free(w2_0, 1);
                     view2 = getDataViewMemory0();
                 }
@@ -797,7 +797,7 @@ export function nullable_points(v) {
             for (let k6 = 0; k6 < ret[1]; k6++) {
                 const cell6 = b4 + k6 * 4;
                 const w6_0 = view6.getInt32(cell6 + 0, true) >>> 0;
-                if (w6_0> 1) {
+                if (w6_0 >>> 0 > 1) {
                     wasm.__wbg_point_free(w6_0, 1);
                     view6 = getDataViewMemory0();
                 }

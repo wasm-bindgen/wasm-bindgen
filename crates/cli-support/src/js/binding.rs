@@ -1495,9 +1495,14 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             },
             Owner::Class { class, nullable } => {
                 let free = self.class_free(class);
-                let owned = if *nullable { "> 1" } else { "" };
+                // A pointer word is signed until coerced, and 1 is the null.
+                let held = if *nullable {
+                    format!("{ptr}{} > 1", self.cx.coerce_ptr_suffix())
+                } else {
+                    ptr.clone()
+                };
                 Release {
-                    held: Some(format!("{ptr}{owned}")),
+                    held: Some(held),
                     calls: format!("{free}({ptr}, 1);"),
                     style: ReleaseStyle::Bare,
                     calls_wasm: true,
@@ -1740,12 +1745,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         let i = self.tmp();
         let taken = self.local(format!("taken{i}"));
         writeln!(self.pre_try, "let {taken} = false;").unwrap();
-        let mut release = self.release_of(owner, &[word.to_string()], None);
-        // The word is as Wasm passed it, signed.
-        if matches!(owner, Owner::Class { nullable: true, .. }) {
-            release.held = Some(format!("{word}{} > 1", self.cx.coerce_ptr_suffix()));
-        }
-        let release = release.stmt();
+        let release = self.release_of(owner, &[word.to_string()], None).stmt();
         self.finally(&format!("if (!{taken}) {{\n{release}\n}}"));
         self.push(format!("({taken} = true, {take})"));
     }

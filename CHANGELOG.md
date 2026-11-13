@@ -18,8 +18,8 @@
   [#5446](https://github.com/wasm-bindgen/wasm-bindgen/pull/5446)
 
 * `Vec<T>` and `Box<[T]>` cross for every `T` that crosses on its own, and
-  `&[T]` for every `T` whose `&T` does, by the element's own
-  `IntoWasmAbi` / `FromWasmAbi`. `Vec<Option<T>>`, `Vec<Nullable<T>>`,
+  `&[T]` as an imported function's argument for every `T` whose `&T` does,
+  by the element's own `IntoWasmAbi` / `FromWasmAbi`. `Vec<Option<T>>`, `Vec<Nullable<T>>`,
   `Vec<Vec<T>>` and vectors of types with hand-written conversions newly
   cross, in arguments, returns and `JsValue::from`, and `&[Closure<T>]` as
   an imported function's argument. A borrowed slice of numbers held by a

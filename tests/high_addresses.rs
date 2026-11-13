@@ -166,6 +166,8 @@ extern "C" {
     fn item_after_caught(v: Vec<String>, item: Nullable<HighItem>) -> Result<(), JsValue>;
     #[wasm_bindgen(js_name = callFailedDecodes)]
     fn js_failed_decodes();
+    #[wasm_bindgen(js_name = callRejectedBeside)]
+    fn js_rejected_beside();
     #[wasm_bindgen(js_name = echo)]
     fn bytes(v: Vec<u8>) -> Vec<u8>;
     #[wasm_bindgen(js_name = echo)]
@@ -299,6 +301,19 @@ fn a_failed_decode_frees_the_instance_beside_it() {
     }
     for _ in 0..3 {
         balanced(js_failed_decodes);
+    }
+}
+
+#[wasm_bindgen]
+pub fn high_takes_beside(_first: Nullable<HighItem>, _rest: Vec<HighItem>) {}
+
+#[wasm_bindgen_test]
+fn a_rejected_sequence_frees_the_instance_taken_ahead_of_it() {
+    if !high() {
+        return;
+    }
+    for _ in 0..3 {
+        balanced(js_rejected_beside);
     }
 }
 
