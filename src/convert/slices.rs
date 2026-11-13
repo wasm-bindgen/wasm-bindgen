@@ -451,8 +451,12 @@ impl WasmSlice {
         };
         let mut elems = Vec::with_capacity(cells.len);
         let mut rejected = None;
-        for i in 0..cells.len {
-            match T::try_from_abi(T::Abi::read_cell(cells.ptr.add(i * T::Abi::CELL.size()))) {
+        let mut rest = Rest::<T> {
+            cells: &cells,
+            next: 0,
+        };
+        while let Some(elem) = rest.receive() {
+            match elem {
                 Ok(elem) if rejected.is_none() => elems.push(elem),
                 Ok(_) => {}
                 Err(msg) => rejected = rejected.or(Some(msg)),
@@ -462,6 +466,30 @@ impl WasmSlice {
             Some(msg) => Err(msg),
             None => Ok(elems.into_boxed_slice()),
         }
+    }
+}
+
+/// The cells of a sequence JS gave that are yet to be received. Dropping it
+/// receives them, so that a conversion that unwinds leaves none behind.
+struct Rest<'a, T: FromWasmAbi> {
+    cells: &'a Cells<T::Abi>,
+    next: usize,
+}
+
+impl<T: FromWasmAbi> Rest<'_, T> {
+    fn receive(&mut self) -> Option<Result<T, &'static str>> {
+        if self.next == self.cells.len {
+            return None;
+        }
+        let cell = unsafe { self.cells.ptr.add(self.next * T::Abi::CELL.size()) };
+        self.next += 1;
+        Some(unsafe { T::try_from_abi(T::Abi::read_cell(cell)) })
+    }
+}
+
+impl<T: FromWasmAbi> Drop for Rest<'_, T> {
+    fn drop(&mut self) {
+        while self.receive().is_some() {}
     }
 }
 

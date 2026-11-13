@@ -495,3 +495,39 @@ mod shadow_stack {
         assert_eq!(drift, 0, "shadow stack lost {drift} bytes to 64 panics");
     }
 }
+
+mod sequences {
+    use std::panic::{catch_unwind, AssertUnwindSafe};
+    use std::sync::atomic::{AtomicU32, Ordering::Relaxed};
+    use wasm_bindgen::convert::{FromWasmAbi, WasmSlice};
+    use wasm_bindgen::describe::WasmDescribe;
+    use wasm_bindgen_test::wasm_bindgen_test;
+
+    static RECEIVED: AtomicU32 = AtomicU32::new(0);
+
+    struct Probe;
+
+    impl WasmDescribe for Probe {
+        fn describe() {}
+    }
+
+    impl FromWasmAbi for Probe {
+        type Abi = u32;
+
+        unsafe fn from_abi(js: u32) -> Self {
+            RECEIVED.fetch_add(1, Relaxed);
+            assert_ne!(js, 1, "expected panic");
+            Probe
+        }
+    }
+
+    /// Rust owns every cell JS gave it, so the ones after an element whose
+    /// conversion unwinds are still received.
+    #[wasm_bindgen_test]
+    fn a_sequence_is_received_whole_when_an_element_unwinds() {
+        let cells = WasmSlice::encode(&[0u32, 1, 2, 3], |n| *n);
+        let decoded = catch_unwind(AssertUnwindSafe(|| unsafe { cells.try_decode::<Probe>() }));
+        assert!(decoded.is_err());
+        assert_eq!(RECEIVED.load(Relaxed), 4);
+    }
+}

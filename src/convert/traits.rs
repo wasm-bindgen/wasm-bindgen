@@ -120,7 +120,10 @@ pub trait FromWasmAbi: WasmDescribe {
     /// A throw runs no destructors, so the generated wrappers convert every
     /// argument with this and throw only once all of them are released.
     /// Implementations must release anything `js` owns before returning an
-    /// error.
+    /// error. One that throws or panics instead, here, in `from_abi` or in
+    /// `IntoWasmAbi::into_abi`, leaves unreleased whatever its caller still
+    /// held or had already converted, such as the other elements of a
+    /// sequence it is in.
     ///
     /// # Safety
     ///
