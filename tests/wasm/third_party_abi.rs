@@ -198,7 +198,7 @@ pub fn third_party_point_ref(point: &Point) -> f64 {
     point.x + point.y
 }
 
-fn point(x: f64, y: f64) -> Point {
+pub(crate) fn point(x: f64, y: f64) -> Point {
     Point { x, y }
 }
 

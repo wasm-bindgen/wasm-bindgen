@@ -34,6 +34,7 @@ pub mod closures;
 pub mod comments;
 pub mod duplicate_deps;
 pub mod duplicates;
+pub mod element_matrix;
 pub mod enum_vecs;
 pub mod enums;
 #[path = "final.rs"]
