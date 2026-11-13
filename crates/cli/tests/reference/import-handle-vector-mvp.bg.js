@@ -60,6 +60,38 @@ export function __wbg_takes_beside_8e50eaf734ab6671(arg0, arg1, arg2, arg3) {
         }
     }
 }
+export function __wbg_takes_nullable_beside_7c4d16b33d8ab86c(arg0, arg1, arg2) {
+    const b0 = arg0 >>> 0;
+    let taken2 = false;
+    try {
+        const v0 = [];
+        let p0 = b0;
+        const view0 = getDataViewMemory0();
+        for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
+            const w0_0 = view0.getInt32(p0 + 0, true);
+            const w0_1 = view0.getInt32(p0 + 4, true);
+            v0.push(getStringFromWasm0(w0_0, w0_1));
+        }
+        takes_nullable_beside(v0, (taken2 = true, arg2 === 1 ? null : Item.__wrap(arg2)));
+    } finally {
+        if (b0) {
+            let view1 = getDataViewMemory0();
+            for (let k1 = 0; k1 < arg1; k1++) {
+                const cell1 = b0 + k1 * 8;
+                const w1_0 = view1.getInt32(cell1 + 0, true) >>> 0;
+                const w1_1 = view1.getInt32(cell1 + 4, true) >>> 0;
+                if (w1_0) {
+                    wasm.__wbindgen_free(w1_0, w1_1 * 1, 1);
+                    view1 = getDataViewMemory0();
+                }
+            }
+            wasm.__wbindgen_free(b0, arg1 * 8, 4);
+        }
+        if (!taken2) {
+            if (arg2 >>> 0 > 1) wasm.__wbg_item_free(arg2, 1);
+        }
+    }
+}
 export function __wbg_takes_optional_values_81c81c200e75d4b6(arg0, arg1) {
     try {
         let v0;

@@ -160,6 +160,12 @@ extern "C" {
     fn opt_items(v: Option<Vec<HighItem>>) -> Option<Vec<HighItem>>;
     #[wasm_bindgen(js_name = second)]
     fn item_beside(item: HighItem, v: Vec<String>) -> Vec<String>;
+    #[wasm_bindgen(js_name = freeSecond)]
+    fn item_after(v: Vec<String>, item: Nullable<HighItem>);
+    #[wasm_bindgen(catch, js_name = freeSecond)]
+    fn item_after_caught(v: Vec<String>, item: Nullable<HighItem>) -> Result<(), JsValue>;
+    #[wasm_bindgen(js_name = callFailedDecodes)]
+    fn js_failed_decodes();
     #[wasm_bindgen(js_name = echo)]
     fn bytes(v: Vec<u8>) -> Vec<u8>;
     #[wasm_bindgen(js_name = echo)]
@@ -267,6 +273,32 @@ fn an_import_is_given_instances() {
         balanced(|| assert_eq!(opt_items(Some(given())), Some(given())));
         balanced(|| assert_eq!(opt_items(None), None));
         balanced(|| assert_eq!(item_beside(HighItem::new(3), vec![s("x")]), [s("x")]));
+        balanced(|| item_after(vec![s("x")], Nullable::Value(HighItem::new(4))));
+        balanced(|| item_after(vec![s("x")], Nullable::Null));
+    }
+}
+
+/// Whether the import failed, which without `catch` this doesn't return
+/// from.
+#[wasm_bindgen]
+pub fn high_gives_item_after(caught: bool) -> bool {
+    let names = vec![s("a")];
+    let item = Nullable::Value(HighItem::new(4));
+    if caught {
+        item_after_caught(names, item).is_err()
+    } else {
+        item_after(names, item);
+        false
+    }
+}
+
+#[wasm_bindgen_test]
+fn a_failed_decode_frees_the_instance_beside_it() {
+    if !high() {
+        return;
+    }
+    for _ in 0..3 {
+        balanced(js_failed_decodes);
     }
 }
 

@@ -6,6 +6,7 @@ exports.second = (first, v) => {
     first.free();
     return v;
 };
+exports.freeSecond = (first, second) => second?.free();
 exports.count = (...args) => args.length;
 exports.fail = () => {
     throw new Error('failed');
@@ -55,4 +56,17 @@ exports.callExports = () => {
     assert.throws(() => wasm.high_rejects(names, [values, 1], item));
     assert.throws(() => wasm.high_rejects([1], [values], item));
     item.free();
+};
+
+exports.callFailedDecodes = () => {
+    const decode = TextDecoder.prototype.decode;
+    TextDecoder.prototype.decode = () => {
+        throw new Error('failed decode');
+    };
+    try {
+        assert.strictEqual(wasm.high_gives_item_after(true), true);
+        assert.throws(() => wasm.high_gives_item_after(false), /failed decode/);
+    } finally {
+        TextDecoder.prototype.decode = decode;
+    }
 };

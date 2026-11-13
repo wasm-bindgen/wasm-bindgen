@@ -1713,7 +1713,12 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         let i = self.tmp();
         let taken = self.local(format!("taken{i}"));
         writeln!(self.pre_try, "let {taken} = false;").unwrap();
-        let release = self.release_stmt(owner, &[word.to_string()], None);
+        let mut release = self.release_of(owner, &[word.to_string()], None);
+        // The word is as Wasm passed it, signed.
+        if matches!(owner, Owner::Class { nullable: true, .. }) {
+            release.held = Some(format!("{word}{} > 1", self.cx.coerce_ptr_suffix()));
+        }
+        let release = release.stmt();
         self.finally(&format!("if (!{taken}) {{\n{release}\n}}"));
         self.push(format!("({taken} = true, {take})"));
     }
