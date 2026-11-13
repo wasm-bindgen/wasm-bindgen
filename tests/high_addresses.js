@@ -15,7 +15,7 @@ exports.fill = (v) => v.fill(7);
 exports.join = (v) => v.map(String).join(',');
 exports.call = (f, v) => f(v, ['a', 'b'], new Uint8Array([1, 2, 3]));
 
-exports.exports = () => {
+exports.callExports = () => {
     const values = [1, 'two', null, { a: 1 }];
     assert.deepStrictEqual(wasm.high_values(values), values);
     assert.deepStrictEqual(wasm.high_opt_values(values), values);

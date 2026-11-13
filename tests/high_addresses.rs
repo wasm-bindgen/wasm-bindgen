@@ -74,7 +74,10 @@ fn high() -> bool {
     }
 }
 
-fn balanced(f: impl FnOnce()) {
+/// Runs `f` once for whatever it sets up on first use, and again to leave
+/// no allocation and no handle behind.
+fn balanced(f: impl Fn()) {
+    f();
     let before = (
         LIVE.load(Ordering::Relaxed),
         wasm_bindgen::externref_heap_live_count(),
@@ -185,7 +188,7 @@ extern "C" {
         f: &Closure<dyn FnMut(Vec<JsValue>, Vec<String>, Vec<u8>) -> Vec<String>>,
         v: Vec<JsValue>,
     ) -> Vec<String>;
-    #[wasm_bindgen(js_name = exports)]
+    #[wasm_bindgen(js_name = callExports)]
     fn js_exports();
 }
 
