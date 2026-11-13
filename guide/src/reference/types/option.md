@@ -20,3 +20,9 @@ caller has to tell them apart, use [`Nullable<T>`](./nullable.md) for
 `T | null` and `Nullable<Option<T>>` for `T | null | undefined`. The outer
 `Nullable` claims `null` first, so the `Option` inside is `None` only for
 `undefined`.
+
+`Option<()>` doesn't cross: `()` is `undefined`, which is what `None` is, so
+`Some(())` could not be told from `None`. It is rejected when the crate is
+compiled, and so is `Nullable<()>`, which isn't implemented. A sequence has
+no such trouble, so `Option<Vec<()>>` crosses, and an empty `Vec<()>` is
+never read as `None`.

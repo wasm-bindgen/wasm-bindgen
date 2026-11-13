@@ -28,8 +28,8 @@ sequence can't hold a `&mut [T]`, whose copy JS's writes would never leave.
 
 Only numeric elements have a choice. A sequence of anything else
 (`String`, `&str`, `bool`, `char`, exported enums, `JsValue` or imported
-JS types) always arrives as a fresh `Array`, so `array` is the only mode
-that fits it. Every [`JsStringLike`](experimental_generic_mono.md#string-bounds)
+JS types, or `()`, which is `undefined`) always arrives as a fresh `Array`,
+so `array` is the only mode that fits it. Every [`JsStringLike`](experimental_generic_mono.md#string-bounds)
 shape is a slice element, `&String`, `&Box<str>`, `&Cow<str>` and
 `&JsString` included, as is a reference to anything that can be passed by
 reference on its own: a `&[&JsValue]`, `&[Option<&str>]` or `&[&[String]]`

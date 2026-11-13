@@ -17,11 +17,18 @@ passed on its own, including:
   reaches JS as a copy.
 - `Option<T>` and `Nullable<T>` of any of these, and of numbers.
 - Other `Vec`s.
+- `()`, which is `undefined`.
 
-Three types that can be passed on their own can't be an element: `()`, which
-crosses as nothing, a `&mut [T]`, whose copy JS's writes would never leave,
-and a borrowed closure (`&dyn Fn()`) in a value Rust returns or converts
-with `JsValue::from`, which outlives the call the closure is lent for.
+Two types that can be passed on their own can't be an element: a
+`&mut [T]`, whose copy JS's writes would never leave, and a borrowed closure
+(`&dyn Fn()`) in a value Rust returns or converts with `JsValue::from`,
+which outlives the call the closure is lent for.
+
+A `Vec<()>` is an `Array` of `undefined`, typed `undefined[]`. Only its
+length crosses, so nothing is allocated in wasm memory for one, and coming
+into Rust every element is checked to be `undefined`, so a `null` or any
+other value throws. An `Option<()>` can't be an element, or cross at all;
+see [`Option<T>`](option.md).
 
 Imported JS types and `JsValue`s are passed as their handles. Every other
 element is converted the same way a single value of that type is. A `String`
