@@ -101,6 +101,10 @@ pub struct JsBuilder<'a, 'b> {
     /// The Wasm interface types "stack". Expressions that aren't pure are
     /// bound in the `prelude` and pushed as locals.
     stack: Vec<Value>,
+    /// Whether Rust gives the function a sequence whose values' glue may
+    /// throw. Every buffer given with it is then freed in the `finally`,
+    /// which doesn't depend on which argument's glue threw.
+    defers_given: bool,
 }
 
 /// A statement of the function body. It is `pure` when it reads only the JS
@@ -1082,6 +1086,13 @@ impl<'p> BodyParams<'p> {
         'p: 'a,
     {
         let mut js = JsBuilder::new(cx, self.debug_name);
+        js.defers_given = self.instructions.iter().any(|i| match &i.instr {
+            Instruction::EncodedSliceLoad { .. } => true,
+            Instruction::VectorLoad { kind, .. } | Instruction::OptionVectorLoad { kind, .. } => {
+                kind.is_handles()
+            }
+            _ => false,
+        });
         if self.ctor_is_subclass {
             js.prelude("super(__wbgSuperSkip);");
         }
@@ -1206,6 +1217,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             cell: None,
             prelude: Vec::new(),
             stack: Vec::new(),
+            defers_given: false,
         }
     }
 
@@ -1792,6 +1804,20 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         self.stack.push(value);
     }
 
+    /// Whether the vector Rust gives at `ptr` is freed in the `finally`: one
+    /// of handles, which are read and only then dropped, and any other
+    /// given alongside a sequence that is.
+    fn frees_in_finally(&self, kind: &VectorKind, ptr: &str, len: &str) -> bool {
+        (kind.is_handles() || self.defers_given) && self.held_by_args(ptr, Some(len))
+    }
+
+    /// Whether `ptr` and `len` are arguments of the function itself, which
+    /// its `finally` can read whatever the body got to.
+    fn held_by_args(&self, ptr: &str, len: Option<&str>) -> bool {
+        let arg = |word: &str| self.args.iter().any(|arg| arg.expr() == word);
+        !self.stored && arg(ptr) && len.is_none_or(arg)
+    }
+
     fn class_free(&mut self, class: &str) -> String {
         let resolved = self.cx.resolve_class_name(class).to_string();
         self.cx
@@ -2281,7 +2307,13 @@ fn instruction(
                 // accessible in the `finally` block, so we declare variables to hold the args
                 // outside of the try-finally block and then set those to the args.
                 for i in 0..params {
-                    let arg = &js.stack[js.stack.len() - params + i];
+                    let arg = js.stack[js.stack.len() - params + i].expr().to_string();
+                    // An argument of the function is there for the
+                    // `finally` whatever the body got to.
+                    if js.defers_given && js.held_by_args(&arg, None) {
+                        args.push(arg);
+                        continue;
+                    }
                     let name = format!("deferred{tmp}_{i}");
                     writeln!(js.pre_try, "let {name};").unwrap();
                     js.prelude(&format!("{name} = {arg};"));
@@ -3174,7 +3206,12 @@ fn instruction(
                 )?
             {
                 let free = js.cx.wasm_export_of(*free);
-                js.prelude(&format!("if ({ptr} !== 0) {{ {free}({ptr}, {len}, 1); }}",));
+                let free = format!("if ({ptr} !== 0) {{ {free}({ptr}, {len}, 1); }}");
+                if js.defers_given && js.held_by_args(&ptr, Some(&len)) {
+                    js.finally(&free);
+                } else {
+                    js.prelude(&free);
+                }
             }
 
             let v = js.local(format!("v{tmp}"));
@@ -3233,7 +3270,14 @@ fn instruction(
                 // A stored closure is one of many its glue makes, each
                 // with a state of its own.
                 let decl = if js.stored { "const" } else { "var" };
-                js.prelude(&format!("{decl} state{i} = {{a: {a}, b: {b}}};"));
+                let state = format!("{decl} state{i} = {{a: {a}, b: {b}}};");
+                if js.defers_given && js.held_by_args(&a, Some(&b)) {
+                    // Ahead of the `try` whose `finally` clears it.
+                    js.pre_try.push_str(&state);
+                    js.pre_try.push('\n');
+                } else {
+                    js.prelude(&state);
+                }
                 let args = (0..*nargs)
                     .map(|i| format!("arg{i}"))
                     .collect::<Vec<_>>()
@@ -3306,13 +3350,22 @@ fn instruction(
                 js.push(seq_value_expr(format!("{f}({ptr}, {len})"), kind, copy));
                 return Ok(());
             }
+            let i = js.tmp();
+            if js.frees_in_finally(kind, &ptr, &len) {
+                let f = view_from_wasm(js, kind, *mem);
+                let load = seq_value_expr(format!("{f}({ptr}, {len})"), kind, copy);
+                let release = js.vector_release(kind, *mem, *free, &ptr, &len);
+                let v = js.declare("var", format!("v{i}"), load);
+                js.finally(&release);
+                js.push(v);
+                return Ok(());
+            }
             let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem);
             // TODO(next major): default to `slice = transfer` here and in
             // `OptionVectorLoad`, once supported. It needs a view no other view
             // can be derived from, so that a finalizer can free the data:
             // https://github.com/tc39/proposal-limited-arraybuffer/issues/19.
             let load = seq_value_expr(format!("{f}({ptr}, {len})"), kind, copy);
-            let i = js.tmp();
             let free = js.cx.wasm_export_of(*free);
             let free = format!("{free}({ptr}, {len} * {size}, {size});", size = kind.size());
             if kind.is_handles() {
@@ -3348,13 +3401,15 @@ fn instruction(
                 free: *free,
             };
             let owned = js.owns(owner, &ptr)?;
-            let f = if owned {
+            let deferred = !owned && js.frees_in_finally(kind, &ptr, &len);
+            let f = if owned || deferred {
                 view_from_wasm(js, kind, *mem)
             } else {
                 js.cx.expose_get_vector_from_wasm(kind.clone(), *mem)
             };
             let load = seq_value_expr(format!("{f}({ptr}, {len})"), kind, mode);
             let i = js.tmp();
+            let release = js.vector_release(kind, *mem, *free, &ptr, &len);
             let free = js.cx.wasm_export_of(*free);
             let init = empty_vector_init(&len, *option_kind);
             let free = format!("{free}({ptr}, {len} * {size}, {size});", size = kind.size());
@@ -3362,6 +3417,9 @@ fn instruction(
             js.prelude(&format!("if ({ptr} !== 0) {{"));
             if owned {
                 js.prelude(&format!("v{i} = {load};"));
+            } else if deferred {
+                js.prelude(&format!("v{i} = {load};"));
+                js.finally(&release);
             } else if kind.is_handles() {
                 js.prelude(&format!(
                     "try {{\nv{i} = {load};\n}} finally {{\n{free}\n}}"
@@ -3438,6 +3496,9 @@ fn instruction(
                 count: *count,
             }));
             let held = js.owns(owner.clone(), &ptr)?;
+            // An argument's cells are released in the function's `finally`,
+            // whichever argument's glue threw.
+            let deferred = !held && js.held_by_args(&ptr, len.as_deref());
             let base = js.local(format!("b{i}"));
             let release = if held {
                 None
@@ -3493,17 +3554,23 @@ fn instruction(
                 format!("const {view} = {memory};")
             };
             let read = format!("{view}\n{open}\n{bind}{body}{close}\n");
-            let read = match release {
-                Some(release) => {
-                    format!("const {base} = {p};\ntry {{\n{read}}} finally {{\n{release}\n}}")
+            let (start, read) = match release {
+                Some(release) if deferred => {
+                    let coerce = js.cx.coerce_ptr_suffix();
+                    writeln!(js.pre_try, "const {base} = {ptr}{coerce};").unwrap();
+                    js.finally(&release);
+                    (format!("let {p} = {base};"), read)
                 }
-                None => read,
+                Some(release) => (
+                    format!("let {p} = {ptr};\n{coerce}"),
+                    format!("const {base} = {p};\ntry {{\n{read}}} finally {{\n{release}\n}}"),
+                ),
+                None => (format!("let {p} = {ptr};\n{coerce}"), read),
             };
             js.prelude(&format!(
                 "
                 {init}
-                let {p} = {ptr};
-                {coerce}
+                {start}
                 {read}
                 "
             ));
@@ -3526,7 +3593,7 @@ fn instruction(
             let val = js.pop();
             // Whether the values are held by an input of this glue's scope.
             let held_by_input = !js.instr.reads_local;
-            // A held sequence is checked as one in every build.
+            // A sequence that a sequence holds is checked as one in every build.
             if js.cx.config.debug && !js.stored && matches!(count, CellCount::Word) {
                 js.cx.expose_assert_array_like();
                 let assert = format!("_assertArrayLike({val});");

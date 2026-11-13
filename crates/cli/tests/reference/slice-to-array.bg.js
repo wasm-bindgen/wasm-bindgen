@@ -5,44 +5,42 @@ export function __wbg_js_block_slice_u16_351329232b16999d(arg0, arg1) {
     js_block_slice_u16(Array.from(getArrayU16FromWasm0(arg0, arg1)));
 }
 export function __wbg_js_slice_optional_string_as_array_ce9ccdb9300131fd(arg0, arg1) {
-    let v0;
-    if (arg0 !== 0) {
-        v0 = [];
-        let p0 = arg0;
-        p0 = p0 >>> 0;
-        const b0 = p0;
-        try {
+    const b0 = arg0 >>> 0;
+    try {
+        let v0;
+        if (arg0 !== 0) {
+            v0 = [];
+            let p0 = b0;
             const view0 = getDataViewMemory0();
             for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
                 const w0_0 = view0.getInt32(p0 + 0, true);
                 const w0_1 = view0.getInt32(p0 + 4, true);
                 v0.push(getStringFromWasm0(w0_0, w0_1));
             }
-        } finally {
-            if (b0) wasm.__wbindgen_free(b0, arg1 * 8, 4);
         }
+        js_slice_optional_string_as_array(v0);
+    } finally {
+        if (b0) wasm.__wbindgen_free(b0, arg1 * 8, 4);
     }
-    js_slice_optional_string_as_array(v0);
 }
 export function __wbg_js_slice_optional_u16_as_array_f119bb99afccb33c(arg0, arg1) {
     js_slice_optional_u16_as_array(arg0 === 0 ? undefined : Array.from(getArrayU16FromWasm0(arg0, arg1)));
 }
 export function __wbg_js_slice_string_as_array_03aefca66a560a29(arg0, arg1) {
-    const v0 = [];
-    let p0 = arg0;
-    p0 = p0 >>> 0;
-    const b0 = p0;
+    const b0 = arg0 >>> 0;
     try {
+        const v0 = [];
+        let p0 = b0;
         const view0 = getDataViewMemory0();
         for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
             const w0_0 = view0.getInt32(p0 + 0, true);
             const w0_1 = view0.getInt32(p0 + 4, true);
             v0.push(getStringFromWasm0(w0_0, w0_1));
         }
+        js_slice_string_as_array(v0);
     } finally {
         if (b0) wasm.__wbindgen_free(b0, arg1 * 8, 4);
     }
-    js_slice_string_as_array(v0);
 }
 export function __wbg_js_slice_u16_as_array_78e736a5d5adf04b(arg0, arg1) {
     js_slice_u16_as_array(Array.from(getArrayU16FromWasm0(arg0, arg1)));

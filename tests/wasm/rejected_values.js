@@ -214,6 +214,8 @@ exports.rejectedNotArrays = () => {
 
 exports.jsNotNames = () => 'notarray';
 
+exports.jsTakesMixed = (points) => points.forEach(point => point.free());
+
 let returned = [];
 
 exports.jsBadPoints = () => {
@@ -287,6 +289,19 @@ exports.failedDecodes = (memory) => {
         wrapped.forEach(point => point.free());
         assert.strictEqual(live(), before);
     }
+
+    // An argument that fails to decode releases the ones after it too.
+    assert.strictEqual(wasm.given_mixed(), false);
+    failing(wasm.Kept, '__wrap', 1, reset => {
+        const before = live();
+        const handles = wasm.rejected_handles();
+        assertFlat(memory, () => {
+            reset();
+            assert.strictEqual(wasm.given_mixed(), true);
+        });
+        assert.strictEqual(live(), before);
+        assert.strictEqual(wasm.rejected_handles(), handles);
+    });
 
     // A handle that fails to load drops the rest. Without reference types
     // a handle is read off the JS heap, which can't fail.

@@ -182,6 +182,20 @@ pub fn given_maybe_values(n: u32) -> Vec<Option<JsValue>> {
         .collect()
 }
 
+/// Whether JS failed to take a call's values.
+#[wasm_bindgen]
+pub fn given_mixed() -> bool {
+    js_takes_mixed(
+        given_points(2),
+        &|| {},
+        given_names(2),
+        given_values(2),
+        "a".repeat(200 * 1024),
+        vec![0; 200 * 1024],
+    )
+    .is_err()
+}
+
 #[wasm_bindgen(module = "tests/wasm/rejected_values.js")]
 extern "C" {
     #[wasm_bindgen(js_name = rejectedArguments)]
@@ -200,6 +214,15 @@ extern "C" {
     fn js_not_names() -> Result<Vec<String>, JsValue>;
     #[wasm_bindgen(js_name = failedDecodes)]
     fn failed_decodes(memory: JsValue);
+    #[wasm_bindgen(catch, js_name = jsTakesMixed)]
+    fn js_takes_mixed(
+        a: Vec<Kept>,
+        f: &dyn Fn(),
+        b: Vec<String>,
+        c: Vec<JsValue>,
+        d: String,
+        e: Vec<u8>,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, js_name = jsBadPoints)]
     fn js_bad_points() -> Result<Vec<Kept>, JsValue>;
     #[wasm_bindgen(catch, js_name = jsBadNestedPoints)]

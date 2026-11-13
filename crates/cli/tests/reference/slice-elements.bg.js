@@ -13,108 +13,102 @@ export function __wbg___wbindgen_throw_4c88d8bf264fd984(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbg_js_bools_9e72c19b74d918e2(arg0, arg1) {
-    const v0 = [];
-    let p0 = arg0;
-    p0 = p0 >>> 0;
-    const b0 = p0;
+    const b0 = arg0 >>> 0;
     try {
+        const v0 = [];
+        let p0 = b0;
         const view0 = getDataViewMemory0();
         for (const end0 = p0 + arg1 * 4; p0 < end0; p0 += 4) {
             const w0_0 = view0.getInt32(p0 + 0, true);
             v0.push(w0_0 !== 0);
         }
+        js_bools(v0);
     } finally {
         if (b0) wasm.__wbindgen_free(b0, arg1 * 4, 4);
     }
-    js_bools(v0);
 }
 export function __wbg_js_handles_394bed7813e915ae(arg0, arg1) {
     js_handles(getArrayJsValueViewFromWasm0(arg0, arg1));
 }
 export function __wbg_js_levels_92d6261cd8377562(arg0, arg1) {
-    const v0 = [];
-    let p0 = arg0;
-    p0 = p0 >>> 0;
-    const b0 = p0;
+    const b0 = arg0 >>> 0;
     try {
+        const v0 = [];
+        let p0 = b0;
         const view0 = getDataViewMemory0();
         for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
             const w0_0 = view0.getFloat64(p0 + 0, true);
             v0.push(w0_0);
         }
+        js_levels(v0);
     } finally {
         if (b0) wasm.__wbindgen_free(b0, arg1 * 8, 8);
     }
-    js_levels(v0);
 }
 export function __wbg_js_modes_bb53fb3d0fbfa09c(arg0, arg1) {
-    const v0 = [];
-    let p0 = arg0;
-    p0 = p0 >>> 0;
-    const b0 = p0;
+    const b0 = arg0 >>> 0;
     try {
+        const v0 = [];
+        let p0 = b0;
         const view0 = getDataViewMemory0();
         for (const end0 = p0 + arg1 * 4; p0 < end0; p0 += 4) {
             const w0_0 = view0.getInt32(p0 + 0, true);
             v0.push(__wbindgen_enum_Mode[w0_0]);
         }
+        js_modes(v0);
     } finally {
         if (b0) wasm.__wbindgen_free(b0, arg1 * 4, 4);
     }
-    js_modes(v0);
 }
 export function __wbg_js_opt_chars_43eba37f0b6dc71f(arg0, arg1) {
-    let v0;
-    if (arg0 !== 0) {
-        v0 = [];
-        let p0 = arg0;
-        p0 = p0 >>> 0;
-        const b0 = p0;
-        try {
+    const b0 = arg0 >>> 0;
+    try {
+        let v0;
+        if (arg0 !== 0) {
+            v0 = [];
+            let p0 = b0;
             const view0 = getDataViewMemory0();
             for (const end0 = p0 + arg1 * 4; p0 < end0; p0 += 4) {
                 const w0_0 = view0.getInt32(p0 + 0, true);
                 v0.push(String.fromCodePoint(w0_0));
             }
-        } finally {
-            if (b0) wasm.__wbindgen_free(b0, arg1 * 4, 4);
         }
+        js_opt_chars(v0);
+    } finally {
+        if (b0) wasm.__wbindgen_free(b0, arg1 * 4, 4);
     }
-    js_opt_chars(v0);
 }
 export function __wbg_js_strings_2558d2768768ed5f(arg0, arg1) {
-    const v0 = [];
-    let p0 = arg0;
-    p0 = p0 >>> 0;
-    const b0 = p0;
+    const b0 = arg0 >>> 0;
     try {
+        const v0 = [];
+        let p0 = b0;
         const view0 = getDataViewMemory0();
         for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
             const w0_0 = view0.getInt32(p0 + 0, true);
             const w0_1 = view0.getInt32(p0 + 4, true);
             v0.push(getStringFromWasm0(w0_0, w0_1));
         }
+        js_strings(v0);
     } finally {
         if (b0) wasm.__wbindgen_free(b0, arg1 * 8, 4);
     }
-    js_strings(v0);
 }
 export function __wbg_js_strs_4204ef305fb644c2(arg0, arg1) {
-    const v0 = [];
-    let p0 = arg0;
-    p0 = p0 >>> 0;
-    const b0 = p0;
+    const b0 = arg0 >>> 0;
     try {
+        const v0 = [];
+        let p0 = b0;
         const view0 = getDataViewMemory0();
         for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
             const w0_0 = view0.getInt32(p0 + 0, true);
             const w0_1 = view0.getInt32(p0 + 4, true);
             v0.push(getStringFromWasm0(w0_0, w0_1));
         }
+        js_strs(v0);
     } finally {
         if (b0) wasm.__wbindgen_free(b0, arg1 * 8, 4);
     }
-    js_strs(v0);
 }
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_externrefs;

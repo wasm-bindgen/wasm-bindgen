@@ -713,15 +713,39 @@ export function __wbg___wbindgen_throw_4c88d8bf264fd984(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbg_js_maybe_foos_0a6988fff2da253a(arg0, arg1, arg2) {
-    const v0 = [];
-    let p0 = arg1;
-    p0 = p0 >>> 0;
-    const b0 = p0;
+    const b0 = arg1 >>> 0;
     try {
+        const v0 = [];
+        let p0 = b0;
         const view0 = getDataViewMemory0();
         for (const end0 = p0 + arg2 * 4; p0 < end0; p0 += 4) {
             const w0_0 = view0.getInt32(p0 + 0, true);
             v0.push(wasm.__wbindgen_externrefs.get(w0_0));
+        }
+        const ret = js_maybe_foos(v0);
+        let j3 = 0, len3, ptr3;
+        try {
+            len3 = ret.length;
+            ptr3 = wasm.__wbindgen_malloc(len3 * 4, 4) >>> 0;
+            for (; j3 < len3; j3++) {
+                const e3 = ret[j3];
+                const w3_0 = isLikeNone(e3) ? 0 : addToExternrefTable0(e3);
+                const view3 = getDataViewMemory0();
+                const p3 = ptr3 + j3 * 4;
+                view3.setInt32(p3 + 0, w3_0, true);
+            }
+            getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 1, len3, true);
+            getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 0, ptr3, true);
+        } catch (e) {
+            if (ptr3) {
+                for (let k4 = 0; k4 < j3; k4++) {
+                    const cell4 = ptr3 + k4 * 4;
+                    const w4_0 = getDataViewMemory0().getInt32(cell4 + 0, true) >>> 0;
+                    wasm.__externref_table_dealloc(w4_0);
+                }
+                wasm.__wbindgen_free(ptr3, len3 * 4, 4);
+            }
+            throw e;
         }
     } finally {
         if (b0) {
@@ -733,44 +757,55 @@ export function __wbg_js_maybe_foos_0a6988fff2da253a(arg0, arg1, arg2) {
             wasm.__wbindgen_free(b0, arg2 * 4, 4);
         }
     }
-    const ret = js_maybe_foos(v0);
-    let j3 = 0, len3, ptr3;
-    try {
-        len3 = ret.length;
-        ptr3 = wasm.__wbindgen_malloc(len3 * 4, 4) >>> 0;
-        for (; j3 < len3; j3++) {
-            const e3 = ret[j3];
-            const w3_0 = isLikeNone(e3) ? 0 : addToExternrefTable0(e3);
-            const view3 = getDataViewMemory0();
-            const p3 = ptr3 + j3 * 4;
-            view3.setInt32(p3 + 0, w3_0, true);
-        }
-        getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 1, len3, true);
-        getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 0, ptr3, true);
-    } catch (e) {
-        if (ptr3) {
-            for (let k4 = 0; k4 < j3; k4++) {
-                const cell4 = ptr3 + k4 * 4;
-                const w4_0 = getDataViewMemory0().getInt32(cell4 + 0, true) >>> 0;
-                wasm.__externref_table_dealloc(w4_0);
-            }
-            wasm.__wbindgen_free(ptr3, len3 * 4, 4);
-        }
-        throw e;
-    }
 }
 export function __wbg_js_maybe_points_a502c96988d34bc0(arg0, arg1, arg2) {
-    const v0 = [];
-    let p0 = arg1;
-    p0 = p0 >>> 0;
-    const b0 = p0;
+    const b0 = arg1 >>> 0;
     try {
+        const v0 = [];
+        let p0 = b0;
         const view0 = getDataViewMemory0();
         for (const end0 = p0 + arg2 * 4; p0 < end0; p0 += 4) {
             const w0_0 = view0.getInt32(p0 + 0, true);
             const obj1 = w0_0 === 0 ? undefined : Point.__wrap(w0_0);
             getDataViewMemory0().setInt32(p0 + 0, 0, true);
             v0.push(obj1);
+        }
+        const ret = js_maybe_points(v0);
+        let j4 = 0, len4, ptr4;
+        try {
+            for (let n4 = 0; n4 < ret.length; n4++) {
+                const e4 = ret[n4];
+                if (!isLikeNone(e4)) {
+                    _assertClass(e4, Point);
+                    if (e4.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
+                }
+            }
+            len4 = ret.length;
+            ptr4 = wasm.__wbindgen_malloc(len4 * 4, 4) >>> 0;
+            for (; j4 < len4; j4++) {
+                const e4 = ret[j4];
+                let ptr5 = 0;
+                if (!isLikeNone(e4)) {
+                    _assertClass(e4, Point);
+                    if (e4.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
+                    ptr5 = e4.__destroy_into_raw();
+                }
+                const view4 = getDataViewMemory0();
+                const p4 = ptr4 + j4 * 4;
+                view4.setInt32(p4 + 0, ptr5, true);
+            }
+            getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 1, len4, true);
+            getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 0, ptr4, true);
+        } catch (e) {
+            if (ptr4) {
+                for (let k6 = 0; k6 < j4; k6++) {
+                    const cell6 = ptr4 + k6 * 4;
+                    const w6_0 = getDataViewMemory0().getInt32(cell6 + 0, true) >>> 0;
+                    if (w6_0) wasm.__wbg_point_free(w6_0, 1);
+                }
+                wasm.__wbindgen_free(ptr4, len4 * 4, 4);
+            }
+            throw e;
         }
     } finally {
         if (b0) {
@@ -782,55 +817,50 @@ export function __wbg_js_maybe_points_a502c96988d34bc0(arg0, arg1, arg2) {
             wasm.__wbindgen_free(b0, arg2 * 4, 4);
         }
     }
-    const ret = js_maybe_points(v0);
-    let j4 = 0, len4, ptr4;
-    try {
-        for (let n4 = 0; n4 < ret.length; n4++) {
-            const e4 = ret[n4];
-            if (!isLikeNone(e4)) {
-                _assertClass(e4, Point);
-                if (e4.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
-            }
-        }
-        len4 = ret.length;
-        ptr4 = wasm.__wbindgen_malloc(len4 * 4, 4) >>> 0;
-        for (; j4 < len4; j4++) {
-            const e4 = ret[j4];
-            let ptr5 = 0;
-            if (!isLikeNone(e4)) {
-                _assertClass(e4, Point);
-                if (e4.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
-                ptr5 = e4.__destroy_into_raw();
-            }
-            const view4 = getDataViewMemory0();
-            const p4 = ptr4 + j4 * 4;
-            view4.setInt32(p4 + 0, ptr5, true);
-        }
-        getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 1, len4, true);
-        getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 0, ptr4, true);
-    } catch (e) {
-        if (ptr4) {
-            for (let k6 = 0; k6 < j4; k6++) {
-                const cell6 = ptr4 + k6 * 4;
-                const w6_0 = getDataViewMemory0().getInt32(cell6 + 0, true) >>> 0;
-                if (w6_0) wasm.__wbg_point_free(w6_0, 1);
-            }
-            wasm.__wbindgen_free(ptr4, len4 * 4, 4);
-        }
-        throw e;
-    }
 }
 export function __wbg_js_names_8202f1528d646c9a(arg0, arg1, arg2) {
-    const v0 = [];
-    let p0 = arg1;
-    p0 = p0 >>> 0;
-    const b0 = p0;
+    const b0 = arg1 >>> 0;
     try {
+        const v0 = [];
+        let p0 = b0;
         const view0 = getDataViewMemory0();
         for (const end0 = p0 + arg2 * 8; p0 < end0; p0 += 8) {
             const w0_0 = view0.getInt32(p0 + 0, true);
             const w0_1 = view0.getInt32(p0 + 4, true);
             v0.push(getStringFromWasm0(w0_0, w0_1));
+        }
+        const ret = js_names(v0);
+        let j3 = 0, len3, ptr3;
+        try {
+            for (let n3 = 0; n3 < ret.length; n3++) {
+                const e3 = ret[n3];
+                if (typeof e3 !== 'string') throw new Error('array contains a value of the wrong type');
+            }
+            len3 = ret.length;
+            ptr3 = wasm.__wbindgen_malloc(len3 * 8, 4) >>> 0;
+            for (; j3 < len3; j3++) {
+                const e3 = ret[j3];
+                if (typeof e3 !== 'string') throw new Error('array contains a value of the wrong type');
+                const ptr4 = passStringToWasm0(e3, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+                const len4 = WASM_VECTOR_LEN;
+                const view3 = getDataViewMemory0();
+                const p3 = ptr3 + j3 * 8;
+                view3.setInt32(p3 + 0, ptr4, true);
+                view3.setInt32(p3 + 4, len4, true);
+            }
+            getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 1, len3, true);
+            getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 0, ptr3, true);
+        } catch (e) {
+            if (ptr3) {
+                for (let k5 = 0; k5 < j3; k5++) {
+                    const cell5 = ptr3 + k5 * 8;
+                    const w5_0 = getDataViewMemory0().getInt32(cell5 + 0, true) >>> 0;
+                    const w5_1 = getDataViewMemory0().getInt32(cell5 + 4, true) >>> 0;
+                    if (w5_0) { wasm.__wbindgen_free(w5_0, w5_1 * 1, 1); }
+                }
+                wasm.__wbindgen_free(ptr3, len3 * 8, 4);
+            }
+            throw e;
         }
     } finally {
         if (b0) {
@@ -842,39 +872,6 @@ export function __wbg_js_names_8202f1528d646c9a(arg0, arg1, arg2) {
             }
             wasm.__wbindgen_free(b0, arg2 * 8, 4);
         }
-    }
-    const ret = js_names(v0);
-    let j3 = 0, len3, ptr3;
-    try {
-        for (let n3 = 0; n3 < ret.length; n3++) {
-            const e3 = ret[n3];
-            if (typeof e3 !== 'string') throw new Error('array contains a value of the wrong type');
-        }
-        len3 = ret.length;
-        ptr3 = wasm.__wbindgen_malloc(len3 * 8, 4) >>> 0;
-        for (; j3 < len3; j3++) {
-            const e3 = ret[j3];
-            if (typeof e3 !== 'string') throw new Error('array contains a value of the wrong type');
-            const ptr4 = passStringToWasm0(e3, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-            const len4 = WASM_VECTOR_LEN;
-            const view3 = getDataViewMemory0();
-            const p3 = ptr3 + j3 * 8;
-            view3.setInt32(p3 + 0, ptr4, true);
-            view3.setInt32(p3 + 4, len4, true);
-        }
-        getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 1, len3, true);
-        getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 0, ptr3, true);
-    } catch (e) {
-        if (ptr3) {
-            for (let k5 = 0; k5 < j3; k5++) {
-                const cell5 = ptr3 + k5 * 8;
-                const w5_0 = getDataViewMemory0().getInt32(cell5 + 0, true) >>> 0;
-                const w5_1 = getDataViewMemory0().getInt32(cell5 + 4, true) >>> 0;
-                if (w5_0) { wasm.__wbindgen_free(w5_0, w5_1 * 1, 1); }
-            }
-            wasm.__wbindgen_free(ptr3, len3 * 8, 4);
-        }
-        throw e;
     }
 }
 export function __wbindgen_init_externref_table() {

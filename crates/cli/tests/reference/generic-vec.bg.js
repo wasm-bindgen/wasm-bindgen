@@ -591,20 +591,19 @@ export function __wbg_take_borrowed_bytes_6797222e0fd108d2(arg0, arg1) {
     take_borrowed_bytes(getArrayU8FromWasm0(arg0, arg1));
 }
 export function __wbg_take_borrowed_closures_ecfd86a190534640(arg0, arg1) {
-    const v0 = [];
-    let p0 = arg0;
-    p0 = p0 >>> 0;
-    const b0 = p0;
+    const b0 = arg0 >>> 0;
     try {
+        const v0 = [];
+        let p0 = b0;
         const view0 = getDataViewMemory0();
         for (const end0 = p0 + arg1 * 4; p0 < end0; p0 += 4) {
             const w0_0 = view0.getInt32(p0 + 0, true);
             v0.push(wasm.__wbindgen_externrefs.get(w0_0));
         }
+        take_borrowed_closures(v0);
     } finally {
         if (b0) wasm.__wbindgen_free(b0, arg1 * 4, 4);
     }
-    take_borrowed_closures(v0);
 }
 export function __wbg_take_borrowed_floats_30475c7407955193(arg0, arg1) {
     take_borrowed_floats(getArrayF64FromWasm0(arg0, arg1));
@@ -613,21 +612,20 @@ export function __wbg_take_borrowed_foos_7e4a629107e7f1a8(arg0, arg1) {
     take_borrowed_foos(getArrayJsValueViewFromWasm0(arg0, arg1));
 }
 export function __wbg_take_borrowed_strings_d2f788fd08c3a59d(arg0, arg1) {
-    const v0 = [];
-    let p0 = arg0;
-    p0 = p0 >>> 0;
-    const b0 = p0;
+    const b0 = arg0 >>> 0;
     try {
+        const v0 = [];
+        let p0 = b0;
         const view0 = getDataViewMemory0();
         for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
             const w0_0 = view0.getInt32(p0 + 0, true);
             const w0_1 = view0.getInt32(p0 + 4, true);
             v0.push(getStringFromWasm0(w0_0, w0_1));
         }
+        take_borrowed_strings(v0);
     } finally {
         if (b0) wasm.__wbindgen_free(b0, arg1 * 8, 4);
     }
-    take_borrowed_strings(v0);
 }
 export function __wbg_take_borrowed_values_32b41a9c5f1b820f(arg0, arg1) {
     take_borrowed_values(getArrayJsValueViewFromWasm0(arg0, arg1));
@@ -638,41 +636,39 @@ export function __wbg_take_bytes_0be694c4de362f6b(arg0, arg1) {
     take_bytes(v0);
 }
 export function __wbg_take_foos_a6f1ce7bf0b6785b(arg0, arg1) {
-    var v0;
     try {
-        v0 = getArrayJsValueFromWasm0(arg0, arg1);
+        var v0 = getArrayJsValueViewFromWasm0(arg0, arg1);
+        take_foos(v0);
     } finally {
-        wasm.__wbindgen_free(arg0, arg1 * 4, 4);
+        if (arg0) { wasm.__externref_drop_slice(arg0, arg1); wasm.__wbindgen_free(arg0, arg1 * 4, 4); }
     }
-    take_foos(v0);
 }
 export function __wbg_take_opt_bytes_f444cd63983812da(arg0, arg1) {
-    const v0 = [];
-    let p0 = arg0;
-    p0 = p0 >>> 0;
-    const b0 = p0;
+    const b0 = arg0 >>> 0;
     try {
+        const v0 = [];
+        let p0 = b0;
         const view0 = getDataViewMemory0();
         for (const end0 = p0 + arg1 * 4; p0 < end0; p0 += 4) {
             const w0_0 = view0.getInt32(p0 + 0, true);
             v0.push(w0_0 === 0xFFFFFF ? undefined : w0_0);
         }
+        take_opt_bytes(v0);
     } finally {
         if (b0) wasm.__wbindgen_free(b0, arg1 * 4, 4);
     }
-    take_opt_bytes(v0);
 }
 export function __wbg_take_opt_foos_cba1deacf9e0e96b(arg0, arg1) {
-    const v0 = [];
-    let p0 = arg0;
-    p0 = p0 >>> 0;
-    const b0 = p0;
+    const b0 = arg0 >>> 0;
     try {
+        const v0 = [];
+        let p0 = b0;
         const view0 = getDataViewMemory0();
         for (const end0 = p0 + arg1 * 4; p0 < end0; p0 += 4) {
             const w0_0 = view0.getInt32(p0 + 0, true);
             v0.push(wasm.__wbindgen_externrefs.get(w0_0));
         }
+        take_opt_foos(v0);
     } finally {
         if (b0) {
             for (let k1 = 0; k1 < arg1; k1++) {
@@ -683,20 +679,19 @@ export function __wbg_take_opt_foos_cba1deacf9e0e96b(arg0, arg1) {
             wasm.__wbindgen_free(b0, arg1 * 4, 4);
         }
     }
-    take_opt_foos(v0);
 }
 export function __wbg_take_strings_7ffdcb3cae111236(arg0, arg1) {
-    const v0 = [];
-    let p0 = arg0;
-    p0 = p0 >>> 0;
-    const b0 = p0;
+    const b0 = arg0 >>> 0;
     try {
+        const v0 = [];
+        let p0 = b0;
         const view0 = getDataViewMemory0();
         for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
             const w0_0 = view0.getInt32(p0 + 0, true);
             const w0_1 = view0.getInt32(p0 + 4, true);
             v0.push(getStringFromWasm0(w0_0, w0_1));
         }
+        take_strings(v0);
     } finally {
         if (b0) {
             for (let k1 = 0; k1 < arg1; k1++) {
@@ -708,7 +703,6 @@ export function __wbg_take_strings_7ffdcb3cae111236(arg0, arg1) {
             wasm.__wbindgen_free(b0, arg1 * 8, 4);
         }
     }
-    take_strings(v0);
 }
 export function __wbindgen_generic_0000000000000000(arg0, arg1) {
     // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [], shim_idx: 2, ret: Unit, inner_ret: Some(Unit) }, mutable: false }) -> Externref`.

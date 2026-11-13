@@ -11,54 +11,51 @@ export function __wbg_call_nullable_61a2ccea214cfd68(arg0) {
     call_nullable(arg0);
 }
 export function __wbg_nullable_js_strings_4d25a7d2d74571c9(arg0, arg1) {
-    const v0 = [];
-    let p0 = arg0;
-    p0 = p0 >>> 0;
-    const b0 = p0;
+    const b0 = arg0 >>> 0;
     try {
+        const v0 = [];
+        let p0 = b0;
         const view0 = getDataViewMemory0();
         for (const end0 = p0 + arg1 * 4; p0 < end0; p0 += 4) {
             const w0_0 = view0.getInt32(p0 + 0, true);
             v0.push(wasm.__wbindgen_externrefs.get(w0_0));
         }
+        nullable_js_strings(v0);
     } finally {
         if (b0) wasm.__wbindgen_free(b0, arg1 * 4, 4);
     }
-    nullable_js_strings(v0);
 }
 export function __wbg_nullable_strings_e1dfa29465202c22(arg0, arg1) {
-    const v0 = [];
-    let p0 = arg0;
-    p0 = p0 >>> 0;
-    const b0 = p0;
+    const b0 = arg0 >>> 0;
     try {
+        const v0 = [];
+        let p0 = b0;
         const view0 = getDataViewMemory0();
         for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
             const w0_0 = view0.getInt32(p0 + 0, true);
             const w0_1 = view0.getInt32(p0 + 4, true);
             v0.push(w0_0 === 0 ? null : getStringFromWasm0(w0_0, w0_1));
         }
+        nullable_strings(v0);
     } finally {
         if (b0) wasm.__wbindgen_free(b0, arg1 * 8, 4);
     }
-    nullable_strings(v0);
 }
 export function __wbg_opt_f64s_95d8affd5b395def(arg0, arg1) {
-    const v0 = [];
-    let p0 = arg0;
-    p0 = p0 >>> 0;
-    const b0 = p0;
+    const b0 = arg0 >>> 0;
     try {
+        const v0 = [];
+        let p0 = b0;
         const view0 = getDataViewMemory0();
         for (const end0 = p0 + arg1 * 16; p0 < end0; p0 += 16) {
             const w0_0 = view0.getInt32(p0 + 0, true);
             const w0_1 = view0.getFloat64(p0 + 8, true);
             v0.push(w0_0 === 0 ? undefined : w0_1);
         }
+        opt_f64s(v0);
     } finally {
         if (b0) wasm.__wbindgen_free(b0, arg1 * 16, 8);
     }
-    opt_f64s(v0);
 }
 export function __wbg_ref_f64_4483fcdd9da682a2(arg0) {
     ref_f64(arg0);
