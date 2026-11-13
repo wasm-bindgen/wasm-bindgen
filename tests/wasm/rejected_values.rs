@@ -193,6 +193,33 @@ pub fn rejected_names_then_maybe_numbers(_a: Vec<String>, v: Vec<Option<i64>>) -
 }
 
 #[wasm_bindgen]
+pub fn rejected_units(v: Vec<()>) -> usize {
+    v.len()
+}
+
+/// The length of the list, or -1 for none.
+#[wasm_bindgen]
+pub fn rejected_maybe_units(v: Option<Vec<()>>) -> i32 {
+    v.map_or(-1, |v| v.len() as i32)
+}
+
+/// How many units the lists hold between them.
+#[wasm_bindgen]
+pub fn rejected_nested_units(v: Vec<Vec<()>>) -> usize {
+    v.iter().map(Vec::len).sum()
+}
+
+#[wasm_bindgen]
+pub fn rejected_point_names_then_units(_a: Kept, _names: Vec<String>, v: Vec<()>) -> usize {
+    v.len()
+}
+
+#[wasm_bindgen]
+pub fn rejected_units_then_point_names(v: Vec<()>, _a: Kept, _names: Vec<String>) -> usize {
+    v.len()
+}
+
+#[wasm_bindgen]
 pub fn rejected_returned_long_names() -> bool {
     js_long_names().is_err()
 }
@@ -299,6 +326,10 @@ extern "C" {
     fn rejected_changed_lengths(memory: JsValue);
     #[wasm_bindgen(js_name = rejectedChanging)]
     fn rejected_changing(memory: JsValue);
+    #[wasm_bindgen(js_name = rejectedUnits)]
+    fn rejected_unit_values(memory: JsValue);
+    #[wasm_bindgen(catch, js_name = jsGrownUnits)]
+    fn js_grown_units(past: JsValue) -> Result<Vec<()>, JsValue>;
     #[wasm_bindgen(catch, js_name = jsLongNames)]
     fn js_long_names() -> Result<Vec<Option<String>>, JsValue>;
     #[wasm_bindgen(js_name = takenNotArrays)]
@@ -389,6 +420,15 @@ fn arguments_grown() {
 #[wasm_bindgen_test]
 fn arguments_changing() {
     rejected_changing(wasm_bindgen::memory());
+}
+
+#[wasm_bindgen_test]
+fn units() {
+    rejected_unit_values(wasm_bindgen::memory());
+    // What JS returns is as long as it says where its values are taken,
+    // each of them checked there.
+    assert_eq!(js_grown_units(JsValue::UNDEFINED).unwrap().len(), 5);
+    assert!(js_grown_units(JsValue::NULL).is_err());
 }
 
 #[wasm_bindgen_test]

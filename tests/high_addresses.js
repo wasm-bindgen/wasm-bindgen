@@ -7,6 +7,10 @@ exports.second = (first, v) => {
     return v;
 };
 exports.freeSecond = (first, second) => second?.free();
+exports.third = (first, second, third) => {
+    second.free();
+    return third;
+};
 exports.count = (...args) => args.length;
 exports.fail = () => {
     throw new Error('failed');
@@ -56,6 +60,11 @@ exports.callExports = () => {
     assert.throws(() => wasm.high_rejects(names, [values, values], {}));
     assert.throws(() => wasm.high_rejects(names, [values, 1], item));
     assert.throws(() => wasm.high_rejects([1], [values], item));
+    const units = [undefined, undefined];
+    assert.deepStrictEqual(wasm.high_units(names, units, item, [units, [], []]), units);
+    assert.throws(() => wasm.high_units(names, [undefined, null], item, [units, [], []]), /wrong type/);
+    assert.throws(() => wasm.high_units(names, units, item, [units, [0], []]), /wrong type/);
+    assert.throws(() => wasm.high_units(names, units, {}, [units, [], []]));
     item.free();
 };
 

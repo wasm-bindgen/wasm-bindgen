@@ -303,6 +303,8 @@ matrix! {
     // hole: of_union sl rf, `MatrixUnion: RefIntoWasmAbi` is not satisfied
     of_union          [+  +  +  +  -  -  +  +  +]: MatrixUnion              = [MatrixUnion::Loading, MatrixUnion::Count(7), MatrixUnion::Name(A)] => r#"["loading",7,"a"]"#;
     of_hand_written   [+  +  +  +  +  +  +  +  -]: Point                    = [point(1., 2.), point(3., 4.)] => r#"[{"x":1,"y":2},{"x":3,"y":4}]"#;
+    // `()` is `undefined`, in a cell of no words: a sequence of it is only a length.
+    of_unit           [+  +  +  +  +  +  +  +  +]: ()                       = [(), (), ()] => "[undefined,undefined,undefined]";
 
     opt_u32           [+  +  +  +  +  +  +  +  -]: Option<u32>              = [Some(1), None, Some(u32::MAX)] => "[1,undefined,4294967295]";
     opt_i64           [+  +  +  +  +  +  +  +  -]: Option<i64>              = [Some(-1), None, Some(i64::MAX)] => "[-1n,undefined,9223372036854775807n]";
@@ -341,6 +343,7 @@ matrix! {
     vec_string        [+  +  +  +  +  +  +  +  +]: Vec<String>              = [vec![s("a"), s("b")], vec![], vec![s("c")]] => r#"[["a","b"],[],["c"]]"#;
     vec_js_string     [+  +  +  +  +  +  +  +  +]: Vec<JsString>            = [vec![js("a"), js("b")], vec![], vec![js("c")]] => r#"[["a","b"],[],["c"]]"#;
     vec_opt_string    [+  +  +  +  +  +  +  +  +]: Vec<Option<String>>      = [vec![Some(s("a")), None], vec![], vec![None]] => r#"[["a",undefined],[],[undefined]]"#;
+    vec_unit          [+  +  +  +  +  +  +  +  +]: Vec<()>                  = [vec![(), ()], vec![], vec![()]] => "[[undefined,undefined],[],[undefined]]";
 }
 
 #[allow(clippy::ptr_arg, clippy::borrowed_box)]
