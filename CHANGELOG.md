@@ -20,15 +20,16 @@
 * `Vec<T>` and `Box<[T]>` cross for every `T` that crosses on its own, and
   `&[T]` for every `T` whose `&T` does, by the element's own
   `IntoWasmAbi` / `FromWasmAbi`. `Vec<Option<T>>`, `Vec<Nullable<T>>`,
-  `Vec<Vec<T>>`, `&[Closure<T>]` and vectors of types with hand-written
-  conversions newly cross, in arguments, returns and `JsValue::from`. A
-  borrowed slice of numbers held by a sequence, such as each `&[u8]` of a
-  `Vec<&[u8]>`, reaches JS as a copy and never as a view of wasm memory.
-  A borrowed vector (`&Vec<T>`, `&Box<[T]>`) is an imported function's
-  argument too, reaching JS as a copy, as the vector does. Three elements
-  don't cross: `()`, which crosses as nothing, a `&mut [T]`, whose copy
-  JS's writes would never leave, and a borrowed closure (`&dyn Fn()`) in a
-  value Rust returns, which outlives the call it is lent for.
+  `Vec<Vec<T>>` and vectors of types with hand-written conversions newly
+  cross, in arguments, returns and `JsValue::from`, and `&[Closure<T>]` as
+  an imported function's argument. A borrowed slice of numbers held by a
+  sequence, such as each `&[u8]` of a `Vec<&[u8]>`, reaches JS as a copy
+  and never as a view of wasm memory. A borrowed vector (`&Vec<T>`,
+  `&Box<[T]>`) is an imported function's argument too, reaching JS as a
+  copy, as the vector does. Three elements don't cross: `()`, which crosses
+  as nothing, a `&mut [T]`, whose copy JS's writes would never leave, and a
+  borrowed closure (`&dyn Fn()`) in a value Rust returns or converts with
+  `JsValue::from`, which outlives the call it is lent for.
 
 * A dynamic-union enum is a `Vec<T>` / `Box<[T]>` element in both
   directions, crossing as a JS array whose elements are each converted as a
@@ -70,7 +71,7 @@
   a `Vec`, and generic code bounded by them alone needs `T: IntoWasmAbi` /
   `T: FromWasmAbi` to pass a `Vec<T>`. `OptionIntoWasmAbi` and
   `OptionFromWasmAbi` are soft-deprecated in favour of `MaybeIntoWasmAbi` and
-  `MaybeFromWasmAbi`. All five will be removed in 0.3.0.
+  `MaybeFromWasmAbi`. All five will be removed in the next major release.
 
 * A `Vec<String>` and a `Vec` of an exported Rust type reach the generated JS
   as each element's own ABI rather than as a list of JS handles. What JS

@@ -103,7 +103,8 @@ impl<T: ?Sized> AbiTransparent<T> {
 /// themselves.
 ///
 /// Soft-deprecated and unused: a vector is described by its element's
-/// [`WasmDescribe`]. It will be removed in 0.3.0.
+/// [`WasmDescribe`]. It will be removed in the next major
+/// release.
 pub trait WasmDescribeVector {
     fn describe_vector();
 }

@@ -20,8 +20,8 @@ passed on its own, including:
 
 Three types that can be passed on their own can't be an element: `()`, which
 crosses as nothing, a `&mut [T]`, whose copy JS's writes would never leave,
-and a borrowed closure (`&dyn Fn()`) in a value Rust returns, which outlives
-the call the closure is lent for.
+and a borrowed closure (`&dyn Fn()`) in a value Rust returns or converts
+with `JsValue::from`, which outlives the call the closure is lent for.
 
 Imported JS types and `JsValue`s are passed as their handles. Every other
 element is converted the same way a single value of that type is. A `String`

@@ -241,6 +241,12 @@ extern "C" {
     where
         Vec<T>: IntoWasmAbi;
 
+    // A generic vector is bounded by its element, optional or not.
+    #[wasm_bindgen(experimental_generic_mono, js_name = joined)]
+    fn joined_generic_vec<T: IntoWasmAbi>(v: Vec<T>) -> String;
+    #[wasm_bindgen(experimental_generic_mono, js_name = joined)]
+    fn joined_generic_opt_vec<T: IntoWasmAbi>(v: Option<Vec<T>>) -> String;
+
     // A concrete element alongside a type parameter.
     #[wasm_bindgen(experimental_generic_mono, js_name = joined)]
     fn joined_strings_per_mono<T: IntoWasmAbi>(v: &[String], marker: T) -> String;
@@ -419,6 +425,15 @@ fn per_mono_per_arg_modes_resolve_per_instantiation() {
     );
     let s = ["a".to_string()];
     assert_eq!(kinds_generic_explicit_array(&s, s.to_vec()), "Array,Array");
+
+    assert_eq!(joined_generic_vec(vec![1u8, 2]), "Uint8Array:fresh:1,2");
+    assert_eq!(joined_generic_vec(s.to_vec()), "Array:a");
+    assert_eq!(
+        joined_generic_opt_vec(Some(vec![1u8, 2])),
+        "Uint8Array:fresh:1,2"
+    );
+    assert_eq!(joined_generic_opt_vec(Some(s.to_vec())), "Array:a");
+    assert_eq!(joined_generic_opt_vec(None::<Vec<String>>), "undefined");
 }
 
 #[wasm_bindgen(module = "tests/wasm/slice_modes.js")]

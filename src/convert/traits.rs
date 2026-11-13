@@ -258,7 +258,8 @@ pub trait RefMutFromWasmAbi: WasmDescribe {
 /// directly instead.
 ///
 /// Soft-deprecated: new code should bound on and implement
-/// [`MaybeIntoWasmAbi`]. This trait will be removed in 0.3.0.
+/// [`MaybeIntoWasmAbi`]. This trait will be removed in the next major
+/// release.
 ///
 /// # ⚠️ Unstable
 ///
@@ -278,7 +279,8 @@ pub trait OptionIntoWasmAbi: IntoWasmAbi {
 /// its own ABI. See [`OptionIntoWasmAbi`].
 ///
 /// Soft-deprecated: new code should bound on and implement
-/// [`MaybeFromWasmAbi`]. This trait will be removed in 0.3.0.
+/// [`MaybeFromWasmAbi`]. This trait will be removed in the next major
+/// release.
 ///
 /// # ⚠️ Unstable
 ///
@@ -586,7 +588,8 @@ use core::marker::Sized;
 /// themselves.
 ///
 /// Soft-deprecated and unused: `Vec<T>` and `Box<[T]>` cross for every
-/// `T: IntoWasmAbi`, by the element's own ABI. It will be removed in 0.3.0.
+/// `T: IntoWasmAbi`, by the element's own ABI. It will be removed in the
+/// next major release.
 ///
 /// # ⚠️ Unstable
 ///
@@ -603,7 +606,8 @@ pub trait VectorIntoWasmAbi: WasmDescribeVector + Sized {
 /// themselves.
 ///
 /// Soft-deprecated and unused: `Vec<T>` and `Box<[T]>` cross for every
-/// `T: FromWasmAbi`, by the element's own ABI. It will be removed in 0.3.0.
+/// `T: FromWasmAbi`, by the element's own ABI. It will be removed in the
+/// next major release.
 ///
 /// # ⚠️ Unstable
 ///
