@@ -354,12 +354,14 @@ fn module_needs_externref_metadata(aux: &WasmBindgenAux, section: &NonstandardWi
                 | OptionView { kind, .. } => {
                     matches!(kind, VectorKind::Externref | VectorKind::NamedExternref(_))
                 }
-                EncodedSliceStore { elem, .. } => {
+                EncodedSliceStore { elem, .. } | EncodedSliceLoad { elem, .. } => {
                     let mut handle = false;
                     visit_instructions(elem, &mut |instr| {
                         handle |= matches!(
                             instr.instr,
-                            I32FromExternrefOwned | I32FromOptionExternref { .. }
+                            I32FromExternrefOwned
+                                | I32FromOptionExternref { .. }
+                                | ExternrefLoadOwned { .. }
                         );
                     });
                     handle

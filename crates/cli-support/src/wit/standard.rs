@@ -755,7 +755,9 @@ impl walrus::CustomSection for NonstandardWitSection {
                     roots.push_table(table);
                     roots.push_func(alloc);
                 }
-                UnwrapResult { table_and_drop } | UnwrapResultString { table_and_drop } => {
+                UnwrapResult { table_and_drop }
+                | UnwrapResultString { table_and_drop }
+                | ExternrefLoadOwned { table_and_drop } => {
                     if let Some((table, drop)) = table_and_drop {
                         roots.push_table(table);
                         roots.push_func(drop);
