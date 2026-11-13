@@ -2281,8 +2281,11 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
                     _ => {
                         self.cx.expose_drop_ref();
                         let view = self.dataview(mem);
+                        // `ptr` may be a wasm argument as it arrived, which
+                        // is negative from 2 GiB on wasm32.
+                        let coerce = self.cx.coerce_ptr_suffix();
                         format!(
-                            "for (let i = 0, view = {view}; i < {len}; i++) dropObject(view.getUint32({ptr} + 4 * i, true)); "
+                            "for (let p = {ptr}{coerce}, end = p + 4 * {len}, view = {view}; p < end; p += 4) dropObject(view.getUint32(p, true)); "
                         )
                     }
                 }
