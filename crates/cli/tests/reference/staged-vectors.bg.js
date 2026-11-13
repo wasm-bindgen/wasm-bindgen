@@ -190,7 +190,7 @@ export function maybe_nullable_points(v) {
         const e0 = v[n0];
         if (!isLikeNone(e0)) {
             _assertClass(e0, Point);
-            if (e0.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
+            if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
         }
     }
     let j0 = 0, len0, ptr0;
@@ -202,7 +202,7 @@ export function maybe_nullable_points(v) {
             let ptr1 = e0 === null ? 1 : 0;
             if (!isLikeNone(e0)) {
                 _assertClass(e0, Point);
-                if (e0.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
+                if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
                 ptr1 = e0.__destroy_into_raw();
             }
             const view0 = getDataViewMemory0();
@@ -255,7 +255,7 @@ export function maybe_points(v) {
         const e0 = v[n0];
         if (!isLikeNone(e0)) {
             _assertClass(e0, Point);
-            if (e0.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
+            if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
         }
     }
     let j0 = 0, len0, ptr0;
@@ -267,7 +267,7 @@ export function maybe_points(v) {
             let ptr1 = 0;
             if (!isLikeNone(e0)) {
                 _assertClass(e0, Point);
-                if (e0.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
+                if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
                 ptr1 = e0.__destroy_into_raw();
             }
             const view0 = getDataViewMemory0();
@@ -654,7 +654,7 @@ export function nullable_points(v) {
         const e0 = v[n0];
         if (e0 !== null) {
             _assertClass(e0, Point);
-            if (e0.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
+            if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
         }
     }
     let j0 = 0, len0, ptr0;
@@ -666,7 +666,7 @@ export function nullable_points(v) {
             let ptr1 = e0 === null ? 1 : 0;
             if (e0 !== null) {
                 _assertClass(e0, Point);
-                if (e0.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
+                if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
                 ptr1 = e0.__destroy_into_raw();
             }
             const view0 = getDataViewMemory0();
@@ -777,7 +777,7 @@ export function __wbg_js_maybe_points_a502c96988d34bc0(arg0, arg1, arg2) {
                 const e4 = ret[n4];
                 if (!isLikeNone(e4)) {
                     _assertClass(e4, Point);
-                    if (e4.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
+                    if (!e4.__wbg_ptr) throw new Error('array contains a value of the wrong type');
                 }
             }
             len4 = ret.length;
@@ -787,7 +787,7 @@ export function __wbg_js_maybe_points_a502c96988d34bc0(arg0, arg1, arg2) {
                 let ptr5 = 0;
                 if (!isLikeNone(e4)) {
                     _assertClass(e4, Point);
-                    if (e4.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
+                    if (!e4.__wbg_ptr) throw new Error('array contains a value of the wrong type');
                     ptr5 = e4.__destroy_into_raw();
                 }
                 const view4 = getDataViewMemory0();

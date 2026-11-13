@@ -287,7 +287,7 @@ export function take_non_numbers(a, b, c) {
         const e4 = c[n4];
         if (!(e4 instanceof Point)) throw new Error('array contains a value of the wrong type');
         _assertClass(e4, Point);
-        if (e4.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
+        if (!e4.__wbg_ptr) throw new Error('array contains a value of the wrong type');
     }
     let ptr0, len0, j1 = 0, len1, ptr1, j4 = 0, len4, ptr4;
     try {
@@ -311,7 +311,7 @@ export function take_non_numbers(a, b, c) {
             const e4 = c[j4];
             if (!(e4 instanceof Point)) throw new Error('array contains a value of the wrong type');
             _assertClass(e4, Point);
-            if (e4.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
+            if (!e4.__wbg_ptr) throw new Error('array contains a value of the wrong type');
             var ptr5 = e4.__destroy_into_raw();
             const view4 = getDataViewMemory0();
             const p4 = ptr4 + j4 * 4;

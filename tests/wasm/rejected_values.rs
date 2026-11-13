@@ -223,6 +223,8 @@ extern "C" {
         d: String,
         e: Vec<u8>,
     ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, js_name = jsBadNames)]
+    fn js_bad_names() -> Result<Vec<String>, JsValue>;
     #[wasm_bindgen(catch, js_name = jsBadPoints)]
     fn js_bad_points() -> Result<Vec<Kept>, JsValue>;
     #[wasm_bindgen(catch, js_name = jsBadNestedPoints)]
@@ -264,6 +266,10 @@ fn arguments_not_arrays() {
 
 #[wasm_bindgen_test]
 fn returns() {
+    // A value an import with `catch` returns is rejected as the import's
+    // error.
+    assert!(js_bad_names().is_err());
+
     let live = Kept::live_count();
     assert!(js_bad_points().is_err());
     assert_eq!(Kept::live_count(), live + 2);

@@ -69,7 +69,9 @@
 
 * A `Vec<String>` and a `Vec` of an exported Rust type reach the generated JS
   as each element's own ABI rather than as a list of JS handles. What JS
-  passes and receives is unchanged.
+  passes and receives is unchanged, except that a wrong element in what a
+  `catch` import returns is now that import's `Err` rather than an exception
+  thrown from the export that called it.
 
 * Stabilized the `js_sys::Temporal` bindings and `Date::to_temporal_instant`,
   previously behind `js_sys_unstable_apis`, now that Temporal is Stage 4 and

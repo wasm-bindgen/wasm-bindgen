@@ -32,6 +32,13 @@ exports.rejectedArguments = (memory) => {
     assert.throws(() => wasm.rejected_nested_points([[a], [], [b, 1]]), wrongType);
     kept();
 
+    // An instance without a pointer isn't one.
+    const empty = Object.create(wasm.Kept.prototype);
+    assert.throws(() => wasm.rejected_points([a, empty, b]), wrongType);
+    assert.throws(() => wasm.rejected_maybe_points([a, empty, b]), wrongType);
+    assert.throws(() => wasm.rejected_nested_points([[a], [empty, b]]), wrongType);
+    kept();
+
     // As does an argument, or an element of one, after an argument.
     assert.throws(() => wasm.rejected_point_then_point(a, {}), /expected instance of Kept/);
     kept();
@@ -217,6 +224,8 @@ exports.jsNotNames = () => 'notarray';
 exports.jsTakesMixed = (points) => points.forEach(point => point.free());
 
 let returned = [];
+
+exports.jsBadNames = () => ['a', 5];
 
 exports.jsBadPoints = () => {
     returned = [new wasm.Kept(1), new wasm.Kept(2)];

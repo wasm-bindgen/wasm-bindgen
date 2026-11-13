@@ -430,7 +430,7 @@ export function echo_option_vec_struct(a) {
             const e0 = a[n0];
             if (!(e0 instanceof Foo)) throw new Error('array contains a value of the wrong type');
             _assertClass(e0, Foo);
-            if (e0.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
+            if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
         }
     }
     let j0 = 0, ptr0 = 0, len0 = 0;
@@ -442,7 +442,7 @@ export function echo_option_vec_struct(a) {
                 const e0 = a[j0];
                 if (!(e0 instanceof Foo)) throw new Error('array contains a value of the wrong type');
                 _assertClass(e0, Foo);
-                if (e0.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
+                if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
                 var ptr1 = e0.__destroy_into_raw();
                 const view0 = getDataViewMemory0();
                 const p0 = ptr0 + j0 * 4;
@@ -887,7 +887,7 @@ export function echo_vec_struct(a) {
         const e0 = a[n0];
         if (!(e0 instanceof Foo)) throw new Error('array contains a value of the wrong type');
         _assertClass(e0, Foo);
-        if (e0.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
+        if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
     }
     let j0 = 0, len0, ptr0;
     try {
@@ -897,7 +897,7 @@ export function echo_vec_struct(a) {
             const e0 = a[j0];
             if (!(e0 instanceof Foo)) throw new Error('array contains a value of the wrong type');
             _assertClass(e0, Foo);
-            if (e0.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
+            if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
             var ptr1 = e0.__destroy_into_raw();
             const view0 = getDataViewMemory0();
             const p0 = ptr0 + j0 * 4;

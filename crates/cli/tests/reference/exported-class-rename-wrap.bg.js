@@ -52,7 +52,7 @@ export function readRenameds(renameds) {
         const e0 = renameds[n0];
         if (!(e0 instanceof Renamed)) throw new Error('array contains a value of the wrong type');
         _assertClass(e0, Renamed);
-        if (e0.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
+        if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
     }
     let j0 = 0, len0, ptr0;
     try {
@@ -62,7 +62,7 @@ export function readRenameds(renameds) {
             const e0 = renameds[j0];
             if (!(e0 instanceof Renamed)) throw new Error('array contains a value of the wrong type');
             _assertClass(e0, Renamed);
-            if (e0.__wbg_ptr === 0) throw new Error('array contains a value of the wrong type');
+            if (!e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
             var ptr1 = e0.__destroy_into_raw();
             const view0 = getDataViewMemory0();
             const p0 = ptr0 + j0 * 4;
