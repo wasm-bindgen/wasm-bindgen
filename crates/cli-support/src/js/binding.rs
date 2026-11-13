@@ -3820,12 +3820,9 @@ fn instruction(
             // wrap to one it accepts, for fewer cells than are written. The
             // length is read again where the values are taken, and what it
             // is by then is checked there. Cells of no size aren't
-            // allocated, so the most of them is the most the length's word
-            // counts: a `usize` on wasm32, and on memory64, where the word
-            // is a number, the most a length is.
+            // allocated, so the most of them is the most an `Array` holds.
             let most = match count {
                 CellCount::One => None,
-                CellCount::Word if !sized && js.cx.memory64 => Some((1u64 << 53) - 1),
                 CellCount::Word if !sized => Some(u32::MAX as u64),
                 CellCount::Word if js.cx.memory64 => None,
                 CellCount::Word => Some((i32::MAX as usize / stride) as u64),

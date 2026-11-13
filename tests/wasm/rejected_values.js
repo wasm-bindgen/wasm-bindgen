@@ -2,7 +2,6 @@ const wasm = require('wasm-bindgen-test.js');
 const assert = require('assert');
 
 const big = 'a'.repeat(200 * 1024);
-const isWasm64 = () => typeof wasm.wasm64_return_usize === 'function';
 const MAX_GROWTH = 4 * 1024 * 1024;
 
 function assertFlat(memory, f) {
@@ -430,11 +429,10 @@ exports.rejectedUnits = (memory) => {
         ));
         kept();
     }
-    // A length below none, or above what a `usize` holds, is rejected as
-    // one too long to allocate is, where the values are taken. One that
+    // A length below none, or above the most an `Array` has, is rejected
+    // as one too long to allocate is, where the values are taken. One that
     // isn't a number is no values.
-    const tooMany = isWasm64() ? 2 ** 53 : 2 ** 32;
-    for (const length of [-(2 ** 31), -1, tooMany, 2 ** 53, Infinity]) {
+    for (const length of [-(2 ** 31), -1, 2 ** 32, 2 ** 53, Infinity]) {
         assert.throws(() => wasm.rejected_units({ length }), /invalid malloc request/);
         assert.throws(() => wasm.rejected_maybe_units({ length }), /invalid malloc request/);
         assert.throws(
@@ -450,7 +448,7 @@ exports.rejectedUnits = (memory) => {
     for (const length of [NaN, -0.5]) {
         assert.strictEqual(wasm.rejected_units({ length }), 0);
     }
-    for (const then of [-1, tooMany, Infinity]) {
+    for (const then of [-1, 2 ** 32, Infinity]) {
         assert.throws(() => wasm.rejected_units(grown([undefined], then)), /invalid malloc request/);
         assert.throws(
             () => wasm.rejected_nested_units([[undefined], grown([undefined], then)]),
