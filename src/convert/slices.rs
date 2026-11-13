@@ -307,7 +307,7 @@ impl<T: RefIntoWasmAbi> IntoWasmAbi for &[T] {
 
     #[inline]
     fn into_abi(self) -> WasmSlice {
-        if T::ABI_TRANSPARENT {
+        if T::ABI_TRANSPARENT.get() {
             WasmSlice::borrow(self)
         } else {
             WasmSlice::encode(self, T::ref_into_abi)
@@ -606,7 +606,7 @@ impl<T: IntoWasmAbi> IntoWasmAbi for Box<[T]> {
 
     #[inline]
     fn into_abi(self) -> WasmSlice {
-        if T::ABI_TRANSPARENT {
+        if T::ABI_TRANSPARENT.get() {
             let len = self.len();
             WasmSlice::from_usize(Box::into_raw(self) as *mut T as usize, len)
         } else {
@@ -644,7 +644,7 @@ impl<T: FromWasmAbi> FromWasmAbi for Box<[T]> {
 
     #[inline]
     unsafe fn try_from_abi(js: WasmSlice) -> Result<Self, &'static str> {
-        if T::ABI_TRANSPARENT {
+        if T::ABI_TRANSPARENT.get() {
             let ptr = js.ptr.into_usize() as *mut T;
             let len = js.len.into_usize();
             Ok(Vec::from_raw_parts(ptr, len, len).into_boxed_slice())

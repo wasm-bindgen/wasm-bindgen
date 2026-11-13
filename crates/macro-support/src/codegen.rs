@@ -1826,8 +1826,9 @@ impl TryToTokens for ast::ImportType {
 
                 #[automatically_derived]
                 impl #impl_generics WasmDescribe for #rust_name #ty_generics #where_clause {
-                    // A handle's memory is its table index.
-                    const ABI_TRANSPARENT: bool = true;
+                    // SAFETY: A handle's memory is its table index.
+                    const ABI_TRANSPARENT: #wasm_bindgen::describe::AbiTransparent<Self> =
+                        unsafe { #wasm_bindgen::describe::AbiTransparent::yes() };
 
                     fn describe() {
                         #description

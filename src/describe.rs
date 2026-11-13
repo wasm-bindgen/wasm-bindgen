@@ -7,6 +7,7 @@ use alloc::borrow::Cow;
 use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::vec::Vec;
+use core::marker::PhantomData;
 use core::panic::AssertUnwindSafe;
 use core::{mem::MaybeUninit, ptr::NonNull};
 
@@ -68,17 +69,33 @@ pub trait WasmDescribe {
     /// A `Vec<Self>`, `Box<[Self]>` or `&[Self]` crosses as a buffer of each
     /// element's ABI, unless this is set, when its own memory is passed
     /// instead.
-    ///
-    /// # Safety
-    ///
-    /// Setting it is a layout promise: `Self` is, in memory, the element JS
-    /// reads in place for its descriptor, a number of the descriptor's width
-    /// or a JS handle's index, and every such element JS writes is a valid
-    /// `Self`.
     #[doc(hidden)]
-    const ABI_TRANSPARENT: bool = false;
+    const ABI_TRANSPARENT: AbiTransparent<Self> = AbiTransparent::NO;
 
     fn describe();
+}
+
+/// Whether a `[T]` crosses in place. It names `T` so that one type's can't
+/// stand in for another's, and is set only through [`AbiTransparent::yes`].
+#[doc(hidden)]
+pub struct AbiTransparent<T: ?Sized>(bool, PhantomData<fn(&T)>);
+
+impl<T: ?Sized> AbiTransparent<T> {
+    pub const NO: Self = Self(false, PhantomData);
+
+    /// # Safety
+    ///
+    /// This is a layout promise: `T` is, in memory, the element JS reads in
+    /// place for its descriptor, a number of the descriptor's width or a JS
+    /// handle's index, and every such element JS writes is a valid `T`.
+    pub const unsafe fn yes() -> Self {
+        Self(true, PhantomData)
+    }
+
+    #[inline]
+    pub(crate) const fn get(self) -> bool {
+        self.0
+    }
 }
 
 /// Trait for element types to implement WasmDescribe for vectors of
@@ -94,7 +111,7 @@ macro_rules! simple {
     ($($t:ident => $d:ident)*) => (simple!(@false $($t => $d)*););
     (@$transparent:literal $($t:ident => $d:ident)*) => ($(
         impl WasmDescribe for $t {
-            const ABI_TRANSPARENT: bool = $transparent;
+            const ABI_TRANSPARENT: AbiTransparent<Self> = AbiTransparent($transparent, PhantomData);
 
             #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
             fn describe() { inform($d) }
@@ -182,7 +199,7 @@ impl<T: WasmDescribe> WasmDescribe for [T] {
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe() {
         inform(SLICE);
-        if !T::ABI_TRANSPARENT {
+        if !T::ABI_TRANSPARENT.get() {
             inform(ABI_CELL);
         }
         T::describe();
@@ -245,7 +262,7 @@ impl<T: WasmDescribe> WasmDescribe for Box<[T]> {
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe() {
         inform(VECTOR);
-        if !T::ABI_TRANSPARENT {
+        if !T::ABI_TRANSPARENT.get() {
             inform(ABI_CELL);
         }
         T::describe();
@@ -294,7 +311,7 @@ impl<T: WasmDescribe, E: Into<JsValue>> WasmDescribe for Result<T, E> {
 }
 
 impl<T: WasmDescribe> WasmDescribe for MaybeUninit<T> {
-    const ABI_TRANSPARENT: bool = T::ABI_TRANSPARENT;
+    const ABI_TRANSPARENT: AbiTransparent<Self> = AbiTransparent(T::ABI_TRANSPARENT.0, PhantomData);
 
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe() {
@@ -311,7 +328,7 @@ impl<T: WasmDescribe> WasmDescribe for Clamped<T> {
 }
 
 impl WasmDescribe for JsError {
-    const ABI_TRANSPARENT: bool = true;
+    const ABI_TRANSPARENT: AbiTransparent<Self> = AbiTransparent(true, PhantomData);
 
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe() {
