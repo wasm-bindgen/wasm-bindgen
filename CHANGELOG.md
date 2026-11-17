@@ -45,6 +45,7 @@
   `Option<()>` still doesn't cross, as an element or on its own, since
   `None` is `undefined` already, and `Nullable<()>` isn't implemented.
   A `()` argument is unchanged: it is left out of the JS signature.
+  [#5476](https://github.com/wasm-bindgen/wasm-bindgen/pull/5476)
 
 * A dynamic-union enum is a `Vec<T>` / `Box<[T]>` element in both
   directions, crossing as a JS array whose elements are each converted as a
