@@ -89,14 +89,11 @@ pub fn detect_exception_handling_version(
 
 /// If a start function is present, it removes it from the `start` section
 /// of the Wasm module and then moves it to an exported function, named
-/// `__wbindgen_start`.
-pub(crate) fn unstart_start_function(module: &mut walrus::Module) -> bool {
-    let start = match module.start.take() {
-        Some(id) => id,
-        None => return false,
-    };
-    module.exports.add("__wbindgen_start", start);
-    true
+/// `__wbindgen_start`. Returns the new export, or `None` if the module has
+/// no start function.
+pub(crate) fn unstart_start_function(module: &mut walrus::Module) -> Option<walrus::ExportId> {
+    let start = module.start.take()?;
+    Some(module.exports.add("__wbindgen_start", start))
 }
 
 #[cfg(test)]
