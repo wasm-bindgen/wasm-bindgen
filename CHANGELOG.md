@@ -93,6 +93,7 @@
   is `undefined` as well, as is what a setter or a `pub` field of `()` is
   set to, which failed to bind before. A function returning `()` returns
   nothing, as before.
+  [#5477](https://github.com/wasm-bindgen/wasm-bindgen/pull/5477)
 
 * `VectorIntoWasmAbi`, `VectorFromWasmAbi` and `WasmDescribeVector` are
   soft-deprecated and no longer read: a vector crosses by its element's
