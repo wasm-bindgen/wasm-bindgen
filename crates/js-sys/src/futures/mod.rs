@@ -365,6 +365,9 @@ where
     Promise::new(&mut move |resolve, reject| {
         let future = future.take().unwrap_throw();
         spawn_local(async move {
+            // A future whose poll panicked is dropped by the end of this
+            // statement and never polled again. `#[wasm_bindgen]` async
+            // exports rely on this to assert their future `UnwindSafe`.
             let res = future.catch_unwind().await;
             match res {
                 Ok(Ok(val)) => {

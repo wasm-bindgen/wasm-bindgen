@@ -1348,10 +1348,21 @@ impl TryToTokens for ast::Export {
                     }
                 }
             } else {
+                // The arguments were checked to be unwind safe above (`Self:
+                // RefUnwindSafe` for `&self` and `&mut self`, `T:
+                // RefUnwindSafe` for `&T` and `&mut T`, `T: UnwindSafe` for
+                // owned values), as for a sync export. The future itself can
+                // never be `UnwindSafe` when it holds a `&mut` borrow across
+                // an `.await`, because of std's blanket `&mut T: !UnwindSafe`,
+                // so assert it here, just like the sync path does by
+                // converting the arguments inside its `maybe_catch_unwind`
+                // closure.
                 call = quote! {
-                    #futures::future_to_promise(async move {
-                        #call
-                    }).into()
+                    #futures::future_to_promise(
+                        #wasm_bindgen::__rt::core::panic::AssertUnwindSafe(async move {
+                            #call
+                        })
+                    ).into()
                 }
             }
         } else {

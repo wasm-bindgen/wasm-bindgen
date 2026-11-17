@@ -6,7 +6,7 @@ use wasm_bindgen_test::*;
 #[wasm_bindgen(module = "tests/wasm/futures.js")]
 extern "C" {
     #[wasm_bindgen(catch)]
-    async fn call_exports(catch_unwind: bool) -> Result<JsValue, JsValue>;
+    async fn call_exports() -> Result<JsValue, JsValue>;
 
     async fn call_promise() -> JsValue;
     #[wasm_bindgen(js_name = call_promise)]
@@ -33,9 +33,7 @@ extern "C" {
 
 #[wasm_bindgen_test]
 async fn smoke() {
-    call_exports(cfg!(all(feature = "std", panic = "unwind")))
-        .await
-        .unwrap();
+    call_exports().await.unwrap();
 }
 
 #[wasm_bindgen]
@@ -144,12 +142,36 @@ pub async fn async_take_js_reference(x: &JsValue) {
     assert_eq!(*x, 42);
 }
 
-// TODO: Not sure how to mark the slice argument as unwind safe while also
-// preserving WasmAbi trait impl.
-#[cfg(not(all(feature = "std", panic = "unwind")))]
 #[wasm_bindgen]
 pub async fn async_take_mut_slice(x: &mut [i32]) {
     x.fill(42);
+}
+
+#[wasm_bindgen]
+pub struct AsyncCounter {
+    count: u32,
+}
+
+#[wasm_bindgen]
+impl AsyncCounter {
+    #[allow(clippy::new_without_default)]
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> AsyncCounter {
+        AsyncCounter { count: 0 }
+    }
+
+    /// Holds `&mut self` across an `.await`.
+    pub async fn increment(&mut self) -> u32 {
+        call_promise().await;
+        self.count += 1;
+        self.count
+    }
+
+    pub async fn increment_and_panic(&mut self) -> u32 {
+        call_promise().await;
+        self.count += 1;
+        panic!("Oops!");
+    }
 }
 
 #[wasm_bindgen_test]
