@@ -26,6 +26,30 @@ pub trait IntoWasmAbi: WasmDescribe {
     /// Convert `self` into `Self::Abi` so that it can be sent across the wasm
     /// ABI boundary.
     fn into_abi(self) -> Self::Abi;
+
+    /// Lowers an import argument held in `slot`, which the caller drops after
+    /// the call returns. Owning types whose borrow crosses identically (`String`
+    /// as `&str`, a JS handle as `&JsValue`) leave the value in the slot and
+    /// cross borrowed, so the owned and borrowed forms of a type share one
+    /// wire format; everything else takes the value.
+    #[doc(hidden)]
+    #[inline]
+    fn arg_into_abi(slot: &mut Option<Self>) -> Self::Abi
+    where
+        Self: Sized,
+    {
+        match slot.take() {
+            Some(value) => value.into_abi(),
+            None => unreachable!(),
+        }
+    }
+
+    /// Describes the wire format [`IntoWasmAbi::arg_into_abi`] produces.
+    #[doc(hidden)]
+    #[inline]
+    fn describe_arg() {
+        Self::describe()
+    }
 }
 
 /// A type whose shared references can cross the Wasm ABI, i.e.
@@ -69,6 +93,10 @@ mod ref_into_wasm_abi {
     pub trait Sealed {}
 
     impl<T: ?Sized> Sealed for T where for<'a> &'a T: IntoWasmAbi {}
+
+    pub trait MaybeSealed {}
+
+    impl<T: ?Sized> MaybeSealed for T where for<'a> Option<&'a T>: IntoWasmAbi {}
 }
 
 // Reports a missing `T: RefIntoWasmAbi` as that bound, not as this impl's.
@@ -87,6 +115,57 @@ where
     #[inline]
     fn ref_into_abi(&self) -> A {
         IntoWasmAbi::into_abi(self)
+    }
+}
+
+/// A type whose optional shared references can cross the Wasm ABI, i.e.
+/// `for<'a> Option<&'a Self>: IntoWasmAbi`.
+///
+/// This carries the conversion of an `Option<&Self>` as [`RefIntoWasmAbi`]
+/// carries that of a `&Self`. `experimental_generic_mono` imports marshal an
+/// `Option<&T>` argument through it, so `T: MaybeRefIntoWasmAbi` is the
+/// bound they declare, which covers a `&T` argument too. It is sealed,
+/// holding exactly where the higher-ranked bound does.
+///
+/// # ⚠️ Unstable
+///
+/// This is part of the internal [`convert`](crate::convert) module, **no
+/// stability guarantees** are provided. Use at your own risk. See its
+/// documentation for more details.
+#[cfg_attr(
+    wbg_diagnostic,
+    diagnostic::on_unimplemented(
+        note = "`Option<&{Self}>` does not implement `IntoWasmAbi`, which is how an optional reference is lent"
+    )
+)]
+pub trait MaybeRefIntoWasmAbi: RefIntoWasmAbi + ref_into_wasm_abi::MaybeSealed {
+    /// The Wasm ABI type that `Option<&Self>` converts into.
+    type MaybeAbi: WasmAbi;
+
+    /// Describe `Option<&Self>`.
+    fn describe_maybe_ref();
+
+    /// Convert an `Option<&Self>` into `Self::MaybeAbi`.
+    fn maybe_ref_into_abi(value: Option<&Self>) -> Self::MaybeAbi;
+}
+
+// Reports a missing `T: MaybeRefIntoWasmAbi` as that bound, not as this
+// impl's.
+#[cfg_attr(wbg_do_not_recommend, diagnostic::do_not_recommend)]
+impl<T: RefIntoWasmAbi + ?Sized, A: WasmAbi> MaybeRefIntoWasmAbi for T
+where
+    for<'a> Option<&'a T>: IntoWasmAbi<Abi = A>,
+{
+    type MaybeAbi = A;
+
+    #[inline]
+    fn describe_maybe_ref() {
+        <Option<&T> as WasmDescribe>::describe()
+    }
+
+    #[inline]
+    fn maybe_ref_into_abi(value: Option<&Self>) -> A {
+        IntoWasmAbi::into_abi(value)
     }
 }
 
@@ -273,6 +352,27 @@ pub trait OptionIntoWasmAbi: IntoWasmAbi {
     /// It should be guaranteed that the `IntoWasmAbi` can never produce the ABI
     /// value returned here.
     fn none() -> Self::Abi;
+
+    /// [`IntoWasmAbi::arg_into_abi`] for `Option<Self>`.
+    #[doc(hidden)]
+    #[inline]
+    fn option_arg_into_abi(slot: &mut Option<Option<Self>>) -> Self::Abi
+    where
+        Self: Sized,
+    {
+        match slot.take() {
+            Some(Some(value)) => value.into_abi(),
+            Some(None) => Self::none(),
+            None => unreachable!(),
+        }
+    }
+
+    /// [`IntoWasmAbi::describe_arg`] for `Option<Self>`, after `OPTIONAL`.
+    #[doc(hidden)]
+    #[inline]
+    fn option_describe_arg() {
+        Self::describe()
+    }
 }
 
 /// Indicates that this type can be received from JS as `Option<Self>` over
@@ -320,6 +420,27 @@ pub trait MaybeIntoWasmAbi: IntoWasmAbi {
     /// It should be guaranteed that
     /// [`into_maybe_abi`](Self::into_maybe_abi) can never produce this value.
     fn none() -> Self::MaybeAbi;
+
+    /// [`IntoWasmAbi::arg_into_abi`] for `Option<Self>`.
+    #[doc(hidden)]
+    #[inline]
+    fn maybe_arg_into_abi(slot: &mut Option<Option<Self>>) -> Self::MaybeAbi
+    where
+        Self: Sized,
+    {
+        match slot.take() {
+            Some(Some(value)) => value.into_maybe_abi(),
+            Some(None) => Self::none(),
+            None => unreachable!(),
+        }
+    }
+
+    /// [`IntoWasmAbi::describe_arg`] for `Option<Self>`, after `OPTIONAL`.
+    #[doc(hidden)]
+    #[inline]
+    fn maybe_describe_arg() {
+        Self::describe()
+    }
 }
 
 /// The ABI of `Option<Self>` received from JS. See [`MaybeIntoWasmAbi`].

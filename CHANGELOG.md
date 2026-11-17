@@ -41,6 +41,20 @@
   single value is, and typed as `Union[]`.
   [#5471](https://github.com/wasm-bindgen/wasm-bindgen/pull/5471)
 
+* `experimental_generic_mono` imports emit one binding per wire format: an
+  owned `String`, `Option<String>`, `JsValue` or imported type argument is
+  passed borrowed and dropped in Rust after the call, so `"a"`, `&s` and `s`
+  share one binding, and instantiations that differ only in a handle's
+  TypeScript type share one too. The per-binding `// generic import` comments
+  are only emitted under `--keep-debug`. Such imports also take
+  `Option<&T>` arguments under a `T: MaybeRefIntoWasmAbi` bound, which
+  covers `&T` too,
+  `?Sized` type parameters named only behind a reference (`key: &Q` with
+  `K: Borrow<Q>`), and raw identifiers as argument and function names, and
+  keep argument-position `impl Trait` in the public signature, so it is left
+  out of a turbofish as in any Rust function.
+  [#5440](https://github.com/wasm-bindgen/wasm-bindgen/pull/5440)
+
 * Added `aarch64-pc-windows-msvc` release artifacts.
   [#5439](https://github.com/wasm-bindgen/wasm-bindgen/pull/5439)
 

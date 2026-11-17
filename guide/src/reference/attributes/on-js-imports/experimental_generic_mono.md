@@ -67,6 +67,7 @@ everything a caller has to satisfy:
 |---|---|
 | argument `T` | `T: IntoWasmAbi` |
 | argument `&T` | `T: RefIntoWasmAbi` |
+| argument `Option<&T>` | `T: MaybeRefIntoWasmAbi` |
 | argument `&[T]` or `Option<&[T]>` | `T: RefIntoWasmAbi` |
 | argument `Vec<T>` or `Option<Vec<T>>` | `T: IntoWasmAbi` |
 | return `T` | `T: FromWasmAbi` |
@@ -126,9 +127,24 @@ has no borrowed ABI and so can't be passed. A `Vec<u32>` satisfies both and
 crosses as a copy; take a `&[u32]` argument to pass a view instead. See
 [Note on `&T` arguments](#note-on-t-arguments).
 
-Relaxed bounds are the exception: `T: ?Sized` is not supported on any
-`wasm-bindgen` generic — erased or per-monomorphisation — and is reported as
-`unsupported in wasm-bindgen generics`.
+A parameter only ever named behind a reference may be relaxed with `?Sized`,
+as in `HashMap::get`:
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    type Map<K, V>;
+
+    #[wasm_bindgen(method, experimental_generic_mono)]
+    fn has<K, V, Q>(this: &Map<K, V>, key: &Q) -> bool
+    where
+        K: Borrow<Q>,
+        Q: ?Sized + RefIntoWasmAbi;
+}
+```
+
+`T: ?Sized` is still reported as `unsupported in wasm-bindgen generics` on an
+erased generic.
 
 ### String bounds
 
@@ -219,6 +235,21 @@ as a separate `&Symbol` overload. There are no singleton traits; use
 other singleton cases. Like `experimental_generic_mono`, the union traits may
 change or be removed while the feature evolves.
 
+## One binding per wire format
+
+An owned argument whose borrowed form crosses identically is passed borrowed,
+and dropped in Rust once the call returns. `String` crosses as a `&str`,
+`Option<String>` as an `Option<&str>`, and `JsValue` or an imported type as
+its handle, so `log("a")`, `log(&s)` and `log(s)` share one binding, as do
+`log(js_string)` and `log(&js_string)`. An owned string is freed in Rust
+rather than in a JS `finally`.
+
+Instantiations that differ only in a JS handle's TypeScript type, such as two
+imported types, share one binding too.
+
+The generated bindings carry a `// generic import` comment naming the
+instantiation only under `--keep-debug`.
+
 ## `impl Trait` arguments
 
 Argument-position `impl Trait` is supported. It is desugared into a synthesized
@@ -241,6 +272,21 @@ is equivalent to writing `fn log<T: core::fmt::Debug + IntoWasmAbi>(value: T)`. 
 means a function can have a type parameter without appearing to: `impl Trait`
 counts towards the "at least one type parameter" requirement even though it
 never appears in the function's own generic parameter list.
+
+The public wrapper keeps the `impl Trait` in its signature, so, as for any Rust
+function, it does not count in a turbofish:
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    type Storage;
+
+    #[wasm_bindgen(method, experimental_generic_mono)]
+    fn get<T: FromWasmAbi>(this: &Storage, key: impl JsStringLike) -> T;
+}
+
+let value = storage.get::<JsValue>("key");
+```
 
 `impl Trait` can be mixed with named type parameters, nested inside another
 type (`Option<impl Trait>`), and repeated — each occurrence gets its own
@@ -495,8 +541,8 @@ usually to drop `experimental_generic_mono`:
 
 * **A mutable reference to a type parameter** (`&mut T`, `&mut [T]`, or any
   other `&mut` whose referent mentions a type parameter), and a reference to
-  a type parameter **nested inside another type** (e.g. `Option<&T>`). A bare
-  `&T` *is* supported, slices are supported, `Option<&[T]>` included, since
+  a type parameter **nested inside another type** (e.g. `(T, &T)`). A bare
+  `&T` and `Option<&T>` *are* supported, slices are supported, `Option<&[T]>` included, since
   a slice crosses by its element's ABI rather than as a nested reference,
   and mutable references to *concrete* types (e.g.
   `&mut [u16]`, `&mut dyn FnMut(u32)`) bind exactly as they do on the
@@ -571,3 +617,9 @@ which is lent as itself; a sequence of numbers behind the `&T` reaches JS as
 a copy. Passing `&SomeStruct` for a plain Rust struct is rejected, since
 there is no `&T` ABI representation for it; take the value by value, or pass
 a JS type.
+
+An `Option<&T>` argument is declared with the bound `T: MaybeRefIntoWasmAbi`
+and crosses as the `Option<T>` of that type would. The bound holds for every
+`T` with `for<'a> Option<&'a T>: IntoWasmAbi`, and covers a `&T` argument too.
+`T` may itself be an `Option<U>`: JS has one empty value, so `Some(&None)` and
+`None` both arrive as `undefined`.
