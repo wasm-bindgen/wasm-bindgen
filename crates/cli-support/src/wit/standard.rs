@@ -205,7 +205,7 @@ pub enum AdapterType {
     NamedExternref(String),
     Function,
     NonNull,
-    /// `()` in a sequence, which is `undefined` and no Wasm value.
+    /// `()`, which is `undefined` and no Wasm value.
     Undefined,
 }
 
@@ -316,7 +316,7 @@ pub enum Instruction {
     /// Pops a `bool` from the stack and pushes an `i32` equivalent
     I32FromBool,
     /// Pops the `undefined` that `()` is and pushes nothing, as `()` has no
-    /// words.
+    /// words. A debug build asserts it of an argument.
     UnitFromUndefined,
     /// Pops a `string` from the stack and pushes the first character as `i32`
     I32FromStringFirstChar,

@@ -15,16 +15,17 @@ use walrus::ValType;
 
 impl InstructionBuilder<'_, '_> {
     /// Process a `Descriptor` as if it's being passed from JS to Rust. This
-    /// will skip `Unit` and otherwise internally add instructions necessary to
-    /// convert the foreign type into the Rust bits.
+    /// will skip a returned `Unit` and otherwise internally add instructions
+    /// necessary to convert the foreign type into the Rust bits.
     pub fn incoming(&mut self, arg: &Descriptor) -> Result<(), Error> {
-        if let Descriptor::Unit = arg {
+        if self.returns_nothing(arg) {
             return Ok(());
         }
         // This is a wrapper around `_incoming` to have a number of sanity checks
-        // that we don't forget things. We should always produce at least one
-        // Wasm arg and exactly one webidl arg. Additionally the number of
-        // bindings should always match the number of webidl types for now.
+        // that we don't forget things. We should always produce exactly one
+        // webidl arg and at least one Wasm arg, which `()` alone has none of.
+        // Additionally the number of bindings should always match the number
+        // of webidl types for now.
         let input_before = self.input.len();
         let output_before = self.output.len();
         self._incoming(arg)?;
@@ -34,10 +35,16 @@ impl InstructionBuilder<'_, '_> {
             "didn't push an input {arg:?}"
         );
         assert!(
-            output_before < self.output.len(),
+            output_before < self.output.len() || matches!(arg, Descriptor::Unit),
             "didn't push more outputs {arg:?}"
         );
         Ok(())
+    }
+
+    /// Whether `arg` is the `()` of a function that returns nothing. Anywhere
+    /// else `()` is a value, which is `undefined`.
+    pub(super) fn returns_nothing(&self, arg: &Descriptor) -> bool {
+        matches!(arg, Descriptor::Unit) && self.return_position && !self.stored
     }
 
     fn _incoming(&mut self, arg: &Descriptor) -> Result<(), Error> {
@@ -209,10 +216,8 @@ impl InstructionBuilder<'_, '_> {
                 "unsupported argument type for calling Rust function from JS: {arg:?}"
             ),
 
-            // On its own `()` crosses as nothing. A sequence holds it as
-            // `undefined`, in no words.
             Descriptor::Unit => {
-                if self.stored {
+                if !self.returns_nothing(arg) {
                     self.stored_check(StoredCheck::Undefined);
                     self.instruction(
                         &[AdapterType::Undefined],

@@ -96,6 +96,7 @@ pub mod structural;
 pub mod third_party_abi;
 pub mod truthy_falsy;
 pub mod try_from_js_value;
+pub mod unit_arguments;
 pub mod unit_values;
 #[cfg(all(panic = "unwind", feature = "std"))]
 pub mod unwind;

@@ -3313,28 +3313,33 @@ mod tests {
         );
     }
 
-    // Only a sequence holds `()` as a value. On its own it crosses as
-    // nothing, and a reference to it doesn't cross.
+    // `()` is `undefined` wherever it's a value, in no Wasm words, and only
+    // the `()` a function returns is nothing.
     #[test]
-    fn unit_is_nothing_on_its_own() {
+    fn unit_is_a_value_of_no_words() {
         let mut module = Module::default();
         let mut cx = test_context(&mut module, None);
         let unit = Descriptor::Unit;
-        for return_position in [false, true] {
-            let mut flat = cx.instruction_builder(return_position);
-            flat.incoming(&unit).unwrap();
-            flat.outgoing(&unit).unwrap();
-            assert!(flat.input.is_empty() && flat.output.is_empty());
-            assert!(flat.instructions.is_empty());
-            let err = flat
-                .outgoing(&Descriptor::Ref(Box::new(unit.clone())))
-                .unwrap_err();
-            assert!(
-                err.to_string()
-                    .contains("unsupported reference argument type"),
-                "{err}"
-            );
-        }
+
+        let mut arg = cx.instruction_builder(false);
+        arg.incoming(&unit).unwrap();
+        assert_eq!(arg.input, [AdapterType::Undefined]);
+        assert!(arg.output.is_empty());
+
+        let mut arg = cx.instruction_builder(false);
+        arg.outgoing(&unit).unwrap();
+        arg.outgoing(&Descriptor::Ref(Box::new(unit.clone())))
+            .unwrap();
+        assert!(arg.input.is_empty());
+        assert_eq!(arg.output, [AdapterType::Undefined, AdapterType::Undefined]);
+
+        let mut ret = cx.instruction_builder(true);
+        ret.incoming(&unit).unwrap();
+        ret.outgoing(&unit).unwrap();
+        ret.outgoing(&Descriptor::Ref(Box::new(unit.clone())))
+            .unwrap();
+        assert!(ret.input.is_empty() && ret.output.is_empty());
+        assert!(ret.instructions.is_empty());
     }
 
     /// Collect argv and argc constants.

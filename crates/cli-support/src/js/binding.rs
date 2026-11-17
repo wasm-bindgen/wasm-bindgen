@@ -2099,6 +2099,16 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         self.check(&format!("_assertBoolean({arg});"));
     }
 
+    /// The check a debug build makes of a `()` argument. A stored one is
+    /// checked in every build.
+    fn assert_undefined(&mut self, arg: &str) {
+        if !self.cx.config.debug || self.stored {
+            return;
+        }
+        self.cx.expose_assert_undefined();
+        self.check(&format!("_assertUndefined({arg});"));
+    }
+
     /// The test for an incoming option holding no value: only `null` for a
     /// plain `Nullable`, otherwise either empty.
     fn is_none(&mut self, val: &str, kind: OptionKind) -> String {
@@ -2782,7 +2792,8 @@ fn instruction(
         }
 
         Instruction::UnitFromUndefined => {
-            js.pop();
+            let val = js.pop();
+            js.assert_undefined(&val);
         }
 
         Instruction::UndefinedFromUnit => js.push_safe("undefined".into()),
