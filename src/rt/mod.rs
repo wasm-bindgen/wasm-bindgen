@@ -974,8 +974,11 @@ pub static mut __abort_handler: fn() = NO_OP_PTR;
 /// `wasm-bindgen` is run with `--force-enable-abort-handler`; without that flag
 /// the handler is registered but never fires.
 ///
-/// On Emscripten the handler never fires. Use Emscripten's `Module.onAbort`
-/// callback instead.
+/// On Emscripten the callback is driven by Emscripten's own `abort()`: the
+/// generated glue hooks `Module.onAbort` (wrapping one the embedder set) and
+/// calls the handler from there, so it fires for every abort regardless of
+/// the panic strategy, including `panic=abort` panics and
+/// `std::process::abort()`, before the embedder's `onAbort` runs.
 pub fn set_on_abort(f: fn()) -> Option<fn()> {
     let prev = unsafe { __abort_handler };
     unsafe {
@@ -988,6 +991,18 @@ pub fn set_on_abort(f: fn()) -> Option<fn()> {
     } else {
         None
     }
+}
+
+/// Runs the [`set_on_abort`] handler. Exported on Emscripten for the
+/// generated `Module.onAbort` wrapper to call: rustc doesn't export statics
+/// there, so the glue can't reach `__abort_handler` through memory the way
+/// it does on other targets, and a call into wasm needs no address at all.
+/// `C-unwind` so that a panicking handler under `panic=unwind` surfaces as
+/// an exception the glue can swallow rather than a second abort.
+#[cfg(target_os = "emscripten")]
+#[no_mangle]
+pub extern "C-unwind" fn __wbg_call_abort_hook() {
+    unsafe { (__abort_handler)() }
 }
 
 /// Schedule the instance for reinitialization before the next export call.

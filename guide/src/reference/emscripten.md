@@ -131,11 +131,14 @@ Fatal errors, on the other hand, are Emscripten's business rather than
 `wasm-bindgen`'s: a trap (`WebAssembly.RuntimeError`: `unreachable`, stack
 overflow, out-of-bounds access) escaping an export is passed to Emscripten's
 `abort()`, which calls `Module.onAbort`, sets `ABORT` and re-traps so the
-error reaches the caller as a `RuntimeError`. None of the machinery in
-[Handling aborts](handling-aborts.md) is generated for Emscripten output:
-`set_on_abort` callbacks never fire (use `Module.onAbort`), later export
-calls are not refused, and `schedule_reinit()` is a no-op since Emscripten
-owns instantiation.
+error reaches the caller as a `RuntimeError`. The glue hooks `Module.onAbort`
+at startup (wrapping one you passed to the module, which still runs
+afterwards) so that a [`set_on_abort`](handling-aborts.md) handler fires on
+every abort — including `panic=abort` panics and `std::process::abort()`,
+which reach the same `abort()` through libc. The rest of the machinery in
+[Handling aborts](handling-aborts.md) is not generated for Emscripten output:
+later export calls are not refused, and `schedule_reinit()` is a no-op since
+Emscripten owns instantiation.
 
 Anything else that escapes an export is rethrown to the caller untouched.
 Unlike `wasm32-unknown-unknown`, most imports in an Emscripten module aren't

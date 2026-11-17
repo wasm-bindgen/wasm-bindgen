@@ -16,9 +16,9 @@
 //! `panic=abort` builds. Support for `panic=abort` may be added in a future
 //! release.
 //!
-//! On Emscripten neither hook applies: termination there uses Emscripten's
-//! `abort()` and the instance is never reinitialized since Emscripten owns
-//! instantiation.
+//! On Emscripten [`set_on_abort`] is driven from Emscripten's `Module.onAbort`
+//! and fires with either panic strategy; [`schedule_reinit()`] is a no-op
+//! there, since Emscripten owns instantiation.
 //!
 //! # Reinit
 //!
