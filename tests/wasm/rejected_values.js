@@ -291,8 +291,9 @@ exports.rejectedSizes = () => {
 };
 
 // `values`, answering `then` for their length once each was read and the
-// reading stopped at the length they have.
-function grown(values, then) {
+// reading stopped at the length they have. A read past them throws, or
+// answers `past` when that is given.
+function grown(values, then, ...past) {
     let read = 0;
     return new Proxy(values, {
         get(target, key) {
@@ -302,7 +303,10 @@ function grown(values, then) {
                 return target.length;
             }
             if (key === String(target.length - 1)) read = read || 1;
-            if (Number(key) >= target.length) throw new Error('read past the values');
+            if (Number(key) >= target.length) {
+                if (!past.length) throw new Error('read past the values');
+                return past[0];
+            }
             return target[key];
         },
     });
@@ -354,6 +358,136 @@ exports.rejectedChangedLengths = (memory) => {
 
 exports.jsLongNames = () => grown(['a', undefined], 2 ** 29);
 
+// `()` is `undefined` and nothing else. A sequence of it is only a length,
+// with nothing allocated for it, so what is checked is what Rust is given.
+exports.rejectedUnits = (memory) => {
+    const debug = process.env.WASM_BINDGEN_NO_DEBUG == null;
+    const before = live();
+    const a = new wasm.Kept(1);
+    const kept = () => {
+        assert.strictEqual(a.value, 1);
+        assert.strictEqual(live(), before + 1);
+    };
+
+    assert.strictEqual(wasm.rejected_units([undefined, undefined]), 2);
+    assert.strictEqual(wasm.rejected_nested_units([[undefined], [], [undefined, undefined]]), 3);
+    for (const bad of [[undefined, null], [1], [undefined, undefined, 0], [''], [[]]]) {
+        assert.throws(() => wasm.rejected_units(bad), wrongType);
+        assert.throws(() => wasm.rejected_maybe_units(bad), wrongType);
+        assert.throws(() => wasm.rejected_nested_units([[undefined], bad]), wrongType);
+        // The instance and the names beside them stay with JS.
+        assertFlat(memory, () => assert.throws(
+            () => wasm.rejected_point_names_then_units(a, [big, big], bad),
+            wrongType,
+        ));
+        assertFlat(memory, () => assert.throws(
+            () => wasm.rejected_units_then_point_names(bad, a, [big, big]),
+            wrongType,
+        ));
+        kept();
+    }
+    for (const bad of [5, 'ab', undefined, null, {}]) {
+        assert.throws(() => wasm.rejected_nested_units([[undefined], bad]), wrongType);
+    }
+    assert.strictEqual(wasm.rejected_maybe_units(undefined), -1);
+    assert.strictEqual(wasm.rejected_maybe_units(null), -1);
+    assert.strictEqual(wasm.rejected_maybe_units([]), 0);
+
+    // Only a debug build's glue rejects what isn't an array: anything else
+    // with a `length` is otherwise taken as its elements.
+    if (debug) {
+        for (const v of ['ab', 5, {}, true, null]) {
+            assert.throws(() => wasm.rejected_units(v), /expected an array, found/);
+        }
+    } else {
+        assert.throws(() => wasm.rejected_units('ab'), wrongType);
+        assert.strictEqual(wasm.rejected_units(5), 0);
+    }
+    assert.strictEqual(wasm.rejected_units({ length: 2 }), 2);
+    assert.throws(() => wasm.rejected_units({ length: 2, 1: null }), wrongType);
+    // A length that isn't a whole number takes the values below it.
+    assert.strictEqual(wasm.rejected_units({ length: 1.5 }), 1);
+
+    // The length is read again where the values are taken: what it is then
+    // is how many Rust is given, each of them checked there.
+    assert.strictEqual(wasm.rejected_units(grown([undefined, undefined], 5, undefined)), 5);
+    assert.strictEqual(wasm.rejected_units(grown([undefined, undefined, undefined], 1)), 1);
+    assert.strictEqual(wasm.rejected_units(grown([undefined], 0)), 0);
+    assert.strictEqual(wasm.rejected_maybe_units(grown([undefined], 4, undefined)), 4);
+    assert.strictEqual(
+        wasm.rejected_nested_units([[undefined], grown([undefined], 3, undefined)]), 4);
+    for (const past of [null, 0, 'x']) {
+        assert.throws(() => wasm.rejected_units(grown([undefined, undefined], 5, past)), wrongType);
+        assert.throws(() => wasm.rejected_maybe_units(grown([undefined], 2, past)), wrongType);
+        assert.throws(
+            () => wasm.rejected_nested_units([[undefined], grown([undefined], 3, past)]),
+            wrongType,
+        );
+        assertFlat(memory, () => assert.throws(
+            () => wasm.rejected_units_then_point_names(grown([undefined], 2, past), a, [big]),
+            wrongType,
+        ));
+        kept();
+    }
+    // A length below none, or above the most an `Array` has, is rejected
+    // as one too long to allocate is, where the values are taken. One that
+    // isn't a number is no values.
+    for (const length of [-(2 ** 31), -1, 2 ** 32, 2 ** 53, Infinity]) {
+        assert.throws(() => wasm.rejected_units({ length }), /invalid malloc request/);
+        assert.throws(() => wasm.rejected_maybe_units({ length }), /invalid malloc request/);
+        assert.throws(
+            () => wasm.rejected_nested_units([[undefined], { length }]),
+            wrongType,
+        );
+        assertFlat(memory, () => assert.throws(
+            () => wasm.rejected_units_then_point_names({ length }, a, [big]),
+            /invalid malloc request/,
+        ));
+        kept();
+    }
+    for (const length of [NaN, -0.5]) {
+        assert.strictEqual(wasm.rejected_units({ length }), 0);
+    }
+    for (const then of [-1, 2 ** 32, Infinity]) {
+        assert.throws(() => wasm.rejected_units(grown([undefined], then)), /invalid malloc request/);
+        assert.throws(
+            () => wasm.rejected_nested_units([[undefined], grown([undefined], then)]),
+            /invalid malloc request/,
+        );
+    }
+    // A length no array has is only read as far as its values go.
+    for (const then of [2 ** 28, 2 ** 31, 2 ** 32 - 1]) {
+        assertFlat(memory, () => assert.throws(
+            () => wasm.rejected_units_then_point_names(grown([undefined], then), a, [big]),
+            /read past the values/,
+        ));
+        kept();
+    }
+
+    // What was taken ahead of the units is Rust's by the time they are
+    // rejected, and is freed.
+    assertFlat(memory, () => {
+        const taken = new wasm.Kept(2);
+        const units = [undefined, undefined];
+        const names = [big];
+        let reads = 0;
+        Object.defineProperty(names, 0, {
+            get() {
+                if (++reads === 2) units.push(null);
+                return big;
+            },
+        });
+        assert.throws(() => wasm.rejected_point_names_then_units(taken, names, units), wrongType);
+        assert.strictEqual(taken.__wbg_ptr, 0);
+    });
+    kept();
+
+    a.free();
+    assert.strictEqual(live(), before);
+};
+
+exports.jsGrownUnits = (past) => grown([undefined, undefined], 5, past);
+
 function seeded(a) {
     return () => {
         a = (a + 0x6D2B79F5) | 0;
@@ -393,6 +527,11 @@ exports.rejectedChanging = (memory) => {
         ['rejected_points_then_chars', (k, flat) => [[k()], flat(), ['a', 'b']]],
         ['rejected_points_then_maybe_chars', k => [[k(), k()], [undefined, 'a']]],
         ['rejected_named', (k, flat) => [flat(), [big]]],
+        ['rejected_units', () => [[undefined, undefined, undefined]]],
+        ['rejected_maybe_units', () => [[undefined, undefined]]],
+        ['rejected_nested_units', () => [[[undefined], [undefined, undefined]]]],
+        ['rejected_point_names_then_units', (k, flat) => [flat(), [big, 'b'], [undefined, undefined]]],
+        ['rejected_units_then_point_names', (k, flat) => [[undefined, undefined], flat(), [big]]],
     ];
     const random = seeded(1);
     const pick = values => values[Math.floor(random() * values.length)];

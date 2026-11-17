@@ -11,3 +11,9 @@ Each page's table says whether the type is accepted inside `Option`. How
 the [`Option<T>`](./types/option.md) page, and
 [`Nullable<T>`](./types/nullable.md) is accepted wherever `Option<T>` is for a
 `T | null` value, with `Nullable<Option<T>>` for `T | null | undefined`.
+
+`()` is `undefined` as the element of a sequence, so a
+[`Vec<()>`](./types/boxed-slices.md) is an `Array` of `undefined`. A function
+that returns `()` returns nothing, and a `()` argument is left out of the JS
+signature. It can't be wrapped in an `Option`, whose `None` is `undefined`
+already.

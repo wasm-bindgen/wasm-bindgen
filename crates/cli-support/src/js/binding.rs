@@ -2781,6 +2781,12 @@ fn instruction(
             js.push(val);
         }
 
+        Instruction::UnitFromUndefined => {
+            js.pop();
+        }
+
+        Instruction::UndefinedFromUnit => js.push_safe("undefined".into()),
+
         Instruction::I32FromStringFirstChar => {
             let val = js.pop();
             let i = js.tmp();
@@ -3634,9 +3640,16 @@ fn instruction(
             let i = js.tmp();
             let p = js.local(format!("p{i}"));
             let end = js.local(format!("end{i}"));
-            let memory = js.dataview(*mem);
-            let view = js.local(format!("view{i}"));
             let (fields, stride, align) = encoded_slice_layout(layout)?;
+            // A sequence of cells with no size is in no memory: it is only
+            // how many there are, which nothing was allocated for.
+            let sized = stride != 0 || len.is_none();
+            let memory = if sized {
+                js.dataview(*mem)
+            } else {
+                String::new()
+            };
+            let view = js.local(format!("view{i}"));
             // Decode one element from its words with its own instructions,
             // into the loop body, which reads the cell's words ahead of
             // them.
@@ -3682,7 +3695,7 @@ fn instruction(
                 given: element.owned,
                 count: *count,
             }));
-            let held = js.owns(owner.clone(), &ptr)?;
+            let held = !sized || js.owns(owner.clone(), &ptr)?;
             // An argument's cells are released in the function's `finally`,
             // whichever argument's glue threw.
             let deferred = !held && js.held_by_args(&ptr, len.as_deref());
@@ -3706,9 +3719,15 @@ fn instruction(
                         None => format!("const {v} = [];"),
                     },
                     format!("{v}.push({value});"),
-                    format!(
-                        "for (const {end} = {p} + {len} * {stride}; {p} < {end}; {p} += {stride}) {{"
-                    ),
+                    if sized {
+                        format!(
+                            "for (const {end} = {p} + {len} * {stride}; {p} < {end}; {p} += {stride}) {{"
+                        )
+                    } else {
+                        let n = js.local(format!("n{i}"));
+                        let coerce = js.cx.coerce_ptr_suffix();
+                        format!("for (let {n} = {len}{coerce}; {n} > 0; {n}--) {{")
+                    },
                     "}",
                 ),
                 None => (
@@ -3735,7 +3754,7 @@ fn instruction(
                 writeln!(body, "{lent}.push(() => {{\n{}}});", element.finally).unwrap();
                 js.finally(&format!("for (const f of {lent}) f();"));
             }
-            let view = if effects {
+            let view = if effects || !sized {
                 String::new()
             } else {
                 format!("const {view} = {memory};")
@@ -3752,7 +3771,8 @@ fn instruction(
                     format!("let {p} = {ptr};\n{coerce}"),
                     format!("const {base} = {p};\ntry {{\n{read}}} finally {{\n{release}\n}}"),
                 ),
-                None => (format!("let {p} = {ptr};\n{coerce}"), read),
+                None if sized => (format!("let {p} = {ptr};\n{coerce}"), read),
+                None => (String::new(), read),
             };
             js.prelude(&format!(
                 "
@@ -3793,13 +3813,20 @@ fn instruction(
                 }
             }
             let (fields, stride, align) = encoded_slice_layout(layout)?;
+            // A sequence of cells with no size is only its length.
+            let sized = stride != 0 || matches!(count, CellCount::One);
             // More cells than can be allocated are rejected here, as the
             // allocator rejects them: on wasm32 their size would otherwise
             // wrap to one it accepts, for fewer cells than are written. The
             // length is read again where the values are taken, and what it
-            // is by then is checked there.
-            let most = (!js.cx.memory64 && matches!(count, CellCount::Word))
-                .then(|| i32::MAX as usize / stride);
+            // is by then is checked there. Cells of no size aren't
+            // allocated, so the most of them is the most an `Array` holds.
+            let most = match count {
+                CellCount::One => None,
+                CellCount::Word if !sized => Some(u32::MAX as u64),
+                CellCount::Word if js.cx.memory64 => None,
+                CellCount::Word => Some((i32::MAX as usize / stride) as u64),
+            };
             if let Some(most) = most {
                 let some = if *optional {
                     format!("{} && ", js.is_some(&val, *option_kind))
@@ -3823,7 +3850,11 @@ fn instruction(
                 CellCount::Word => js.local(format!("p{i}")),
                 CellCount::One => ptr.clone(),
             };
-            let memory = js.dataview(*mem);
+            let memory = if sized {
+                js.dataview(*mem)
+            } else {
+                String::new()
+            };
             let view = js.local(format!("view{i}"));
             // Encode one element into its words with its own instructions.
             // The buffer takes the words as a call takes its arguments: what
@@ -3890,7 +3921,6 @@ fn instruction(
                 };
                 js.check_of(&checks, held_by_input, true);
             }
-            let malloc = js.cx.wasm_export_of(*malloc);
             let coerce = js.cx.coerce_ptr_suffix();
             let body = element.body;
             let cells = Cells {
@@ -3903,7 +3933,48 @@ fn instruction(
                 count: *count,
             };
             match count {
+                // Nothing is allocated for the cells or written to them,
+                // and Rust reads none at the address, which is the
+                // alignment as an empty buffer's is. The values are still
+                // taken here, in their turn.
+                CellCount::Word if !sized => {
+                    let most = most.unwrap();
+                    let len = js.local(format!("len{i}"));
+                    let j = js.local(format!("j{i}"));
+                    js.instr.effects = true;
+                    // The length isn't wrapped to a word, where one below
+                    // none would be more than can be allocated, so it's
+                    // rejected as it is.
+                    let length = format!("Math.trunc({val}.length)");
+                    let fits = format!(
+                        "if ({len} < 0 || {len} > {most}) throw new Error('invalid malloc request');"
+                    );
+                    let take = format!(
+                        "for (let {j} = 0; {j} < {len}; {j}++) {{\nconst {e} = {val}[{j}];\n{body}}}"
+                    );
+                    if *optional {
+                        js.declare("let", ptr.clone(), "0".into());
+                        let empty_len = if option_kind.nullable() {
+                            format!("{val} === null ? {NULL_HANDLE} : 0")
+                        } else {
+                            "0".into()
+                        };
+                        js.declare("let", len.clone(), empty_len);
+                        let some = js.is_some(&val, *option_kind);
+                        js.prelude(&format!(
+                            "if ({some}) {{\n{len} = {length};\n{fits}\n{ptr} = {align};\n{take}\n}}"
+                        ));
+                    } else {
+                        js.declare("const", len.clone(), length);
+                        js.prelude(&fits);
+                        js.declare("const", ptr.clone(), align.to_string());
+                        js.prelude(&take);
+                    }
+                    js.push(ptr);
+                    js.push(len);
+                }
                 CellCount::Word => {
+                    let malloc = js.cx.wasm_export_of(*malloc);
                     let len = js.local(format!("len{i}"));
                     let j = js.local(format!("j{i}"));
                     let alloc = format!("{malloc}({len} * {stride}, {align}){coerce}");
@@ -3981,6 +4052,7 @@ fn instruction(
                 // The cell is allocated once the value's glue is through, so
                 // it's never held half written.
                 CellCount::One => {
+                    let malloc = js.cx.wasm_export_of(*malloc);
                     let alloc = format!("{malloc}({stride}, {align}){coerce}");
                     let write = format!("const {view} = {memory};\n{writes}");
                     if *optional {
@@ -4016,6 +4088,7 @@ fn instruction(
                     let none = js.is_none(&val, *kind);
                     format!("!({none}) && typeof {val} !== 'string'")
                 }
+                StoredCheck::Undefined => format!("{val} !== undefined"),
                 StoredCheck::Sequence(kind) => {
                     let sequence = format!("!Array.isArray({val}) && !ArrayBuffer.isView({val})");
                     match kind {
@@ -4404,6 +4477,7 @@ pub(crate) fn adapter2ts(
         AdapterType::String => dst.push_str("string"),
         AdapterType::Externref => dst.push_str("any"),
         AdapterType::Bool => dst.push_str("boolean"),
+        AdapterType::Undefined => dst.push_str("undefined"),
         AdapterType::Vector(kind) => match kind {
             VectorKind::NamedExternref(name) => {
                 let resolved = name_map.get(name).map(|s| s.as_str()).unwrap_or(name);

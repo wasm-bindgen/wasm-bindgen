@@ -81,6 +81,13 @@ higher-ranked bound, which generic callers could not otherwise rely on. A trait
 whose supertraits include the right ABI trait satisfies the bound too, as with
 [`JsStringLike`](#string-bounds).
 
+`()` satisfies these bounds. A `&[T]` or `Vec<T>` argument instantiated at
+`()` is an `Array` of `undefined`, as the concrete one is. A `T` argument
+instantiated at `()` is left out of the call, as a `()` argument is, and a
+`&T` argument instantiated at it is rejected when the bindings are generated.
+An `Option<T>` bound isn't satisfied at `()`, as `None` is `undefined`
+already.
+
 The bound is on the type in that position, so a compound type is bounded as a
 whole, such as `Option<T>: IntoWasmAbi` or `Vec<T>: IntoWasmAbi`. A callback
 return is bounded by `ReturnWasmAbi`, which `IntoWasmAbi` implies for a bare

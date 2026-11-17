@@ -972,23 +972,90 @@ fn lent_sequence_cannot_hold_a_mutable_slice() {
     assert_contains!(err, "`&mut [u32]: RefIntoWasmAbi` is not satisfied");
 }
 
-/// `()` crosses as nothing, so a sequence has no cell to hold one in, which
-/// the build finds where it lays the element out.
+/// `()` is `undefined`, which is also what `None` is: an `Option<()>` could
+/// not tell `Some(())` from `None`, so it has no ABI. A `Nullable<()>` isn't
+/// implemented either.
 #[test]
-fn sequence_cannot_hold_unit() {
-    let err = Project::new("sequence_cannot_hold_unit")
-        .file(
-            "src/lib.rs",
-            r#"
-                use wasm_bindgen::prelude::*;
+fn optional_unit_does_not_cross() {
+    let build_err = |name: &str, ty: &str| {
+        Project::new(&format!("optional_unit_does_not_cross_{name}"))
+            .file(
+                "src/lib.rs",
+                &format!(
+                    r#"
+                        use wasm_bindgen::prelude::*;
 
-                #[wasm_bindgen]
-                pub fn units() -> JsValue {
-                    JsValue::from(vec![(), ()])
-                }
-            "#,
-        )
-        .build_err();
+                        #[wasm_bindgen]
+                        pub fn take(_v: {ty}) {{}}
+                    "#
+                ),
+            )
+            .build_err()
+    };
 
-    assert_contains!(err, "a sequence's element must cross as at least one word");
+    let err = build_err("argument", "Option<()>");
+    assert_contains!(
+        &err,
+        "the trait bound `(): OptionFromWasmAbi` is not satisfied"
+    );
+    assert_contains!(&err, "required for `Option<()>` to implement `FromWasmAbi`");
+
+    let err = build_err("element", "Vec<Option<()>>");
+    assert_contains!(
+        &err,
+        "the trait bound `(): OptionFromWasmAbi` is not satisfied"
+    );
+    assert_contains!(
+        &err,
+        "required for `Vec<Option<()>>` to implement `FromWasmAbi`"
+    );
+
+    let err = build_err("nullable", "Nullable<()>");
+    assert_contains!(
+        &err,
+        "the trait bound `(): NullableFromWasmAbi` is not satisfied"
+    );
+}
+
+/// Only a sequence holds `()` as a value, so only one lends a `&()`: one
+/// that is an argument or is returned isn't bound.
+#[test]
+fn unit_reference_is_not_bound_on_its_own() {
+    let bind_err = |name: &str, import: &str, call: &str| {
+        let err = Project::new(&format!("unit_reference_is_not_bound_on_its_own_{name}"))
+            .file(
+                "src/lib.rs",
+                &format!(
+                    r#"
+                        use wasm_bindgen::prelude::*;
+
+                        #[wasm_bindgen]
+                        extern "C" {{
+                            fn f({import});
+                        }}
+
+                        #[wasm_bindgen]
+                        pub fn run() {{
+                            {call}
+                        }}
+                    "#
+                ),
+            )
+            .wasm_bindgen("")
+            .unwrap_err();
+        let err = format!("{err:?}");
+        assert!(!err.contains("panicked"), "{err}");
+        assert_contains!(
+            &err,
+            "unsupported reference argument type for calling JS function from Rust: Unit"
+        );
+    };
+
+    bind_err("argument", "unit: &()", "f(&());");
+    bind_err("returned", "f: &dyn Fn() -> &'static ()", "f(&|| &());");
+    bind_err(
+        "returned_result",
+        "f: &Closure<dyn Fn() -> Result<&'static (), JsValue>>",
+        "f(&Closure::new(|| Ok(&())));",
+    );
 }

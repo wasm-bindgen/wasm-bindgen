@@ -3300,17 +3300,41 @@ mod tests {
     fn unsupported_sequence_elements_are_rejected() {
         let mut module = Module::default();
         let mut cx = test_context(&mut module, None);
-        let vector = Descriptor::Vector(Box::new(Descriptor::Unit));
+        let vector = Descriptor::Vector(Box::new(Descriptor::Slice(Box::new(Descriptor::U8))));
         let err = cx.instruction_builder(false).outgoing(&vector).unwrap_err();
         assert!(
-            err.to_string().contains("unsupported slice element type"),
+            err.to_string().contains("unsupported argument type"),
             "{err}"
         );
         let err = cx.instruction_builder(false).incoming(&vector).unwrap_err();
         assert!(
-            err.to_string().contains("unsupported vector element type"),
+            err.to_string().contains("unsupported argument type"),
             "{err}"
         );
+    }
+
+    // Only a sequence holds `()` as a value. On its own it crosses as
+    // nothing, and a reference to it doesn't cross.
+    #[test]
+    fn unit_is_nothing_on_its_own() {
+        let mut module = Module::default();
+        let mut cx = test_context(&mut module, None);
+        let unit = Descriptor::Unit;
+        for return_position in [false, true] {
+            let mut flat = cx.instruction_builder(return_position);
+            flat.incoming(&unit).unwrap();
+            flat.outgoing(&unit).unwrap();
+            assert!(flat.input.is_empty() && flat.output.is_empty());
+            assert!(flat.instructions.is_empty());
+            let err = flat
+                .outgoing(&Descriptor::Ref(Box::new(unit.clone())))
+                .unwrap_err();
+            assert!(
+                err.to_string()
+                    .contains("unsupported reference argument type"),
+                "{err}"
+            );
+        }
     }
 
     /// Collect argv and argc constants.

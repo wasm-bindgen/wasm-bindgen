@@ -373,19 +373,14 @@ struct Cells<A: WasmAbi> {
 }
 
 impl<A: WasmAbi> Cells<A> {
-    const HOLDS_A_WORD: () = assert!(
-        A::CELL.size() != 0,
-        "a sequence's element must cross as at least one word"
-    );
-
     fn layout(len: usize) -> Layout {
-        let () = Self::HOLDS_A_WORD;
         len.checked_mul(A::CELL.size())
             .and_then(|size| Layout::from_size_align(size, A::CELL.align()).ok())
             .expect("capacity overflow")
     }
 
-    /// An empty buffer is dangling, as `__wbindgen_malloc` gives JS.
+    /// A buffer of no bytes is dangling and never freed, as the one JS gives
+    /// is: an empty one, and any of `()`, whose cell has no words.
     fn new(len: usize) -> Self {
         let layout = Self::layout(len);
         let ptr = if layout.size() == 0 {

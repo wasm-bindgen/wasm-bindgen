@@ -960,6 +960,13 @@ impl FromWasmAbi for () {
     unsafe fn from_abi(_js: ()) {}
 }
 
+impl IntoWasmAbi for &() {
+    type Abi = ();
+
+    #[inline]
+    fn into_abi(self) {}
+}
+
 impl Promising for () {
     type Resolution = Undefined;
 }

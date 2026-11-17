@@ -164,6 +164,14 @@ extern "C" {
     fn item_after(v: Vec<String>, item: Nullable<HighItem>);
     #[wasm_bindgen(catch, js_name = freeSecond)]
     fn item_after_caught(v: Vec<String>, item: Nullable<HighItem>) -> Result<(), JsValue>;
+    #[wasm_bindgen(js_name = third)]
+    fn units_beside(v: Vec<String>, item: HighItem, units: Vec<()>, bytes: &[u8]) -> Vec<()>;
+    #[wasm_bindgen(js_name = echo)]
+    fn nested_units(v: Vec<Option<Vec<()>>>) -> Vec<Option<Vec<()>>>;
+    #[wasm_bindgen(js_name = join)]
+    fn unit_slices(v: &[&[()]]) -> String;
+    #[wasm_bindgen(catch, js_name = fail)]
+    fn units_throw(v: Vec<String>, units: Vec<Vec<()>>) -> Result<(), JsValue>;
     #[wasm_bindgen(js_name = callFailedDecodes)]
     fn js_failed_decodes();
     #[wasm_bindgen(js_name = callRejectedBeside)]
@@ -305,6 +313,28 @@ fn an_import_is_given_instances() {
         balanced(|| assert_eq!(item_beside(HighItem::new(3), vec![s("x")]), [s("x")]));
         balanced(|| item_after(vec![s("x")], Nullable::Value(HighItem::new(4))));
         balanced(|| item_after(vec![s("x")], Nullable::Null));
+    }
+}
+
+// A sequence of `()` is only a length: nothing is allocated for it on either
+// side, beside arguments that something is.
+#[wasm_bindgen_test]
+fn an_import_is_given_units() {
+    if !high() {
+        return;
+    }
+    let names = || vec![s("a"), s(""), s("cde")];
+    for _ in 0..3 {
+        balanced(|| {
+            let given = units_beside(names(), HighItem::new(1), vec![(); 3], &[1, 2]);
+            assert_eq!(given, [(); 3]);
+        });
+        balanced(|| {
+            let given = vec![Some(vec![(); 2]), None, Some(vec![])];
+            assert_eq!(nested_units(given.clone()), given);
+        });
+        balanced(|| assert_eq!(unit_slices(&[&[(), ()], &[]]), ",,"));
+        balanced(|| assert!(units_throw(names(), vec![vec![(); 2], vec![]]).is_err()));
     }
 }
 
@@ -510,6 +540,17 @@ pub fn high_text(v: &str, w: String) -> String {
 
 #[wasm_bindgen]
 pub fn high_rejects(_v: Vec<String>, _w: Vec<Vec<JsValue>>, _item: &HighItem) {}
+
+#[wasm_bindgen]
+pub fn high_units(
+    v: Vec<String>,
+    units: Vec<()>,
+    _item: &HighItem,
+    nested: Vec<Vec<()>>,
+) -> Vec<()> {
+    assert_eq!(v.len(), nested.len());
+    units
+}
 
 #[wasm_bindgen_test]
 fn exports_are_given_and_give_sequences() {

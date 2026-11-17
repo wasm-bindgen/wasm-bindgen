@@ -30,11 +30,22 @@
   reference that a borrowed sequence holds is lent as itself, so `&[&T]`
   and `&[&[T]]` cross wherever `&T` does, to any depth, and `&[Option<&T>]`
   where `Option<&T>` does, and a slice of numbers behind a second reference
-  (`&&[u8]`) is a copy as a nested one is. Three elements don't cross: `()`, which crosses
-  as nothing, a `&mut [T]`, whose copy JS's writes would never leave, and a
-  borrowed closure (`&dyn Fn()`) in a value Rust returns or converts with
+  (`&&[u8]`) is a copy as a nested one is. Two elements don't cross: a
+  `&mut [T]`, whose copy JS's writes would never leave, and a borrowed
+  closure (`&dyn Fn()`) in a value Rust returns or converts with
   `JsValue::from`, which outlives the call it is lent for.
   [#5471](https://github.com/wasm-bindgen/wasm-bindgen/pull/5471)
+
+* `()` is a sequence element, where it is `undefined`. A `Vec<()>` or
+  `Box<[()]>` crosses in both directions as an `Array` of `undefined`,
+  typed `undefined[]`, nested or optional as any other vector, and a
+  `&[()]` or `&Vec<()>` crosses to an imported function as one. Only the
+  length crosses, with nothing allocated in wasm memory, and every element
+  coming into Rust is checked to be `undefined`, in every build.
+  `Option<()>` still doesn't cross, as an element or on its own, since
+  `None` is `undefined` already, and `Nullable<()>` isn't implemented.
+  A `()` argument is unchanged: it is left out of the JS signature.
+  [#5476](https://github.com/wasm-bindgen/wasm-bindgen/pull/5476)
 
 * A dynamic-union enum is a `Vec<T>` / `Box<[T]>` element in both
   directions, crossing as a JS array whose elements are each converted as a

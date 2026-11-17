@@ -209,8 +209,17 @@ impl InstructionBuilder<'_, '_> {
                 bail!("unsupported argument type for calling JS function from Rust: {arg:?}")
             }
 
-            // nothing to do
-            Descriptor::Unit => {}
+            // On its own `()` crosses as nothing. A sequence holds it as
+            // `undefined`, in no words.
+            Descriptor::Unit => {
+                if self.stored {
+                    self.instruction(
+                        &[],
+                        Instruction::UndefinedFromUnit,
+                        &[AdapterType::Undefined],
+                    );
+                }
+            }
 
             // Largely synthetic and can't show up
             Descriptor::ClampedU8 => unreachable!(),
@@ -315,6 +324,8 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::Char
             | Descriptor::Enum { .. }
             | Descriptor::StringEnum { .. } => self._outgoing(arg)?,
+            // Only a sequence holds `()`, so only one lends it.
+            Descriptor::Unit if self.stored => self._outgoing(arg)?,
 
             Descriptor::Option(inner) => {
                 self.outgoing_option_ref(mutable, inner, OptionKind::Option)?
@@ -938,8 +949,8 @@ impl InstructionBuilder<'_, '_> {
             };
             decode.outgoing_ref(false, elem)?;
         }
-        // A cell holds one value, in at least one word.
-        if decode.output.len() != 1 || decode.input.is_empty() {
+        // A cell holds one value, in as many words as it has: `()` has none.
+        if decode.output.len() != 1 {
             bail!("unsupported slice element type for calling JS function from Rust: {elem:?}")
         }
         let InstructionBuilder {
