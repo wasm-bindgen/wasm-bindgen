@@ -1,0 +1,41 @@
+error[E0277]: the trait bound `Shape: RefIntoWasmAbi` is not satisfied
+  --> ui-tests/slice-of-union.rs:14:8
+   |
+12 | #[wasm_bindgen]
+   | --------------- in this procedural macro expansion
+13 | extern "C" {
+14 |     fn take_shapes(shapes: &[Shape]);
+   |        ^^^^^^^^^^^ the trait `RefIntoWasmAbi` is not implemented for `Shape`
+   |
+   = note: `&Shape` does not implement `IntoWasmAbi`, which is how a reference, and each element of a slice, is lent
+   = help: the following other types implement trait `IntoWasmAbi`:
+             &[MaybeUninit<f32>]
+             &[MaybeUninit<f64>]
+             &[MaybeUninit<i16>]
+             &[MaybeUninit<i32>]
+             &[MaybeUninit<i64>]
+             &[MaybeUninit<i8>]
+             &[MaybeUninit<isize>]
+             &[MaybeUninit<u16>]
+           and $N others
+   = note: required for `&[Shape]` to implement `IntoWasmAbi`
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `Shape: RefIntoWasmAbi` is not satisfied
+  --> ui-tests/slice-of-union.rs:14:28
+   |
+14 |     fn take_shapes(shapes: &[Shape]);
+   |                            ^ the trait `RefIntoWasmAbi` is not implemented for `Shape`
+   |
+   = note: `&Shape` does not implement `IntoWasmAbi`, which is how a reference, and each element of a slice, is lent
+   = help: the following other types implement trait `IntoWasmAbi`:
+             &[MaybeUninit<f32>]
+             &[MaybeUninit<f64>]
+             &[MaybeUninit<i16>]
+             &[MaybeUninit<i32>]
+             &[MaybeUninit<i64>]
+             &[MaybeUninit<i8>]
+             &[MaybeUninit<isize>]
+             &[MaybeUninit<u16>]
+           and $N others
+   = note: required for `&[Shape]` to implement `IntoWasmAbi`

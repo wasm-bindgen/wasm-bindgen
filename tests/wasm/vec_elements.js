@@ -21,19 +21,18 @@ exports.throwingElementFreesBuffer = (memory) => {
 };
 
 // Each attempt converts the valid elements before the rejected one: leaked,
-// with the list itself, memory would grow by tens of MB.
+// with the list itself, memory would grow by tens of MB. The items before a
+// rejected one stay with the caller.
 exports.rejectedElementLeaksNothing = (memory) => {
     const levels = Array.from({ length: 100000 }, () => -1);
     const strings = Array.from({ length: 10000 }, () => 'a');
+    const items = Array.from({ length: 5000 }, () => new wasm.VecItem());
     const cases = [
         [() => wasm.vec_elements_boxed_levels([...levels, NaN]), /invalid enum value passed/],
         [() => wasm.vec_elements_boxed_levels([...levels, 1.5]), /invalid enum value passed/],
         [() => wasm.vec_elements_count_strings([...strings, 1]), /array contains a value of the wrong type/],
         [
-            () => wasm.vec_elements_count_items([
-                ...Array.from({ length: 5000 }, () => new wasm.VecItem()),
-                {},
-            ]),
+            () => wasm.vec_elements_count_items([...items, {}]),
             /array contains a value of the wrong type/,
         ],
     ];
@@ -44,6 +43,7 @@ exports.rejectedElementLeaksNothing = (memory) => {
         }
         assert.ok(memory.buffer.byteLength - before < 4 * 1024 * 1024, `${message}`);
     }
+    assert.strictEqual(wasm.vec_elements_count_items(items), 5000);
 };
 
 exports.callExports = () => {

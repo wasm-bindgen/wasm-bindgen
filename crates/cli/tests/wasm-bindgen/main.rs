@@ -122,37 +122,16 @@ impl Project {
         self
     }
 
+    /// The compiler's errors for a project that must not build.
+    fn build_err(&mut self) -> String {
+        self.manifest();
+        let failed = self.cargo_cmd.assert().failure();
+        String::from_utf8_lossy(&failed.get_output().stderr).into_owned()
+    }
+
     fn build(&mut self) -> PathBuf {
         if !self.built {
-            if !self.root.join("Cargo.toml").is_file() {
-                self.file(
-                    "Cargo.toml",
-                    &format!(
-                        "
-                        [package]
-                        name = \"{}\"
-                        authors = []
-                        version = \"1.0.0\"
-                        edition = '2021'
-
-                        [dependencies]
-                        {}
-
-                        [lib]
-                        crate-type = ['cdylib']
-
-                        [workspace]
-
-                        [profile.dev]
-                        codegen-units = 1
-                    ",
-                        self.name,
-                        self.deps.replace("{root}", REPO_ROOT.to_str().unwrap())
-                    ),
-                );
-            }
-
-            self.cargo_cmd.arg("--target").arg(&self.target);
+            self.manifest();
             self.cargo_cmd.assert().success();
 
             self.built = true;
@@ -165,6 +144,38 @@ impl Project {
         built.set_extension("wasm");
 
         built
+    }
+
+    fn manifest(&mut self) {
+        if !self.root.join("Cargo.toml").is_file() {
+            self.file(
+                "Cargo.toml",
+                &format!(
+                    "
+                    [package]
+                    name = \"{}\"
+                    authors = []
+                    version = \"1.0.0\"
+                    edition = '2021'
+
+                    [dependencies]
+                    {}
+
+                    [lib]
+                    crate-type = ['cdylib']
+
+                    [workspace]
+
+                    [profile.dev]
+                    codegen-units = 1
+                ",
+                    self.name,
+                    self.deps.replace("{root}", REPO_ROOT.to_str().unwrap())
+                ),
+            );
+        }
+
+        self.cargo_cmd.arg("--target").arg(&self.target);
     }
 }
 
@@ -3337,10 +3348,19 @@ fn emscripten_private_class_references_are_deps() {
                  Secret { value }.into()
              }",
         ),
-        // `Vec<Secret>` from JS goes through an import shim that calls
+        // `Secret::try_from_js_value` goes through an import shim that calls
         // `Secret.__unwrap`.
         (
             "import_unwrap",
+            "#[wasm_bindgen]
+             pub fn unwrap_secret(secret: JsValue) -> Option<u32> {
+                 use wasm_bindgen::convert::TryFromJsValue;
+                 Secret::try_from_js_value(secret).ok().map(|s| s.value)
+             }",
+        ),
+        // A `Vec<Secret>` from JS checks each element against the class.
+        (
+            "export_vec",
             "#[wasm_bindgen]
              pub fn sum_secrets(secrets: Vec<Secret>) -> u32 {
                  secrets.iter().map(|s| s.value).sum()

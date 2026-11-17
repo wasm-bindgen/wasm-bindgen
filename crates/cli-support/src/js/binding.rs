@@ -9,13 +9,14 @@ use crate::js::{Context, IdentScope, MemView};
 use crate::wit::{
     Adapter, AdapterId, AdapterKind, AdapterType, AuxFunctionArgumentData, ClosureDtor, Instruction,
 };
-use crate::wit::{InstructionData, OptionKind};
+use crate::wit::{CellCount, CellLayout, InstructionData, OptionKind, StoredCheck};
 use crate::OutputMode;
 use anyhow::{bail, Error};
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::fmt::Write;
+use std::rc::Rc;
 use walrus::{Module, ValType};
 use wasm_bindgen_shared::identifier::is_valid_ident;
 
@@ -72,11 +73,25 @@ pub struct JsBuilder<'a, 'b> {
     /// What the arguments have allocated so far, until Rust is called.
     guard: Option<ArgGuard>,
 
+    /// The words on the stack that own what they refer to.
+    given: Vec<Given>,
+
+    /// Whether an owned word was popped, so its owner is no longer known.
+    moved: bool,
+
+    /// Whether the glue is a stored value's, running in a scope.
+    stored: bool,
+
+    /// The cell the glue is decoding its value from.
+    cell: Option<CellRead>,
+
     /// An index used to manage allocation of temporary indices, used to name
     /// variables to ensure nothing clashes with anything else.
     tmp: usize,
 
-    /// The arguments to the adapter, which the `arg.get` instruction pushes.
+    /// The inputs of the function, or of the scope glue is running in: the
+    /// arguments to the adapter, which the `arg.get` instruction pushes, or
+    /// what a scope was given with [`JsBuilder::input`].
     args: Vec<Value>,
 
     /// Identifiers bound in the function body, which the arguments must not
@@ -86,6 +101,10 @@ pub struct JsBuilder<'a, 'b> {
     /// The Wasm interface types "stack". Expressions that aren't pure are
     /// bound in the `prelude` and pushed as locals.
     stack: Vec<Value>,
+    /// Whether Rust gives the function a sequence whose values' glue may
+    /// throw. Every buffer given with it is then freed in the `finally`,
+    /// which doesn't depend on which argument's glue threw.
+    defers_given: bool,
 }
 
 /// A statement of the function body. It is `pure` when it reads only the JS
@@ -100,6 +119,17 @@ struct Stmt {
 /// lift them out as a `let`.
 enum StmtKind {
     Raw(String),
+    /// A statement that only throws unless a value is what Rust takes it
+    /// as. Without `inputs_only` it reads what its instruction bound. One
+    /// that is `repeated` where its value is taken runs only ahead of what
+    /// holds the value being taken. What a value taken ahead of this one
+    /// may have changed of it is checked `again` where the check stood.
+    Check {
+        text: String,
+        inputs_only: bool,
+        repeated: bool,
+        again: Option<String>,
+    },
     /// `keyword` declares the binding, or is `None` once lifted.
     Decl {
         keyword: Option<&'static str>,
@@ -108,11 +138,32 @@ enum StmtKind {
     },
 }
 
+fn moved_assert(arg: &str) -> String {
+    format!(
+        "\
+        if ({arg}.__wbg_ptr === 0) {{
+            throw new Error('Attempt to use a moved value');
+        }}\n"
+    )
+}
+
+/// `code` with each line trimmed and the empty ones dropped.
+fn lines(code: &str) -> String {
+    let mut text = String::new();
+    for line in code.trim().lines().map(|l| l.trim()) {
+        if !line.is_empty() {
+            text.push_str(line);
+            text.push('\n');
+        }
+    }
+    text
+}
+
 fn render(stmts: &[Stmt]) -> String {
     let mut code = String::new();
     for stmt in stmts {
         match &stmt.kind {
-            StmtKind::Raw(text) => code.push_str(text),
+            StmtKind::Raw(text) | StmtKind::Check { text, .. } => code.push_str(text),
             StmtKind::Decl {
                 keyword: Some(keyword),
                 name,
@@ -207,6 +258,143 @@ struct ArgGuard {
     tail: bool,
     /// Statements releasing each allocation, in allocation order.
     releases: Vec<String>,
+}
+
+/// What a word pushed for Rust owns, which is how it's released should JS
+/// throw before Rust takes it.
+#[derive(Clone)]
+enum Owner {
+    /// The address of a buffer of `kind` elements, followed by its length.
+    Vector {
+        kind: VectorKind,
+        mem: walrus::MemoryId,
+        free: walrus::FunctionId,
+    },
+    /// The address of a buffer of cells, followed by its length when that
+    /// is a word.
+    Cells(Rc<Cells>),
+    /// A pointer to an instance of an exported class, where 0 and, when
+    /// `nullable`, 1 are no instance.
+    Class { class: String, nullable: bool },
+    /// A handle to a JS value.
+    Handle,
+}
+
+impl Owner {
+    fn words(&self) -> usize {
+        match self {
+            Owner::Vector { .. } => 2,
+            Owner::Cells(cells) => match cells.count {
+                CellCount::Word => 2,
+                CellCount::One => 1,
+            },
+            Owner::Class { .. } | Owner::Handle => 1,
+        }
+    }
+}
+
+/// A buffer of cells, with what each cell's words own.
+struct Cells {
+    fields: Vec<(usize, &'static str)>,
+    stride: usize,
+    align: usize,
+    mem: walrus::MemoryId,
+    free: walrus::FunctionId,
+    given: Vec<Given>,
+    count: CellCount,
+}
+
+/// An owner at its first word's index: on the stack, or in a cell.
+#[derive(Clone)]
+struct Given {
+    word: usize,
+    owner: Owner,
+}
+
+/// The builder's state around a stored value's glue, which runs in a scope
+/// of its own.
+struct Scope {
+    args: Vec<Value>,
+    stack: Vec<Value>,
+    prelude: Vec<Stmt>,
+    pre_try: String,
+    finally: String,
+    guard: Option<ArgGuard>,
+    given: Vec<Given>,
+    moved: bool,
+    stored: bool,
+    cell: Option<CellRead>,
+    instr: InstrState,
+    wasm_refs: usize,
+}
+
+/// A cell Rust gave, as its value's glue decodes it. The glue reads the
+/// words and releases nothing: what they own is recorded, for what holds
+/// the cell to release once it has been read, however far the reading got.
+struct CellRead {
+    /// The cell's words, which are the glue's inputs.
+    words: Vec<String>,
+    /// The cell's address, with each word's offset and accessor suffix.
+    at: String,
+    fields: Vec<(usize, &'static str)>,
+    mem: walrus::MemoryId,
+    /// The view the words were read through, which holds until the glue
+    /// makes a call into wasm: `wasm_refs` is how many it began with.
+    view: String,
+    wasm_refs: usize,
+    /// What the words own, by the first one's index.
+    owned: Vec<Given>,
+}
+
+/// How to release what an owner's words hold: `calls`, when `held`.
+struct Release {
+    held: Option<String>,
+    calls: String,
+    style: ReleaseStyle,
+    /// Whether the calls reach wasm, which may grow memory.
+    calls_wasm: bool,
+}
+
+enum ReleaseStyle {
+    Bare,
+    Inline,
+    Block,
+}
+
+impl Release {
+    fn stmt(&self) -> String {
+        let Release { held, calls, .. } = self;
+        match (held, &self.style) {
+            (None, _) => calls.clone(),
+            (Some(held), ReleaseStyle::Bare) => format!("if ({held}) {calls}"),
+            (Some(held), ReleaseStyle::Inline) => format!("if ({held}) {{ {calls} }}"),
+            (Some(held), ReleaseStyle::Block) => format!("if ({held}) {{\n{calls}\n}}"),
+        }
+    }
+}
+
+/// What an element's glue did in its scope.
+struct Element {
+    body: String,
+    /// What it deferred, to run when the element is done with.
+    pre_try: String,
+    finally: String,
+    /// What its words own.
+    given: Vec<Given>,
+    /// What the words of the cell it decoded own.
+    owned: Vec<Given>,
+    /// Whether it may have called into wasm, which may grow memory.
+    calls_wasm: bool,
+}
+
+/// `body` with what it deferred: `pre_try` ahead of it, and `finally` however
+/// it ends.
+fn with_deferred(pre_try: &str, body: &str, finally: &str) -> String {
+    if finally.is_empty() {
+        format!("{pre_try}{body}")
+    } else {
+        format!("{pre_try}try {{\n{body}}} finally {{\n{finally}}}\n")
+    }
 }
 
 pub struct JsFunction {
@@ -548,16 +736,7 @@ impl<'a, 'b> Builder<'a, 'b> {
         }
         code.push_str(") {\n");
 
-        let prelude = render(&js.prelude);
-        let call = if !js.finally.is_empty() {
-            format!(
-                "{pre_try}try {{\n{prelude}}} finally {{\n{finally}}}\n",
-                pre_try = js.pre_try,
-                finally = js.finally
-            )
-        } else {
-            js.pre_try + &prelude
-        };
+        let call = with_deferred(&js.pre_try, &render(&js.prelude), &js.finally);
 
         // Generate a try/catch block in debug mode which handles unexpected and
         // unhandled exceptions, typically used on imports. This currently just
@@ -949,6 +1128,13 @@ impl<'p> BodyParams<'p> {
         'p: 'a,
     {
         let mut js = JsBuilder::new(cx, self.debug_name);
+        js.defers_given = self.instructions.iter().any(|i| match &i.instr {
+            Instruction::EncodedSliceLoad { .. } => true,
+            Instruction::VectorLoad { kind, .. } | Instruction::OptionVectorLoad { kind, .. } => {
+                kind.is_handles()
+            }
+            _ => false,
+        });
         if self.ctor_is_subclass {
             js.prelude("super(__wbgSuperSkip);");
         }
@@ -1067,8 +1253,13 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             finally: String::new(),
             instr: InstrState::default(),
             guard: None,
+            given: Vec::new(),
+            moved: false,
+            stored: false,
+            cell: None,
             prelude: Vec::new(),
             stack: Vec::new(),
+            defers_given: false,
         }
     }
 
@@ -1093,8 +1284,19 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             ..
         } = self.instr;
         if reads_local || effects {
+            // A check was tagged by what it read when it was emitted, unless
+            // that was a binding of the instruction's.
             for stmt in &mut self.prelude[start..] {
-                stmt.pure = false;
+                let inputs_only = matches!(
+                    stmt.kind,
+                    StmtKind::Check {
+                        inputs_only: true,
+                        ..
+                    }
+                );
+                if !inputs_only {
+                    stmt.pure = false;
+                }
             }
         }
         if let (Some(at), Some(guard)) = (allocated_at, &mut self.guard) {
@@ -1145,15 +1347,81 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     }
 
     pub fn prelude(&mut self, prelude: &str) {
-        let mut text = String::new();
-        for line in prelude.trim().lines().map(|l| l.trim()) {
-            if !line.is_empty() {
-                text.push_str(line);
-                text.push('\n');
-            }
-        }
+        let text = lines(prelude);
         if !text.is_empty() {
             self.stmt(StmtKind::Raw(text));
+        }
+    }
+
+    /// Emits `check`, which only throws unless the value the instruction
+    /// popped is what Rust takes it as. Reading nothing the prelude bound,
+    /// it runs ahead of the first allocation, which is ahead of anything
+    /// being taken from JS: a value JS rejects leaves the others as they
+    /// were.
+    fn check(&mut self, check: &str) {
+        let inputs_only = !self.instr.reads_local && !self.instr.binds_local;
+        self.check_of(check, inputs_only, false);
+    }
+
+    fn check_of(&mut self, check: &str, inputs_only: bool, repeated: bool) {
+        let text = lines(check);
+        if !text.is_empty() {
+            self.prelude.push(Stmt {
+                pure: !self.instr.reads_local,
+                kind: StmtKind::Check {
+                    text,
+                    inputs_only,
+                    repeated,
+                    again: None,
+                },
+            });
+        }
+    }
+
+    /// Has the check just emitted run `again` where it stood, once a value
+    /// ahead of it in the call has been taken.
+    fn check_again(&mut self, again: Option<String>) {
+        if again.is_none() {
+            return;
+        }
+        if let Some(Stmt {
+            kind: StmtKind::Check { again: slot, .. },
+            ..
+        }) = self.prelude.last_mut()
+        {
+            *slot = again;
+        }
+    }
+
+    /// The scope's statements that read only its inputs, when any is a
+    /// check, for what holds the stored value to run ahead of taking any of
+    /// it. They stay in the value's glue as well: what holds the value is
+    /// read again where it's taken, and may hold another by then.
+    fn validation(&mut self) -> String {
+        let mut code = String::new();
+        let mut checks = false;
+        self.prelude.retain(|stmt| {
+            if !stmt.pure {
+                return true;
+            }
+            match &stmt.kind {
+                StmtKind::Raw(_) => true,
+                StmtKind::Check { repeated, .. } => {
+                    checks = true;
+                    code.push_str(&render(std::slice::from_ref(stmt)));
+                    !repeated
+                }
+                // What a check reads of its instruction's.
+                StmtKind::Decl { .. } => {
+                    code.push_str(&render(std::slice::from_ref(stmt)));
+                    true
+                }
+            }
+        });
+        if checks {
+            code
+        } else {
+            String::new()
         }
     }
 
@@ -1174,10 +1442,15 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         self.instr.effects = true;
         let (start, len) = (self.instr.start, self.prelude.len());
         self.instr.allocated_at = Some(len);
+        // The checks run ahead of the allocation, whatever else it emitted.
+        let checks = self.prelude[start..]
+            .iter()
+            .filter(|stmt| stmt.pure && matches!(stmt.kind, StmtKind::Check { .. }))
+            .count();
         self.guard
             .get_or_insert_with(|| ArgGuard {
                 start,
-                first: len - start,
+                first: len - start - checks,
                 tail: false,
                 releases: Vec::new(),
             })
@@ -1185,11 +1458,308 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             .push(stmt);
     }
 
+    /// Pushes `words`, which `owner` says how to release until Rust takes
+    /// them.
+    fn give(&mut self, owner: Owner, words: &[String]) {
+        self.give_written(owner, words, None);
+    }
+
+    /// [`Self::give`] of a buffer of cells whose first `written` hold their
+    /// elements so far.
+    fn give_written(&mut self, owner: Owner, words: &[String], written: Option<&str>) {
+        assert_eq!(words.len(), owner.words());
+        let release = self.release_stmt(&owner, words, written);
+        self.release(release);
+        self.given.push(Given {
+            word: self.stack.len(),
+            owner,
+        });
+        for word in words {
+            self.push(word.clone());
+        }
+    }
+
+    /// The statement releasing what `owner` holds through `words`.
+    fn release_stmt(&mut self, owner: &Owner, words: &[String], written: Option<&str>) -> String {
+        self.release_of(owner, words, written).stmt()
+    }
+
+    fn release_of(&mut self, owner: &Owner, words: &[String], written: Option<&str>) -> Release {
+        let ptr = &words[0];
+        match owner {
+            Owner::Vector { kind, mem, free } => Release {
+                held: Some(ptr.clone()),
+                calls: self.vector_free(kind, *mem, *free, ptr, &words[1]),
+                style: ReleaseStyle::Inline,
+                calls_wasm: true,
+            },
+            Owner::Class { class, nullable } => {
+                let free = self.class_free(class);
+                // A pointer word is signed until coerced, and 1 is the null.
+                let held = if *nullable {
+                    format!("{ptr}{} > 1", self.cx.coerce_ptr_suffix())
+                } else {
+                    ptr.clone()
+                };
+                Release {
+                    held: Some(held),
+                    calls: format!("{free}({ptr}, 1);"),
+                    style: ReleaseStyle::Bare,
+                    calls_wasm: true,
+                }
+            }
+            Owner::Handle => {
+                let (drop, calls_wasm) =
+                    match (self.cx.aux.externref_table, self.cx.aux.externref_drop) {
+                        (Some(_), Some(drop)) => (self.cx.wasm_export_of(drop), true),
+                        _ => {
+                            self.cx.expose_drop_ref();
+                            ("dropObject".into(), false)
+                        }
+                    };
+                Release {
+                    held: None,
+                    calls: format!("{drop}({ptr});"),
+                    style: ReleaseStyle::Bare,
+                    calls_wasm,
+                }
+            }
+            Owner::Cells(cells) => {
+                let Cells {
+                    fields,
+                    stride,
+                    align,
+                    mem,
+                    free,
+                    given,
+                    count,
+                } = &**cells;
+                let len = match count {
+                    CellCount::Word => Some(&words[1]),
+                    CellCount::One => None,
+                };
+                let size = match len {
+                    Some(len) => format!("{len} * {stride}"),
+                    None => stride.to_string(),
+                };
+                let free = self.cx.wasm_export_of(*free);
+                let free = format!("{free}({ptr}, {size}, {align});");
+                let held = Some(ptr.clone());
+                if given.is_empty() {
+                    return Release {
+                        held,
+                        calls: free,
+                        style: ReleaseStyle::Bare,
+                        calls_wasm: true,
+                    };
+                }
+                // A cell's words are read through one view of the memory,
+                // taken again after a release that calls into wasm, which
+                // may grow it.
+                let memory = self.dataview(*mem);
+                let coerce = self.cx.coerce_ptr_suffix();
+                let i = self.tmp();
+                let k = self.local(format!("k{i}"));
+                let cell = self.local(format!("cell{i}"));
+                let view = self.local(format!("view{i}"));
+                let mut reads = String::new();
+                let mut releases = String::new();
+                let mut retakes = false;
+                for Given { word, owner } in given {
+                    let words = (*word..word + owner.words())
+                        .map(|n| {
+                            let (offset, ty) = fields[n];
+                            let name = self.local(format!("w{i}_{n}"));
+                            writeln!(
+                                reads,
+                                "const {name} = {view}.get{ty}({cell} + {offset}, true){coerce};"
+                            )
+                            .unwrap();
+                            name
+                        })
+                        .collect::<Vec<_>>();
+                    let release = self.release_of(owner, &words, None);
+                    if len.is_none() || !release.calls_wasm {
+                        releases.push_str(&release.stmt());
+                        releases.push('\n');
+                        continue;
+                    }
+                    retakes = true;
+                    let calls = release.calls.trim_end();
+                    match &release.held {
+                        Some(held) => {
+                            writeln!(releases, "if ({held}) {{\n{calls}\n{view} = {memory};\n}}")
+                        }
+                        None => writeln!(releases, "{calls}\n{view} = {memory};"),
+                    }
+                    .unwrap();
+                }
+                let decl = if retakes { "let" } else { "const" };
+                let elems = match len {
+                    Some(len) => {
+                        let written = written.unwrap_or(len);
+                        format!(
+                            "{decl} {view} = {memory};\n\
+                             for (let {k} = 0; {k} < {written}; {k}++) {{\n\
+                             const {cell} = {ptr} + {k} * {stride};\n\
+                             {reads}{releases}}}"
+                        )
+                    }
+                    None => format!(
+                        "const {cell} = {ptr};\n{decl} {view} = {memory};\n{reads}{}",
+                        releases.trim_end()
+                    ),
+                };
+                Release {
+                    held,
+                    calls: format!("{elems}\n{free}"),
+                    style: ReleaseStyle::Block,
+                    calls_wasm: true,
+                }
+            }
+        }
+    }
+
+    /// A `DataView` of `mem` as it is now: a call into wasm may grow it,
+    /// which detaches a view taken earlier.
+    fn dataview(&mut self, mem: walrus::MemoryId) -> String {
+        let view = self.cx.expose_dataview_memory(mem);
+        if self.cx.config.mode.emscripten() {
+            view.name.to_string()
+        } else {
+            format!("{view}()")
+        }
+    }
+
+    /// Enters a scope for a stored value's glue to run in. Its inputs are to
+    /// it what the JS arguments are to the function: what reads only them
+    /// runs ahead of what the glue allocates, and so does the conversion of
+    /// one that becomes a word as it is.
+    fn enter_scope(&mut self) -> Scope {
+        Scope {
+            args: std::mem::take(&mut self.args),
+            stack: std::mem::take(&mut self.stack),
+            prelude: std::mem::take(&mut self.prelude),
+            pre_try: std::mem::take(&mut self.pre_try),
+            finally: std::mem::take(&mut self.finally),
+            guard: self.guard.take(),
+            given: std::mem::take(&mut self.given),
+            moved: std::mem::take(&mut self.moved),
+            stored: std::mem::replace(&mut self.stored, true),
+            cell: self.cell.take(),
+            instr: std::mem::take(&mut self.instr),
+            wasm_refs: self.cx.wasm_refs,
+        }
+    }
+
+    /// Pushes `value` as an input of the scope.
+    fn input(&mut self, value: Value) {
+        self.args.push(value.clone());
+        self.stack.push(value);
+    }
+
+    /// Leaves the element's scope, whose values and guard its glue's caller
+    /// has taken.
+    fn exit_scope(&mut self, scope: Scope) -> Result<Element, Error> {
+        assert!(self.guard.is_none() && self.stack.is_empty());
+        if self.moved {
+            bail!("an encoded element's glue consumed a word it owns");
+        }
+        let element = Element {
+            body: render(&std::mem::replace(&mut self.prelude, scope.prelude)),
+            pre_try: std::mem::replace(&mut self.pre_try, scope.pre_try),
+            finally: std::mem::replace(&mut self.finally, scope.finally),
+            given: std::mem::replace(&mut self.given, scope.given),
+            owned: match std::mem::replace(&mut self.cell, scope.cell) {
+                Some(cell) => cell.owned,
+                None => Vec::new(),
+            },
+            calls_wasm: self.cx.wasm_refs != scope.wasm_refs,
+        };
+        self.args = scope.args;
+        self.stack = scope.stack;
+        self.guard = scope.guard;
+        self.moved = scope.moved;
+        self.stored = scope.stored;
+        self.instr = scope.instr;
+        Ok(element)
+    }
+
+    /// Records that the words from `first` of the cell being decoded own
+    /// what `owner` says, which leaves releasing it to what holds the cell.
+    /// Glue that isn't decoding a cell releases what it's given itself.
+    fn owns(&mut self, owner: Owner, first: &str) -> Result<bool, Error> {
+        let Some(cell) = &mut self.cell else {
+            return Ok(false);
+        };
+        let Some(word) = cell.words.iter().position(|word| word == first) else {
+            bail!("a stored value's glue owns a word that isn't one of its cell's")
+        };
+        cell.owned.push(Given { word, owner });
+        Ok(true)
+    }
+
+    /// Pushes `wrap`, which hands the instance of `class` at the pointer
+    /// `word` to a wrapper. In a cell the word is cleared once the wrapper
+    /// owns the instance, so releasing the cell frees it only if it was
+    /// never wrapped.
+    fn push_wrapped(
+        &mut self,
+        wrap: String,
+        word: &str,
+        class: &str,
+        nullable: bool,
+    ) -> Result<(), Error> {
+        let class = class.to_string();
+        let owner = Owner::Class { class, nullable };
+        if !self.owns(owner.clone(), word)? {
+            self.push_taken(wrap, word, &owner);
+            return Ok(());
+        }
+        let cell = self.cell.as_ref().unwrap();
+        let (word, at, mem) = (cell.owned.last().unwrap().word, cell.at.clone(), cell.mem);
+        let (offset, ty) = cell.fields[word];
+        let none = if ty == "BigInt64" { "0n" } else { "0" };
+        let memory = if cell.wasm_refs == self.cx.wasm_refs {
+            cell.view.clone()
+        } else {
+            self.dataview(mem)
+        };
+        let i = self.tmp();
+        let wrapped = self.declare("const", format!("obj{i}"), wrap);
+        self.prelude(&format!("{memory}.set{ty}({at} + {offset}, {none}, true);"));
+        self.push(wrapped);
+        Ok(())
+    }
+
+    /// Pushes `take`, which hands what `owner` holds through `word` over to
+    /// JS when it's evaluated. In a function whose `finally` releases what
+    /// it was given, that releases this too until then: a sequence that
+    /// fails to decode ahead of the call leaves it neither wrapped nor
+    /// taken.
+    fn push_taken(&mut self, take: String, word: &str, owner: &Owner) {
+        if !self.defers_given || !self.held_by_args(word, None) {
+            self.push(take);
+            return;
+        }
+        let i = self.tmp();
+        let taken = self.local(format!("taken{i}"));
+        writeln!(self.pre_try, "let {taken} = false;").unwrap();
+        let release = self.release_of(owner, &[word.to_string()], None).stmt();
+        self.finally(&format!("if (!{taken}) {{\n{release}\n}}"));
+        self.push(format!("({taken} = true, {take})"));
+    }
+
     fn push_safe(&mut self, arg: String) {
         self.stack.push(Value::Safe(arg));
     }
 
+    /// Pushes a handle that `arg` allocates when evaluated.
     fn push_alloc(&mut self, arg: String) {
+        self.given.push(Given {
+            word: self.stack.len(),
+            owner: Owner::Handle,
+        });
         self.stack.push(Value::Alloc(arg));
     }
 
@@ -1269,12 +1839,25 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     /// returning the rest and whether anything after the allocation is left
     /// to throw.
     fn split_guard(&mut self, guard: &ArgGuard) -> (Vec<Stmt>, bool) {
-        let (pure, rest): (Vec<_>, Vec<_>) = self
-            .prelude
-            .split_off(guard.start)
-            .into_iter()
-            .partition(|stmt| stmt.pure);
-        self.prelude.extend(pure);
+        let mut rest = Vec::new();
+        for stmt in self.prelude.split_off(guard.start) {
+            if !stmt.pure {
+                rest.push(stmt);
+                continue;
+            }
+            if let StmtKind::Check {
+                again: Some(again), ..
+            } = &stmt.kind
+            {
+                if rest.len() >= guard.first {
+                    rest.push(Stmt {
+                        pure: false,
+                        kind: StmtKind::Raw(again.clone()),
+                    });
+                }
+            }
+            self.prelude.push(stmt);
+        }
         let guarded = rest.len() > guard.first;
         (rest, guarded)
     }
@@ -1321,9 +1904,14 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             close.push('\n');
         }
         close.push_str("throw e;\n}\n");
-        self.stmt(StmtKind::Raw(open));
+        // Neither half reads only the arguments, as a statement is taken to.
+        let raw = |text| Stmt {
+            pure: false,
+            kind: StmtKind::Raw(text),
+        };
+        self.prelude.push(raw(open));
         self.prelude.extend(rest);
-        self.stmt(StmtKind::Raw(close));
+        self.prelude.push(raw(close));
     }
 
     pub fn tmp(&mut self) -> usize {
@@ -1333,10 +1921,14 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     }
 
     fn pop_value(&mut self) -> Value {
-        match self.stack.pop() {
-            Some(value) => value,
-            None => panic!("popping an empty stack in {}", self.debug_name),
-        }
+        let Some(value) = self.stack.pop() else {
+            panic!("popping an empty stack in {}", self.debug_name)
+        };
+        let len = self.stack.len();
+        let given = self.given.len();
+        self.given.retain(|g| g.word + g.owner.words() <= len);
+        self.moved |= self.given.len() != given;
+        value
     }
 
     fn pop(&mut self) -> String {
@@ -1362,6 +1954,20 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         self.stack.push(value);
     }
 
+    /// Whether the vector Rust gives at `ptr` is freed in the `finally`: one
+    /// of handles, which are read and only then dropped, and any other
+    /// given alongside a sequence that is.
+    fn frees_in_finally(&self, kind: &VectorKind, ptr: &str, len: &str) -> bool {
+        (kind.is_handles() || self.defers_given) && self.held_by_args(ptr, Some(len))
+    }
+
+    /// Whether `ptr` and `len` are arguments of the function itself, which
+    /// its `finally` can read whatever the body got to.
+    fn held_by_args(&self, ptr: &str, len: Option<&str>) -> bool {
+        let arg = |word: &str| self.args.iter().any(|arg| arg.expr() == word);
+        !self.stored && arg(ptr) && len.is_none_or(arg)
+    }
+
     fn class_free(&mut self, class: &str) -> String {
         let resolved = self.cx.resolve_class_name(class).to_string();
         self.cx
@@ -1369,9 +1975,14 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     }
 
     fn assert_class(&mut self, arg: &str, class: &str) {
+        let assert = self.class_assert(arg, class);
+        self.check(&assert);
+    }
+
+    fn class_assert(&mut self, arg: &str, class: &str) -> String {
         self.cx.expose_assert_class();
         let identifier = self.cx.require_class_reference(class);
-        self.prelude(&format!("_assertClass({arg}, {identifier});"));
+        format!("_assertClass({arg}, {identifier});\n")
     }
 
     /// `assert_class` for boundaries that take the receiver by value
@@ -1385,8 +1996,21 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     /// (or a user-written JS-only subclass) those agree; for a Rust
     /// descendant the per-class slot holds the upcasted ancestor pointer
     /// and differs from `__wbg_ptr`, so we throw.
-    fn assert_owned_class(&mut self, arg: &str, class: &str) {
-        self.assert_class(arg, class);
+    ///
+    /// A stored instance is one that still has its pointer: one that never
+    /// had it, or was freed or moved, isn't, which a sequence holding an
+    /// instance twice makes of it where it's taken the second time. That is
+    /// a single test where the value isn't optional, made ahead of taking
+    /// any value and again where this one is taken.
+    fn owned_class_assert(&mut self, arg: &str, class: &str, optional: bool) -> String {
+        let live = format!("!{arg}.__wbg_ptr");
+        let wrong = "throw new Error('array contains a value of the wrong type');";
+        let mut assert = if self.stored && !optional {
+            let identifier = self.cx.require_class_reference(class);
+            format!("if (!({arg} instanceof {identifier}) || {live}) {wrong}\n")
+        } else {
+            self.class_assert(arg, class)
+        };
         let resolved = self.cx.resolve_class_name(class).to_string();
         let participates = self
             .cx
@@ -1395,13 +2019,60 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             .is_some_and(|c| c.participates_in_inheritance);
         if participates {
             let identifier = self.cx.require_class_identifier(class);
-            self.prelude(&format!(
+            writeln!(
+                assert,
                 "if ({arg}.__wbg_ptr !== {arg}.__wbg_ptr_{identifier}) {{ \
                     throw new TypeError('expected exact instance of {identifier}; \
                     a wasm-bindgen descendant cannot be consumed by-value as its ancestor'); \
                 }}"
-            ));
+            )
+            .unwrap();
         }
+        if self.stored && optional {
+            writeln!(assert, "if ({live}) {wrong}").unwrap();
+        }
+        assert.push_str(&self.not_moved_assert(arg));
+        assert
+    }
+
+    /// Checks `arg`, when `some`, as an instance of `class` that Rust takes
+    /// by value. A stored optional's check is returned for the branch that
+    /// takes the instance to repeat.
+    fn assert_owned_class(&mut self, arg: &str, class: &str, some: Option<&str>) -> String {
+        let assert = self.owned_class_assert(arg, class, some.is_some());
+        let again = self.moved_again(arg, some);
+        let Some(some) = some else {
+            self.check(&assert);
+            self.check_again(again);
+            return String::new();
+        };
+        let inputs_only = !self.instr.reads_local && !self.instr.binds_local;
+        self.check_of(
+            &format!("if ({some}) {{\n{assert}}}"),
+            inputs_only,
+            self.stored,
+        );
+        self.check_again(again);
+        if self.stored {
+            assert
+        } else {
+            String::new()
+        }
+    }
+
+    /// The check a debug build's string encoder makes, ahead of anything
+    /// being taken. A stored string is checked in every build.
+    fn assert_string(&mut self, arg: &str, kind: Option<OptionKind>) {
+        if !self.cx.config.debug || self.stored {
+            return;
+        }
+        let some = match kind {
+            Some(kind) => format!("{} && ", self.is_some(arg, kind)),
+            None => String::new(),
+        };
+        self.check(&format!(
+            "if ({some}typeof({arg}) !== 'string') throw new Error(`expected a string argument, found ${{typeof({arg})}}`);"
+        ));
     }
 
     fn assert_number(&mut self, arg: &str) {
@@ -1409,7 +2080,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             return;
         }
         self.cx.expose_assert_num();
-        self.prelude(&format!("_assertNum({arg});"));
+        self.check(&format!("_assertNum({arg});"));
     }
 
     fn assert_bigint(&mut self, arg: &str) {
@@ -1417,7 +2088,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             return;
         }
         self.cx.expose_assert_bigint();
-        self.prelude(&format!("_assertBigInt({arg});"));
+        self.check(&format!("_assertBigInt({arg});"));
     }
 
     fn assert_bool(&mut self, arg: &str) {
@@ -1425,7 +2096,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             return;
         }
         self.cx.expose_assert_bool();
-        self.prelude(&format!("_assertBoolean({arg});"));
+        self.check(&format!("_assertBoolean({arg});"));
     }
 
     /// The test for an incoming option holding no value: only `null` for a
@@ -1499,19 +2170,18 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             return;
         }
         let some = self.is_some(arg, kind);
-        self.prelude(&format!("if ({some}) {{"));
-        self.assert_number(arg);
-        self.prelude("}");
+        self.cx.expose_assert_num();
+        self.check(&format!("if ({some}) {{\n_assertNum({arg});\n}}"));
     }
 
     fn assert_non_null(&mut self, arg: &str) {
         self.cx.expose_assert_non_null();
-        self.prelude(&format!("_assertNonNull({arg});"));
+        self.check(&format!("_assertNonNull({arg});"));
     }
 
     fn assert_char(&mut self, arg: &str) {
         self.cx.expose_assert_char();
-        self.prelude(&format!("_assertChar({arg});"));
+        self.check(&format!("_assertChar({arg});"));
     }
 
     fn assert_optional_bigint(&mut self, arg: &str, kind: OptionKind) {
@@ -1519,9 +2189,8 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             return;
         }
         let some = self.is_some(arg, kind);
-        self.prelude(&format!("if ({some}) {{"));
-        self.assert_bigint(arg);
-        self.prelude("}");
+        self.cx.expose_assert_bigint();
+        self.check(&format!("if ({some}) {{\n_assertBigInt({arg});\n}}"));
     }
 
     fn assert_optional_bool(&mut self, arg: &str, kind: OptionKind) {
@@ -1529,9 +2198,8 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             return;
         }
         let some = self.is_some(arg, kind);
-        self.prelude(&format!("if ({some}) {{"));
-        self.assert_bool(arg);
-        self.prelude("}");
+        self.cx.expose_assert_bool();
+        self.check(&format!("if ({some}) {{\n_assertBoolean({arg});\n}}"));
     }
 
     /// Values that are not objects with a numeric `length`, such as an
@@ -1541,14 +2209,19 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         if !self.cx.config.debug {
             return;
         }
+        let assert = self.array_like_assert(arg, kind);
+        self.check(&assert);
+    }
+
+    fn array_like_assert(&mut self, arg: &str, kind: &VectorKind) -> String {
         self.cx.expose_assert_array_like();
         match kind {
             VectorKind::Externref | VectorKind::NamedExternref(_) => {
-                self.prelude(&format!("_assertArrayLike({arg});"));
+                format!("_assertArrayLike({arg});")
             }
             _ => {
                 let typed_array = kind.js_ty();
-                self.prelude(&format!("_assertArrayLike({arg}, '{typed_array}');"));
+                format!("_assertArrayLike({arg}, '{typed_array}');")
             }
         }
     }
@@ -1563,9 +2236,8 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             return;
         }
         let some = self.is_some(arg, option_kind);
-        self.prelude(&format!("if ({some}) {{"));
-        self.assert_array_like(arg, kind);
-        self.prelude("}");
+        let assert = self.array_like_assert(arg, kind);
+        self.check(&format!("if ({some}) {{\n{assert}\n}}"));
     }
 
     /// Mutable slices are copied back into the buffer of the original typed
@@ -1578,32 +2250,50 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         self.cx.expose_assert_typed_array();
         let typed_array = kind.js_ty();
         let size = kind.size();
-        self.prelude(&format!(
+        self.check(&format!(
             "_assertTypedArray({arg}, '{typed_array}', {size});"
         ));
     }
 
     fn assert_not_moved(&mut self, arg: &str) {
+        let assert = self.not_moved_assert(arg);
+        self.check(&assert);
+    }
+
+    /// A debug build's check that the instance `arg` wasn't moved, when
+    /// `some`, for where it's taken once an argument ahead of it has been:
+    /// the same instance has no pointer from then. A stored instance's
+    /// check is already made where it's taken, and a borrowed one reaches
+    /// Rust as null.
+    fn moved_again(&self, arg: &str, some: Option<&str>) -> Option<String> {
+        if !self.cx.config.debug || self.stored {
+            return None;
+        }
+        let moved = moved_assert(arg);
+        Some(match some {
+            Some(some) => lines(&format!("if ({some}) {{\n{moved}}}")),
+            None => lines(&moved),
+        })
+    }
+
+    fn not_moved_assert(&mut self, arg: &str) -> String {
+        let mut assert = String::new();
         if self.cx.generate_reinit {
             // Under reset state, we need comprehensive validation
-            self.prelude(&format!(
+            writeln!(
+                assert,
                 "\
                 if (({arg}).__wbg_inst !== undefined && ({arg}).__wbg_inst !== __wbg_instance_id) {{
                     throw new Error('Invalid stale object from previous Wasm instance');
-                }}
-                "
-            ));
+                }}"
+            )
+            .unwrap();
         }
         if self.cx.config.debug {
             // Debug mode only checks for moved values
-            self.prelude(&format!(
-                "\
-                if ({arg}.__wbg_ptr === 0) {{
-                    throw new Error('Attempt to use a moved value');
-                }}
-                ",
-            ));
+            assert.push_str(&moved_assert(arg));
         }
+        assert
     }
 
     fn string_to_memory(
@@ -1615,6 +2305,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     ) {
         let pass = self.cx.expose_pass_string_to_wasm(mem);
         let val = self.pop();
+        self.assert_string(&val, None);
         let malloc = self.cx.export_name_of(malloc);
         let i = self.tmp();
         let malloc = self.cx.wasm_export_ref(&malloc);
@@ -1625,14 +2316,25 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             format!("{pass}({val}, {malloc}{realloc})"),
         );
         let len = self.declare("const", format!("len{i}"), "WASM_VECTOR_LEN".into());
-        let release = self.vector_release(&VectorKind::String, mem, free, &ptr, &len);
-        self.release(release);
-        self.push(ptr);
-        self.push(len);
+        let kind = VectorKind::String;
+        self.give(Owner::Vector { kind, mem, free }, &[ptr, len]);
     }
 
     /// Releases a vector JS allocated at `ptr`, unless it's absent.
     fn vector_release(
+        &mut self,
+        kind: &VectorKind,
+        mem: walrus::MemoryId,
+        free: walrus::FunctionId,
+        ptr: &str,
+        len: &str,
+    ) -> String {
+        let free = self.vector_free(kind, mem, free, ptr, len);
+        format!("if ({ptr}) {{ {free} }}")
+    }
+
+    /// The calls releasing the vector at `ptr`.
+    fn vector_free(
         &mut self,
         kind: &VectorKind,
         mem: walrus::MemoryId,
@@ -1654,21 +2356,19 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
                     }
                     _ => {
                         self.cx.expose_drop_ref();
-                        let view = self.cx.expose_dataview_memory(mem);
-                        let view = if self.cx.config.mode.emscripten() {
-                            view.name.to_string()
-                        } else {
-                            format!("{view}()")
-                        };
+                        let view = self.dataview(mem);
+                        // `ptr` may be a wasm argument as it arrived, which
+                        // is negative from 2 GiB on wasm32.
+                        let coerce = self.cx.coerce_ptr_suffix();
                         format!(
-                            "for (let i = 0; i < {len}; i++) dropObject({view}.getUint32({ptr} + 4 * i, true)); "
+                            "for (let p = {ptr}{coerce}, end = p + 4 * {len}, view = {view}; p < end; p += 4) dropObject(view.getUint32(p, true)); "
                         )
                     }
                 }
             }
             _ => String::new(),
         };
-        format!("if ({ptr}) {{ {elems}{free}({ptr}, {len} * {size}, {size}); }}")
+        format!("{elems}{free}({ptr}, {len} * {size}, {size});")
     }
 }
 
@@ -1759,6 +2459,13 @@ fn instruction(
             js.stack.push(arg);
         }
 
+        // The string the next instruction decodes from its cell.
+        Instruction::DeferFree { free, align: 1 } if js.cell.is_some() => {
+            let ptr = js.stack[js.stack.len() - 2].expr().to_string();
+            let (kind, mem, free) = (VectorKind::String, js.cell.as_ref().unwrap().mem, *free);
+            js.owns(Owner::Vector { kind, mem, free }, &ptr)?;
+        }
+
         Instruction::CallExport(_)
         | Instruction::CallAdapter(_)
         | Instruction::DeferFree { .. } => {
@@ -1785,7 +2492,13 @@ fn instruction(
                 // accessible in the `finally` block, so we declare variables to hold the args
                 // outside of the try-finally block and then set those to the args.
                 for i in 0..params {
-                    let arg = &js.stack[js.stack.len() - params + i];
+                    let arg = js.stack[js.stack.len() - params + i].expr().to_string();
+                    // An argument of the function is there for the
+                    // `finally` whatever the body got to.
+                    if js.defers_given && js.held_by_args(&arg, None) {
+                        args.push(arg);
+                        continue;
+                    }
                     let name = format!("deferred{tmp}_{i}");
                     writeln!(js.pre_try, "let {name};").unwrap();
                     js.prelude(&format!("{name} = {arg};"));
@@ -2003,7 +2716,10 @@ fn instruction(
             js.cx.inject_stack_pointer_shim()?;
             let sp = js.cx.wasm_export_ref("__wbindgen_add_to_stack_pointer");
             let coerce = js.cx.coerce_ptr_suffix();
-            let retptr = js.declare("const", "retptr".into(), format!("{sp}(-{size}){coerce}"));
+            // Taken before the `try` whose `finally` gives it back, so that
+            // a throw from anything in it finds the space taken.
+            writeln!(js.pre_try, "const retptr = {sp}(-{size}){coerce};").unwrap();
+            let retptr = js.local("retptr".into());
             js.finally(&format!("{sp}({size});"));
             js.push(retptr);
         }
@@ -2074,12 +2790,28 @@ fn instruction(
         }
 
         Instruction::I32FromExternrefOwned => {
-            js.cx.expose_add_heap_object();
             let val = js.pop();
-            js.push_alloc(format!("addHeapObject({val})"));
+            // With externref the pass sinks every argument's into wasm,
+            // leaving only an encoded cell's, written to memory in JS.
+            let alloc = match (js.cx.aux.externref_table, js.cx.aux.externref_alloc) {
+                (Some(table), Some(alloc)) => js
+                    .cx
+                    .expose_add_to_externref_table(table, alloc)
+                    .to_string(),
+                _ => {
+                    js.cx.expose_add_heap_object();
+                    "addHeapObject".to_string()
+                }
+            };
+            js.push_alloc(format!("{alloc}({val})"));
         }
 
         Instruction::I32FromExternrefBorrow => {
+            // With externref the pass sinks every argument's into wasm, and
+            // an encoded cell has no table stack to borrow on.
+            if js.cx.config.externref {
+                bail!("an element of a vector passed to Rust can't be lent");
+            }
             js.cx.expose_borrowed_objects();
             js.cx.expose_global_stack_pointer();
             let val = js.pop();
@@ -2094,17 +2826,16 @@ fn instruction(
 
         Instruction::I32FromExternrefRustOwned { class } => {
             let val = js.pop();
-            js.assert_owned_class(&val, class);
-            js.assert_not_moved(&val);
+            js.assert_owned_class(&val, class, None);
             let i = js.tmp();
             let ptr = js.declare(
                 "var",
                 format!("ptr{i}"),
                 format!("{val}.__destroy_into_raw()"),
             );
-            let free = js.class_free(class);
-            js.release(format!("if ({ptr}) {free}({ptr}, 1);"));
-            js.push(ptr);
+            let class = class.clone();
+            let nullable = false;
+            js.give(Owner::Class { class, nullable }, &[ptr]);
         }
 
         Instruction::I32FromExternrefRustBorrow { class } => {
@@ -2141,21 +2872,20 @@ fn instruction(
             let val = js.pop();
             let i = js.tmp();
             // `Nullable::Null` is the pointer `1`, which no instance can have.
-            let (empty, owned) = if kind.nullable() {
-                (format!("{val} === null ? 1 : 0"), "> 1")
+            let nullable = kind.nullable();
+            let empty = if nullable {
+                format!("{val} === null ? 1 : 0")
             } else {
-                ("0".into(), "")
+                "0".into()
             };
-            let ptr = js.declare("let", format!("ptr{i}"), empty);
             let some = js.is_some(&val, *kind);
-            js.prelude(&format!("if ({some}) {{"));
-            js.assert_owned_class(&val, class);
-            js.assert_not_moved(&val);
-            js.prelude(&format!("{ptr} = {val}.__destroy_into_raw();"));
-            js.prelude("}");
-            let free = js.class_free(class);
-            js.release(format!("if ({ptr}{owned}) {free}({ptr}, 1);"));
-            js.push(ptr);
+            let assert = js.assert_owned_class(&val, class, Some(&some));
+            let ptr = js.declare("let", format!("ptr{i}"), empty);
+            js.prelude(&format!(
+                "if ({some}) {{\n{assert}{ptr} = {val}.__destroy_into_raw();\n}}"
+            ));
+            let class = class.clone();
+            js.give(Owner::Class { class, nullable }, &[ptr]);
         }
 
         Instruction::I32FromOptionExternref {
@@ -2225,7 +2955,7 @@ fn instruction(
                 value.push(format!("{val} !== {U32_NULL_SENTINEL}"));
             }
             let value = value.join(" && ");
-            js.prelude(&format!("if ({value}) {{ _assertChar({val}); }}"));
+            js.check(&format!("if ({value}) {{ _assertChar({val}); }}"));
             js.push(val);
         }
 
@@ -2343,10 +3073,8 @@ fn instruction(
                 format!("{func}({val}, {malloc})"),
             );
             let len = js.declare("const", format!("len{i}"), "WASM_VECTOR_LEN".into());
-            let release = js.vector_release(kind, *mem, *free, &ptr, &len);
-            js.release(release);
-            js.push(ptr);
-            js.push(len);
+            let (kind, mem, free) = (kind.clone(), *mem, *free);
+            js.give(Owner::Vector { kind, mem, free }, &[ptr, len]);
         }
 
         Instruction::UnwrapResult { table_and_drop } => {
@@ -2416,6 +3144,7 @@ fn instruction(
             let i = js.tmp();
             let malloc = js.cx.wasm_export_of(*malloc);
             let val = js.pop();
+            js.assert_string(&val, Some(*kind));
             let realloc = js.cx.optional_func_arg(*realloc);
             let none = js.is_none(&val, *kind);
             let ptr = js.declare(
@@ -2425,10 +3154,8 @@ fn instruction(
             );
             let len = js.vector_len(&val, *kind);
             let len = js.declare("var", format!("len{i}"), len);
-            let release = js.vector_release(&VectorKind::String, *mem, *free, &ptr, &len);
-            js.release(release);
-            js.push(ptr);
-            js.push(len);
+            let (kind, mem, free) = (VectorKind::String, *mem, *free);
+            js.give(Owner::Vector { kind, mem, free }, &[ptr, len]);
         }
 
         Instruction::OptionVector {
@@ -2451,10 +3178,8 @@ fn instruction(
             );
             let len = js.vector_len(&val, *option_kind);
             let len = js.declare("var", format!("len{i}"), len);
-            let release = js.vector_release(kind, *mem, *free, &ptr, &len);
-            js.release(release);
-            js.push(ptr);
-            js.push(len);
+            let (kind, mem, free) = (kind.clone(), *mem, *free);
+            js.give(Owner::Vector { kind, mem, free }, &[ptr, len]);
         }
 
         Instruction::MutableSliceToMemory {
@@ -2472,10 +3197,8 @@ fn instruction(
             let ptr = js.declare("var", format!("ptr{i}"), format!("{func}({val}, {malloc})"));
             let len = js.declare("var", format!("len{i}"), "WASM_VECTOR_LEN".into());
             // Then pass it the pointer and the length of where we copied it.
-            let release = js.vector_release(kind, *mem, *free, &ptr, &len);
-            js.release(release);
-            js.push(ptr);
-            js.push(len);
+            let (kind, mem, free) = (kind.clone(), *mem, *free);
+            js.give(Owner::Vector { kind, mem, free }, &[ptr, len]);
             // Then we give Wasm a reference to the original typed array, so that it can
             // update it with modifications made on the Wasm side before returning.
             js.push(val);
@@ -2484,6 +3207,23 @@ fn instruction(
         Instruction::BoolFromI32 => {
             let val = js.pop();
             js.push(format!("{val} !== 0"));
+        }
+
+        // A handle in a cell is read where it is, and dropped with the cell.
+        Instruction::ExternrefLoadOwned { table_and_drop } if js.cell.is_some() => {
+            let val = js.pop();
+            js.owns(Owner::Handle, &val)?;
+            match *table_and_drop {
+                Some((table, _)) => {
+                    let table = js.cx.export_name_of(table);
+                    let table = js.cx.wasm_export_ref(&table);
+                    js.push(format!("{table}.get({val})"));
+                }
+                None => {
+                    js.cx.expose_get_object();
+                    js.push(format!("getObject({val})"));
+                }
+            }
         }
 
         Instruction::ExternrefLoadOwned { table_and_drop } => {
@@ -2496,7 +3236,7 @@ fn instruction(
                 "takeObject".to_string()
             };
             let val = js.pop();
-            js.push(format!("{take_object}({val})"));
+            js.push_taken(format!("{take_object}({val})"), &val, &Owner::Handle);
         }
 
         Instruction::StringFromChar => {
@@ -2606,7 +3346,7 @@ fn instruction(
                 }
                 Some(_) | None => {
                     let identifier = js.cx.require_class_wrap(class);
-                    js.push(format!("{identifier}.__wrap({val})"));
+                    js.push_wrapped(format!("{identifier}.__wrap({val})"), &val, class, false)?;
                 }
             }
         }
@@ -2615,13 +3355,14 @@ fn instruction(
             assert!(constructor.is_none());
             let val = js.pop();
             let identifier = js.cx.require_class_wrap(class);
-            js.push(abi_option(
+            let wrap = abi_option(
                 &val,
                 *kind,
                 "0",
                 "1",
                 &format!("{identifier}.__wrap({val})"),
-            ));
+            );
+            js.push_wrapped(wrap, &val, class, kind.nullable())?;
         }
 
         Instruction::CachedStringLoad {
@@ -2638,9 +3379,24 @@ fn instruction(
 
             js.prelude(&format!("var v{tmp} = {get}({ptr}, {len});"));
 
-            if *owned {
+            let (kind, mem, string_free) = (VectorKind::String, *mem, *free);
+            if *owned
+                && !js.owns(
+                    Owner::Vector {
+                        kind,
+                        mem,
+                        free: string_free,
+                    },
+                    &ptr,
+                )?
+            {
                 let free = js.cx.wasm_export_of(*free);
-                js.prelude(&format!("if ({ptr} !== 0) {{ {free}({ptr}, {len}, 1); }}",));
+                let free = format!("if ({ptr} !== 0) {{ {free}({ptr}, {len}, 1); }}");
+                if js.defers_given && js.held_by_args(&ptr, Some(&len)) {
+                    js.finally(&free);
+                } else {
+                    js.prelude(&free);
+                }
             }
 
             let v = js.local(format!("v{tmp}"));
@@ -2696,7 +3452,17 @@ fn instruction(
                 // Borrowed closure without destructor
                 let i = js.tmp();
                 js.local(format!("state{i}"));
-                js.prelude(&format!("var state{i} = {{a: {a}, b: {b}}};"));
+                // A stored closure is one of many its glue makes, each
+                // with a state of its own.
+                let decl = if js.stored { "const" } else { "var" };
+                let state = format!("{decl} state{i} = {{a: {a}, b: {b}}};");
+                if js.defers_given && js.held_by_args(&a, Some(&b)) {
+                    // Ahead of the `try` whose `finally` clears it.
+                    js.pre_try.push_str(&state);
+                    js.pre_try.push('\n');
+                } else {
+                    js.prelude(&state);
+                }
                 let args = (0..*nargs)
                     .map(|i| format!("arg{i}"))
                     .collect::<Vec<_>>()
@@ -2706,7 +3472,7 @@ fn instruction(
                     // recursively, so ensure that we clear out one of the
                     // internal pointers while it's being invoked.
                     js.prelude(&format!(
-                        "var cb{i} = ({args}) => {{
+                        "{decl} cb{i} = ({args}) => {{
                             const a = state{i}.a;
                             state{i}.a = 0;
                             try {{
@@ -2718,7 +3484,7 @@ fn instruction(
                     ));
                 } else {
                     js.prelude(&format!(
-                        "var cb{i} = ({args}) => {wrapper}(state{i}.a, state{i}.b, {args});",
+                        "{decl} cb{i} = ({args}) => {wrapper}(state{i}.a, state{i}.b, {args});",
                     ));
                 }
 
@@ -2753,24 +3519,50 @@ fn instruction(
         } => {
             let len = js.pop();
             let ptr = js.pop();
+            // The data is freed once it's read, so it can never be left as
+            // a view.
+            let copy = match mode {
+                SeqValue::View => SeqValue::Copy,
+                mode => *mode,
+            };
+            let owner = Owner::Vector {
+                kind: kind.clone(),
+                mem: *mem,
+                free: *free,
+            };
+            if js.owns(owner, &ptr)? {
+                let f = view_from_wasm(js, kind, *mem);
+                js.push(seq_value_expr(format!("{f}({ptr}, {len})"), kind, copy));
+                return Ok(());
+            }
+            let i = js.tmp();
+            if js.frees_in_finally(kind, &ptr, &len) {
+                let f = view_from_wasm(js, kind, *mem);
+                let load = seq_value_expr(format!("{f}({ptr}, {len})"), kind, copy);
+                let release = js.vector_release(kind, *mem, *free, &ptr, &len);
+                let v = js.declare("var", format!("v{i}"), load);
+                js.finally(&release);
+                js.push(v);
+                return Ok(());
+            }
             let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem);
-            // The data is freed below, so it can never be left as a view.
             // TODO(next major): default to `slice = transfer` here and in
             // `OptionVectorLoad`, once supported. It needs a view no other view
             // can be derived from, so that a finalizer can free the data:
             // https://github.com/tc39/proposal-limited-arraybuffer/issues/19.
-            let mode = match mode {
-                SeqValue::View => SeqValue::Copy,
-                mode => *mode,
-            };
-            let load = seq_value_expr(format!("{f}({ptr}, {len})"), kind, mode);
-            let i = js.tmp();
+            let load = seq_value_expr(format!("{f}({ptr}, {len})"), kind, copy);
             let free = js.cx.wasm_export_of(*free);
-            js.prelude(&format!("var v{i} = {load};"));
-            js.prelude(&format!(
-                "{free}({ptr}, {len} * {size}, {size});",
-                size = kind.size()
-            ));
+            let free = format!("{free}({ptr}, {len} * {size}, {size});", size = kind.size());
+            if kind.is_handles() {
+                // Reading a handle goes through the table, however that
+                // ends.
+                js.prelude(&format!(
+                    "var v{i};\ntry {{\nv{i} = {load};\n}} finally {{\n{free}\n}}"
+                ));
+            } else {
+                js.prelude(&format!("var v{i} = {load};"));
+                js.prelude(&free);
+            }
             let v = js.local(format!("v{i}"));
             js.push(v)
         }
@@ -2784,85 +3576,189 @@ fn instruction(
         } => {
             let len = js.pop();
             let ptr = js.pop();
-            let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem);
             let mode = match mode {
                 SeqValue::View => SeqValue::Copy,
                 mode => *mode,
             };
+            let owner = Owner::Vector {
+                kind: kind.clone(),
+                mem: *mem,
+                free: *free,
+            };
+            let owned = js.owns(owner, &ptr)?;
+            let deferred = !owned && js.frees_in_finally(kind, &ptr, &len);
+            let f = if owned || deferred {
+                view_from_wasm(js, kind, *mem)
+            } else {
+                js.cx.expose_get_vector_from_wasm(kind.clone(), *mem)
+            };
             let load = seq_value_expr(format!("{f}({ptr}, {len})"), kind, mode);
             let i = js.tmp();
+            let release = js.vector_release(kind, *mem, *free, &ptr, &len);
             let free = js.cx.wasm_export_of(*free);
             let init = empty_vector_init(&len, *option_kind);
+            let free = format!("{free}({ptr}, {len} * {size}, {size});", size = kind.size());
             js.prelude(&format!("let v{i}{init};"));
             js.prelude(&format!("if ({ptr} !== 0) {{"));
-            js.prelude(&format!("v{i} = {load};"));
-            js.prelude(&format!(
-                "{free}({ptr}, {len} * {size}, {size});",
-                size = kind.size()
-            ));
+            if owned {
+                js.prelude(&format!("v{i} = {load};"));
+            } else if deferred {
+                js.prelude(&format!("v{i} = {load};"));
+                js.finally(&release);
+            } else if kind.is_handles() {
+                js.prelude(&format!(
+                    "try {{\nv{i} = {load};\n}} finally {{\n{free}\n}}"
+                ));
+            } else {
+                js.prelude(&format!("v{i} = {load};"));
+                js.prelude(&free);
+            }
             js.prelude("}");
             let v = js.local(format!("v{i}"));
             js.push(v);
         }
 
         Instruction::EncodedSliceLoad {
-            words,
+            layout,
             elem,
             mem,
             free,
             optional,
+            count,
         } => {
-            let len = js.pop();
+            let len = match count {
+                CellCount::Word => Some(js.pop()),
+                CellCount::One => None,
+            };
             let ptr = js.pop();
             let i = js.tmp();
             let p = js.local(format!("p{i}"));
             let end = js.local(format!("end{i}"));
-            let memory = js.cx.expose_dataview_memory(*mem);
-            let memory = if js.cx.config.mode.emscripten() {
-                memory.name.to_string()
-            } else {
-                format!("{memory}()")
-            };
-            // Decoding never calls into wasm, so memory cannot grow under the
-            // loop and one view serves the whole buffer.
+            let memory = js.dataview(*mem);
             let view = js.local(format!("view{i}"));
-            let (fields, stride, align) = encoded_slice_layout(words)?;
-            let reads = fields
-                .iter()
-                .map(|(offset, ty)| format!("{view}.get{ty}({p} + {offset}, true)"))
-                .collect::<Vec<_>>();
+            let (fields, stride, align) = encoded_slice_layout(layout)?;
             // Decode one element from its words with its own instructions,
-            // into the loop body.
-            let reads = reads
-                .into_iter()
-                .map(|expr| Value::Expr { expr, pure: false })
+            // into the loop body, which reads the cell's words ahead of
+            // them.
+            let mut bind = String::new();
+            let words = fields
+                .iter()
+                .enumerate()
+                .map(|(n, (offset, ty))| {
+                    let word = js.local(format!("w{i}_{n}"));
+                    writeln!(bind, "const {word} = {view}.get{ty}({p} + {offset}, true);").unwrap();
+                    word
+                })
                 .collect();
-            let stack = std::mem::replace(&mut js.stack, reads);
-            let prelude = std::mem::take(&mut js.prelude);
-            for instr in elem {
-                instruction(js, &instr.instr, log_error, constructor)?;
+            let cell = CellRead {
+                words,
+                at: p.clone(),
+                fields: fields.clone(),
+                mem: *mem,
+                view: view.clone(),
+                wasm_refs: js.cx.wasm_refs,
+                owned: Vec::new(),
+            };
+            let (element, value) = encoded_element(js, elem, cell, log_error, constructor)?;
+            // Glue that calls into wasm may grow memory under the loop, so
+            // each iteration then reads through the memory as it is.
+            let effects =
+                element.calls_wasm || !element.pre_try.is_empty() || !element.finally.is_empty();
+            if effects {
+                bind.insert_str(0, &format!("const {view} = {memory};\n"));
             }
-            let value = js.pop();
-            let body = render(&std::mem::replace(&mut js.prelude, prelude));
-            js.stack = stack;
             let v = js.local(format!("v{i}"));
-            let free = js.cx.wasm_export_of(*free);
             let coerce = js.cx.coerce_ptr_assign(&p);
-            if let Some(kind) = optional {
-                let init = empty_vector_init(&len, *kind);
-                js.prelude(&format!("let {v}{init};\nif ({ptr} !== 0) {{\n{v} = [];"));
+            // The cells are read and nothing of theirs released: what they
+            // own goes with the buffer, which a cell holding it releases
+            // and otherwise this does once the cells are read, however far
+            // the reading got.
+            let owner = Owner::Cells(Rc::new(Cells {
+                fields,
+                stride,
+                align,
+                mem: *mem,
+                free: *free,
+                given: element.owned,
+                count: *count,
+            }));
+            let held = js.owns(owner.clone(), &ptr)?;
+            // An argument's cells are released in the function's `finally`,
+            // whichever argument's glue threw.
+            let deferred = !held && js.held_by_args(&ptr, len.as_deref());
+            let base = js.local(format!("b{i}"));
+            let release = if held {
+                None
             } else {
-                js.prelude(&format!("const {v} = [];"));
+                let mut words = vec![base.clone()];
+                words.extend(len.clone());
+                Some(js.release_stmt(&owner, &words, None))
+            };
+            // A sequence's cells decode into an array, and a single cell
+            // into its value.
+            let (init, take, open, close) = match &len {
+                Some(len) => (
+                    match optional {
+                        Some(kind) => {
+                            let init = empty_vector_init(len, *kind);
+                            format!("let {v}{init};\nif ({ptr} !== 0) {{\n{v} = [];")
+                        }
+                        None => format!("const {v} = [];"),
+                    },
+                    format!("{v}.push({value});"),
+                    format!(
+                        "for (const {end} = {p} + {len} * {stride}; {p} < {end}; {p} += {stride}) {{"
+                    ),
+                    "}",
+                ),
+                None => (
+                    match optional {
+                        // A nullable `null` is told apart by the length.
+                        Some(kind) if kind.nullable() => {
+                            bail!("a single cell can't be nullable")
+                        }
+                        Some(_) => format!("let {v};\nif ({ptr} !== 0) {{"),
+                        None => format!("let {v};"),
+                    },
+                    format!("{v} = {value};"),
+                    String::new(),
+                    "",
+                ),
+            };
+            // What an element lends is JS's until this glue is done with
+            // the sequence, so what the element deferred is kept for what
+            // this glue defers.
+            let mut body = format!("{}{}{take}\n", element.pre_try, element.body);
+            if !element.finally.is_empty() {
+                let lent = js.local(format!("lent{i}"));
+                writeln!(js.pre_try, "const {lent} = [];").unwrap();
+                writeln!(body, "{lent}.push(() => {{\n{}}});", element.finally).unwrap();
+                js.finally(&format!("for (const f of {lent}) f();"));
             }
+            let view = if effects {
+                String::new()
+            } else {
+                format!("const {view} = {memory};")
+            };
+            let read = format!("{view}\n{open}\n{bind}{body}{close}\n");
+            let (start, read) = match release {
+                Some(release) if deferred => {
+                    let coerce = js.cx.coerce_ptr_suffix();
+                    writeln!(js.pre_try, "const {base} = {ptr}{coerce};").unwrap();
+                    js.finally(&release);
+                    (format!("let {p} = {base};"), read)
+                }
+                Some(release) => (
+                    format!("let {p} = {ptr};\n{coerce}"),
+                    format!("const {base} = {p};\ntry {{\n{read}}} finally {{\n{release}\n}}"),
+                ),
+                None => (format!("let {p} = {ptr};\n{coerce}"), read),
+            };
             js.prelude(&format!(
                 "
-                let {p} = {ptr};
-                {coerce}
-                const {view} = {memory};
-                for (const {end} = {p} + {len} * {stride}; {p} < {end}; {p} += {stride}) {{
-                {body}{v}.push({value});
-                }}
-                {free}({ptr}, {len} * {stride}, {align});
+                {init}
+                {start}
+                {read}
                 "
             ));
             if optional.is_some() {
@@ -2872,89 +3768,269 @@ fn instruction(
         }
 
         Instruction::EncodedSliceStore {
-            words,
+            layout,
             elem,
+            array,
             malloc,
             free,
             mem,
             optional,
             option_kind,
+            count,
         } => {
             let val = js.pop();
+            // Whether the values are held by an input of this glue's scope.
+            let held_by_input = !js.instr.reads_local;
+            // A sequence that a sequence holds is checked as one in every build.
+            if js.cx.config.debug && *array && !js.stored && matches!(count, CellCount::Word) {
+                js.cx.expose_assert_array_like();
+                let assert = format!("_assertArrayLike({val});");
+                if *optional {
+                    let some = js.is_some(&val, *option_kind);
+                    js.check(&format!("if ({some}) {{\n{assert}\n}}"));
+                } else {
+                    js.check(&assert);
+                }
+            }
+            let (fields, stride, align) = encoded_slice_layout(layout)?;
+            // More cells than can be allocated are rejected here, as the
+            // allocator rejects them: on wasm32 their size would otherwise
+            // wrap to one it accepts, for fewer cells than are written. The
+            // length is read again where the values are taken, and what it
+            // is by then is checked there.
+            let most = (!js.cx.memory64 && matches!(count, CellCount::Word))
+                .then(|| i32::MAX as usize / stride);
+            if let Some(most) = most {
+                let some = if *optional {
+                    format!("{} && ", js.is_some(&val, *option_kind))
+                } else {
+                    String::new()
+                };
+                let inputs_only = !js.instr.reads_local && !js.instr.binds_local;
+                js.check_of(
+                    &format!(
+                        "if ({some}{val}.length > {most}) throw new Error('invalid malloc request');"
+                    ),
+                    inputs_only,
+                    true,
+                );
+            }
             let i = js.tmp();
             let ptr = js.local(format!("ptr{i}"));
-            let len = js.local(format!("len{i}"));
-            let j = js.local(format!("j{i}"));
-            let p = js.local(format!("p{i}"));
             let e = js.local(format!("e{i}"));
-            let memory = js.cx.expose_dataview_memory(*mem);
-            let memory = if js.cx.config.mode.emscripten() {
-                memory.name.to_string()
-            } else {
-                format!("{memory}()")
+            // A single cell is written at the buffer's address.
+            let p = match count {
+                CellCount::Word => js.local(format!("p{i}")),
+                CellCount::One => ptr.clone(),
             };
-            // Encoding never calls into wasm, so the view taken after the
-            // allocation serves the whole buffer.
+            let memory = js.dataview(*mem);
             let view = js.local(format!("view{i}"));
-            let (fields, stride, align) = encoded_slice_layout(words)?;
-            // Encode one element into its words with its own instructions,
-            // into the loop body.
-            // The element reads the loop's local, so it's never hoisted
-            // ahead of it; the guard belongs to the enclosing arguments.
-            let guard = js.guard.take();
-            let stack = std::mem::replace(&mut js.stack, vec![Value::Local(e.clone())]);
-            let prelude = std::mem::take(&mut js.prelude);
+            // Encode one element into its words with its own instructions.
+            // The buffer takes the words as a call takes its arguments: what
+            // the element allocated is released should the rest of its glue
+            // throw, and the writes that follow can't.
+            let scope = js.enter_scope();
+            js.input(Value::Param(e.clone()));
             for instr in elem {
+                js.begin_instr();
                 instruction(js, &instr.instr, log_error, constructor)?;
+                js.end_instr();
             }
-            let values = std::mem::replace(&mut js.stack, stack);
-            let mut body = render(&std::mem::replace(&mut js.prelude, prelude));
-            debug_assert!(js.guard.is_none(), "an encoded element allocated");
-            js.guard = guard;
-            for ((offset, ty), value) in fields.iter().zip(values) {
-                body.push_str(&format!("{view}.set{ty}({p} + {offset}, {value}, true);\n"));
+            let values = std::mem::take(&mut js.stack);
+            let allocs = values
+                .iter()
+                .map(|value| matches!(value, Value::Alloc(_)))
+                .collect::<Vec<_>>();
+            let tys = layout
+                .words()
+                .into_iter()
+                .map(AdapterType::to_wasm)
+                .collect::<Option<Vec<_>>>();
+            let values = js.take_args(values, tys.as_deref());
+            assert_eq!(values.len(), fields.len());
+            let checks = js.validation();
+            let mut writes = String::new();
+            for (n, (((offset, ty), value), alloc)) in
+                fields.iter().zip(values).zip(allocs).enumerate()
+            {
+                // An allocation may grow memory, so it's made ahead of the
+                // view the words are written through.
+                let value = if alloc {
+                    js.declare("const", format!("w{i}_{n}"), value)
+                } else {
+                    value
+                };
+                writeln!(writes, "{view}.set{ty}({p} + {offset}, {value}, true);").unwrap();
+            }
+            let element = js.exit_scope(scope)?;
+            if !element.pre_try.is_empty() || !element.finally.is_empty() {
+                // What it lends would have to stay until Rust returns, past
+                // the element's own iteration.
+                bail!("an element of a vector passed to Rust can't be lent");
+            }
+            let effects = element.calls_wasm || !element.given.is_empty();
+            // Every value is checked before any is taken, or anything is
+            // allocated for one: a value that is rejected leaves the others
+            // with JS, and what holds them as it was.
+            if !checks.is_empty() {
+                let n = js.local(format!("n{i}"));
+                let checks = match count {
+                    CellCount::Word => format!(
+                        "for (let {n} = 0; {n} < {val}.length; {n}++) {{\n\
+                         const {e} = {val}[{n}];\n\
+                         {checks}}}"
+                    ),
+                    CellCount::One => format!("{{\nconst {e} = {val};\n{checks}}}"),
+                };
+                let checks = if *optional {
+                    let some = js.is_some(&val, *option_kind);
+                    format!("if ({some}) {{\n{checks}\n}}")
+                } else {
+                    checks
+                };
+                js.check_of(&checks, held_by_input, true);
             }
             let malloc = js.cx.wasm_export_of(*malloc);
-            let free = js.cx.wasm_export_of(*free);
             let coerce = js.cx.coerce_ptr_suffix();
-            let alloc = format!("{malloc}({len} * {stride}, {align}){coerce}");
-            if *optional {
-                js.declare("let", ptr.clone(), "0".into());
-                // A nullable `null` buffer is the null pointer with the
-                // `null` handle as its length.
-                let empty_len = if option_kind.nullable() {
-                    format!("{val} === null ? {NULL_HANDLE} : 0")
-                } else {
-                    "0".into()
-                };
-                js.declare("let", len.clone(), empty_len);
-                let some = js.is_some(&val, *option_kind);
-                js.prelude(&format!(
-                    "if ({some}) {{\n{len} = {val}.length;\n{ptr} = {alloc};"
-                ));
-            } else {
-                js.declare("const", len.clone(), format!("{val}.length"));
-                js.declare("const", ptr.clone(), alloc);
+            let body = element.body;
+            let cells = Cells {
+                fields,
+                stride,
+                align,
+                mem: *mem,
+                free: *free,
+                given: element.given,
+                count: *count,
+            };
+            match count {
+                CellCount::Word => {
+                    let len = js.local(format!("len{i}"));
+                    let j = js.local(format!("j{i}"));
+                    let alloc = format!("{malloc}({len} * {stride}, {align}){coerce}");
+                    // As many cells are written as are allocated for: a
+                    // whole number of them, read once.
+                    let length = if js.cx.memory64 {
+                        format!("Math.trunc({val}.length)")
+                    } else {
+                        format!("{val}.length >>> 0")
+                    };
+                    let fits = match most {
+                        Some(most) => format!(
+                            "if ({len} > {most}) throw new Error('invalid malloc request');"
+                        ),
+                        None => String::new(),
+                    };
+                    // With elements that own something, how many the buffer
+                    // holds so far is kept for releasing them.
+                    if effects {
+                        js.declare("let", j.clone(), "0".into());
+                    }
+                    if *optional {
+                        js.declare("let", ptr.clone(), "0".into());
+                        // A nullable `null` buffer is the null pointer with
+                        // the `null` handle as its length.
+                        let empty_len = if option_kind.nullable() {
+                            format!("{val} === null ? {NULL_HANDLE} : 0")
+                        } else {
+                            "0".into()
+                        };
+                        js.declare("let", len.clone(), empty_len);
+                        let some = js.is_some(&val, *option_kind);
+                        js.prelude(&format!(
+                            "if ({some}) {{\n{len} = {length};\n{fits}\n{ptr} = {alloc};"
+                        ));
+                    } else {
+                        js.declare("const", len.clone(), length);
+                        js.prelude(&fits);
+                        js.declare("const", ptr.clone(), alloc);
+                    }
+                    // An element encoder may throw (an invalid `char`, say),
+                    // which the guard releases the buffer and the elements
+                    // written for.
+                    js.give_written(
+                        Owner::Cells(Rc::new(cells)),
+                        &[ptr.clone(), len.clone()],
+                        Some(&j),
+                    );
+                    if effects {
+                        js.prelude(&format!(
+                            "
+                            for (; {j} < {len}; {j}++) {{
+                            const {e} = {val}[{j}];
+                            {body}const {view} = {memory};
+                            const {p} = {ptr} + {j} * {stride};
+                            {writes}}}
+                            "
+                        ));
+                    } else {
+                        // Memory a getter grows under the view only throws.
+                        js.prelude(&format!(
+                            "
+                            const {view} = {memory};
+                            for (let {j} = 0; {j} < {len}; {j}++) {{
+                            const {e} = {val}[{j}];
+                            const {p} = {ptr} + {j} * {stride};
+                            {body}{writes}}}
+                            "
+                        ));
+                    }
+                    if *optional {
+                        js.prelude("}");
+                    }
+                }
+                // The cell is allocated once the value's glue is through, so
+                // it's never held half written.
+                CellCount::One => {
+                    let alloc = format!("{malloc}({stride}, {align}){coerce}");
+                    let write = format!("const {view} = {memory};\n{writes}");
+                    if *optional {
+                        if option_kind.nullable() {
+                            // A nullable `null` is told apart by the length.
+                            bail!("a single cell can't be nullable");
+                        }
+                        js.declare("let", ptr.clone(), "0".into());
+                        let some = js.is_some(&val, *option_kind);
+                        js.prelude(&format!(
+                            "
+                            if ({some}) {{
+                            const {e} = {val};
+                            {body}{ptr} = {alloc};
+                            {write}}}
+                            "
+                        ));
+                    } else {
+                        js.prelude(&format!("const {e} = {val};\n{body}"));
+                        js.declare("const", ptr.clone(), alloc);
+                        js.prelude(&write);
+                    }
+                    js.give(Owner::Cells(Rc::new(cells)), &[ptr]);
+                }
             }
-            // An element encoder may throw (an invalid `char`, say), which
-            // the guard frees the buffer for.
-            js.release(format!(
-                "if ({ptr}) {free}({ptr}, {len} * {stride}, {align});"
+        }
+
+        Instruction::StoredCheck(check) => {
+            let val = js.pop();
+            let misplaced = match check {
+                StoredCheck::String(None) => format!("typeof {val} !== 'string'"),
+                StoredCheck::String(Some(kind)) => {
+                    let none = js.is_none(&val, *kind);
+                    format!("!({none}) && typeof {val} !== 'string'")
+                }
+                StoredCheck::Sequence(kind) => {
+                    let sequence = format!("!Array.isArray({val}) && !ArrayBuffer.isView({val})");
+                    match kind {
+                        Some(kind) => {
+                            let some = js.is_some(&val, *kind);
+                            format!("{some} && {sequence}")
+                        }
+                        None => sequence,
+                    }
+                }
+            };
+            js.check(&format!(
+                "if ({misplaced}) throw new Error('array contains a value of the wrong type');"
             ));
-            js.prelude(&format!(
-                "
-                const {view} = {memory};
-                for (let {j} = 0; {j} < {len}; {j}++) {{
-                const {e} = {val}[{j}];
-                const {p} = {ptr} + {j} * {stride};
-                {body}}}
-                "
-            ));
-            if *optional {
-                js.prelude("}");
-            }
-            js.push(ptr);
-            js.push(len);
+            js.push(val);
         }
 
         Instruction::View { kind, mem, mode } => {
@@ -3071,6 +4147,35 @@ fn instruction(
 
 /// The helper reading borrowed vector data of `kind`; for externref kinds, the
 /// version that doesn't take ownership of the handles.
+/// Translates the glue decoding one encoded element from `words`, giving
+/// what it did and the element's value.
+fn encoded_element(
+    js: &mut JsBuilder,
+    elem: &[InstructionData],
+    cell: CellRead,
+    log_error: &mut bool,
+    constructor: &Option<String>,
+) -> Result<(Element, String), Error> {
+    let scope = js.enter_scope();
+    for word in &cell.words {
+        js.input(Value::Local(word.clone()));
+    }
+    js.cell = Some(cell);
+    for instr in elem {
+        js.begin_instr();
+        instruction(js, &instr.instr, log_error, constructor)?;
+        js.end_instr();
+    }
+    let value = js.pop();
+    // Nothing takes what the glue allocated but the element's value.
+    if let Some(guard) = js.guard.take() {
+        let (rest, _) = js.split_guard(&guard);
+        let tail = guard.tail;
+        js.close_guard(guard, rest, tail);
+    }
+    Ok((js.exit_scope(scope)?, value))
+}
+
 fn view_from_wasm(js: &mut JsBuilder, kind: &VectorKind, mem: walrus::MemoryId) -> MemView {
     match kind {
         VectorKind::Externref | VectorKind::NamedExternref(_) => {
@@ -3080,29 +4185,44 @@ fn view_from_wasm(js: &mut JsBuilder, kind: &VectorKind, mem: walrus::MemoryId) 
     }
 }
 
-/// The layout of an encoded slice element's ABI `words`, each at its natural
-/// alignment as in the `#[repr(C)]` ABI types the buffer holds: each word's
-/// offset and `DataView` accessor suffix, the stride and the alignment.
+/// The layout of a cell: each word's offset and `DataView` accessor suffix
+/// in order, the size and the alignment. A value's words are each at their
+/// natural alignment, as in the `#[repr(C)]` ABI type the cell holds, and a
+/// record's parts are each at their cell's, as in the `#[repr(C)]` record of
+/// them.
 fn encoded_slice_layout(
-    words: &[AdapterType],
+    layout: &CellLayout,
 ) -> Result<(Vec<(usize, &'static str)>, usize, usize), Error> {
     let mut fields = Vec::new();
-    let mut stride: usize = 0;
+    let mut size: usize = 0;
     let mut align: usize = 1;
-    for word in words {
-        let (size, ty) = match word {
-            AdapterType::I32 => (4, "Int32"),
-            AdapterType::F32 => (4, "Float32"),
-            AdapterType::I64 => (8, "BigInt64"),
-            AdapterType::F64 => (8, "Float64"),
-            _ => bail!("unsupported slice element word {word:?}"),
-        };
-        stride = stride.next_multiple_of(size);
-        fields.push((stride, ty));
-        stride += size;
-        align = align.max(size);
+    match layout {
+        CellLayout::Words(words) => {
+            for word in words {
+                let (word_size, ty) = match word {
+                    AdapterType::I32 => (4, "Int32"),
+                    AdapterType::F32 => (4, "Float32"),
+                    AdapterType::I64 => (8, "BigInt64"),
+                    AdapterType::F64 => (8, "Float64"),
+                    _ => bail!("unsupported slice element word {word:?}"),
+                };
+                size = size.next_multiple_of(word_size);
+                fields.push((size, ty));
+                size += word_size;
+                align = align.max(word_size);
+            }
+        }
+        CellLayout::Record(parts) => {
+            for part in parts {
+                let (part_fields, part_size, part_align) = encoded_slice_layout(part)?;
+                size = size.next_multiple_of(part_align);
+                fields.extend(part_fields.into_iter().map(|(at, ty)| (size + at, ty)));
+                size += part_size;
+                align = align.max(part_align);
+            }
+        }
     }
-    Ok((fields, stride.next_multiple_of(align), align))
+    Ok((fields, size.next_multiple_of(align), align))
 }
 
 /// The JS value for the vector `load` of `kind` per `mode`. Only typed kinds
@@ -3362,7 +4482,8 @@ pub(crate) fn adapter2ts(
 
 #[test]
 fn encoded_slice_layout_matches_repr_c() {
-    let layout = |words: &[AdapterType]| encoded_slice_layout(words).unwrap();
+    let words = |words: &[AdapterType]| CellLayout::Words(words.to_vec());
+    let layout = |tys: &[AdapterType]| encoded_slice_layout(&words(tys)).unwrap();
     assert_eq!(layout(&[AdapterType::I32]), (vec![(0, "Int32")], 4, 4));
     assert_eq!(
         layout(&[AdapterType::F64, AdapterType::F64]),
@@ -3371,5 +4492,15 @@ fn encoded_slice_layout_matches_repr_c() {
     assert_eq!(
         layout(&[AdapterType::I32, AdapterType::F64]),
         (vec![(0, "Int32"), (8, "Float64")], 16, 8)
+    );
+    // `{ { x, n }, m }` keeps the inner record's padding, where the flat run
+    // of its words would be 16 bytes.
+    let record = CellLayout::Record(vec![
+        CellLayout::Record(vec![words(&[AdapterType::F64]), words(&[AdapterType::I32])]),
+        words(&[AdapterType::I32]),
+    ]);
+    assert_eq!(
+        encoded_slice_layout(&record).unwrap(),
+        (vec![(0, "Float64"), (8, "Int32"), (16, "Int32")], 24, 8)
     );
 }

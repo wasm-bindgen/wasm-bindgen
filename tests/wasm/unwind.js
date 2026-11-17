@@ -48,3 +48,18 @@ function spDrift(f, n) {
 exports.js_closure_sp_drift = (f, n) => spDrift(() => f(), n);
 
 exports.js_export_sp_drift = (n) => spDrift(() => wasm.sp_leak_panic(), n);
+
+// The message of the panic that two unsafe integers in one sequence raise,
+// after which the module must still take a call.
+exports.js_unsafe_integers_message = () => {
+  let message;
+  try {
+    wasm.unwind_safe_integers([1, 1.5, 2.5]);
+  } catch (error) {
+    message = error.message;
+  }
+  if (wasm.unwind_safe_integers([1, 2]) !== 2) {
+    throw new Error('the module did not survive');
+  }
+  return message;
+};

@@ -67,12 +67,70 @@ export function roundtrip(borrowed, owned) {
  * @returns {string[]}
  */
 export function strings(input) {
-    const ptr0 = passArrayJsValueToWasm0(input, wasm.__wbindgen_malloc);
-    const len0 = WASM_VECTOR_LEN;
+    if (input.length > 268435455) throw new Error('invalid malloc request');
+    for (let n0 = 0; n0 < input.length; n0++) {
+        const e0 = input[n0];
+        if (typeof e0 !== 'string') throw new Error('array contains a value of the wrong type');
+    }
+    let j0 = 0, len0, ptr0;
+    try {
+        len0 = input.length >>> 0;
+        if (len0 > 268435455) throw new Error('invalid malloc request');
+        ptr0 = wasm.__wbindgen_malloc(len0 * 8, 4) >>> 0;
+        for (; j0 < len0; j0++) {
+            const e0 = input[j0];
+            if (typeof e0 !== 'string') throw new Error('array contains a value of the wrong type');
+            const ptr1 = passStringToWasm0(e0, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            const len1 = WASM_VECTOR_LEN;
+            const view0 = getDataViewMemory0();
+            const p0 = ptr0 + j0 * 8;
+            view0.setInt32(p0 + 0, ptr1, true);
+            view0.setInt32(p0 + 4, len1, true);
+        }
+    } catch (e) {
+        if (ptr0) {
+            let view2 = getDataViewMemory0();
+            for (let k2 = 0; k2 < j0; k2++) {
+                const cell2 = ptr0 + k2 * 8;
+                const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
+                const w2_1 = view2.getInt32(cell2 + 4, true) >>> 0;
+                if (w2_0) {
+                    wasm.__wbindgen_free(w2_0, w2_1 * 1, 1);
+                    view2 = getDataViewMemory0();
+                }
+            }
+            wasm.__wbindgen_free(ptr0, len0 * 8, 4);
+        }
+        throw e;
+    }
     const ret = wasm.strings(ptr0, len0);
-    var v2 = getArrayJsValueFromWasm0(ret[0], ret[1]);
-    wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
-    return v2;
+    const v4 = [];
+    let p4 = ret[0];
+    p4 = p4 >>> 0;
+    const b4 = p4;
+    try {
+        const view4 = getDataViewMemory0();
+        for (const end4 = p4 + ret[1] * 8; p4 < end4; p4 += 8) {
+            const w4_0 = view4.getInt32(p4 + 0, true);
+            const w4_1 = view4.getInt32(p4 + 4, true);
+            v4.push(getStringFromWasm0(w4_0, w4_1));
+        }
+    } finally {
+        if (b4) {
+            let view5 = getDataViewMemory0();
+            for (let k5 = 0; k5 < ret[1]; k5++) {
+                const cell5 = b4 + k5 * 8;
+                const w5_0 = view5.getInt32(cell5 + 0, true) >>> 0;
+                const w5_1 = view5.getInt32(cell5 + 4, true) >>> 0;
+                if (w5_0) {
+                    wasm.__wbindgen_free(w5_0, w5_1 * 1, 1);
+                    view5 = getDataViewMemory0();
+                }
+            }
+            wasm.__wbindgen_free(b4, ret[1] * 8, 4);
+        }
+    }
+    return v4;
 }
 export function __wbg___wbindgen_debug_string_f249a2a76caa9a55(arg0, arg1) {
     const ret = debugString(arg1);
@@ -88,14 +146,6 @@ export function __wbg___wbindgen_is_function_741ff2bb612836f5(arg0) {
 export function __wbg___wbindgen_is_undefined_be5b34249ff1fc15(arg0) {
     const ret = arg0 === undefined;
     return ret;
-}
-export function __wbg___wbindgen_string_get_7ce8eee7fd327545(arg0, arg1) {
-    const obj = arg1;
-    const ret = typeof(obj) === 'string' ? obj : undefined;
-    var ptr1 = isLikeNone(ret) ? 0 : passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len1 = WASM_VECTOR_LEN;
-    getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 1, len1, true);
-    getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 0, ptr1, true);
 }
 export function __wbg___wbindgen_throw_4c88d8bf264fd984(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
@@ -292,17 +342,6 @@ function getArrayF32FromWasm0(ptr, len) {
     return getFloat32ArrayMemory0().subarray(ptr / 4, ptr / 4 + len);
 }
 
-function getArrayJsValueFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    const mem = getDataViewMemory0();
-    const result = [];
-    for (let i = ptr; i < ptr + 4 * len; i += 4) {
-        result.push(wasm.__wbindgen_externrefs.get(mem.getUint32(i, true)));
-    }
-    wasm.__externref_drop_slice(ptr, len);
-    return result;
-}
-
 function getArrayU8FromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return getUint8ArrayMemory0().subarray(ptr / 1, ptr / 1 + len);
@@ -382,16 +421,6 @@ function passArray8ToWasm0(arg, malloc) {
     const ptr = malloc(arg.length * 1, 1) >>> 0;
     getUint8ArrayMemory0().set(arg, ptr / 1);
     WASM_VECTOR_LEN = arg.length;
-    return ptr;
-}
-
-function passArrayJsValueToWasm0(array, malloc) {
-    const ptr = malloc(array.length * 4, 4) >>> 0;
-    for (let i = 0; i < array.length; i++) {
-        const add = addToExternrefTable0(array[i]);
-        getDataViewMemory0().setUint32(ptr + 4 * i, add, true);
-    }
-    WASM_VECTOR_LEN = array.length;
     return ptr;
 }
 

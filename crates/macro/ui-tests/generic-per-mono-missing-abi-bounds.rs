@@ -19,7 +19,7 @@ extern "C" {
     #[wasm_bindgen(experimental_generic_mono, catch)]
     fn reference_argument_catch<T>(x: &T) -> Result<Option<u32>, JsValue>;
 
-    // Needs `T: VectorRefIntoWasmAbi`.
+    // Needs `T: RefIntoWasmAbi`.
     #[wasm_bindgen(experimental_generic_mono)]
     fn slice_argument<T>(xs: &[T]);
 

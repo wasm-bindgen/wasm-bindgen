@@ -1,8 +1,9 @@
 use crate::descriptor::{Descriptor, Function, SeqValue, SequenceCell, VectorKind};
 use crate::wasm_conventions::get_function_table_entry;
 use crate::wit::{AdapterType, ClosureDtor, Instruction, InstructionBuilder, OptionKind};
-use crate::wit::{InstructionData, StackChange};
+use crate::wit::{CellCount, CellLayout, InstructionData, StackChange};
 use anyhow::{bail, Error};
+use std::borrow::Cow;
 use walrus::{ExportId, ValType};
 use wasm_bindgen_shared::identifier::to_valid_ident;
 
@@ -171,7 +172,9 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Vector(cell) => {
                 let kind = match cell.sequence_cell() {
                     SequenceCell::InPlace(kind) => kind,
-                    SequenceCell::Encoded(elem) => return self.outgoing_encoded_slice(elem, None),
+                    SequenceCell::Encoded(elem) => {
+                        return self.outgoing_encoded_slice(elem, true, None)
+                    }
                 };
                 let mem = self.cx.memory()?;
                 let free = self.cx.free()?;
@@ -202,7 +205,7 @@ impl InstructionBuilder<'_, '_> {
                 self.outgoing_function(false, descriptor, None)?;
             }
 
-            Descriptor::Slice(_) => {
+            Descriptor::Slice(_) | Descriptor::Cell(_) => {
                 bail!("unsupported argument type for calling JS function from Rust: {arg:?}")
             }
 
@@ -264,19 +267,25 @@ impl InstructionBuilder<'_, '_> {
                     &[AdapterType::String],
                 );
             }
-            Descriptor::Slice(cell) => {
+            Descriptor::Slice(cell) | Descriptor::Vector(cell) => {
                 let kind = match cell.sequence_cell() {
                     SequenceCell::InPlace(kind) => kind,
-                    SequenceCell::Encoded(elem) => return self.outgoing_encoded_slice(elem, None),
+                    SequenceCell::Encoded(elem) => {
+                        return self.outgoing_encoded_slice(elem, false, None)
+                    }
                 };
                 let mem = self.cx.memory()?;
                 let ptr_ty = self.outgoing_internal_word_ty();
+                let mode = match arg {
+                    Descriptor::Vector(_) => self.borrowed_vector_mode(mutable)?,
+                    _ => self.lent_mode(mutable)?,
+                };
                 self.instruction(
                     &[ptr_ty.clone(), ptr_ty],
                     Instruction::View {
                         kind: kind.clone(),
                         mem,
-                        mode: self.seq_value,
+                        mode,
                     },
                     &[AdapterType::Vector(kind)],
                 );
@@ -287,7 +296,7 @@ impl InstructionBuilder<'_, '_> {
             }
 
             // A borrowed borrow or scalar crosses as the value itself, by copy.
-            Descriptor::Ref(d) => self.outgoing_ref(mutable, d)?,
+            Descriptor::Ref(d) => self.outgoing_ref(mutable, &Self::behind_second_ref(d))?,
             Descriptor::I8
             | Descriptor::U8
             | Descriptor::I16
@@ -303,7 +312,9 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::F32
             | Descriptor::F64
             | Descriptor::Boolean
-            | Descriptor::Char => self._outgoing(arg)?,
+            | Descriptor::Char
+            | Descriptor::Enum { .. }
+            | Descriptor::StringEnum { .. } => self._outgoing(arg)?,
 
             Descriptor::Option(inner) => {
                 self.outgoing_option_ref(mutable, inner, OptionKind::Option)?
@@ -384,8 +395,16 @@ impl InstructionBuilder<'_, '_> {
             Some(false) => ClosureDtor::Borrowed,
             Some(true) => ClosureDtor::OwnClosure,
         };
+        if self.stored && self.returned && owned_closure.is_none() {
+            bail!("a closure can't be lent by a value that Rust returns, which outlives the call");
+        }
         let adapter = self.cx.export_adapter(shim, descriptor)?;
-        let ptr_ty = self.ptr_ty();
+        // A stored word is the `f64` that `WasmWord` is in memory on memory64.
+        let ptr_ty = if self.stored {
+            self.outgoing_internal_word_ty()
+        } else {
+            self.ptr_ty()
+        };
         self.instruction(
             &[ptr_ty.clone(), ptr_ty],
             Instruction::Closure {
@@ -524,7 +543,7 @@ impl InstructionBuilder<'_, '_> {
                     Descriptor::Vector(cell) => match cell.sequence_cell() {
                         SequenceCell::InPlace(kind) => kind,
                         SequenceCell::Encoded(elem) => {
-                            return self.outgoing_encoded_slice(elem, Some(option_kind))
+                            return self.outgoing_encoded_slice(elem, true, Some(option_kind))
                         }
                     },
                     _ => VectorKind::String,
@@ -710,6 +729,7 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::Closure(_)
             | Descriptor::Slice(_)
             | Descriptor::SeqMode(..)
+            | Descriptor::Cell(_)
             | Descriptor::Result(_) => {
                 bail!("unsupported Result type for returning from exported Rust function: {arg:?}")
             }
@@ -719,7 +739,7 @@ impl InstructionBuilder<'_, '_> {
 
     fn outgoing_option_ref(
         &mut self,
-        _mutable: bool,
+        mutable: bool,
         arg: &Descriptor,
         option_kind: OptionKind,
     ) -> Result<(), Error> {
@@ -741,35 +761,44 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
             Descriptor::CachedString => self.cached_string(false)?,
-            Descriptor::String | Descriptor::Slice(_) => {
+            Descriptor::String | Descriptor::Slice(_) | Descriptor::Vector(_) => {
                 let kind = match arg {
-                    Descriptor::Slice(cell) => match cell.sequence_cell() {
-                        SequenceCell::InPlace(kind) => kind,
-                        SequenceCell::Encoded(elem) => {
-                            return self.outgoing_encoded_slice(elem, Some(option_kind))
+                    Descriptor::Slice(cell) | Descriptor::Vector(cell) => {
+                        match cell.sequence_cell() {
+                            SequenceCell::InPlace(kind) => kind,
+                            SequenceCell::Encoded(elem) => {
+                                return self.outgoing_encoded_slice(elem, false, Some(option_kind))
+                            }
                         }
-                    },
+                    }
                     _ => VectorKind::String,
                 };
                 let mem = self.cx.memory()?;
                 let ptr_ty = self.outgoing_internal_word_ty();
+                let mode = match arg {
+                    Descriptor::Slice(_) => self.lent_mode(mutable)?,
+                    Descriptor::Vector(_) => self.borrowed_vector_mode(mutable)?,
+                    _ => self.seq_value,
+                };
                 self.instruction(
                     &[ptr_ty.clone(), ptr_ty],
                     Instruction::OptionView {
                         kind: kind.clone(),
                         mem,
-                        mode: self.seq_value,
+                        mode,
                         option_kind,
                     },
                     &[AdapterType::Vector(kind).option_kind(option_kind)],
                 );
             }
-            Descriptor::Ref(d) => self.outgoing_option_ref(_mutable, d, option_kind)?,
+            Descriptor::Ref(d) => {
+                self.outgoing_option_ref(mutable, &Self::behind_second_ref(d), option_kind)?
+            }
             Descriptor::Option(d) => {
                 if option_kind != OptionKind::Nullable {
                     bail!("unsupported nested optional type for calling JS function from Rust: {arg:?}");
                 }
-                self.outgoing_option_ref(_mutable, d, OptionKind::OptionNullable)?
+                self.outgoing_option_ref(mutable, d, OptionKind::OptionNullable)?
             }
             Descriptor::I8
             | Descriptor::U8
@@ -786,7 +815,9 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::F32
             | Descriptor::F64
             | Descriptor::Boolean
-            | Descriptor::Char => self.outgoing_option(arg, option_kind)?,
+            | Descriptor::Char
+            | Descriptor::Enum { .. }
+            | Descriptor::StringEnum { .. } => self.outgoing_option(arg, option_kind)?,
             _ => bail!(
                 "unsupported optional ref argument type for calling JS function from Rust: {arg:?}"
             ),
@@ -794,77 +825,130 @@ impl InstructionBuilder<'_, '_> {
         Ok(())
     }
 
-    /// A sequence with encoded cells, borrowed or owned, is a buffer of its
-    /// elements' scalar ABIs. JS reads each element's ABI words from the
-    /// buffer and decodes them with the element's own instructions, as for an
-    /// argument of the element type.
+    /// A sequence with encoded cells is a buffer of its elements' cells. JS
+    /// reads each element's ABI words from the buffer and decodes them with
+    /// the element's own instructions, as for a value of the element type: an
+    /// `owned` vector gives its elements, a borrowed slice lends them.
     fn outgoing_encoded_slice(
         &mut self,
         elem: &Descriptor,
+        owned: bool,
         optional: Option<OptionKind>,
     ) -> Result<(), Error> {
-        // `&[&str]` / `Vec<&str>`: the element is a reference, decoded as
-        // borrowed anyway.
-        let elem = match elem {
-            Descriptor::Ref(d) => &**d,
-            d => d,
+        // The buffer is freshly encoded whether it gives or lends its
+        // elements, so it's freed like an owned vector's.
+        if let Some(kind) = elem.typed_cell() {
+            let mem = self.cx.memory()?;
+            let free = self.cx.free()?;
+            let ptr_ty = self.outgoing_internal_word_ty();
+            let mode = self.seq_value;
+            let (instr, ty) = match optional {
+                Some(option_kind) => (
+                    Instruction::OptionVectorLoad {
+                        kind: kind.clone(),
+                        mem,
+                        free,
+                        mode,
+                        option_kind,
+                    },
+                    AdapterType::Vector(kind).option_kind(option_kind),
+                ),
+                None => (
+                    Instruction::VectorLoad {
+                        kind: kind.clone(),
+                        mem,
+                        free,
+                        mode,
+                    },
+                    AdapterType::Vector(kind),
+                ),
+            };
+            self.instruction(&[ptr_ty.clone(), ptr_ty], instr, &[ty]);
+            return Ok(());
+        }
+        self.outgoing_cells(elem, owned, optional, CellCount::Word)
+    }
+
+    /// The buffer of `count` cells that values of `elem` cross in.
+    fn outgoing_cells(
+        &mut self,
+        elem: &Descriptor,
+        owned: bool,
+        optional: Option<OptionKind>,
+        count: CellCount,
+    ) -> Result<(), Error> {
+        let (layout, elem, ty) = self.outgoing_cell(elem, owned)?;
+        let ptr_ty = self.outgoing_internal_word_ty();
+        let (ty, words) = match count {
+            CellCount::Word => (
+                AdapterType::Array(Box::new(ty)),
+                vec![ptr_ty.clone(), ptr_ty],
+            ),
+            CellCount::One => (ty, vec![ptr_ty]),
         };
+        let mem = self.cx.memory()?;
+        let free = self.cx.free()?;
+        self.instruction(
+            &words,
+            Instruction::EncodedSliceLoad {
+                layout,
+                elem,
+                mem,
+                free,
+                optional,
+                count,
+            },
+            &[match optional {
+                Some(kind) => ty.option_kind(kind),
+                None => ty,
+            }],
+        );
+        Ok(())
+    }
+
+    /// A value in stored position: its cell, the instructions that lift the
+    /// cell's words to it, which are those of a value passed to JS, and the
+    /// JS type it's given as. An `owned` value is given, and otherwise lent.
+    fn outgoing_cell(
+        &mut self,
+        elem: &Descriptor,
+        owned: bool,
+    ) -> Result<(CellLayout, Vec<InstructionData>, AdapterType), Error> {
         let mut decode = InstructionBuilder {
             input: Vec::new(),
             output: Vec::new(),
             instructions: Vec::new(),
             cx: &mut *self.cx,
-            // The words are read from the buffer onto the stack, not fetched
+            // The words are read from the cell onto the stack, not fetched
             // as arguments. This also types a pointer word as the `f64` that
             // `WasmWord` is in memory on memory64, so the words' layout
-            // matches the Rust ABI types in the buffer.
+            // matches the Rust ABI type in the cell.
             return_position: true,
+            returned: self.returned,
+            stored: true,
             seq_value: SeqValue::View,
         };
-        // Every element that isn't in place reaches here, so this is what
-        // rejects one the glue can't decode. Element decoders must neither call into wasm
-        // nor free: the glue reads the whole buffer through one view and frees
-        // it after the loop. That rules out owned elements, such as an owned
-        // string or a Rust struct.
-        match elem {
-            // `&[&JsString]`: the cell is the borrowed handle.
-            Descriptor::String
-            | Descriptor::CachedString
-            | Descriptor::Externref
-            | Descriptor::NamedExternref(_) => decode.outgoing_ref(false, elem)?,
-            Descriptor::Boolean
-            | Descriptor::Char
-            | Descriptor::Enum { .. }
-            | Descriptor::StringEnum { .. } => decode._outgoing(elem)?,
-            _ => {
-                bail!("unsupported slice element type for calling JS function from Rust: {elem:?}")
-            }
+        if owned {
+            decode._outgoing(elem)?;
+        } else {
+            // `&[&T]` lends its elements as `&[T]` does.
+            let elem = match elem {
+                Descriptor::Ref(d) => &**d,
+                d => d,
+            };
+            decode.outgoing_ref(false, elem)?;
+        }
+        // A cell holds one value, in at least one word.
+        if decode.output.len() != 1 || decode.input.is_empty() {
+            bail!("unsupported slice element type for calling JS function from Rust: {elem:?}")
         }
         let InstructionBuilder {
             input: words,
             mut output,
-            instructions: elem,
+            instructions,
             ..
         } = decode;
-        let array = AdapterType::Array(Box::new(output.remove(0)));
-        let mem = self.cx.memory()?;
-        let free = self.cx.free()?;
-        let ptr_ty = self.outgoing_internal_word_ty();
-        self.instruction(
-            &[ptr_ty.clone(), ptr_ty],
-            Instruction::EncodedSliceLoad {
-                words,
-                elem,
-                mem,
-                free,
-                optional,
-            },
-            &[match optional {
-                Some(kind) => array.option_kind(kind),
-                None => array,
-            }],
-        );
-        Ok(())
+        Ok((CellLayout::Words(words), instructions, output.remove(0)))
     }
 
     fn outgoing_string_enum(&mut self, name: &str) {
@@ -946,6 +1030,43 @@ impl InstructionBuilder<'_, '_> {
             Instruction::OptionF64Sentinel { kind },
             &[ty.option_kind(kind)],
         );
+    }
+
+    /// The mode a lent numeric sequence reaches JS in. Only the argument
+    /// itself is a view: one that a cell holds is copied, as nothing ties
+    /// the value holding it to what lent it.
+    fn lent_mode(&self, mutable: bool) -> Result<SeqValue, Error> {
+        if !self.stored {
+            return Ok(self.seq_value);
+        }
+        if mutable {
+            bail!("a `&mut [T]` can't be an element: JS would receive a copy, whose writes never reach it");
+        }
+        Ok(match self.seq_value {
+            SeqValue::View => SeqValue::Copy,
+            mode => mode,
+        })
+    }
+
+    /// What a reference behind another reference lends. A slice there is no
+    /// longer the argument itself: the reference to it is a sized type as a
+    /// borrowed vector is, so it's read as one.
+    fn behind_second_ref(arg: &Descriptor) -> Cow<'_, Descriptor> {
+        match arg {
+            Descriptor::Slice(elem) => Cow::Owned(Descriptor::Vector(elem.clone())),
+            arg => Cow::Borrowed(arg),
+        }
+    }
+
+    /// The mode a borrowed numeric vector reaches JS in. Only the unsized
+    /// `&[T]` is a view: a borrowed vector is a sized type, which a generic
+    /// `&T` can pass to JS that keeps it, so it's read as the vector is, by
+    /// copy, with nothing freed.
+    fn borrowed_vector_mode(&self, mutable: bool) -> Result<SeqValue, Error> {
+        Ok(match self.lent_mode(mutable)? {
+            SeqValue::View => SeqValue::Copy,
+            mode => mode,
+        })
     }
 
     fn outgoing_internal_word_ty(&self) -> AdapterType {

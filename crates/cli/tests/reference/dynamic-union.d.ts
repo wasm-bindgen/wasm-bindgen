@@ -25,3 +25,5 @@ export function echo_shade(s: ShadeOrNumber): ShadeOrNumber;
 export function echo_status(status: Status): Status;
 
 export function echo_wrapper(w: Wrapper): Wrapper;
+
+export function echo_wrappers(list: Wrapper[]): Wrapper[];

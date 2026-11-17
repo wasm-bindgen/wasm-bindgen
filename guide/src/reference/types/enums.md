@@ -228,6 +228,26 @@ export type Outer = "loading" | Inner | Theme | Foo;
 export function maybe(o?: Outer | null): Outer | undefined;
 ```
 
+### Vectors
+
+`Vec<T>` and `Box<[T]>` of a dynamic union cross in both directions as a JS
+array, each element converted exactly as a single value is, so `fallback`
+and nested unions behave the same:
+
+```rust
+#[wasm_bindgen]
+pub fn shapes(list: Vec<Outer>) -> Vec<Outer> { list }
+```
+
+```ts
+export function shapes(list: Outer[]): Outer[];
+```
+
+An array holding an element that matches no variant of a union without a
+`fallback` throws, as a single value does, and Rust drops the whole array.
+A union can't be borrowed as `&[Outer]`, since a variant may own an exported
+struct.
+
 ### Hiding the type alias
 
 By default the generated TypeScript alias is emitted as `export type`. To

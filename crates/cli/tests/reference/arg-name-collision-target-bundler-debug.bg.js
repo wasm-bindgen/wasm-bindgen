@@ -102,6 +102,7 @@ export function local_args(ptr02, len02, ret2) {
     let deferred4_0;
     let deferred4_1;
     try {
+        if (typeof(ptr02) !== 'string') throw new Error(`expected a string argument, found ${typeof(ptr02)}`);
         _assertNum(len02);
         _assertNum(ret2);
         const val2 = +len02;
@@ -127,9 +128,9 @@ export function wasm_args(wasm3, wasm2) {
     let deferred3_0;
     let deferred3_1;
     try {
+        _assertArrayLike(wasm3, 'Uint8Array');
         _assertNum(wasm2);
         const val2 = +wasm2;
-        _assertArrayLike(wasm3, 'Uint8Array');
         const ptr0 = passArray8ToWasm0(wasm3, wasm.__wbindgen_malloc);
         const len0 = WASM_VECTOR_LEN;
         const ret = wasm.wasm_args(ptr0, len0, val2);
