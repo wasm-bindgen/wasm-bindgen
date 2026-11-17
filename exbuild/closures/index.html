@@ -1,0 +1,39 @@
+<html>
+  <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+    <style>
+      #green-square {
+        background: green;
+        width: 200px;
+        height: 200px;
+        text-align: center;
+        line-height: 200px;
+        color: white;
+      }
+      #green-square span {
+        display: inline-block;
+        vertical-align: middle;
+      }
+    </style>
+  <script defer src="index.js"></script></head>
+  <body>
+    <div id='loading'>
+      Loading...
+    </div>
+    <div id='script' style='display:none'>
+      <p>
+        The current time is:
+        <span id='current-time'>...</span>
+      </p>
+
+      <div id='green-square'>
+        <span>Click me!</span>
+      </div>
+      <p>
+        You've clicked the green square
+        <span id='num-clicks'>0</span>
+        times
+      </p>
+    </div>
+  </body>
+</html>

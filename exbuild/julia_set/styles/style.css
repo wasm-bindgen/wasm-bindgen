@@ -1,0 +1,25 @@
+body {
+  display: flex;
+  justify-content: center;
+}
+
+.controls {
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 1em;
+}
+
+.controls h1 {
+  margin: 0 .3em 0 0;
+  font-style: italic;
+  font-family: 'Times New Roman', Times, serif;
+}
+
+.controls > div {
+  margin-right: 1em;
+}
+
+button,
+input[type="number"] {
+  margin-bottom: 0;
+}
