@@ -670,3 +670,70 @@ fn uint8array_set_from_base64_hex() {
     assert_eq!(result.written(), 2);
     assert_eq!(short.to_vec(), vec![0, 1]);
 }
+
+#[wasm_bindgen(inline_js = r#"
+const kind = (b) => {
+  if (b === undefined || b === null) return 'none';
+  const bytes = b instanceof ArrayBuffer ? new Uint8Array(b) : new Uint8Array(b.buffer, b.byteOffset, b.byteLength);
+  return `${b.constructor.name}:${Array.from(bytes)}`;
+};
+let kept;
+export function bufferKind(b) { return kind(b); }
+export function bufferKinds(list) { return list.map(kind).join('|'); }
+export function keepBytes(list) { kept = list; }
+export function keptKinds() { return bufferKinds(kept); }
+"#)]
+extern "C" {
+    #[wasm_bindgen(experimental_generic_mono, js_name = bufferKind)]
+    fn buffer_kind(bytes: impl BufferSourceLike) -> String;
+    #[wasm_bindgen(experimental_generic_mono, js_name = bufferKind)]
+    fn maybe_buffer_kind(bytes: Option<impl BufferSourceLike>) -> String;
+    #[wasm_bindgen(experimental_generic_mono, js_name = bufferKinds)]
+    fn buffer_kinds(bits: &[impl BufferSourceLike]) -> String;
+    #[wasm_bindgen(experimental_generic_mono, js_name = keepBytes)]
+    fn keep_bits(bits: &[impl BufferSourceLike]);
+    #[wasm_bindgen(js_name = keptKinds)]
+    fn kept_kinds() -> String;
+}
+
+#[wasm_bindgen_test]
+fn buffer_sources() {
+    let bytes = [1u8, 2, 3];
+    assert_eq!(buffer_kind(&bytes[..]), "Uint8Array:1,2,3");
+    assert_eq!(buffer_kind(bytes.to_vec()), "Uint8Array:1,2,3");
+    let buf = Uint8Array::new_from_slice(&bytes).buffer();
+    assert_eq!(buffer_kind(&buf), "ArrayBuffer:1,2,3");
+    let view = Uint8Array::new_from_slice(&bytes);
+    assert_eq!(buffer_kind(&view), "Uint8Array:1,2,3");
+    assert_eq!(buffer_kind(view.subarray(1, 3)), "Uint8Array:2,3");
+    assert_eq!(buffer_kind(DataView::new(&buf, 1, 1)), "DataView:2");
+    assert_eq!(
+        buffer_kind(Float64Array::new_from_slice(&[0.5])),
+        "Float64Array:0,0,0,0,0,0,224,63"
+    );
+    assert_eq!(maybe_buffer_kind(Some(&buf)), "ArrayBuffer:1,2,3");
+    assert_eq!(maybe_buffer_kind(None::<&[u8]>), "none");
+}
+
+#[wasm_bindgen_test]
+fn buffer_source_slices() {
+    let mut bytes = vec![1u8, 2, 3];
+    assert_eq!(
+        buffer_kinds(&[&bytes[..], &bytes[1..]]),
+        "Uint8Array:1,2,3|Uint8Array:2,3"
+    );
+    assert_eq!(buffer_kinds(&[bytes.clone()]), "Uint8Array:1,2,3");
+    let buf = Uint8Array::new_from_slice(&bytes).buffer();
+    assert_eq!(
+        buffer_kinds(&[&buf, &buf]),
+        "ArrayBuffer:1,2,3|ArrayBuffer:1,2,3"
+    );
+    assert_eq!(
+        buffer_kinds(&[Uint8Array::new_from_slice(&bytes)]),
+        "Uint8Array:1,2,3"
+    );
+    assert_eq!(buffer_kinds(&[] as &[&[u8]]), "");
+    keep_bits(&[&bytes[..]]);
+    bytes[0] = 9;
+    assert_eq!(kept_kinds(), "Uint8Array:1,2,3");
+}

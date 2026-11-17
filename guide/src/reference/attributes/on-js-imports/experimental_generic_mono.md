@@ -217,6 +217,34 @@ as a separate `&Symbol` overload. There are no singleton traits; use
 other singleton cases. Like `experimental_generic_mono`, the union traits may
 change or be removed while the feature evolves.
 
+### Buffer source bounds
+
+`js_sys::BufferSourceLike` is TypeScript's `BufferSource`
+(`ArrayBuffer | ArrayBufferView`) as an argument bound. Each form crosses as
+itself: `&[u8]` as a view of Wasm memory, `Vec<u8>` as a copy, and an
+`ArrayBuffer`, `DataView` or typed array, owned or borrowed, as that handle:
+
+```rust
+use js_sys::BufferSourceLike;
+
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn write(chunk: impl BufferSourceLike);
+
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn write_all(chunks: &[impl BufferSourceLike]);
+}
+
+write(&bytes[..]);
+write(&array_buffer);
+write_all(&[&bytes[..], &more[..]]);
+```
+
+`Option<impl BufferSourceLike>` works under the same bound. A slice
+`&[impl BufferSourceLike]` arrives as an `Array`, with `&[u8]` and `Vec<u8>`
+elements as `Uint8Array` copies, since JS may keep the array past the call.
+
 ## `impl Trait` arguments
 
 Argument-position `impl Trait` is supported. It is desugared into a synthesized
