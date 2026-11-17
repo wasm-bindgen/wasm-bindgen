@@ -775,6 +775,22 @@ fn seq_modes_are_validated_when_explicit() {
              for an owned `Vec<T>` use `vec = copy | array`",
         ),
         (
+            "seq_mode_copy_on_generic_slice_of_strings",
+            "#[wasm_bindgen(experimental_generic_mono)] \
+             fn f<T: wasm_bindgen::convert::RefIntoWasmAbi>(#[wasm_bindgen(slice = copy)] xs: &[T]);",
+            r#"&["a".to_string()]"#,
+            "`slice = copy` can't apply to this argument: it has no typed-array form, so it \
+             always reaches JS as a fresh `Array`",
+        ),
+        (
+            "seq_mode_vec_on_generic_slice",
+            "#[wasm_bindgen(experimental_generic_mono)] \
+             fn f<T: wasm_bindgen::convert::RefIntoWasmAbi>(#[wasm_bindgen(vec = array)] xs: &[T]);",
+            "&[1u8]",
+            "`vec = array` can't apply to this argument: `vec` applies to owned vectors; for a \
+             borrowed `&[T]` use `slice = view | copy | array`",
+        ),
+        (
             "seq_mode_slice_on_scalar",
             "fn f(#[wasm_bindgen(slice = copy)] x: u32);",
             "1",

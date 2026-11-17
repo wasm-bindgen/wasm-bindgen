@@ -144,6 +144,23 @@ A generic `Vec<T>` argument resolves its `vec` mode at each instantiation in
 the same way, as does a `&T` argument instantiated as a borrowed vector or
 as a slice (`T = &[u8]`), which is the same copy.
 
+A mode written on an argument whose type is generic as a whole, such as `T`,
+`&T` or `Option<T>`, applies to each instantiation it fits, as an inherited mode
+does, and is a no-op on the others. So `slice = copy` makes a `&[u8]` arrive
+as a fresh `Uint8Array` while an `ArrayBuffer` or typed array still crosses as
+itself:
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn enqueue<T: IntoWasmAbi>(#[wasm_bindgen(slice = copy)] chunk: T);
+}
+
+enqueue(&bytes[..]);       // a Uint8Array copy, safe for JS to keep
+enqueue(&array_buffer);    // the ArrayBuffer itself
+```
+
 Without `experimental_generic_mono`, a generic slice's elements must be JS
 types, so it always arrives as a fresh `Array`.
 
