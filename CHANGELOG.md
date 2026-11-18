@@ -136,6 +136,9 @@
   function. On a module with 100,000 functions, bindgen took 17% less time.
   [#5481](https://github.com/wasm-bindgen/wasm-bindgen/pull/5481)
 
+* The CLI demangles function names in parallel.
+  [#5482](https://github.com/wasm-bindgen/wasm-bindgen/pull/5482)
+
 ### Fixed
 
 * Value async iterables in WebIDL (`async iterable<V>`) now only generate a
