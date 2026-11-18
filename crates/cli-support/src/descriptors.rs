@@ -98,18 +98,16 @@ impl WasmBindgenDescriptorsSection {
             None => return Ok(()),
         };
 
-        let mut generic_funcs = Vec::new();
-        for (func_id, local) in module.funcs.iter_local() {
+        let funcs = module.funcs.iter_local().collect();
+        let generic_funcs = crate::parallel::map(funcs, |(func_id, local)| {
             let mut find = FindDescribeGenericImport {
                 wbindgen_describe_generic_import,
                 calls: 0,
             };
             dfs_in_order(&mut find, local, local.entry_block());
-            if find.calls > 0 {
-                generic_funcs.push((func_id, find.calls));
-            }
-        }
-        for (func_id, calls) in generic_funcs {
+            (find.calls > 0).then_some((func_id, find.calls))
+        });
+        for (func_id, calls) in generic_funcs.into_iter().flatten() {
             // `interpret_descriptor` stops at the first marker call, so a second
             // one in the same function would be silently dropped and every call
             // site bound to it mis-bound. That should be impossible — the macro
