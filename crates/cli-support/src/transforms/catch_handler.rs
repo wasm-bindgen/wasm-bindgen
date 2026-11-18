@@ -594,15 +594,16 @@ fn rewrite_calls(
     let wrapper_ids: std::collections::HashSet<_> = wrappers.values().copied().collect();
 
     // Visit all local functions and rewrite calls
-    for (func_id, func) in module.funcs.iter_local_mut() {
+    let funcs = module.funcs.iter_local_mut().collect();
+    crate::parallel::for_each(funcs, |(func_id, func)| {
         // Don't rewrite calls within the wrappers themselves
         if wrapper_ids.contains(&func_id) {
-            continue;
+            return;
         }
 
         let entry = func.entry_block();
         dfs_pre_order_mut(&mut CallRewriter { wrappers }, func, entry);
-    }
+    });
 
     Ok(())
 }
