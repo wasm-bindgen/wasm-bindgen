@@ -1130,3 +1130,37 @@ where
     pairs.sort_by_key(|(k, _)| *k);
     pairs.into_iter()
 }
+
+#[cfg(test)]
+mod tests {
+    use walrus::{FunctionBuilder, Module};
+
+    #[test]
+    fn demangle_adds_suffixes_in_function_order() {
+        const MANGLED: &str = "_ZN3foo3bar17h0123456789abcdefE";
+        const DEMANGLED: &str = "foo::bar::h0123456789abcdef";
+        let mut module = Module::default();
+        for i in 0..100 {
+            let id =
+                FunctionBuilder::new(&mut module.types, &[], &[]).finish(vec![], &mut module.funcs);
+            let name = if i % 7 == 0 { "not_mangled" } else { MANGLED };
+            module.funcs.get_mut(id).name = Some(name.to_string());
+        }
+
+        super::demangle(&mut module);
+
+        let mut seen = 0;
+        for (i, func) in module.funcs.iter().enumerate() {
+            let expected = if i % 7 == 0 {
+                "not_mangled".to_string()
+            } else {
+                seen += 1;
+                match seen {
+                    1 => DEMANGLED.to_string(),
+                    n => format!("{DEMANGLED}[{}]", n - 1),
+                }
+            };
+            assert_eq!(func.name.as_deref(), Some(expected.as_str()));
+        }
+    }
+}
