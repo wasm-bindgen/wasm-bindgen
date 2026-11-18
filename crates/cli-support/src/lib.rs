@@ -1103,13 +1103,13 @@ fn gc_module_and_adapters(module: &mut Module) {
             .retain(|pair| imports_remaining.contains(&pair.0));
 
         // ... and after we delete the `implements` directive we try to
-        // delete some adapters themselves. If nothing is deleted, then we're
-        // good to go. If something is deleted though then we may have free'd up
-        // some functions in the main module to get deleted, so go again to gc
-        // things.
-        let any_removed = section.gc();
+        // delete some adapters themselves. If a deleted adapter was the only
+        // user of some Wasm items, the GC may now be able to delete those
+        // items, so run it again. Otherwise the GC roots have not changed,
+        // and another run would delete nothing.
+        let may_have_unrooted_items = section.gc();
         module.customs.add(*section);
-        if !any_removed {
+        if !may_have_unrooted_items {
             break;
         }
     }
