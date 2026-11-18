@@ -27,6 +27,7 @@ mod interpreter;
 mod intrinsic;
 mod js;
 mod multivalue;
+mod parallel;
 mod suggest;
 mod transforms;
 pub mod wasm2es6js;

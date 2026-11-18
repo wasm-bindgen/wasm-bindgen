@@ -803,11 +803,12 @@ impl<'a> Context<'a> {
                 }
             }
         }
-        let mut replace = Replace { map };
-        for (_id, func) in self.module.funcs.iter_local_mut() {
+        let funcs = self.module.funcs.iter_local_mut().collect();
+        crate::parallel::for_each(funcs, |(_id, func)| {
             let entry = func.entry_block();
-            walrus::ir::dfs_pre_order_mut(&mut replace, func, entry);
-        }
+            walrus::ir::dfs_pre_order_mut(&mut Replace { map }, func, entry);
+        });
+        let mut replace = Replace { map };
         for elems in self.module.elements.iter_mut() {
             match &mut elems.items {
                 ElementItems::Functions(funcs) => {
