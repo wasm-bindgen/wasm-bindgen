@@ -17,6 +17,7 @@
 
 use anyhow::{anyhow, bail, Context as _, Error};
 use std::collections::{HashMap, HashSet};
+use std::sync::Mutex;
 
 use crate::wasm_conventions;
 use crate::{INITIAL_HEAP_OFFSET, INITIAL_HEAP_VALUES};
@@ -608,37 +609,40 @@ impl Transform<'_> {
         }
         let clone_ref = self.clone_ref()?;
         let heap_dealloc = self.heap_dealloc()?;
-        for (id, func) in module.funcs.iter_local_mut() {
-            if self.shims.contains(&id) {
-                continue;
+        let xform = &*self;
+        let locals = Mutex::new(&mut module.locals);
+        let funcs = module.funcs.iter_local_mut().collect();
+        crate::parallel::for_each(funcs, |(id, func)| {
+            if xform.shims.contains(&id) {
+                return;
             }
             let entry = func.entry_block();
             dfs_pre_order_mut(
                 &mut Rewrite {
-                    xform: self,
+                    xform,
                     clone_ref,
                     heap_dealloc,
-                    locals: &mut module.locals,
+                    locals: &locals,
                     scratch_i32: None,
                 },
                 func,
                 entry,
             );
-        }
+        });
 
         return Ok(());
 
-        struct Rewrite<'a, 'b> {
+        struct Rewrite<'a, 'b, 'c> {
             xform: &'a Transform<'b>,
             clone_ref: FunctionId,
             heap_dealloc: FunctionId,
-            locals: &'a mut ModuleLocals,
+            locals: &'a Mutex<&'c mut ModuleLocals>,
             // `None` until the rewrite of the first call to the `table_grow`
             // intrinsic in this function adds the local.
             scratch_i32: Option<LocalId>,
         }
 
-        impl VisitorMut for Rewrite<'_, '_> {
+        impl VisitorMut for Rewrite<'_, '_, '_> {
             fn start_instr_seq_mut(&mut self, seq: &mut InstrSeq) {
                 for i in (0..seq.instrs.len()).rev() {
                     let is_return_call = matches!(seq.instrs[i].0, Instr::ReturnCall(_));
@@ -681,10 +685,10 @@ impl Transform<'_> {
                             }
                             .into();
                             let loc = seq.instrs[i].1;
-                            let locals = &mut *self.locals;
+                            let locals = self.locals;
                             let local = *self
                                 .scratch_i32
-                                .get_or_insert_with(|| locals.add(ValType::I32));
+                                .get_or_insert_with(|| locals.lock().unwrap().add(ValType::I32));
                             seq.instrs.insert(i, (LocalGet { local }.into(), loc));
                             seq.instrs.insert(i, (RefNull { ty }.into(), loc));
                             seq.instrs.insert(i, (LocalSet { local }.into(), loc));
