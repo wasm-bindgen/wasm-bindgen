@@ -82,6 +82,12 @@
   Rust types, while its keys stay JS objects.
   [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
 
+* A dynamic-union enum is lent to an imported function, as `&Union`,
+  `Option<&Union>` or an element of a `&[Union]`, where each of its
+  payloads can be lent, which an exported struct can't. JS is given a fresh
+  value for each.
+  [#5484](https://github.com/wasm-bindgen/wasm-bindgen/pull/5484)
+
 * Added `aarch64-pc-windows-msvc` release artifacts.
   [#5439](https://github.com/wasm-bindgen/wasm-bindgen/pull/5439)
 

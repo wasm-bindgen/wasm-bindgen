@@ -85,6 +85,13 @@ exports.js_union_list = () => ['green', 'custom', 7];
 exports.js_outer_union_vec_len = withBadElement =>
     wasm.outer_union_vec_len(withBadElement ? ['loading', true, 'foo', {}] : ['loading', 'foo', 3]);
 
+exports.js_show = v => JSON.stringify(v) ?? 'undefined';
+let kept;
+exports.js_keep = v => {
+    kept = v;
+};
+exports.js_kept = () => JSON.stringify(kept);
+
 // Async round-trip: returning from an `async function` produces a
 // `Promise<Union>` on the JS side; awaiting it on the Rust import side
 // requires `From<Promise<Union>> for JsFuture<Union>` to compile.

@@ -295,7 +295,8 @@ impl InstructionBuilder<'_, '_> {
                 self.outgoing_function(mutable, descriptor, None)?;
             }
 
-            // A borrowed borrow or scalar crosses as the value itself, by copy.
+            // A borrowed borrow, scalar or union crosses as the value itself,
+            // by copy.
             Descriptor::Ref(d) => self.outgoing_ref(mutable, &Self::behind_second_ref(d))?,
             Descriptor::I8
             | Descriptor::U8
@@ -314,7 +315,8 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::Boolean
             | Descriptor::Char
             | Descriptor::Enum { .. }
-            | Descriptor::StringEnum { .. } => self._outgoing(arg)?,
+            | Descriptor::StringEnum { .. }
+            | Descriptor::DynamicUnion { .. } => self._outgoing(arg)?,
 
             Descriptor::Option(inner) => {
                 self.outgoing_option_ref(mutable, inner, OptionKind::Option)?
@@ -822,7 +824,8 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::Boolean
             | Descriptor::Char
             | Descriptor::Enum { .. }
-            | Descriptor::StringEnum { .. } => self.outgoing_option(arg, option_kind)?,
+            | Descriptor::StringEnum { .. }
+            | Descriptor::DynamicUnion { .. } => self.outgoing_option(arg, option_kind)?,
             _ => bail!(
                 "unsupported optional ref argument type for calling JS function from Rust: {arg:?}"
             ),
