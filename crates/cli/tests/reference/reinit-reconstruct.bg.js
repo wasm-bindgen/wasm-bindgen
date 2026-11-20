@@ -32,7 +32,7 @@ export class ReinitCounter {
      */
     get count() {
         __wbg_call_guard();
-        if (this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {
+        if ((this).__wbg_inst !== undefined && (this).__wbg_inst !== __wbg_instance_id) {
             _reconstructStale(this);
         }
         const ret = wasm.reinitcounter_count(this.__wbg_ptr);
@@ -43,7 +43,7 @@ export class ReinitCounter {
      */
     increment() {
         __wbg_call_guard();
-        if (this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {
+        if ((this).__wbg_inst !== undefined && (this).__wbg_inst !== __wbg_instance_id) {
             _reconstructStale(this);
         }
         const ret = wasm.reinitcounter_increment(this.__wbg_ptr);
@@ -71,7 +71,7 @@ export class ReinitCounter {
      */
     set count(count) {
         __wbg_call_guard();
-        if (this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {
+        if ((this).__wbg_inst !== undefined && (this).__wbg_inst !== __wbg_instance_id) {
             _reconstructStale(this);
         }
         wasm.reinitcounter_set_count(this.__wbg_ptr, count);
@@ -111,7 +111,7 @@ export class ReinitParent {
         let deferred1_1;
         try {
             __wbg_call_guard();
-            if (this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {
+            if ((this).__wbg_inst !== undefined && (this).__wbg_inst !== __wbg_instance_id) {
                 _reconstructStale(this);
             }
             const ret = wasm.reinitparent_name(this.__wbg_ptr_ReinitParent);
@@ -171,7 +171,7 @@ export class ReinitPlain {
      */
     value() {
         __wbg_call_guard();
-        if (this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {
+        if ((this).__wbg_inst !== undefined && (this).__wbg_inst !== __wbg_instance_id) {
             _reconstructStale(this);
         }
         const ret = wasm.reinitplain_value(this.__wbg_ptr);
@@ -198,7 +198,7 @@ function __wbg_reset_state () {
 export function reinit_read_counter(counter) {
     __wbg_call_guard();
     _assertClass(counter, ReinitCounter);
-    if (counter.__wbg_inst !== undefined && counter.__wbg_inst !== __wbg_instance_id) {
+    if ((counter).__wbg_inst !== undefined && (counter).__wbg_inst !== __wbg_instance_id) {
         _reconstructStale(counter);
     }
     const ret = wasm.reinit_read_counter(counter.__wbg_ptr);
@@ -243,7 +243,7 @@ export class ReinitChild extends ReinitParent {
      */
     extra() {
         __wbg_call_guard();
-        if (this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {
+        if ((this).__wbg_inst !== undefined && (this).__wbg_inst !== __wbg_instance_id) {
             _reconstructStale(this);
         }
         const ret = wasm.reinitchild_extra(this.__wbg_ptr_ReinitChild);
