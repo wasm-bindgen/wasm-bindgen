@@ -31,6 +31,27 @@ pub mod marker;
 
 pub use wasm_bindgen_macro::BindgenedStruct;
 
+/// A lent `&T`, crossing as it does. A generated impl bounds this rather
+/// than `&'a T`, since a where-clause on `&'a T` would be taken for the
+/// `for<'b> &'b T` bound that `T: RefIntoWasmAbi` is proved from.
+pub struct Lent<'a, T: ?Sized>(pub &'a T);
+
+impl<T: crate::convert::RefIntoWasmAbi + ?Sized> crate::describe::WasmDescribe for Lent<'_, T> {
+    #[inline]
+    fn describe() {
+        T::describe_ref()
+    }
+}
+
+impl<T: crate::convert::RefIntoWasmAbi + ?Sized> IntoWasmAbi for Lent<'_, T> {
+    type Abi = T::Abi;
+
+    #[inline]
+    fn into_abi(self) -> T::Abi {
+        self.0.ref_into_abi()
+    }
+}
+
 /// Wrapper implementation for JsValue errors, with atomics and std handling
 pub fn js_panic(err: JsValue) {
     #[cfg(all(feature = "std", not(target_feature = "atomics")))]
