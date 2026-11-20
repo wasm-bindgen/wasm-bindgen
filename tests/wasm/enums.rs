@@ -38,6 +38,8 @@ extern "C" {
     #[wasm_bindgen(js_name = js_show)]
     fn js_show_union_slice(v: &[LentUnion]) -> String;
     fn js_keep(v: &[LentUnion]);
+    #[wasm_bindgen(js_name = js_show)]
+    fn js_show_generic_union_slice(v: &[LentGenericUnion]) -> String;
     fn js_kept() -> String;
 
     // Async round-trip: imports an `async fn` returning a dynamic union,
@@ -452,6 +454,29 @@ fn test_lent_union() {
     js_keep(&list);
     assert_eq!(js_kept(), shown);
     assert!(matches!(&list[7], LentUnion::Text(s) if s == "x"));
+}
+
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_name = Array)]
+    type BoundedList<T: wasm_bindgen::convert::JsGeneric = JsValue>;
+}
+
+// A payload can also be the argument of another's bounded parameter.
+#[wasm_bindgen]
+pub enum LentGenericUnion {
+    One(js_sys::Number),
+    Many(BoundedList<js_sys::Number>),
+}
+
+#[wasm_bindgen_test]
+fn test_lent_generic_union() {
+    let many = js_sys::Array::of1(&JsValue::from(2));
+    let list = [
+        LentGenericUnion::One(js_sys::Number::from(1)),
+        LentGenericUnion::Many(many.unchecked_into()),
+    ];
+    assert_eq!(js_show_generic_union_slice(&list), "[1,[2]]");
 }
 
 // `#[wasm_bindgen(fallback)]` makes the last tuple variant act as an
