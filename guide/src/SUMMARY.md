@@ -70,6 +70,7 @@
     - [`char`](./reference/types/char.md)
     - [`str`](./reference/types/str.md)
     - [`String`](./reference/types/string.md)
+    - [`enum`](./reference/types/enum.md)
     - [Number Slices](./reference/types/number-slices.md)
     - [Boxed Number Slices](./reference/types/boxed-number-slices.md)
     - [`Option<T>`](./reference/types/option.md)
