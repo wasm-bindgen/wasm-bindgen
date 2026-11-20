@@ -2509,14 +2509,17 @@ impl ToTokens for ast::DynamicUnion {
                 let ty = &fields[0];
                 quote! {
                     #enum_name::#name(value) => #wasm_bindgen::__rt::wbg_cast::<
-                        &'__wbg_lent #ty,
+                        #wasm_bindgen::__rt::Lent<'__wbg_lent, #ty>,
                         #wasm_bindgen::JsValue,
-                    >(value)
+                    >(#wasm_bindgen::__rt::Lent(value))
                 }
             })
             .collect();
         let lent_where = quote! {
-            where #(&'__wbg_lent #lent_tys: #wasm_bindgen::convert::IntoWasmAbi,)*
+            where #(
+                #wasm_bindgen::__rt::Lent<'__wbg_lent, #lent_tys>:
+                    #wasm_bindgen::convert::IntoWasmAbi,
+            )*
         };
 
         // FromWasmAbi - try to match JsValue to each variant. All string
