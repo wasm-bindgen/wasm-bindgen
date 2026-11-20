@@ -19035,6 +19035,7 @@ mod buffer_source_sealed {
 pub trait BufferSourceLike:
     IntoWasmAbi
     + wasm_bindgen::convert::OptionIntoWasmAbi
+    + wasm_bindgen::convert::RefIntoWasmAbi
     + buffer_source_sealed::Sealed
 {
 }
