@@ -2497,6 +2497,31 @@ impl ToTokens for ast::DynamicUnion {
             })
             .collect();
 
+        // A lent payload reaches JS through its own `&T` conversion, so a
+        // union is lent only where each of its payloads is.
+        let lent_tys: Vec<_> = fallback_variants
+            .iter()
+            .map(|(_, fields)| &fields[0])
+            .collect();
+        let lent_into_arms: Vec<_> = fallback_variants
+            .iter()
+            .map(|(name, fields)| {
+                let ty = &fields[0];
+                quote! {
+                    #enum_name::#name(value) => #wasm_bindgen::__rt::wbg_cast::<
+                        #wasm_bindgen::__rt::Lent<'__wbg_lent, #ty>,
+                        #wasm_bindgen::JsValue,
+                    >(#wasm_bindgen::__rt::Lent(value))
+                }
+            })
+            .collect();
+        let lent_where = quote! {
+            where #(
+                #wasm_bindgen::__rt::Lent<'__wbg_lent, #lent_tys>:
+                    #wasm_bindgen::convert::IntoWasmAbi,
+            )*
+        };
+
         // FromWasmAbi - try to match JsValue to each variant. All string
         // literal variants share a single `as_string` call coalesced into one
         // `match`, so the worst-case dispatch cost is a single string read
@@ -2629,6 +2654,41 @@ impl ToTokens for ast::DynamicUnion {
                     };
                     #wasm_bindgen::convert::IntoWasmAbi::into_abi(js_value)
                 }
+            }
+
+            // A borrowed union crosses as a fresh value that JS owns.
+            #[automatically_derived]
+            impl<'__wbg_lent> #wasm_bindgen::convert::IntoWasmAbi for &'__wbg_lent #enum_name
+            #lent_where
+            {
+                type Abi = u32;
+
+                #[inline]
+                fn into_abi(self) -> u32 {
+                    let js_value: #wasm_bindgen::JsValue = match self {
+                        #(#known_into_arms,)*
+                        #(#lent_into_arms,)*
+                    };
+                    #wasm_bindgen::convert::IntoWasmAbi::into_abi(js_value)
+                }
+            }
+
+            #[automatically_derived]
+            impl<'__wbg_lent> #wasm_bindgen::convert::OptionIntoWasmAbi for &'__wbg_lent #enum_name
+            #lent_where
+            {
+                #[inline]
+                fn none() -> u32 {
+                    <#wasm_bindgen::JsValue as #wasm_bindgen::convert::OptionIntoWasmAbi>::none()
+                }
+            }
+
+            #[automatically_derived]
+            impl<'__wbg_lent> #wasm_bindgen::convert::NullableIntoWasmAbi for &'__wbg_lent #enum_name
+            #lent_where
+            {
+                #[inline]
+                fn null() -> Self::MaybeAbi { <#wasm_bindgen::JsValue as #wasm_bindgen::convert::NullableIntoWasmAbi>::null() }
             }
 
             #[automatically_derived]

@@ -1,10 +1,10 @@
 error[E0277]: the trait bound `Shape: RefIntoWasmAbi` is not satisfied
-  --> ui-tests/slice-of-union.rs:14:8
+  --> ui-tests/slice-of-union.rs:20:8
    |
-12 | #[wasm_bindgen]
+18 | #[wasm_bindgen]
    | --------------- in this procedural macro expansion
-13 | extern "C" {
-14 |     fn take_shapes(shapes: &[Shape]);
+19 | extern "C" {
+20 |     fn take_shapes(shapes: &[Shape]);
    |        ^^^^^^^^^^^ the trait `RefIntoWasmAbi` is not implemented for `Shape`
    |
    = note: `&Shape` does not implement `IntoWasmAbi`, which is how a reference, and each element of a slice, is lent
@@ -22,9 +22,9 @@ error[E0277]: the trait bound `Shape: RefIntoWasmAbi` is not satisfied
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0277]: the trait bound `Shape: RefIntoWasmAbi` is not satisfied
-  --> ui-tests/slice-of-union.rs:14:28
+  --> ui-tests/slice-of-union.rs:20:28
    |
-14 |     fn take_shapes(shapes: &[Shape]);
+20 |     fn take_shapes(shapes: &[Shape]);
    |                            ^ the trait `RefIntoWasmAbi` is not implemented for `Shape`
    |
    = note: `&Shape` does not implement `IntoWasmAbi`, which is how a reference, and each element of a slice, is lent

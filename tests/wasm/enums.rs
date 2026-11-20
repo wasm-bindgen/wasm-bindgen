@@ -31,6 +31,16 @@ extern "C" {
     fn js_union_list() -> Vec<StringEnumWithFallback>;
     #[wasm_bindgen(catch)]
     fn js_outer_union_vec_len(with_bad_element: bool) -> Result<usize, JsValue>;
+    #[wasm_bindgen(js_name = js_show)]
+    fn js_show_union(u: &LentUnion) -> String;
+    #[wasm_bindgen(js_name = js_show)]
+    fn js_show_optional_union(u: Option<&LentUnion>) -> String;
+    #[wasm_bindgen(js_name = js_show)]
+    fn js_show_union_slice(v: &[LentUnion]) -> String;
+    fn js_keep(v: &[LentUnion]);
+    #[wasm_bindgen(js_name = js_show)]
+    fn js_show_generic_union_slice(v: &[LentGenericUnion]) -> String;
+    fn js_kept() -> String;
 
     // Async round-trip: imports an `async fn` returning a dynamic union,
     // exercising `Promise<Union>` resolution across the `JsFuture` seam.
@@ -405,6 +415,68 @@ fn test_optional_union_roundtrip() {
         js_optional_union_roundtrip(Some(OuterUnion::Wrapped(InnerUnion::Number(42)))),
         Some(OuterUnion::Wrapped(InnerUnion::Number(42)))
     ));
+}
+
+// Each payload here can be lent, so the union can be.
+#[wasm_bindgen]
+pub enum LentUnion {
+    Idle = "idle",
+    Nested(InnerUnion),
+    Tone(Shade),
+    Level(Color),
+    Maybe(Option<u32>),
+    Handle(FooCase),
+    Text(String),
+}
+
+#[wasm_bindgen_test]
+fn test_lent_union() {
+    let list = [
+        LentUnion::Idle,
+        LentUnion::Nested(InnerUnion::Foo),
+        LentUnion::Nested(InnerUnion::Number(3)),
+        LentUnion::Tone(Shade::Dark),
+        LentUnion::Level(Color::Red),
+        LentUnion::Maybe(Some(7)),
+        LentUnion::Handle(make_foo()),
+        LentUnion::Text("x".to_string()),
+    ];
+    let shown = r#"["idle","foo",3,"dark",2,7,{"type":"Foo","data":"test"},"x"]"#;
+    let live = wasm_bindgen::externref_heap_live_count();
+    assert_eq!(js_show_union_slice(&list), shown);
+    assert_eq!(js_show_union_slice(&[]), "[]");
+    assert_eq!(js_show_union(&list[6]), r#"{"type":"Foo","data":"test"}"#);
+    assert_eq!(js_show_optional_union(Some(&list[7])), r#""x""#);
+    assert_eq!(js_show_optional_union(None), "undefined");
+    assert_eq!(wasm_bindgen::externref_heap_live_count(), live);
+
+    // What JS is lent is its own to keep, and Rust's is untouched.
+    js_keep(&list);
+    assert_eq!(js_kept(), shown);
+    assert!(matches!(&list[7], LentUnion::Text(s) if s == "x"));
+}
+
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_name = Array)]
+    type BoundedList<T: wasm_bindgen::convert::JsGeneric = JsValue>;
+}
+
+// A payload can also be the argument of another's bounded parameter.
+#[wasm_bindgen]
+pub enum LentGenericUnion {
+    One(js_sys::Number),
+    Many(BoundedList<js_sys::Number>),
+}
+
+#[wasm_bindgen_test]
+fn test_lent_generic_union() {
+    let many = js_sys::Array::of1(&JsValue::from(2));
+    let list = [
+        LentGenericUnion::One(js_sys::Number::from(1)),
+        LentGenericUnion::Many(many.unchecked_into()),
+    ];
+    assert_eq!(js_show_generic_union_slice(&list), "[1,[2]]");
 }
 
 // `#[wasm_bindgen(fallback)]` makes the last tuple variant act as an
