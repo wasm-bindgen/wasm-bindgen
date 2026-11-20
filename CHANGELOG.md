@@ -91,7 +91,7 @@
   itself. `EventLoop::from_local(rt)` becomes
   `EventLoop::from_builder(&mut builder)`, which takes the builder's
   `on_work_available`.
-  [#PRNUM](https://github.com/wasm-bindgen/wasm-bindgen/pull/PRNUM)
+  [#5485](https://github.com/wasm-bindgen/wasm-bindgen/pull/5485)
 
 * **Breaking (experimental):** `wasm_bindgen_futures::tokio` is reduced to one
   type, `EventLoop`, a hosted event loop held by every root and task on it.
