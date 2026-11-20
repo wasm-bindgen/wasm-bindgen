@@ -84,6 +84,15 @@
   `--cfg tokio_unstable_jspi_hooks` is gone.
   [#5466](https://github.com/wasm-bindgen/wasm-bindgen/pull/5466)
 
+* **Breaking (experimental):** the experimental
+  `#[wasm_bindgen(experimental_tokio)]` support moves to Tokio's host-driven
+  `LocalEventLoop` (tokio#8479), which leaves the host to the embedder:
+  `wasm-bindgen-futures` now registers the loop with Emscripten's host loop
+  itself. `EventLoop::from_local(rt)` becomes
+  `EventLoop::from_builder(&mut builder)`, which takes the builder's
+  `on_work_available`.
+  [#PRNUM](https://github.com/wasm-bindgen/wasm-bindgen/pull/PRNUM)
+
 * **Breaking (experimental):** `wasm_bindgen_futures::tokio` is reduced to one
   type, `EventLoop`, a hosted event loop held by every root and task on it.
   `schedule` becomes `EventLoop::current().schedule`, `schedule_isolated`

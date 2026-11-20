@@ -3742,7 +3742,7 @@ fn emscripten_end_to_end() {
                 tokio = {{ version = "1", default-features = false, features = ["rt", "time"] }}
 
                 [patch.crates-io]
-                tokio = {{ git = "https://github.com/guybedford/tokio", tag = "1.54.1-cf.emscripten" }}
+                tokio = {{ git = "https://github.com/guybedford/tokio", rev = "0bade231d52b7f8dd4492be204696a6358a2901b" }}
 
                 [workspace]
                 "#,
@@ -3842,6 +3842,59 @@ fn emscripten_end_to_end() {
             pub async fn tokio_sleep_spawn(ms: u32) -> u32 {
                 tokio::time::sleep(std::time::Duration::from_millis(ms as u64)).await;
                 tokio::spawn(async move { ms + 1 }).await.unwrap()
+            }
+
+            // Woken from host context while its loop is idle: only the
+            // promise settling can get the loop ticked.
+            #[wasm_bindgen(experimental_tokio)]
+            pub async fn tokio_host_wake(p: js_sys::Promise) -> u32 {
+                let v = wasm_bindgen_futures::JsFuture::from(p).await.unwrap();
+                v.as_f64().unwrap() as u32 + 1
+            }
+
+            // More ready tasks than one tick runs, next to a sibling that
+            // never stops yielding: the loop returns to the host between
+            // batches, so `host_turned` reports the host's own timer fired.
+            #[wasm_bindgen(experimental_tokio)]
+            pub async fn tokio_batches(host_turned: js_sys::Function) -> u32 {
+                let tasks: Vec<_> = (0..200).map(|i| tokio::spawn(async move { i })).collect();
+                let greedy = tokio::spawn(async {
+                    loop {
+                        tokio::task::yield_now().await;
+                    }
+                });
+                tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+                greedy.abort();
+                if !host_turned.call0(&JsValue::NULL).unwrap().is_truthy() {
+                    return 0;
+                }
+                let mut sum = 0;
+                for task in tasks {
+                    sum += task.await.unwrap();
+                }
+                sum
+            }
+
+            struct OnDrop(js_sys::Function);
+
+            impl Drop for OnDrop {
+                fn drop(&mut self) {
+                    self.0.call0(&JsValue::NULL).unwrap();
+                }
+            }
+
+            // A plain spawn does not hold its loop: the sibling is dropped
+            // with the isolated loop as the host tick that settled the root
+            // returns, and its timer is disarmed.
+            #[wasm_bindgen(experimental_tokio = "isolated")]
+            pub async fn tokio_isolated_cancels(cancelled: js_sys::Function) -> u32 {
+                let sibling = OnDrop(cancelled);
+                tokio::task::spawn_local(async move {
+                    let _sibling = sibling;
+                    tokio::time::sleep(std::time::Duration::from_secs(3600)).await;
+                });
+                tokio::time::sleep(std::time::Duration::from_millis(5)).await;
+                5
             }
 
             #[wasm_bindgen(experimental_tokio = "isolated")]
@@ -4041,8 +4094,191 @@ fn emscripten_end_to_end() {
             assert((await Promise.all(nested)).join() === '2,2,1', 'nested schedules');
         }
 
+        // The loop is driven by the host: a wake from a promise while idle,
+        // and a host turn between the batches of a busy loop.
+        assert(await m.tokio_host_wake(new Promise((r) => setTimeout(() => r(6), 10))) === 7, 'host wake');
+        {
+            let turned = false;
+            setTimeout(() => { turned = true; }, 1);
+            assert(await m.tokio_batches(() => turned) === 19900, 'batches yield to the host');
+        }
+        {
+            let cancelled = false;
+            assert(await m.tokio_isolated_cancels(() => { cancelled = true; }) === 5, 'isolated root');
+            assert(cancelled, 'an isolated loop drops its other tasks as its root settles');
+        }
+
         console.log('ok');
         "#,
+    )
+    .unwrap();
+
+    Command::new("node")
+        .arg("run.mjs")
+        .current_dir(&out_dir)
+        .assert()
+        .success()
+        .stdout(str::contains("main ran"))
+        .stdout(str::contains("ok\n"));
+}
+
+/// Tokio's `net` on an `experimental_tokio` event loop. With the I/O driver
+/// the loop has a reactor, and is ticked by the readiness listener on its
+/// epoll descriptor rather than by `on_work_available`: every accept, read
+/// and write here completes on a host readiness callback. Needs an emcc
+/// with the epoll listeners (6.0.12) and `-sNODERAWSOCKETS`; skipped
+/// otherwise.
+#[test]
+fn emscripten_end_to_end_tokio_net() {
+    let name = "emscripten_end_to_end_tokio_net";
+    if !require_emcc(name) {
+        return;
+    }
+    let emcc = fs::canonicalize(which("emcc").unwrap()).unwrap();
+    let emscripten = emcc.parent().unwrap();
+    let has = |file: &str, needle: &str| {
+        fs::read_to_string(emscripten.join(file)).is_ok_and(|s| s.contains(needle))
+    };
+    if !has(
+        "system/include/emscripten/epoll.h",
+        "emscripten_epoll_listener_add",
+    ) || !has("src/settings.js", "NODERAWSOCKETS")
+    {
+        eprintln!("skipping {name}: `emcc` lacks the epoll listeners or NODERAWSOCKETS");
+        return;
+    }
+
+    let mut project = Project::new(name);
+    project.target("wasm32-unknown-emscripten");
+    project
+        .file(
+            "Cargo.toml",
+            &format!(
+                r#"
+                [package]
+                name = "{name}"
+                version = "0.0.0"
+                edition = "2021"
+
+                [dependencies]
+                wasm-bindgen = {{ path = "{root}" }}
+                wasm-bindgen-futures = {{ path = "{root}/crates/futures" }}
+                js-sys = {{ path = "{root}/crates/js-sys" }}
+                tokio = {{ version = "1", default-features = false, features = ["rt", "time", "net", "io-util"] }}
+
+                [patch.crates-io]
+                tokio = {{ git = "https://github.com/guybedford/tokio", rev = "0bade231d52b7f8dd4492be204696a6358a2901b" }}
+
+                [workspace]
+                "#,
+                root = REPO_ROOT.display(),
+            ),
+        )
+        .file(
+            ".cargo/config.toml",
+            r#"
+            [target.wasm32-unknown-emscripten]
+            rustflags = [
+              "-Cpanic=abort",
+              "-Cllvm-args=-enable-emscripten-cxx-exceptions=0",
+              "-Crelocation-model=static",
+              "--cfg=wasm_bindgen_unstable_tokio",
+              "--cfg=tokio_unstable",
+              "-Clink-arg=-sWASM_BINDGEN",
+              "-Clink-arg=-Wno-experimental",
+              "-Clink-arg=-sNODERAWSOCKETS",
+              "-Clink-arg=-sMODULARIZE",
+              "-Clink-arg=-sEXPORT_ES6",
+            ]
+            "#,
+        )
+        .file(
+            "src/main.rs",
+            r#"
+            use std::net::SocketAddr;
+            use tokio::io::{AsyncReadExt, AsyncWriteExt};
+            use tokio::net::{TcpListener, TcpStream};
+            use wasm_bindgen::prelude::*;
+
+            async fn listen() -> (TcpListener, SocketAddr) {
+                let listener = TcpListener::bind(SocketAddr::from(([127, 0, 0, 1], 0)))
+                    .await
+                    .unwrap();
+                let addr = listener.local_addr().unwrap();
+                (listener, addr)
+            }
+
+            // A round trip between a server task and the root.
+            #[wasm_bindgen(experimental_tokio)]
+            pub async fn round_trip() -> String {
+                let (listener, addr) = listen().await;
+                let server = tokio::spawn(async move {
+                    let (mut sock, _) = listener.accept().await.unwrap();
+                    let mut buf = [0u8; 5];
+                    sock.read_exact(&mut buf).await.unwrap();
+                    sock.write_all(b"world").await.unwrap();
+                    String::from_utf8(buf.to_vec()).unwrap()
+                });
+                let mut sock = TcpStream::connect(addr).await.unwrap();
+                sock.write_all(b"hello").await.unwrap();
+                let mut buf = [0u8; 5];
+                sock.read_exact(&mut buf).await.unwrap();
+                format!("{} {}", server.await.unwrap(), String::from_utf8_lossy(&buf))
+            }
+
+            // A server whose client is a host socket, connecting once the
+            // loop is idle with no timer pending: only readiness ticks it.
+            #[wasm_bindgen(experimental_tokio = "isolated")]
+            pub async fn serve_once(listening: js_sys::Function) -> String {
+                let (listener, addr) = listen().await;
+                listening.call1(&JsValue::NULL, &addr.port().into()).unwrap();
+                let (mut sock, _) = listener.accept().await.unwrap();
+                let mut buf = Vec::new();
+                sock.read_to_end(&mut buf).await.unwrap();
+                String::from_utf8(buf).unwrap()
+            }
+
+            fn main() {
+                println!("main ran");
+            }
+            "#,
+        );
+
+    project.cargo_cmd.env("PATH", path_with_workspace_cli());
+
+    let wasm = project.build();
+    let js = wasm.with_extension("js");
+    let out_dir = project.root.join("pkg");
+    fs::create_dir_all(&out_dir).unwrap();
+    fs::copy(&js, out_dir.join(format!("{name}.js"))).unwrap();
+    fs::copy(&wasm, out_dir.join(format!("{name}.wasm"))).unwrap();
+    fs::write(out_dir.join("package.json"), r#"{ "type": "module" }"#).unwrap();
+    fs::write(
+        out_dir.join("run.mjs"),
+        format!(
+            r#"
+        import net from 'node:net';
+        import Module from './{name}.js';
+        const m = await Module();
+        const assert = (c, msg) => {{ if (!c) throw new Error('assertion failed: ' + msg); }};
+        // A loop that misses readiness leaves its sockets open and never exits.
+        const stalled = setTimeout(() => {{ console.error('the event loop stalled'); process.exit(1); }}, 20000);
+
+        assert(await m.round_trip() === 'hello world', 'round trip');
+        assert(await m.round_trip() === 'hello world', 'the ambient loop is reusable');
+
+        const served = m.serve_once((port) => {{
+            setTimeout(() => {{
+                const client = net.connect(port, '127.0.0.1');
+                client.on('connect', () => client.end('late'));
+            }}, 50);
+        }});
+        assert(await served === 'late', 'a host client');
+        clearTimeout(stalled);
+
+        console.log('ok');
+        "#
+        ),
     )
     .unwrap();
 
@@ -4149,13 +4385,14 @@ fn emscripten_unwind_end_to_end(name: &str, dialect: EhDialect) {
                 wasm-bindgen = {{ path = "{root}" }}
                 wasm-bindgen-futures = {{ path = "{root}/crates/futures" }}
                 js-sys = {{ path = "{root}/crates/js-sys" }}
+                tokio = {{ version = "1", default-features = false, features = ["rt"] }}
 
                 # The workspace's `.cargo/config.toml` sets
                 # `--cfg=wasm_bindgen_unstable_tokio` for this target, which
                 # makes wasm-bindgen-futures depend on the emscripten tokio
                 # patchset; mirror the workspace `[patch]`es so it resolves.
                 [patch.crates-io]
-                tokio = {{ git = "https://github.com/guybedford/tokio", tag = "1.54.1-cf.emscripten" }}
+                tokio = {{ git = "https://github.com/guybedford/tokio", rev = "0bade231d52b7f8dd4492be204696a6358a2901b" }}
 
                 [workspace]
                 "#,
@@ -4235,6 +4472,19 @@ fn emscripten_unwind_end_to_end(name: &str, dialect: EhDialect) {
             #[wasm_bindgen]
             pub fn call_abort() {
                 std::process::abort()
+            }
+
+            // A JS exception thrown while a tokio event loop tick polls a
+            // task: in the tick on the caller's stack, and in a host tick.
+            #[wasm_bindgen(experimental_tokio)]
+            pub async fn tokio_throws_in_first_poll() {
+                js_throws_no_catch();
+            }
+
+            #[wasm_bindgen(experimental_tokio)]
+            pub async fn tokio_throws_in_host_tick() {
+                tokio::task::yield_now().await;
+                js_throws_no_catch();
             }
 
             // Emscripten's exit path unwinds (it throws an `ExitStatus` from
@@ -4508,6 +4758,29 @@ fn emscripten_unwind_end_to_end(name: &str, dialect: EhDialect) {
         assert(aborts.length === 1, `onAbort calls ${{aborts.length}}`);
         assert(aborts[0] instanceof WebAssembly.RuntimeError && /unreachable/.test(aborts[0].message), `onAbort gets the trap, got ${{aborts[0]}}`);
 
+        // A JS exception unwinding through a tokio event loop tick aborts:
+        // tokio's task harness drops the future without completing the
+        // task, so the loop would otherwise lose it silently.
+        {{
+            const m3 = await Module({{ printErr() {{}}, onAbort(what) {{ aborts.push(what); }} }});
+            aborts.length = 0;
+            let err;
+            try {{ await m3.tokio_throws_in_first_poll(); }} catch (e) {{ err = e; }}
+            assert(err instanceof WebAssembly.RuntimeError, `a throw in the first poll aborts, got ${{err}}`);
+            assert(aborts.length === 1, `onAbort calls for the first poll: ${{aborts.length}}`);
+
+            const m4 = await Module({{ printErr() {{}}, onAbort(what) {{ aborts.push(what); }} }});
+            aborts.length = 0;
+            const uncaught = new Promise((resolve) => process.once('uncaughtException', resolve));
+            m4.tokio_throws_in_host_tick();
+            err = await uncaught;
+            assert(err instanceof WebAssembly.RuntimeError, `a throw in a host tick aborts, got ${{err}}`);
+            assert(aborts.length === 1, `onAbort calls for the host tick: ${{aborts.length}}`);
+            // Emscripten fails the process for an exception out of a callback.
+            assert(process.exitCode === 1, `exit code after the abort: ${{process.exitCode}}`);
+            process.exitCode = 0;
+        }}
+
         console.log('ok');
         "#
         ),
@@ -4583,7 +4856,7 @@ fn emscripten_jspi_end_to_end(name: &str, reentrant: bool) {
                 # The workspace `.cargo/config.toml` applies here too and
                 # enables the tokio cfg, so its patches are needed as well.
                 [patch.crates-io]
-                tokio = {{ git = "https://github.com/guybedford/tokio", tag = "1.54.1-cf.emscripten" }}
+                tokio = {{ git = "https://github.com/guybedford/tokio", rev = "0bade231d52b7f8dd4492be204696a6358a2901b" }}
 
                 [workspace]
                 "#,
@@ -4800,7 +5073,7 @@ fn emscripten_jspi_tokio_project(name: &str) -> Option<(PathBuf, &'static [&'sta
                 tokio = {{ version = "1", default-features = false, features = ["rt", "time"] }}
 
                 [patch.crates-io]
-                tokio = {{ git = "https://github.com/guybedford/tokio", tag = "1.54.1-cf.emscripten" }}
+                tokio = {{ git = "https://github.com/guybedford/tokio", rev = "0bade231d52b7f8dd4492be204696a6358a2901b" }}
 
                 [workspace]
                 "#,
@@ -4874,6 +5147,13 @@ fn emscripten_jspi_tokio_project(name: &str) -> Option<(PathBuf, &'static [&'sta
                 tokio::spawn(async move { sleep_ms(ms) }).await.unwrap() + 4
             }
 
+            // (e) an event loop export, called while a `block_on` is parked.
+            #[wasm_bindgen(experimental_tokio)]
+            pub async fn hosted_sleep(ms: u32) -> u32 {
+                tokio::time::sleep(Duration::from_millis(ms as u64)).await;
+                ms + 5
+            }
+
             fn main() {
                 println!("main ran");
             }
@@ -4925,6 +5205,18 @@ fn emscripten_jspi_tokio_project(name: &str) -> Option<(PathBuf, &'static [&'sta
         assert(await m.block_on_promise(Promise.resolve(40)) === 42, 'jspi_block_on_promise in the root');
         assert(await m.task_suspends(5) === 8, 'a suspension inside task code');
         assert(await m.isolated_task_suspends(5) === 9, 'a suspension inside an isolated task');
+
+        // An event loop cannot tick while a `block_on` is parked on the
+        // thread: its ticks wait for the `block_on` to return.
+        {{
+            const order = [];
+            const settle = (name, p) => p.then((v) => {{ order.push(name); return v; }});
+            const parked = settle('parked', m.sleep_and_spawn(30));
+            const hosted = settle('hosted', m.hosted_sleep(1));
+            assert((await Promise.all([parked, hosted])).join() === '31,6', 'parked and hosted results');
+            assert(order.join() === 'parked,hosted', `hosted ticks wait for the park: ${{order}}`);
+            assert(await m.hosted_sleep(1) === 6, 'the event loop ticks again afterwards');
+        }}
 
         console.log('ok');
         "#
