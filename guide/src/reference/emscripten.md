@@ -252,8 +252,8 @@ in the same module.
 
 ## Tokio
 
-> **Experimental.** This depends on Tokio's Emscripten event-loop support,
-> which has not yet shipped in a Tokio release, and is subject to change.
+> **Experimental.** This depends on Tokio's host-driven event loops, which
+> have not yet shipped in a Tokio release, and is subject to change.
 
 An exported `async fn` marked `#[wasm_bindgen(experimental_tokio)]` is driven
 as a root on a Tokio event-loop runtime instead of the `wasm-bindgen-futures`
@@ -287,16 +287,15 @@ The cfg makes `wasm-bindgen-futures` depend on Tokio and expose the runtime
 glue; without it nothing Tokio-related is compiled or linked, and the
 attribute is a compile error (as it is on any other target).
 
-Until the Tokio side lands upstream ([tokio#8484]), Tokio comes from a tagged
-patchset, together with its own `--cfg tokio_unstable`:
+Until the Tokio side lands upstream ([tokio#8479], and [tokio#8438] for its
+`net` feature), Tokio comes from a patchset, together with its own
+`--cfg tokio_unstable`:
 
 ```toml
 # Cargo.toml
 [patch.crates-io]
-tokio = { git = "https://github.com/guybedford/tokio", tag = "1.54.1-cf.emscripten" }
-tokio-macros = { git = "https://github.com/guybedford/tokio", tag = "1.54.1-cf.emscripten" }
-# With Tokio's `net` feature, until tokio-rs/mio#1969 is in a mio release:
-mio = { git = "https://github.com/tokio-rs/mio" }
+tokio = { git = "https://github.com/guybedford/tokio", rev = "0bade231d52b7f8dd4492be204696a6358a2901b" }
+tokio-macros = { git = "https://github.com/guybedford/tokio", rev = "0bade231d52b7f8dd4492be204696a6358a2901b" }
 ```
 
 ```toml
@@ -305,20 +304,20 @@ mio = { git = "https://github.com/tokio-rs/mio" }
 rustflags = ["--cfg=wasm_bindgen_unstable_tokio", "--cfg=tokio_unstable", ...]
 ```
 
-The event loop is hosted by the JS event loop: it registers its reactor's
-readiness and its timer deadlines with the host and runs its tasks from those
-callbacks. An export called from JS also runs one batch on the caller's
+The event loop is a Tokio `LocalEventLoop` hosted by the JS event loop:
+`wasm-bindgen-futures` registers its reactor's readiness and its timer
+deadlines with the host and ticks it from those callbacks. An export called from JS also runs one batch on the caller's
 stack, so the future's first poll is synchronous, as it is for a plain
 `async` export.
 
 This needs Emscripten 6.0.12 or later, for its epoll readiness listeners
-([emscripten#27547]). Resolving hostnames additionally needs async DNS
-([emscripten#27742]), not yet in a release, and a multiplexed host needs the
+([emscripten#27547]), and Tokio's `net` feature needs the link flag
+`-sNODERAWSOCKETS` under Node. A multiplexed host additionally needs the
 listener callbacks delivered as a microtask of the task that made the reactor
 ready. The `7.0.0-cf.emscripten` tag of [guybedford/emscripten][emscripten-cf]
-is Emscripten 7.0.0 plus those two changes; with `emcc` 7.0.0 (emsdk,
-Homebrew, ...) already on `PATH`, use its checkout as the frontend over that
-toolchain:
+is Emscripten 7.0.0 plus that change and async DNS ([emscripten#27742]); with
+`emcc` 7.0.0 (emsdk, Homebrew, ...) already on `PATH`, use its checkout as the
+frontend over that toolchain:
 
 ```sh
 git clone --depth 1 --branch 7.0.0-cf.emscripten https://github.com/guybedford/emscripten
@@ -333,7 +332,8 @@ primitives still work when linked with
 is not enabled anywhere in the build: with it the event loop has a reactor to
 register, and building it aborts.
 
-[tokio#8484]: https://github.com/tokio-rs/tokio/pull/8484
+[tokio#8479]: https://github.com/tokio-rs/tokio/pull/8479
+[tokio#8438]: https://github.com/tokio-rs/tokio/pull/8438
 [emscripten#27547]: https://github.com/emscripten-core/emscripten/pull/27547
 [emscripten#27742]: https://github.com/emscripten-core/emscripten/pull/27742
 [emscripten-cf]: https://github.com/guybedford/emscripten/tree/7.0.0-cf.emscripten
@@ -468,10 +468,8 @@ Crates:
 ```toml
 # Cargo.toml
 [patch.crates-io]
-tokio = { git = "https://github.com/guybedford/tokio", tag = "1.54.1-cf.emscripten" }
-tokio-macros = { git = "https://github.com/guybedford/tokio", tag = "1.54.1-cf.emscripten" }
-# With Tokio's `net` feature, until tokio-rs/mio#1969 is in a mio release:
-mio = { git = "https://github.com/tokio-rs/mio" }
+tokio = { git = "https://github.com/guybedford/tokio", rev = "0bade231d52b7f8dd4492be204696a6358a2901b" }
+tokio-macros = { git = "https://github.com/guybedford/tokio", rev = "0bade231d52b7f8dd4492be204696a6358a2901b" }
 ```
 
 ```toml
