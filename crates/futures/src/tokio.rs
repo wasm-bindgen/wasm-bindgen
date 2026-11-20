@@ -2,10 +2,11 @@
 //! Only available on the `wasm32-unknown-emscripten` target under
 //! `--cfg wasm_bindgen_unstable_tokio` (plus tokio's own `--cfg tokio_unstable`).
 //!
-//! An [`EventLoop`] is a hosted tokio event loop: it ticks itself from host
-//! callbacks (reactor readiness, the next timer deadline, an immediate while
-//! work is ready), and a schedule from a top-level JS call ticks it once on
-//! the caller's stack for a synchronous first poll. Every root and every
+//! An [`EventLoop`] is a tokio `LocalEventLoop` hosted by the JavaScript
+//! event loop: host callbacks tick it (reactor readiness, the next timer
+//! deadline, an immediate while work is ready), and a schedule from a
+//! top-level JS call ticks it once on the caller's stack for a synchronous
+//! first poll. Every root and every
 //! [`EventLoop::spawn`] task holds its loop, so a loop lives while anyone
 //! holds it. A plain `tokio::spawn` task does not, and is dropped with it.
 //!
@@ -32,6 +33,11 @@
 #[cfg(not(tokio_unstable))]
 compile_error!("`wasm_bindgen_unstable_tokio` requires tokio's `--cfg tokio_unstable`");
 
+#[cfg(target_feature = "atomics")]
+compile_error!("`wasm_bindgen_unstable_tokio` does not support threads");
+
+mod host;
+
 extern crate std;
 
 use core::future::Future;
@@ -39,9 +45,11 @@ use std::cell::{OnceCell, RefCell};
 use std::rc::{Rc, Weak};
 use std::vec::Vec;
 
+pub use ::tokio::runtime::{Builder, Runtime};
 use ::tokio::runtime::{Handle, Id};
-pub use ::tokio::runtime::{LocalEventLoop, Runtime};
 pub use ::tokio::task::{JoinError, JoinHandle};
+
+use host::Host;
 
 std::thread_local! {
     static AMBIENT: OnceCell<EventLoop> = const { OnceCell::new() };
@@ -49,32 +57,14 @@ std::thread_local! {
     /// The loops of the [`EventLoop::enter`] calls on the stack, innermost
     /// last.
     static ENTERED: RefCell<Vec<EventLoop>> = const { RefCell::new(Vec::new()) };
-    /// Every live loop by runtime id, for [`EventLoop::current`] to find the
-    /// calling task's. Each removes itself on drop.
-    static LOOPS: RefCell<Vec<(Id, Weak<Inner>)>> = const { RefCell::new(Vec::new()) };
+    /// The loops by runtime id, for [`EventLoop::current`] to find the
+    /// calling task's. The dropped ones are pruned as a loop is added.
+    static LOOPS: RefCell<Vec<(Id, Weak<Host>)>> = const { RefCell::new(Vec::new()) };
 }
-
-/// Tasks polled by the tick a schedule runs on its caller's stack: tokio's
-/// default `event_interval`, the batch a host tick runs.
-const FIRST_TICK: usize = 61;
 
 /// A hosted tokio event loop, shared by its clones.
 #[derive(Clone, Debug)]
-pub struct EventLoop(Rc<Inner>);
-
-#[derive(Debug)]
-struct Inner {
-    id: Id,
-    /// Exclusively borrowed only by a tick on the caller's stack, which then
-    /// has this loop as the current runtime.
-    rt: RefCell<LocalEventLoop>,
-}
-
-impl Drop for Inner {
-    fn drop(&mut self) {
-        let _ = LOOPS.try_with(|loops| loops.borrow_mut().retain(|(id, _)| *id != self.id));
-    }
-}
+pub struct EventLoop(Rc<Host>);
 
 impl EventLoop {
     /// A fresh loop with every driver the enabled tokio features provide.
@@ -82,23 +72,20 @@ impl EventLoop {
     /// so it needs Emscripten 6.0.12 or later.
     #[allow(clippy::new_without_default)]
     pub fn new() -> EventLoop {
-        let rt = ::tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build_hosted_local_event_loop(Default::default())
-            .expect("failed to build tokio event loop");
-        EventLoop::from_local(rt)
+        EventLoop::from_builder(Builder::new_current_thread().enable_all())
+            .expect("failed to build tokio event loop")
     }
 
-    /// A loop from a custom builder:
-    /// `Builder::new_current_thread()..build_hosted_local_event_loop(..)`.
-    pub fn from_local(rt: LocalEventLoop) -> EventLoop {
-        let id = rt.handle().id();
-        let inner = Rc::new(Inner {
-            id,
-            rt: RefCell::new(rt),
+    /// A loop from a custom `Builder::new_current_thread()`. The loop takes
+    /// the builder's `on_work_available`, which is how tokio notifies it.
+    pub fn from_builder(builder: &mut Builder) -> std::io::Result<EventLoop> {
+        let host = Host::attach(builder)?;
+        LOOPS.with(|loops| {
+            let mut loops = loops.borrow_mut();
+            loops.retain(|(_, host)| host.strong_count() > 0);
+            loops.push((host.id, Rc::downgrade(&host)));
         });
-        LOOPS.with(|loops| loops.borrow_mut().push((id, Rc::downgrade(&inner))));
-        EventLoop(inner)
+        Ok(EventLoop(host))
     }
 
     /// This thread's ambient loop, built with [`new`](Self::new) on first
@@ -122,8 +109,8 @@ impl EventLoop {
                 let loops = loops.borrow();
                 loops.iter().find(|(i, _)| *i == id)?.1.upgrade()
             });
-            if let Some(inner) = task {
-                return EventLoop(inner);
+            if let Some(host) = task {
+                return EventLoop(host);
             }
         }
         if let Some(rt) = ENTERED.with(|entered| entered.borrow().last().cloned()) {
@@ -170,16 +157,14 @@ impl EventLoop {
         F::Output: 'static,
         C: FnOnce(Result<F::Output, JoinError>) + 'static,
     {
-        let root = self.spawn_local(future);
+        let root = self.0.spawn_local(future);
         let hold = self.clone();
-        self.spawn_local(async move {
+        self.0.spawn_local(async move {
             on_complete(root.await);
             drop(hold);
         });
         if Handle::try_current().is_err() {
-            if let Ok(mut rt) = self.0.rt.try_borrow_mut() {
-                rt.tick(FIRST_TICK);
-            }
+            self.0.tick();
         }
         // A root that settled in that tick let go of the loop; if that was
         // the last hold, the caller's clone drops it outside the tick.
@@ -194,33 +179,28 @@ impl EventLoop {
         F::Output: 'static,
     {
         let hold = self.clone();
-        self.spawn_local(async move {
+        self.0.spawn_local(async move {
             let out = future.await;
             drop(hold);
             out
         })
-    }
-
-    /// Spawns on the loop, or on the current runtime while this loop's
-    /// caller-stack tick holds it, which then is this loop.
-    fn spawn_local<F>(&self, future: F) -> JoinHandle<F::Output>
-    where
-        F: Future + 'static,
-        F::Output: 'static,
-    {
-        match self.0.rt.try_borrow() {
-            Ok(rt) => rt.spawn_local(future),
-            Err(_) => ::tokio::task::spawn_local(future),
-        }
     }
 }
 
 /// A parked runtime: a current-thread `Runtime` whose idle waits are JSPI
 /// suspensions of the calling activation.
 fn build_parked() -> std::io::Result<Runtime> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
+    Builder::new_current_thread().enable_all().build()
+}
+
+/// Reschedules the event loop ticks that arrived while the runtime of a
+/// `block_on` was entered, as it returns or unwinds.
+struct ResumeEventLoops;
+
+impl Drop for ResumeEventLoops {
+    fn drop(&mut self) {
+        host::resume_deferred();
+    }
 }
 
 /// Runs `future` to completion on the thread's ambient parked runtime, for
@@ -237,6 +217,7 @@ fn build_parked() -> std::io::Result<Runtime> {
 /// * A sibling [`EventLoop::schedule`] is queued without a first poll, and
 ///   its event loop's host ticks are deferred until this call returns.
 pub fn block_on<F: Future>(future: F) -> F::Output {
+    let _resume = ResumeEventLoops;
     AMBIENT_PARKED.with(|cell| {
         cell.get_or_init(|| build_parked().expect("failed to build ambient tokio runtime"))
             .block_on(future)
@@ -247,6 +228,7 @@ pub fn block_on<F: Future>(future: F) -> F::Output {
 /// `future` settles (tasks still in flight are dropped, the reactor closed),
 /// for `#[wasm_bindgen(jspi, experimental_tokio = "isolated")]`.
 pub fn block_on_isolated<F: Future>(future: F) -> F::Output {
+    let _resume = ResumeEventLoops;
     build_parked()
         .expect("failed to build isolated tokio runtime")
         .block_on(future)

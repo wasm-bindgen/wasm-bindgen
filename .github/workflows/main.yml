@@ -287,7 +287,7 @@ jobs:
         with:
           # The `-sWASM_BINDGEN` post-link flow, where emcc runs `wasm-bindgen`
           # itself at link time, needs 6.0.10 (emscripten-core/emscripten#27208),
-          # and tokio's hosted event loop the epoll listeners of 6.0.12.
+          # and the hosted tokio event loop the epoll listeners of 6.0.12.
           version: 7.0.0
       - uses: actions/setup-node@v7
         with:
