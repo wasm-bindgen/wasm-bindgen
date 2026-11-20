@@ -1711,7 +1711,7 @@ impl TryToTokens for ast::ImportType {
                     #[inline]
                     fn from(obj: JsValue) -> Self {
                         #rust_name {
-                            obj: obj.into(),
+                            obj: #wasm_bindgen::JsCast::unchecked_from_js(obj),
                             #phantom_init
                         }
                     }
