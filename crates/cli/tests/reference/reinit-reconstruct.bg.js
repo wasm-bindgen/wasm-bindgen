@@ -17,6 +17,7 @@ export class ReinitCounter {
         const ptr = this.__destroy_into_raw();
         __wbg_call_guard();
         wasm.__wbg_reinitcounter_free(ptr, 0);
+
     }
     __wbg_reconstruct() {
         const obj = new ReinitCounter(...this.__wbg_args);
@@ -31,7 +32,7 @@ export class ReinitCounter {
      */
     get count() {
         __wbg_call_guard();
-        if (this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {
+        if ((this).__wbg_inst !== undefined && (this).__wbg_inst !== __wbg_instance_id) {
             _reconstructStale(this);
         }
         const ret = wasm.reinitcounter_count(this.__wbg_ptr);
@@ -42,7 +43,7 @@ export class ReinitCounter {
      */
     increment() {
         __wbg_call_guard();
-        if (this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {
+        if ((this).__wbg_inst !== undefined && (this).__wbg_inst !== __wbg_instance_id) {
             _reconstructStale(this);
         }
         const ret = wasm.reinitcounter_increment(this.__wbg_ptr);
@@ -55,9 +56,10 @@ export class ReinitCounter {
     constructor(start, label) {
         if (arguments[0] === __wbgSuperSkip) return;
         __wbg_call_guard();
+        const val2 = +start;
         const ptr0 = passStringToWasm0(label, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
-        const ret = wasm.reinitcounter_new(start, ptr0, len0);
+        const ret = wasm.reinitcounter_new(val2, ptr0, len0);
         this.__wbg_ptr = ret;
         Object.defineProperty(this, '__wbg_inst', { value: __wbg_instance_id, writable: true });
         Object.defineProperty(this, '__wbg_args', { value: [...arguments] });
@@ -69,7 +71,7 @@ export class ReinitCounter {
      */
     set count(count) {
         __wbg_call_guard();
-        if (this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {
+        if ((this).__wbg_inst !== undefined && (this).__wbg_inst !== __wbg_instance_id) {
             _reconstructStale(this);
         }
         wasm.reinitcounter_set_count(this.__wbg_ptr, count);
@@ -99,6 +101,7 @@ export class ReinitParent {
         const ptr = this.__destroy_into_raw();
         __wbg_call_guard();
         wasm.__wbg_reinitparent_free(ptr, 0);
+
     }
     /**
      * @returns {string}
@@ -108,7 +111,7 @@ export class ReinitParent {
         let deferred1_1;
         try {
             __wbg_call_guard();
-            if (this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {
+            if ((this).__wbg_inst !== undefined && (this).__wbg_inst !== __wbg_instance_id) {
                 _reconstructStale(this);
             }
             const ret = wasm.reinitparent_name(this.__wbg_ptr_ReinitParent);
@@ -149,6 +152,7 @@ export class ReinitPlain {
         const ptr = this.__destroy_into_raw();
         __wbg_call_guard();
         wasm.__wbg_reinitplain_free(ptr, 0);
+
     }
     /**
      * @param {number} value
@@ -167,7 +171,7 @@ export class ReinitPlain {
      */
     value() {
         __wbg_call_guard();
-        if (this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {
+        if ((this).__wbg_inst !== undefined && (this).__wbg_inst !== __wbg_instance_id) {
             _reconstructStale(this);
         }
         const ret = wasm.reinitplain_value(this.__wbg_ptr);
@@ -194,7 +198,7 @@ function __wbg_reset_state () {
 export function reinit_read_counter(counter) {
     __wbg_call_guard();
     _assertClass(counter, ReinitCounter);
-    if (counter.__wbg_inst !== undefined && counter.__wbg_inst !== __wbg_instance_id) {
+    if ((counter).__wbg_inst !== undefined && (counter).__wbg_inst !== __wbg_instance_id) {
         _reconstructStale(counter);
     }
     const ret = wasm.reinit_read_counter(counter.__wbg_ptr);
@@ -222,6 +226,7 @@ export class ReinitChild extends ReinitParent {
         const ptr = this.__destroy_into_raw();
         __wbg_call_guard();
         wasm.__wbg_reinitchild_free(ptr, 0);
+
     }
     __wbg_reconstruct() {
         const obj = new ReinitChild(...this.__wbg_args);
@@ -238,7 +243,7 @@ export class ReinitChild extends ReinitParent {
      */
     extra() {
         __wbg_call_guard();
-        if (this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {
+        if ((this).__wbg_inst !== undefined && (this).__wbg_inst !== __wbg_instance_id) {
             _reconstructStale(this);
         }
         const ret = wasm.reinitchild_extra(this.__wbg_ptr_ReinitChild);
@@ -252,9 +257,10 @@ export class ReinitChild extends ReinitParent {
         super(__wbgSuperSkip);
         if (arguments[0] === __wbgSuperSkip) return;
         __wbg_call_guard();
+        const val2 = +extra;
         const ptr0 = passStringToWasm0(name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
-        const ret = wasm.reinitchild_new(ptr0, len0, extra);
+        const ret = wasm.reinitchild_new(ptr0, len0, val2);
         this.__wbg_ptr = ret >>> 0;
         this.__wbg_ptr_ReinitChild = ret >>> 0;
         Object.defineProperty(this, '__wbg_inst', { value: __wbg_instance_id, writable: true });
@@ -266,20 +272,19 @@ export class ReinitChild extends ReinitParent {
     }
 }
 if (Symbol.dispose) ReinitChild.prototype[Symbol.dispose] = ReinitChild.prototype.free;
-export function __wbg___wbindgen_reinit_3f79fdb34dee3ea9() {
+export function __wbg___wbindgen_reinit_2fe0d0b9c1cc3c21() {
     __wbg_reinit_scheduled = true;
 }
-export function __wbg___wbindgen_throw_41e9ee4f547fc59a(arg0, arg1) {
+export function __wbg___wbindgen_throw_4c88d8bf264fd984(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_externrefs;
-    const offset = table.grow(4);
     table.set(0, undefined);
-    table.set(offset + 0, undefined);
-    table.set(offset + 1, null);
-    table.set(offset + 2, true);
-    table.set(offset + 3, false);
+    table.set(1024, undefined);
+    table.set(1025, null);
+    table.set(1026, true);
+    table.set(1027, false);
 }
 const __wbgSuperSkip = Symbol('wasm-bindgen.super-skip');
 
