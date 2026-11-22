@@ -3040,7 +3040,16 @@ to open an issue at https://github.com/wasm-bindgen/wasm-bindgen/issues!
 "
                 );
             }
-            let next = get_remaining(&mut payload).unwrap();
+            let Some(next) = get_remaining(&mut payload) else {
+                bail!(
+                    "the `__wasm_bindgen_unstable` custom section is truncated: it ends \
+                     after the schema version, with no program data
+
+This section carries the metadata wasm-bindgen needs to process the module. Make
+sure `wasm-bindgen` runs on the complete Wasm file produced by the linker, and
+that the file was not truncated before it was passed to `wasm-bindgen`."
+                );
+            };
             log::debug!("found a program of length {}", next.len());
             ret.push(<decode::Program as decode::Decode>::decode_all(next));
         }
@@ -3177,6 +3186,74 @@ impl StructUnpacker {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Encode a value as an unsigned LEB128 integer, as used by the Wasm binary
+    /// format for section and name lengths.
+    fn leb128(mut value: u32) -> Vec<u8> {
+        let mut out = Vec::new();
+        loop {
+            let mut byte = (value & 0x7f) as u8;
+            value >>= 7;
+            if value != 0 {
+                byte |= 0x80;
+            }
+            out.push(byte);
+            if value == 0 {
+                return out;
+            }
+        }
+    }
+
+    /// Build a Wasm module whose only content is a custom section.
+    fn module_with_custom_section(name: &str, data: &[u8]) -> Vec<u8> {
+        let mut payload = leb128(name.len() as u32);
+        payload.extend_from_slice(name.as_bytes());
+        payload.extend_from_slice(data);
+
+        let mut module = b"\0asm\x01\0\0\0".to_vec();
+        module.push(0); // Custom section id.
+        module.extend(leb128(payload.len() as u32));
+        module.extend(payload);
+        module
+    }
+
+    /// Length prefix each chunk, the way the wasm-bindgen macro does.
+    fn bindgen_section_data(chunks: &[&[u8]]) -> Vec<u8> {
+        let mut data = Vec::new();
+        for chunk in chunks {
+            data.extend_from_slice(&(chunk.len() as u32).to_le_bytes());
+            data.extend_from_slice(chunk);
+        }
+        data
+    }
+
+    #[test]
+    fn test_truncated_bindgen_section_returns_error() {
+        // Test that a `__wasm_bindgen_unstable` custom section that ends after
+        // the schema version, with no program data, returns an error instead
+        // of panicking. See issue #5460.
+        let version = format!(
+            "{{\"schema_version\":\"{}\",\"version\":\"{}\"}}",
+            wasm_bindgen_shared::SCHEMA_VERSION,
+            wasm_bindgen_shared::version()
+        );
+        let data = bindgen_section_data(&[version.as_bytes()]);
+        let mut module = Module::from_buffer(&module_with_custom_section(
+            "__wasm_bindgen_unstable",
+            &data,
+        ))
+        .unwrap();
+
+        let mut program_storage = Vec::new();
+        let err = match extract_programs(&mut module, &mut program_storage) {
+            Ok(_) => panic!("a truncated custom section should return an error"),
+            Err(err) => err,
+        };
+        assert!(
+            err.to_string().contains("custom section is truncated"),
+            "unexpected error: {err}"
+        );
+    }
 
     #[test]
     fn test_struct_packer() {
