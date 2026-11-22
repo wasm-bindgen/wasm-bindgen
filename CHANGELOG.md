@@ -134,6 +134,11 @@
 
 ### Fixed
 
+* `wasm-bindgen-cli-support` now returns an error instead of panicking when the
+  `__wasm_bindgen_unstable` custom section ends after the schema version, with
+  no program data.
+  [#5486](https://github.com/wasm-bindgen/wasm-bindgen/pull/5486)
+
 * Value async iterables in WebIDL (`async iterable<V>`) now only generate a
   `values()` method, matching the WebIDL spec. Previously, they also generated
   `entries()` and `keys()` methods, which do not exist at runtime
