@@ -145,6 +145,13 @@
   elements reach JS as `Uint8Array` copies, as well as slices of handles.
   [#5444](https://github.com/wasm-bindgen/wasm-bindgen/pull/5444)
 
+* Added `js_sys::ArrayHeadRest<H, T>` for
+  TypeScript's `[H, ...T[]]`, an array whose first element is an `H` and
+  whose remaining elements are `T`s: `head()` reads the first element,
+  `rest()` copies the others into an `Array<T>`, and `into_parts()` /
+  `Into<(H, Array<T>)>` split it.
+  [#5448](https://github.com/wasm-bindgen/wasm-bindgen/pull/5448)
+
 ### Changed
 
 * `VectorIntoWasmAbi`, `VectorFromWasmAbi` and `WasmDescribeVector` are
@@ -351,13 +358,6 @@
   `experimental_generic_mono` import taking `&T` accepts `T = f64`,
   `Option<f64>` or `Nullable<String>`, as std's `contains(&T)` does.
   [#5436](https://github.com/wasm-bindgen/wasm-bindgen/pull/5436)
-
-* Under `js_sys_unstable_apis`, added `js_sys::ArrayHeadRest<H, T>` for
-  TypeScript's `[H, ...T[]]`, an array whose first element is an `H` and
-  whose remaining elements are `T`s: `head()` reads the first element,
-  `rest()` copies the others into an `Array<T>`, and `into_parts()` /
-  `Into<(H, Array<T>)>` split it.
-  [#5448](https://github.com/wasm-bindgen/wasm-bindgen/pull/5448)
 
 * Added a rejection type parameter to `js_sys::Promise<T, E = JsValue>`,
   mirrored on `JsFuture<T, E>`, `PromiseState<T, E>` and

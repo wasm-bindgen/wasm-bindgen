@@ -2939,7 +2939,6 @@ impl<T: JsTuple, Target: UpcastFrom<ArrayTuple<T>>> UpcastFrom<ArrayTuple<T>> fo
 impl<T: JsTuple, Target: UpcastFrom<ArrayTuple<T>>> UpcastFrom<ArrayTuple<T>> for Nullable<Target> {}
 impl<T: JsTuple> UpcastFrom<ArrayTuple<T>> for JsNullable<JsValue> {}
 
-#[cfg(js_sys_unstable_apis)]
 #[wasm_bindgen]
 extern "C" {
     /// A JS array whose first element is an `H` and whose remaining elements
@@ -2961,7 +2960,6 @@ extern "C" {
     fn slice_from<H, T>(this: &ArrayHeadRest<H, T>, start: u32) -> Array<T>;
 }
 
-#[cfg(js_sys_unstable_apis)]
 impl<H, T> ArrayHeadRest<H, T> {
     /// The elements after the first, as a new array.
     pub fn rest(&self) -> Array<T> {
@@ -2977,7 +2975,6 @@ impl<H, T> ArrayHeadRest<H, T> {
     }
 }
 
-#[cfg(js_sys_unstable_apis)]
 impl<H: FromWasmAbi, T> From<ArrayHeadRest<H, T>> for (H, Array<T>) {
     fn from(value: ArrayHeadRest<H, T>) -> Self {
         value.into_parts()
