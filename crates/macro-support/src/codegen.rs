@@ -1711,7 +1711,7 @@ impl TryToTokens for ast::ImportType {
                     #[inline]
                     fn from(obj: JsValue) -> Self {
                         #rust_name {
-                            obj: obj.into(),
+                            obj: #wasm_bindgen::JsCast::unchecked_from_js(obj),
                             #phantom_init
                         }
                     }
@@ -2061,7 +2061,7 @@ impl TryToTokens for ast::ImportType {
                     #[inline]
                     fn from(obj: #rust_name #ty_generics) -> #superclass {
                         use #wasm_bindgen::JsCast;
-                        #superclass::unchecked_from_js(obj.into())
+                        <#superclass as #wasm_bindgen::JsCast>::unchecked_from_js(obj.into())
                     }
                 }
 
@@ -2071,7 +2071,7 @@ impl TryToTokens for ast::ImportType {
                     #[inline]
                     fn as_ref(&self) -> &#superclass {
                         use #wasm_bindgen::JsCast;
-                        #superclass::unchecked_from_js_ref(self.as_ref())
+                        <#superclass as #wasm_bindgen::JsCast>::unchecked_from_js_ref(self.as_ref())
                     }
                 }
             })
