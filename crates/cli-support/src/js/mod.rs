@@ -1551,6 +1551,35 @@ export const __wbg_memory: WebAssembly.Memory;
             }
         }
         let compile_options = self.compile_options_arg();
+        let init_memory_arg = if has_memory { ", memory" } else { "" };
+        // `__wbg_destroy_instance` can run while an init is waiting for the
+        // module. That init must not install its instance afterwards, and its
+        // rejection must not clear the promise of a later init.
+        let (init_promise, init_instance_id, init_destroyed_check) = if self
+            .config
+            .generate_reset_state
+        {
+            (
+                    format!(
+                        "const promise = __wbg_init_once(module_or_path{init_memory_arg});
+                        __wbg_init_promise = promise;
+                        promise.catch(() => {{ if (__wbg_init_promise === promise) __wbg_init_promise = undefined; }});"
+                    ),
+                    "const instance_id = __wbg_instance_id;\n",
+                    "if (instance_id !== __wbg_instance_id) {
+                        throw new Error('Wasm instance was destroyed during initialization');
+                    }",
+                )
+        } else {
+            (
+                format!(
+                    "__wbg_init_promise = __wbg_init_once(module_or_path{init_memory_arg});
+                        __wbg_init_promise.catch(() => {{ __wbg_init_promise = undefined; }});"
+                ),
+                "",
+                "",
+            )
+        };
         format!(
             "let wasmModule, wasmInstance, wasm;
             function __wbg_finalize_init(instance, module{init_stack_size_arg}) {{
@@ -1627,14 +1656,13 @@ export const __wbg_memory: WebAssembly.Memory;
             async function __wbg_init(module_or_path{init_memory_arg}) {{
                 if (wasm !== undefined) return wasm;
                 if (__wbg_init_promise === undefined) {{
-                    __wbg_init_promise = __wbg_init_once(module_or_path{init_memory_arg});
-                    __wbg_init_promise.catch(() => {{ __wbg_init_promise = undefined; }});
+                    {init_promise}
                 }}
                 return __wbg_init_promise;
             }}
 
             async function __wbg_init_once(module_or_path{init_memory_arg}) {{
-                {init_stack_size}
+                {init_instance_id}{init_stack_size}
                 if (module_or_path !== undefined) {{
                     if (Object.getPrototypeOf(module_or_path) === Object.prototype) {{
                         ({{module_or_path{init_memory_arg}{init_stack_size_arg}}} = module_or_path)
@@ -1651,7 +1679,7 @@ export const __wbg_memory: WebAssembly.Memory;
                 }}
 
                 const {{ instance, module }} = await __wbg_load(await module_or_path, imports);
-
+                {init_destroyed_check}
                 return __wbg_finalize_init(instance, module{init_stack_size_arg});
             }}
             ",
@@ -1681,11 +1709,6 @@ export const __wbg_memory: WebAssembly.Memory;
                 )
             } else {
                 String::new()
-            },
-            init_memory_arg = if has_memory {
-                ", memory"
-            } else {
-                ""
             },
             init_memory_arg_alone = if has_memory {
                 "memory"
@@ -4664,18 +4687,17 @@ if (require('worker_threads').isMainThread) {{
         reset_statements: &[String],
         abort_reset: &str,
     ) -> Result<(), Error> {
-        // A settled promise would hand the destroyed instance to the next `init()`.
-        let init_promise_reset = if matches!(self.config.mode, OutputMode::Web) {
-            "\n__wbg_init_promise = undefined;"
-        } else {
-            ""
+        let loader_reset = match self.config.mode {
+            // A settled promise would hand the destroyed instance to the next `init()`.
+            OutputMode::Web => "\n__wbg_init_promise = undefined;",
+            _ => "",
         };
 
         let mut statements = reset_statements.to_vec();
         statements.push(format!(
             "{abort_reset}
             wasmInstance = undefined;
-            wasm = undefined;{init_promise_reset}
+            wasm = undefined;{loader_reset}
             "
         ));
 

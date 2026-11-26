@@ -159,13 +159,15 @@ let __wbg_init_promise;
 async function __wbg_init(module_or_path) {
     if (wasm !== undefined) return wasm;
     if (__wbg_init_promise === undefined) {
-        __wbg_init_promise = __wbg_init_once(module_or_path);
-        __wbg_init_promise.catch(() => { __wbg_init_promise = undefined; });
+        const promise = __wbg_init_once(module_or_path);
+        __wbg_init_promise = promise;
+        promise.catch(() => { if (__wbg_init_promise === promise) __wbg_init_promise = undefined; });
     }
     return __wbg_init_promise;
 }
 
 async function __wbg_init_once(module_or_path) {
+    const instance_id = __wbg_instance_id;
 
     if (module_or_path !== undefined) {
         if (Object.getPrototypeOf(module_or_path) === Object.prototype) {
@@ -185,7 +187,9 @@ async function __wbg_init_once(module_or_path) {
     }
 
     const { instance, module } = await __wbg_load(await module_or_path, imports);
-
+    if (instance_id !== __wbg_instance_id) {
+        throw new Error('Wasm instance was destroyed during initialization');
+    }
     return __wbg_finalize_init(instance, module);
 }
 

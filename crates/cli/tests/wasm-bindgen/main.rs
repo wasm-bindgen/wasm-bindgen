@@ -2657,6 +2657,15 @@ fn destroy_instance() {
             initSync({ module });
             assert.equal(increment_counter(), 1);
 
+            // A destroy while `init` waits for the module wins, and does not disturb a later `init`.
+            __wbg_destroy_instance();
+            const first = init({ module_or_path: module });
+            __wbg_destroy_instance();
+            const second = init({ module_or_path: module });
+            await assert.rejects(first, /destroyed during initialization/);
+            assert.equal(await init(), await second);
+            assert.equal(increment_counter(), 1);
+
             // Destroying twice is fine.
             __wbg_destroy_instance();
             __wbg_destroy_instance();
