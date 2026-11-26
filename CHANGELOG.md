@@ -145,6 +145,13 @@
   elements reach JS as `Uint8Array` copies.
   [#5444](https://github.com/wasm-bindgen/wasm-bindgen/pull/5444)
 
+* Added `js_sys::ArrayHeadRest<H, T>` for
+  TypeScript's `[H, ...T[]]`, an array whose first element is an `H` and
+  whose remaining elements are `T`s: `head()` reads the first element,
+  `rest()` copies the others into an `Array<T>`, and `into_parts()` /
+  `Into<(H, Array<T>)>` split it.
+  [#5448](https://github.com/wasm-bindgen/wasm-bindgen/pull/5448)
+
 ### Changed
 
 * `VectorIntoWasmAbi`, `VectorFromWasmAbi` and `WasmDescribeVector` are
