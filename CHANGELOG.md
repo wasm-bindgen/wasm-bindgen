@@ -140,9 +140,9 @@
   `experimental_generic_mono` argument bound, implemented for `&[u8]`,
   `Vec<u8>`, `ArrayBuffer`, `DataView` and every typed array, owned and
   borrowed. Each crosses as itself, so the handles share one binding, and
-  `Option<impl BufferSourceLike>` and `&[impl BufferSourceLike]` work under
-  the same bound. `&[&[u8]]` and `&[Vec<u8>]` are now slice arguments, whose
-  elements reach JS as `Uint8Array` copies.
+  `Option<impl BufferSourceLike>` works under the same bound, and
+  `&[impl BufferSourceLike]` takes `&[&[u8]]` and `&[Vec<u8>]`, whose
+  elements reach JS as `Uint8Array` copies, as well as slices of handles.
   [#5444](https://github.com/wasm-bindgen/wasm-bindgen/pull/5444)
 
 ### Changed
