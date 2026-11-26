@@ -116,6 +116,18 @@
   exists at its default type arguments.
   [#5441](https://github.com/wasm-bindgen/wasm-bindgen/pull/5441)
 
+* Under `js_sys_unstable_apis`, js-sys collections behave as Rust
+  collections: `Map::get` / `has` / `delete` and `Set::has` / `delete` take
+  any borrowed form of the key (`K: Borrow<Q>`), and `Map::get` is `Some` for
+  every present key, whatever its value; `Map`, `Set` and `Object<T>` (as a
+  record of its own string keys) have `iter()`, `IntoIterator`,
+  `FromIterator` and `Extend`; `Entries<K, V>` iterates any `[key, value]`
+  iterator as tuples, and `ArrayTuple` converts into a Rust tuple; and
+  `JsStream<T>` streams any `FromWasmAbi` type. In both configurations,
+  `Iterator<T>` gains `try_iter` / `into_try_iter`, which yield the
+  protocol's errors as `Err` items, and `&Array<T>` is `IntoIterator`.
+  [#5450](https://github.com/wasm-bindgen/wasm-bindgen/pull/5450)
+
 ### Changed
 
 * `VectorIntoWasmAbi`, `VectorFromWasmAbi` and `WasmDescribeVector` are
@@ -263,6 +275,17 @@
   element, where `null` now reads as `None` instead of `Some(Nullable::Null)`,
   so those uses need updating by hand.
   [#5468](https://github.com/wasm-bindgen/wasm-bindgen/pull/5468)
+
+* **Breaking (experimental):** under `js_sys_unstable_apis`, an
+  `Iterator<T>` iterates as `T`, rethrowing a throwing `next()` into JS as
+  `for...of` does; use `try_iter` / `into_try_iter` for the previous
+  `Result<T, JsValue>` items. `Map::get` checks `has` and then reads
+  through the new `Map::get_unchecked` (JS `get`, read as `V`), rather than
+  reading `Option<V>`, so a present `undefined` or `null` value is `Some`.
+  `Object::keys` returns `Array<String>`,
+  `Object::entries` keys are `String`, and `Array::entries` indices are
+  `u32`.
+  [#5450](https://github.com/wasm-bindgen/wasm-bindgen/pull/5450)
 
 ### Fixed
 
