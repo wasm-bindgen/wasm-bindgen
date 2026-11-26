@@ -116,7 +116,8 @@ struct Args {
     ts_typed_array_buffers: bool,
     #[arg(
         long = "experimental-reset-state-function",
-        help = "Generate __wbg_reset_state function for Wasm reinitialization (experimental)"
+        help = "Generate __wbg_reset_state function for Wasm reinitialization, and\n\
+                __wbg_destroy_instance function to release the instance (experimental)"
     )]
     generate_reset_state: bool,
     #[arg(

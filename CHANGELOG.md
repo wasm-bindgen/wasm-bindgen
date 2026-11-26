@@ -44,6 +44,14 @@
   handled in wasm there, and traps now go through `abort()`.
   [#5457](https://github.com/wasm-bindgen/wasm-bindgen/pull/5457)
 
+* `--experimental-reset-state-function` also generates
+  `__wbg_destroy_instance()`, which releases the instance and its linear
+  memory without creating a new instance. Objects and closures of the destroyed
+  instance throw when used, and no longer keep its memory alive. A later call
+  to the init function (`--target web`) or to `__wbg_reset_state()` creates a
+  new instance.
+  [#PRNUM](https://github.com/wasm-bindgen/wasm-bindgen/pull/PRNUM)
+
 ### Changed
 
 * Stabilized the `js_sys::Temporal` bindings and `Date::to_temporal_instant`,

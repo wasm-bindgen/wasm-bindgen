@@ -4549,6 +4549,9 @@ if (require('worker_threads').isMainThread) {{
     /// reinit lifecycle. Called when `schedule_reinit()` is used or
     /// `--experimental-reset-state-function` is passed. The function is private
     /// unless the CLI flag is set.
+    ///
+    /// With the CLI flag, also emit `__wbg_destroy_instance`, which releases
+    /// the instance without creating a new one.
     fn generate_reinit_wrappers(&mut self) -> Result<(), Error> {
         self.global("let __wbg_instance_id = 0;");
 
@@ -4616,6 +4619,10 @@ if (require('worker_threads').isMainThread) {{
         } else {
             "__wbg_reinit_scheduled = false;"
         };
+        if self.config.generate_reset_state {
+            self.generate_destroy_instance(&reset_statements, abort_reset)?;
+        }
+
         reset_statements.push(format!(
             "{abort_reset}
             wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
@@ -4645,6 +4652,51 @@ if (require('worker_threads').isMainThread) {{
         )?;
 
         Ok(())
+    }
+
+    /// Emit the `__wbg_destroy_instance` function, which drops every reference
+    /// the generated JS holds to the instance and its linear memory.
+    ///
+    /// `reset_statements` and `abort_reset` invalidate what belongs to the
+    /// current instance.
+    fn generate_destroy_instance(
+        &mut self,
+        reset_statements: &[String],
+        abort_reset: &str,
+    ) -> Result<(), Error> {
+        // A settled promise would hand the destroyed instance to the next `init()`.
+        let init_promise_reset = if matches!(self.config.mode, OutputMode::Web) {
+            "\n__wbg_init_promise = undefined;"
+        } else {
+            ""
+        };
+
+        let mut statements = reset_statements.to_vec();
+        statements.push(format!(
+            "{abort_reset}
+            wasmInstance = undefined;
+            wasm = undefined;{init_promise_reset}
+            "
+        ));
+
+        let function_body = format!("() {{\n{}}}", statements.join("\n"));
+
+        let identifier = self.generate_identifier("__wbg_destroy_instance");
+        let definition = format!("function {identifier} {function_body}\n");
+        define_export(
+            &mut self.exports,
+            "__wbg_destroy_instance",
+            &[],
+            ExportEntry::Definition(ExportDefinition {
+                comments: None,
+                identifier,
+                definition,
+                ts_definition: "function __wbg_destroy_instance(): void;\n".to_string(),
+                ts_comments: None,
+                private: false,
+                parent_identifier: None,
+            }),
+        )
     }
 
     fn global(&mut self, s: &str) {

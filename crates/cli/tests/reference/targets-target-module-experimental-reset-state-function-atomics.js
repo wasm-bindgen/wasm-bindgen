@@ -2,6 +2,15 @@
 import source wasmModule from "./reference_test_bg.wasm";
 
 
+export function __wbg_destroy_instance () {
+    __wbg_instance_id++;
+    cachedUint8ArrayMemory0 = null;
+    if (typeof numBytesDecoded !== 'undefined') numBytesDecoded = 0;
+    __wbg_reinit_scheduled = false;
+    wasmInstance = undefined;
+    wasm = undefined;
+}
+
 export function __wbg_reset_state () {
     __wbg_instance_id++;
     cachedUint8ArrayMemory0 = null;
