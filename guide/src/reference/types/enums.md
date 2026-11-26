@@ -245,8 +245,20 @@ export function shapes(list: Outer[]): Outer[];
 
 An array holding an element that matches no variant of a union without a
 `fallback` throws, as a single value does, and Rust drops the whole array.
-A union can't be borrowed as `&[Outer]`, since a variant may own an exported
-struct.
+
+A union is lent to an imported function, as `&Shape` or in a `&[Shape]`,
+where each of its payloads can be, which an exported struct can't. JS is
+given a fresh value for each, its own to keep:
+
+```rust
+#[wasm_bindgen]
+pub enum Shape { Circle = "circle", Sides(u32), Named(String) }
+
+#[wasm_bindgen]
+extern "C" {
+    fn draw(shapes: &[Shape]);
+}
+```
 
 ### Hiding the type alias
 
