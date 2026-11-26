@@ -100,7 +100,7 @@ function addToExternrefTable0(obj) {
 
 function getArrayF64FromWasm0(ptr, len) {
     ptr = ptr >>> 0;
-    return getFloat64ArrayMemory0().subarray(ptr / 8, ptr / 8 + len);
+    return new Float64Array(getFloat64ArrayMemory0().buffer, ptr, len);
 }
 
 let cachedDataViewMemory0 = null;
@@ -121,7 +121,7 @@ function getFloat64ArrayMemory0() {
 
 function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
-    return decodeText(getUint8ArrayMemory0().subarray(ptr, ptr + len));
+    return decodeText(new Uint8Array(getUint8ArrayMemory0().buffer, ptr, len));
 }
 
 let cachedUint8ArrayMemory0 = null;

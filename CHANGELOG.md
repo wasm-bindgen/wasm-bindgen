@@ -170,6 +170,19 @@
   of a sync export.
   [#5474](https://github.com/wasm-bindgen/wasm-bindgen/pull/5474)
 
+* The generated JS glue no longer calls `TypedArray.prototype.subarray` with an
+  offset into Wasm memory when passing strings and slices. V8 throws
+  `RangeError: Invalid array buffer length` from `subarray` when the offset
+  exceeds the embedder's maximum `ArrayBuffer` size, which can be smaller than
+  the Wasm memory (128 MiB on Cloudflare Workers), so strings and slices
+  located above that address could not cross the boundary. Views are now
+  created with the typed array constructor, which throws a `RangeError` for a
+  range outside of memory or a misaligned pointer instead of clamping or
+  truncating it. On Emscripten, `Clamped<&[u8]>` and 64-bit integer slices are
+  now viewed as `Uint8ClampedArray`, `BigInt64Array` and `BigUint64Array`
+  instead of `Uint8Array`.
+  [#5490](https://github.com/wasm-bindgen/wasm-bindgen/pull/5490)
+
 ### Removed
 
 ## [0.2.130](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.129...0.2.130)

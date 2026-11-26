@@ -45,7 +45,7 @@ export function __wbindgen_init_externref_table() {
 }
 function getArrayU16FromWasm0(ptr, len) {
     ptr = ptr >>> 0;
-    return getUint16ArrayMemory0().subarray(ptr / 2, ptr / 2 + len);
+    return new Uint16Array(getUint16ArrayMemory0().buffer, ptr, len);
 }
 
 let cachedDataViewMemory0 = null;
@@ -58,7 +58,7 @@ function getDataViewMemory0() {
 
 function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
-    return decodeText(getUint8ArrayMemory0().subarray(ptr, ptr + len));
+    return decodeText(new Uint8Array(getUint8ArrayMemory0().buffer, ptr, len));
 }
 
 let cachedUint16ArrayMemory0 = null;

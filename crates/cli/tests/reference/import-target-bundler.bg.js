@@ -53,7 +53,7 @@ function addToExternrefTable0(obj) {
 
 function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
-    return decodeText(getUint8ArrayMemory0().subarray(ptr, ptr + len));
+    return decodeText(new Uint8Array(getUint8ArrayMemory0().buffer, ptr, len));
 }
 
 let cachedUint8ArrayMemory0 = null;
