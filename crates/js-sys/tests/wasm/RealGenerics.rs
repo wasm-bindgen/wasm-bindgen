@@ -1151,6 +1151,20 @@ fn records_and_borrowed_arrays() {
     let back: std::collections::HashMap<String, String> = (&record).into_iter().collect();
     assert_eq!(back, map);
 
+    let ordered: Object<String> = [("a", "1"), ("b", "2"), ("c", "3")]
+        .into_iter()
+        .map(|(k, v)| (k, v.to_string()))
+        .collect();
+    assert_eq!(ordered.iter().size_hint(), (3, Some(3)));
+    assert_eq!(
+        ordered.iter().collect::<Vec<_>>(),
+        [
+            ("a".into(), "1".into()),
+            ("b".into(), "2".into()),
+            ("c".into(), "3".into())
+        ]
+    );
+
     let proto: Object<String> = [("__proto__", "x".to_string())].into_iter().collect();
     let entries: Vec<(String, String)> = proto.iter().collect();
     assert_eq!(entries, [("__proto__".into(), "x".into())]);

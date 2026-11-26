@@ -8460,12 +8460,27 @@ impl<T: FromWasmAbi> IntoIterator for Iterator<T> {
 /// The `[key, value]` entries of a JS iterator as Rust tuples, from
 /// `Map::entries`, `Headers::entries` and the like.
 #[cfg(js_sys_unstable_apis)]
-pub struct Entries<K, V>(IntoValues<ArrayTuple<(K, V)>>);
+pub struct Entries<K, V>(EntriesSource<K, V>);
+
+// An entries array is indexed rather than walked by the iteration protocol,
+// which costs two more calls per entry.
+#[cfg(js_sys_unstable_apis)]
+enum EntriesSource<K, V> {
+    Iterator(IntoValues<ArrayTuple<(K, V)>>),
+    Array(ArrayIntoIter<ArrayTuple<(K, V)>>),
+}
 
 #[cfg(js_sys_unstable_apis)]
 impl<K, V> From<Iterator<ArrayTuple<(K, V)>>> for Entries<K, V> {
     fn from(iter: Iterator<ArrayTuple<(K, V)>>) -> Self {
-        Entries(IntoValues(iter.into_try_iter()))
+        Entries(EntriesSource::Iterator(IntoValues(iter.into_try_iter())))
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<K, V> From<Array<ArrayTuple<(K, V)>>> for Entries<K, V> {
+    fn from(entries: Array<ArrayTuple<(K, V)>>) -> Self {
+        Entries(EntriesSource::Array(entries.into_iter()))
     }
 }
 
@@ -8474,7 +8489,18 @@ impl<K: FromWasmAbi, V: FromWasmAbi> core::iter::Iterator for Entries<K, V> {
     type Item = (K, V);
 
     fn next(&mut self) -> Option<(K, V)> {
-        Some(self.0.next()?.into_tuple())
+        let entry = match &mut self.0 {
+            EntriesSource::Iterator(iter) => iter.next()?,
+            EntriesSource::Array(iter) => iter.next()?,
+        };
+        Some(entry.into_tuple())
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match &self.0 {
+            EntriesSource::Iterator(_) => (0, None),
+            EntriesSource::Array(iter) => iter.size_hint(),
+        }
     }
 }
 
@@ -10573,7 +10599,6 @@ impl<T> Object<T> {
     pub fn iter(&self) -> Entries<String, T> {
         Object::entries(self)
             .unwrap_or_else(|e| wasm_bindgen::throw_val(e))
-            .values()
             .into()
     }
 }
@@ -10611,12 +10636,17 @@ where
     // Defined rather than set, as `Object.fromEntries` does: `[[Set]]` would
     // run the inherited `__proto__` setter for a `"__proto__"` key.
     fn extend<I: IntoIterator<Item = (K, V)>>(&mut self, iter: I) {
+        let mut descriptor = None;
         for (k, v) in iter {
-            let descriptor = PropertyDescriptor::new_value(v.borrow());
-            descriptor.set_writable(true);
-            descriptor.set_enumerable(true);
-            descriptor.set_configurable(true);
-            Object::define_property(self, k, &descriptor)
+            let descriptor = descriptor.get_or_insert_with(|| {
+                let descriptor = PropertyDescriptor::new::<T>();
+                descriptor.set_writable(true);
+                descriptor.set_enumerable(true);
+                descriptor.set_configurable(true);
+                descriptor
+            });
+            descriptor.set_value(v.borrow());
+            Object::define_property(self, k, descriptor)
                 .unwrap_or_else(|e| wasm_bindgen::throw_val(e));
         }
     }
