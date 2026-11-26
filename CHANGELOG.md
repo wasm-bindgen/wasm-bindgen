@@ -50,7 +50,7 @@
   instance throw when used, and no longer keep its memory alive. A later call
   to the init function (`--target web`) or to `__wbg_reset_state()` creates a
   new instance.
-  [#PRNUM](https://github.com/wasm-bindgen/wasm-bindgen/pull/PRNUM)
+  [#5488](https://github.com/wasm-bindgen/wasm-bindgen/pull/5488)
 
 ### Changed
 
