@@ -4690,6 +4690,13 @@ if (require('worker_threads').isMainThread) {{
         let loader_reset = match self.config.mode {
             // A settled promise would hand the destroyed instance to the next `init()`.
             OutputMode::Web => "\n__wbg_init_promise = undefined;",
+            // The threaded loader also holds the memory, and exports it and the instance.
+            OutputMode::Node { module: false } if self.threads_enabled => {
+                "
+                memory = undefined;
+                exports.__wasm = undefined;
+                exports.__wbg_memory = undefined;"
+            }
             _ => "",
         };
 

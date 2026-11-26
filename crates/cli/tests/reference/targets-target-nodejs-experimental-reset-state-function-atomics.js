@@ -7,6 +7,9 @@ function __wbg_destroy_instance () {
     __wbg_reinit_scheduled = false;
     wasmInstance = undefined;
     wasm = undefined;
+    memory = undefined;
+    exports.__wasm = undefined;
+    exports.__wbg_memory = undefined;
 }
 exports.__wbg_destroy_instance = __wbg_destroy_instance;
 
