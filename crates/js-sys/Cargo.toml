@@ -40,6 +40,13 @@ futures-core = { version = "0.3.8", default-features = false, optional = true }
 futures-util = { version = "0.3.31", default-features = false, optional = true }
 wasm-bindgen = { path = "../..", version = "=0.2.130", default-features = false }
 
+# Unstable: only built under `--cfg wasm_bindgen_unstable_tokio`, where it
+# needs tokio's host-driven event loops (tokio-rs/tokio#8479) on Emscripten
+# 6.0.12 or later. The requirement stays open so that it resolves against
+# whichever tokio the rest of the dependency graph selects.
+[target.'cfg(all(target_os = "emscripten", wasm_bindgen_unstable_tokio))'.dependencies]
+tokio = { version = "1", features = ["rt", "time"], default-features = false }
+
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
 futures-channel = "0.3"
 futures-lite = { version = "2", default-features = false }
@@ -52,6 +59,8 @@ web-sys = { path = "../web-sys", features = ["Headers", "Response", "ResponseIni
 unexpected_cfgs = { level = "warn", check-cfg = [
   'cfg(js_sys_unstable_apis)',
   'cfg(wasm_bindgen_unstable_jspi)',
+  'cfg(wasm_bindgen_unstable_tokio)',
+  'cfg(tokio_unstable)',
 ] }
 
 [lints.clippy]

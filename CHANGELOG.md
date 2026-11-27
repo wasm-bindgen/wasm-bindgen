@@ -91,6 +91,18 @@
   `--cfg tokio_unstable_jspi_hooks` is gone.
   [#5466](https://github.com/wasm-bindgen/wasm-bindgen/pull/5466)
 
+* **Breaking (experimental):** the experimental
+  `#[wasm_bindgen(experimental_tokio)]` support moves to Tokio's host-driven
+  `LocalEventLoop` (tokio#8479), which leaves the host to the embedder: the
+  glue now registers the loop with Emscripten's host loop itself, and lives
+  in `js_sys::futures::tokio`, re-exported as `wasm_bindgen_futures::tokio`.
+  `EventLoop::from_local(rt)` becomes `EventLoop::from_builder(&mut builder)`,
+  which takes the builder's `on_work_available`, and the `Runtime` re-export
+  is gone. A JavaScript exception thrown through a tick aborts with either
+  panic strategy, a loop may be dropped inside another loop's tick, and
+  `--cfg wasm_bindgen_unstable_tokio` is a compile error with threads.
+  [#5485](https://github.com/wasm-bindgen/wasm-bindgen/pull/5485)
+
 * **Breaking (experimental):** `wasm_bindgen_futures::tokio` is reduced to one
   type, `EventLoop`, a hosted event loop held by every root and task on it.
   `schedule` becomes `EventLoop::current().schedule`, `schedule_isolated`

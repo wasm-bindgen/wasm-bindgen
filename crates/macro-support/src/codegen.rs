@@ -1225,7 +1225,7 @@ impl TryToTokens for ast::Export {
             (
                 quote! { #syn_ret },
                 quote! { #syn_ret },
-                quote! { #wasm_bindgen_futures::tokio::#block_on(async move { #ret.await }) },
+                quote! { #futures::tokio::#block_on(async move { #ret.await }) },
             )
         } else if self.function.r#async {
             if self.start.is_start() {
@@ -1301,7 +1301,7 @@ impl TryToTokens for ast::Export {
                 // `experimental_tokio = "isolated"` a fresh one held by this
                 // invocation. `schedule` ticks the loop before returning
                 // when safe. Off emscripten (or without the unstable cfg)
-                // `wasm_bindgen_futures::tokio` is a stub whose bound
+                // the `tokio` module is a stub whose bound
                 // reports the unsupported target at the attribute.
                 let promise = if ast::use_js_sys_futures() {
                     quote! { #js_sys::Promise }
@@ -1328,7 +1328,7 @@ impl TryToTokens for ast::Export {
                             let __wbg_fut = __wbg_fut
                                 .take()
                                 .expect("Promise executor invoked more than once");
-                            #wasm_bindgen_futures::tokio::EventLoop::#event_loop().schedule(__wbg_fut, move |__wbg_out| {
+                            #futures::tokio::EventLoop::#event_loop().schedule(__wbg_fut, move |__wbg_out| {
                                 match __wbg_out {
                                     ::core::result::Result::Ok(::core::result::Result::Ok(__wbg_val)) => {
                                         let _ = resolve.call(&#wasm_bindgen::JsValue::UNDEFINED, (&__wbg_val,));
