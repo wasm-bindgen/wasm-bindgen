@@ -8,16 +8,22 @@ export class ReinitCounter {
         return obj;
     }
     __destroy_into_raw() {
+        if (this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {
+            this.__wbg_ptr = 0;
+            ReinitCounterFinalization.unregister(this);
+            return 0;
+        }
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
         ReinitCounterFinalization.unregister(this);
         return ptr;
     }
     free() {
-        const ptr = this.__destroy_into_raw();
         __wbg_call_guard();
+        const stale = this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id;
+        const ptr = this.__destroy_into_raw();
+        if (stale) return;
         wasm.__wbg_reinitcounter_free(ptr, 0);
-
     }
     __wbg_reconstruct() {
         const obj = new ReinitCounter(...this.__wbg_args);
@@ -90,6 +96,12 @@ if (Symbol.dispose) ReinitCounter.prototype[Symbol.dispose] = ReinitCounter.prot
 
 export class ReinitParent {
     __destroy_into_raw() {
+        if (this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {
+            this.__wbg_ptr = 0;
+            this.__wbg_ptr_ReinitParent = 0;
+            ReinitParentFinalization.unregister(this);
+            return 0;
+        }
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
         this.__wbg_ptr_ReinitParent = 0;
@@ -98,10 +110,11 @@ export class ReinitParent {
     }
     free() {
         if (this.__wbg_ptr !== this.__wbg_ptr_ReinitParent) { throw new TypeError('ReinitParent: free cannot be invoked through subclass prototype dispatch'); }
-        const ptr = this.__destroy_into_raw();
         __wbg_call_guard();
+        const stale = this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id;
+        const ptr = this.__destroy_into_raw();
+        if (stale) return;
         wasm.__wbg_reinitparent_free(ptr, 0);
-
     }
     /**
      * @returns {string}
@@ -143,16 +156,22 @@ if (Symbol.dispose) ReinitParent.prototype[Symbol.dispose] = ReinitParent.protot
 
 export class ReinitPlain {
     __destroy_into_raw() {
+        if (this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {
+            this.__wbg_ptr = 0;
+            ReinitPlainFinalization.unregister(this);
+            return 0;
+        }
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
         ReinitPlainFinalization.unregister(this);
         return ptr;
     }
     free() {
-        const ptr = this.__destroy_into_raw();
         __wbg_call_guard();
+        const stale = this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id;
+        const ptr = this.__destroy_into_raw();
+        if (stale) return;
         wasm.__wbg_reinitplain_free(ptr, 0);
-
     }
     /**
      * @param {number} value
@@ -212,6 +231,13 @@ export function reinit_schedule() {
 
 export class ReinitChild extends ReinitParent {
     __destroy_into_raw() {
+        if (this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {
+            this.__wbg_ptr = 0;
+            this.__wbg_ptr_ReinitChild = 0;
+            this.__wbg_ptr_ReinitParent = 0;
+            ReinitChildFinalization.unregister(this);
+            return 0;
+        }
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
         this.__wbg_ptr_ReinitChild = 0;
@@ -223,10 +249,11 @@ export class ReinitChild extends ReinitParent {
     }
     free() {
         if (this.__wbg_ptr !== this.__wbg_ptr_ReinitChild) { throw new TypeError('ReinitChild: free cannot be invoked through subclass prototype dispatch'); }
-        const ptr = this.__destroy_into_raw();
         __wbg_call_guard();
+        const stale = this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id;
+        const ptr = this.__destroy_into_raw();
+        if (stale) return;
         wasm.__wbg_reinitchild_free(ptr, 0);
-
     }
     __wbg_reconstruct() {
         const obj = new ReinitChild(...this.__wbg_args);
@@ -375,7 +402,7 @@ function passStringToWasm0(arg, malloc, realloc) {
 }
 
 function _reconstructStale(obj) {
-    if (obj.__wbg_args === undefined) {
+    if (obj.__wbg_args === undefined || obj.__wbg_ptr === 0) {
         throw new Error('Invalid stale object from previous Wasm instance');
     }
     obj.__wbg_reconstruct();

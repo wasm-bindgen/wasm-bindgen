@@ -157,7 +157,8 @@
   constructor with the originally passed arguments on next use instead of
   throwing. The generated export glue now runs the termination/reinit guard
   before converting arguments, so a pending reinit takes effect before any
-  linear memory is touched.
+  linear memory is touched. `free()` on a wrapper from a previous instance
+  no longer passes its old pointer to the new instance.
   [#5375](https://github.com/wasm-bindgen/wasm-bindgen/pull/5375)
 
 ### Changed

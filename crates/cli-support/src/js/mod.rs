@@ -2547,13 +2547,52 @@ if (require('worker_threads').isMainThread) {{
             }
         }
 
-        let mut free = format!(
+        let free_call = format!(
             "{}(ptr, 0)",
             self.wasm_export_ref(&wasm_bindgen_shared::free_function(qualified))
         );
-        free = binding::maybe_wrap_export_call(&free, self.export_guard());
+        // A wrapper from a previous instance holds pointers into memory that
+        // is gone: it gives them up without handing any to the new instance.
+        let stale_destroy = if self.generate_reinit {
+            let mut clear = String::from("this.__wbg_ptr = 0;\n");
+            if participates {
+                for id in std::iter::once(identifier).chain(ancestors.iter().map(|(id, _)| id)) {
+                    clear.push_str(&format!("this.__wbg_ptr_{id} = 0;\n"));
+                }
+            }
+            format!(
+                "if (this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {{\n\
+                    {clear}{identifier}Finalization.unregister(this);\n\
+                    return 0;\n\
+                }}\n"
+            )
+        } else {
+            String::new()
+        };
+        // The guard is what swaps in a new instance, so under reinit it runs
+        // before the wrapper is checked for staleness and its pointer read.
+        let free = if self.generate_reinit {
+            let guard = binding::ExportGuard {
+                call_guard: false,
+                ..self.export_guard()
+            };
+            format!(
+                "__wbg_call_guard();\n\
+                const stale = this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id;\n\
+                const ptr = this.__destroy_into_raw();\n\
+                if (stale) return;\n\
+                {}",
+                binding::maybe_wrap_export_call(&free_call, guard)
+            )
+        } else {
+            format!(
+                "const ptr = this.__destroy_into_raw();\n{}",
+                binding::maybe_wrap_export_call(&free_call, self.export_guard())
+            )
+        };
         let destroy_body = if participates {
             let mut body = String::new();
+            body.push_str(&stale_destroy);
             body.push_str("const ptr = this.__wbg_ptr;\n");
             body.push_str("this.__wbg_ptr = 0;\n");
             body.push_str(&format!("this.__wbg_ptr_{identifier} = 0;\n"));
@@ -2575,7 +2614,7 @@ if (require('worker_threads').isMainThread) {{
             body
         } else {
             format!(
-                "const ptr = this.__wbg_ptr;\nthis.__wbg_ptr = 0;\n{identifier}Finalization.unregister(this);\nreturn ptr;"
+                "{stale_destroy}const ptr = this.__wbg_ptr;\nthis.__wbg_ptr = 0;\n{identifier}Finalization.unregister(this);\nreturn ptr;"
             )
         };
         // For inheritance-participating classes, guard `free()` against
@@ -2607,8 +2646,7 @@ if (require('worker_threads').isMainThread) {{
                 {destroy_body}
             }}
             free() {{
-                {free_guard}const ptr = this.__destroy_into_raw();
-                {free}
+                {free_guard}{free}
             }}
             "
         ));
@@ -4089,7 +4127,8 @@ if (require('worker_threads').isMainThread) {{
 
     /// Stale-wrapper handler used when some class has `reinit = "reconstruct"`.
     /// Only wrappers built by a reconstructible constructor carry `__wbg_args`;
-    /// anything else (notably `__wrap`ped return values) still throws.
+    /// anything else (notably `__wrap`ped return values) still throws, as does
+    /// a wrapper that was freed or moved, which a reinit must not revive.
     fn expose_reconstruct_stale(&mut self) {
         self.intrinsic(
             "reconstruct_stale".into(),
@@ -4097,7 +4136,7 @@ if (require('worker_threads').isMainThread) {{
             {
                 "
             function _reconstructStale(obj) {
-                if (obj.__wbg_args === undefined) {
+                if (obj.__wbg_args === undefined || obj.__wbg_ptr === 0) {
                     throw new Error('Invalid stale object from previous Wasm instance');
                 }
                 obj.__wbg_reconstruct();

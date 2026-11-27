@@ -53,6 +53,11 @@ counter.increment(); // 6: the counter was rebuilt with `new Counter(5)`
 * If the constructor throws during reconstruction, that error propagates from
   the call that triggered it. The wrapper stays stale and the next call tries
   again.
+* A wrapper that was freed, or moved into Rust by value, before the reinit is
+  not reconstructed. Using it throws the stale-object error.
+* `free()` on a wrapper from a previous instance only clears the wrapper. Its
+  pointers belonged to the old instance's memory, so nothing is freed in the
+  new one, and the wrapper is not reconstructed afterwards.
 * Objects returned from Rust rather than constructed from JS (for example a
   `Counter` returned from a `pub fn make() -> Counter`) have no constructor
   arguments to replay. They are stamped like any other wrapper and still throw

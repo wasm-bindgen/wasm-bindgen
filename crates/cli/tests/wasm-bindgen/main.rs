@@ -2687,6 +2687,24 @@ fn reinit_reconstruct() {
             }
 
             #[wasm_bindgen]
+            pub fn consume(counter: Counter) -> u32 {
+                counter.count
+            }
+
+            static DROPS: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
+
+            impl Drop for Counter {
+                fn drop(&mut self) {
+                    DROPS.fetch_add(1, core::sync::atomic::Ordering::Relaxed);
+                }
+            }
+
+            #[wasm_bindgen]
+            pub fn drops() -> u32 {
+                DROPS.load(core::sync::atomic::Ordering::Relaxed)
+            }
+
+            #[wasm_bindgen]
             pub struct Parent {
                 name: String,
             }
@@ -2819,6 +2837,28 @@ describe('reinit = "reconstruct"', () => {
         assert.strictEqual(w.increment(), 10);
         trap();
         assert.throws(() => w.increment(), /Invalid stale object from previous Wasm instance/);
+    });
+
+    it('a wrapper freed or moved before a trap stays unusable', () => {
+        const freed = new wasm.Counter({ start: 5 });
+        freed.free();
+        const moved = new wasm.Counter({ start: 5 });
+        assert.strictEqual(wasm.consume(moved), 5);
+        trap();
+        assert.throws(() => freed.increment(), /Invalid stale object from previous Wasm instance/);
+        assert.throws(() => moved.increment(), /Invalid stale object from previous Wasm instance/);
+        assert.throws(() => wasm.read_counter(freed), /Invalid stale object from previous Wasm instance/);
+    });
+
+    it('freeing a stale wrapper frees nothing in the new instance', () => {
+        const c = new wasm.Counter({ start: 5 });
+        const d = new wasm.Child('rex', 2);
+        trap();
+        c.free();
+        d.free();
+        assert.strictEqual(wasm.drops(), 0);
+        assert.throws(() => c.increment(), /Invalid stale object from previous Wasm instance/);
+        assert.throws(() => d.bump(), /Invalid stale object from previous Wasm instance/);
     });
 
     it('a failing reconstruction propagates the constructor error', () => {
