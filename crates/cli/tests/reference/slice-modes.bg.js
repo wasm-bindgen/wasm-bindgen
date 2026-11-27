@@ -68,18 +68,15 @@ export function __wbindgen_generic_0000000000000000(arg0, arg1) {
             const w0_1 = view0.getInt32(p0 + 4, true);
             v0.push(getStringFromWasm0(w0_0, w0_1));
         }
-        // generic import `js_generic_slice`: [Ref(Slice(Cell(String)))] -> Unit
         js_generic_slice(v0);
     } finally {
         if (b0) wasm.__wbindgen_free(b0, arg1 * 8, 4);
     }
 }
 export function __wbindgen_generic_0000000000000001(arg0, arg1) {
-    // generic import `js_generic_slice`: [Ref(Slice(U16))] -> Unit
     js_generic_slice(getArrayU16FromWasm0(arg0, arg1));
 }
 export function __wbindgen_generic_0000000000000002(arg0, arg1) {
-    // generic import `js_generic_slice`: [SeqMode(slice = copy, Option(Ref(Slice(U8))))] -> Unit
     js_generic_slice(arg0 === 0 ? undefined : getArrayU8FromWasm0(arg0, arg1).slice());
 }
 export function __wbindgen_init_externref_table() {

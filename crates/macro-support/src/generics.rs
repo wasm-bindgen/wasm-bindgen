@@ -187,7 +187,13 @@ pub(crate) fn type_params_with_bounds(generics: &syn::Generics) -> Vec<proc_macr
         .type_params()
         .map(|tp| {
             let ident = &tp.ident;
-            let bounds = &tp.bounds;
+            // A relaxed `?Sized` may only be stated once, and the shim's
+            // `where` clause already restates every inline bound.
+            let bounds: syn::punctuated::Punctuated<&syn::TypeParamBound, syn::Token![+]> = tp
+                .bounds
+                .iter()
+                .filter(|b| !matches!(b, syn::TypeParamBound::Trait(t) if t.maybe.is_some()))
+                .collect();
             if bounds.is_empty() {
                 quote::quote! { #ident }
             } else {
