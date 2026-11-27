@@ -587,8 +587,8 @@ impl NonstandardWitSection {
     /// Removes any dead entries in `adapters` that are no longer necessary
     /// and/or no longer referenced.
     ///
-    /// Returns `true` if any adapters were deleted, or `false` if the adapters
-    /// did not change.
+    /// Returns `true` if a deleted adapter used a Wasm item that no remaining
+    /// adapter uses, in which case a Wasm GC may now delete more items.
     pub fn gc(&mut self) -> bool {
         // Populate the live set with the exports, implements directives, and
         // anything transitively referenced by those adapters.
@@ -602,9 +602,25 @@ impl NonstandardWitSection {
 
         // And now that we have the live set we can filter out our list of
         // adapter definitions.
-        let before = self.adapters.len();
-        self.adapters.retain(|id, _| live.contains(id));
-        before != self.adapters.len()
+        let mut dead_roots = HashSet::new();
+        self.adapters.retain(|id, adapter| {
+            let is_live = live.contains(id);
+            if !is_live {
+                adapter_gc_roots(adapter, &mut |root| {
+                    dead_roots.insert(root);
+                });
+            }
+            is_live
+        });
+        if dead_roots.is_empty() {
+            return false;
+        }
+        for adapter in self.adapters.values() {
+            adapter_gc_roots(adapter, &mut |root| {
+                dead_roots.remove(&root);
+            });
+        }
+        !dead_roots.is_empty()
     }
 
     fn add_live(&self, id: AdapterId, live: &mut HashSet<AdapterId>) {
@@ -636,86 +652,105 @@ impl walrus::CustomSection for NonstandardWitSection {
     }
 
     fn add_gc_roots(&self, roots: &mut walrus::passes::Roots) {
-        use Instruction::*;
-
         for adapter in self.adapters.values() {
-            let instrs = match &adapter.kind {
-                AdapterKind::Local { instructions } => instructions,
-                AdapterKind::Import { .. } => continue,
-            };
-            visit_instructions(instrs, &mut |instr| match instr.instr {
-                DeferFree { free: f, .. } => {
-                    roots.push_func(f);
-                }
-                StoreRetptr { mem, .. }
-                | LoadRetptr { mem, .. }
-                | View { mem, .. }
-                | OptionView { mem, .. }
-                | MemoryToString(mem) => {
-                    roots.push_memory(mem);
-                }
-                VectorToMemory {
-                    malloc, free, mem, ..
-                }
-                | OptionVector {
-                    malloc, free, mem, ..
-                }
-                | MutableSliceToMemory {
-                    malloc, free, mem, ..
-                } => {
-                    roots.push_memory(mem);
-                    roots.push_func(malloc);
-                    roots.push_func(free);
-                }
-                EncodedSliceStore {
-                    malloc, free, mem, ..
-                } => {
-                    roots.push_memory(mem);
-                    roots.push_func(malloc);
-                    roots.push_func(free);
-                }
-                VectorLoad { free, mem, .. }
-                | OptionVectorLoad { free, mem, .. }
-                | EncodedSliceLoad { free, mem, .. }
-                | CachedStringLoad { free, mem, .. } => {
-                    roots.push_memory(mem);
-                    roots.push_func(free);
-                }
-                OptionString {
-                    mem,
-                    malloc,
-                    free,
-                    realloc,
-                    ..
-                }
-                | StringToMemory {
-                    mem,
-                    malloc,
-                    free,
-                    realloc,
-                } => {
-                    roots.push_memory(mem);
-                    roots.push_func(malloc);
-                    roots.push_func(free);
-                    if let Some(id) = realloc {
-                        roots.push_func(id);
-                    }
-                }
-                I32FromOptionExternref {
-                    table_and_alloc: Some((table, alloc)),
-                    ..
-                } => {
-                    roots.push_table(table);
-                    roots.push_func(alloc);
-                }
-                UnwrapResult { table_and_drop } | UnwrapResultString { table_and_drop } => {
-                    if let Some((table, drop)) = table_and_drop {
-                        roots.push_table(table);
-                        roots.push_func(drop);
-                    }
-                }
-                _ => {}
+            adapter_gc_roots(adapter, &mut |root| {
+                match root {
+                    GcRoot::Func(id) => roots.push_func(id),
+                    GcRoot::Memory(id) => roots.push_memory(id),
+                    GcRoot::Table(id) => roots.push_table(id),
+                };
             });
         }
     }
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Hash)]
+enum GcRoot {
+    Func(FunctionId),
+    Memory(walrus::MemoryId),
+    Table(walrus::TableId),
+}
+
+/// Calls `roots` with each Wasm item that the instructions of `adapter` use.
+/// An item can appear more than once.
+fn adapter_gc_roots(adapter: &Adapter, roots: &mut impl FnMut(GcRoot)) {
+    use Instruction::*;
+
+    let instrs = match &adapter.kind {
+        AdapterKind::Local { instructions } => instructions,
+        AdapterKind::Import { .. } => return,
+    };
+    visit_instructions(instrs, &mut |instr| match instr.instr {
+        DeferFree { free: f, .. } => {
+            roots(GcRoot::Func(f));
+        }
+        StoreRetptr { mem, .. }
+        | LoadRetptr { mem, .. }
+        | View { mem, .. }
+        | OptionView { mem, .. }
+        | MemoryToString(mem) => {
+            roots(GcRoot::Memory(mem));
+        }
+        VectorToMemory {
+            malloc, free, mem, ..
+        }
+        | OptionVector {
+            malloc, free, mem, ..
+        }
+        | MutableSliceToMemory {
+            malloc, free, mem, ..
+        } => {
+            roots(GcRoot::Memory(mem));
+            roots(GcRoot::Func(malloc));
+            roots(GcRoot::Func(free));
+        }
+        EncodedSliceStore {
+            malloc, free, mem, ..
+        } => {
+            roots(GcRoot::Memory(mem));
+            roots(GcRoot::Func(malloc));
+            roots(GcRoot::Func(free));
+        }
+        VectorLoad { free, mem, .. }
+        | OptionVectorLoad { free, mem, .. }
+        | EncodedSliceLoad { free, mem, .. }
+        | CachedStringLoad { free, mem, .. } => {
+            roots(GcRoot::Memory(mem));
+            roots(GcRoot::Func(free));
+        }
+        OptionString {
+            mem,
+            malloc,
+            free,
+            realloc,
+            ..
+        }
+        | StringToMemory {
+            mem,
+            malloc,
+            free,
+            realloc,
+        } => {
+            roots(GcRoot::Memory(mem));
+            roots(GcRoot::Func(malloc));
+            roots(GcRoot::Func(free));
+            if let Some(id) = realloc {
+                roots(GcRoot::Func(id));
+            }
+        }
+        I32FromOptionExternref {
+            table_and_alloc: Some((table, alloc)),
+            ..
+        } => {
+            roots(GcRoot::Table(table));
+            roots(GcRoot::Func(alloc));
+        }
+        UnwrapResult { table_and_drop } | UnwrapResultString { table_and_drop } => {
+            if let Some((table, drop)) = table_and_drop {
+                roots(GcRoot::Table(table));
+                roots(GcRoot::Func(drop));
+            }
+        }
+        _ => {}
+    });
 }

@@ -53,6 +53,10 @@
 
 ### Changed
 
+* The CLI skips the second Wasm GC pass when the adapters it deleted were
+  not the only users of any Wasm item, which saves time on large modules.
+  [#5480](https://github.com/wasm-bindgen/wasm-bindgen/pull/5480)
+
 * Stabilized the `js_sys::Temporal` bindings and `Date::to_temporal_instant`,
   previously behind `js_sys_unstable_apis`, now that Temporal is Stage 4 and
   ships unflagged in Firefox 139, Chrome 144 and Node 26. They stay behind the
