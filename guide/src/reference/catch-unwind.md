@@ -216,11 +216,6 @@ let cell_ref = std::panic::AssertUnwindSafe(&cell);
 takes_mut_closure(&mut move || { cell_ref.set(cell_ref.get() + 1); });
 ```
 
-### Mutable Slice Arguments
-
-Functions with `&mut [T]` slice arguments cannot be used because mutable slices
-are not `UnwindSafe`. Consider using owned types like `Vec<T>` instead.
-
 ## Hard Aborts
 
 Some errors — `unreachable` instructions, stack overflow, or out-of-memory — are
