@@ -1551,6 +1551,35 @@ export const __wbg_memory: WebAssembly.Memory;
             }
         }
         let compile_options = self.compile_options_arg();
+        let init_memory_arg = if has_memory { ", memory" } else { "" };
+        // `__wbg_destroy_instance` can run while an init is waiting for the
+        // module. That init must not install its instance afterwards, and its
+        // rejection must not clear the promise of a later init.
+        let (init_promise, init_instance_id, init_destroyed_check) = if self
+            .config
+            .generate_reset_state
+        {
+            (
+                    format!(
+                        "const promise = __wbg_init_once(module_or_path{init_memory_arg});
+                        __wbg_init_promise = promise;
+                        promise.catch(() => {{ if (__wbg_init_promise === promise) __wbg_init_promise = undefined; }});"
+                    ),
+                    "const instance_id = __wbg_instance_id;\n",
+                    "if (instance_id !== __wbg_instance_id) {
+                        throw new Error('Wasm instance was destroyed during initialization');
+                    }",
+                )
+        } else {
+            (
+                format!(
+                    "__wbg_init_promise = __wbg_init_once(module_or_path{init_memory_arg});
+                        __wbg_init_promise.catch(() => {{ __wbg_init_promise = undefined; }});"
+                ),
+                "",
+                "",
+            )
+        };
         format!(
             "let wasmModule, wasmInstance, wasm;
             function __wbg_finalize_init(instance, module{init_stack_size_arg}) {{
@@ -1627,14 +1656,13 @@ export const __wbg_memory: WebAssembly.Memory;
             async function __wbg_init(module_or_path{init_memory_arg}) {{
                 if (wasm !== undefined) return wasm;
                 if (__wbg_init_promise === undefined) {{
-                    __wbg_init_promise = __wbg_init_once(module_or_path{init_memory_arg});
-                    __wbg_init_promise.catch(() => {{ __wbg_init_promise = undefined; }});
+                    {init_promise}
                 }}
                 return __wbg_init_promise;
             }}
 
             async function __wbg_init_once(module_or_path{init_memory_arg}) {{
-                {init_stack_size}
+                {init_instance_id}{init_stack_size}
                 if (module_or_path !== undefined) {{
                     if (Object.getPrototypeOf(module_or_path) === Object.prototype) {{
                         ({{module_or_path{init_memory_arg}{init_stack_size_arg}}} = module_or_path)
@@ -1651,7 +1679,7 @@ export const __wbg_memory: WebAssembly.Memory;
                 }}
 
                 const {{ instance, module }} = await __wbg_load(await module_or_path, imports);
-
+                {init_destroyed_check}
                 return __wbg_finalize_init(instance, module{init_stack_size_arg});
             }}
             ",
@@ -1681,11 +1709,6 @@ export const __wbg_memory: WebAssembly.Memory;
                 )
             } else {
                 String::new()
-            },
-            init_memory_arg = if has_memory {
-                ", memory"
-            } else {
-                ""
             },
             init_memory_arg_alone = if has_memory {
                 "memory"
@@ -4589,6 +4612,9 @@ if (require('worker_threads').isMainThread) {{
     /// reinit lifecycle. Called when `schedule_reinit()` is used or
     /// `--experimental-reset-state-function` is passed. The function is private
     /// unless the CLI flag is set.
+    ///
+    /// With the CLI flag, also emit `__wbg_destroy_instance`, which releases
+    /// the instance without creating a new one.
     fn generate_reinit_wrappers(&mut self) -> Result<(), Error> {
         self.global("let __wbg_instance_id = 0;");
 
@@ -4656,6 +4682,10 @@ if (require('worker_threads').isMainThread) {{
         } else {
             "__wbg_reinit_scheduled = false;"
         };
+        if self.config.generate_reset_state {
+            self.generate_destroy_instance(&reset_statements, abort_reset)?;
+        }
+
         reset_statements.push(format!(
             "{abort_reset}
             wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
@@ -4685,6 +4715,57 @@ if (require('worker_threads').isMainThread) {{
         )?;
 
         Ok(())
+    }
+
+    /// Emit the `__wbg_destroy_instance` function, which drops every reference
+    /// the generated JS holds to the instance and its linear memory.
+    ///
+    /// `reset_statements` and `abort_reset` invalidate what belongs to the
+    /// current instance.
+    fn generate_destroy_instance(
+        &mut self,
+        reset_statements: &[String],
+        abort_reset: &str,
+    ) -> Result<(), Error> {
+        let loader_reset = match self.config.mode {
+            // A settled promise would hand the destroyed instance to the next `init()`.
+            OutputMode::Web => "\n__wbg_init_promise = undefined;",
+            // The threaded loader also holds the memory, and exports it and the instance.
+            OutputMode::Node { module: false } if self.threads_enabled => {
+                "
+                memory = undefined;
+                exports.__wasm = undefined;
+                exports.__wbg_memory = undefined;"
+            }
+            _ => "",
+        };
+
+        let mut statements = reset_statements.to_vec();
+        statements.push(format!(
+            "{abort_reset}
+            wasmInstance = undefined;
+            wasm = undefined;{loader_reset}
+            "
+        ));
+
+        let function_body = format!("() {{\n{}}}", statements.join("\n"));
+
+        let identifier = self.generate_identifier("__wbg_destroy_instance");
+        let definition = format!("function {identifier} {function_body}\n");
+        define_export(
+            &mut self.exports,
+            "__wbg_destroy_instance",
+            &[],
+            ExportEntry::Definition(ExportDefinition {
+                comments: None,
+                identifier,
+                definition,
+                ts_definition: "function __wbg_destroy_instance(): void;\n".to_string(),
+                ts_comments: None,
+                private: false,
+                parent_identifier: None,
+            }),
+        )
     }
 
     fn global(&mut self, s: &str) {

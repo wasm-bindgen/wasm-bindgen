@@ -2600,6 +2600,111 @@ describe('schedule_reinit under panic=abort', () => {
 }
 
 #[test]
+fn destroy_instance() {
+    let mut project = Project::new("destroy_instance");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen::prelude::*;
+
+            static mut COUNTER: u32 = 0;
+
+            #[wasm_bindgen]
+            pub fn increment_counter() -> u32 {
+                unsafe { COUNTER += 1; COUNTER }
+            }
+
+            #[wasm_bindgen]
+            pub fn leak_closure() -> JsValue {
+                Closure::<dyn Fn() -> u32>::new(|| 1).into_js_value()
+            }
+        "#,
+    );
+
+    let out_dir = project
+        .wasm_bindgen("--target web --experimental-reset-state-function")
+        .unwrap();
+    fs::write(
+        out_dir.join("main.mjs"),
+        r#"
+            import assert from 'node:assert/strict';
+            import { readFileSync } from 'node:fs';
+            import init, { initSync, increment_counter, leak_closure, __wbg_destroy_instance } from './destroy_instance.js';
+
+            const module = new WebAssembly.Module(readFileSync('./destroy_instance_bg.wasm'));
+
+            const memory = new WeakRef((await init({ module_or_path: module })).memory);
+            assert.equal(increment_counter(), 1);
+            const closure = leak_closure();
+            assert.equal(closure(), 1);
+
+            __wbg_destroy_instance();
+            assert.throws(() => increment_counter(), TypeError);
+            assert.throws(() => closure(), /previous WASM instance/);
+
+            // The memory is released, even though `closure` is still reachable.
+            for (let i = 0; i < 100 && memory.deref() !== undefined; i++) {
+                await new Promise((resolve) => setTimeout(resolve, 10));
+                gc();
+            }
+            assert.equal(memory.deref(), undefined);
+
+            // Both init functions create a new instance.
+            await init({ module_or_path: module });
+            assert.equal(increment_counter(), 1);
+            assert.equal(increment_counter(), 2);
+            __wbg_destroy_instance();
+            initSync({ module });
+            assert.equal(increment_counter(), 1);
+
+            // A destroy while `init` waits for the module wins, and does not disturb a later `init`.
+            __wbg_destroy_instance();
+            const first = init({ module_or_path: module });
+            __wbg_destroy_instance();
+            const second = init({ module_or_path: module });
+            await assert.rejects(first, /destroyed during initialization/);
+            assert.equal(await init(), await second);
+            assert.equal(increment_counter(), 1);
+
+            // Destroying twice is fine.
+            __wbg_destroy_instance();
+            __wbg_destroy_instance();
+        "#,
+    )
+    .unwrap();
+    Command::new("node")
+        .arg("--expose-gc")
+        .arg("main.mjs")
+        .current_dir(out_dir)
+        .assert()
+        .success();
+
+    // Targets without an init function get a new instance from `__wbg_reset_state`.
+    let out_dir = project
+        .wasm_bindgen("--target nodejs --experimental-reset-state-function")
+        .unwrap();
+    fs::write(
+        out_dir.join("main.js"),
+        r#"
+            const assert = require('node:assert/strict');
+            const wasm = require('./destroy_instance.js');
+
+            assert.equal(wasm.increment_counter(), 1);
+            wasm.__wbg_destroy_instance();
+            assert.throws(() => wasm.increment_counter(), TypeError);
+            wasm.__wbg_reset_state();
+            assert.equal(wasm.increment_counter(), 1);
+        "#,
+    )
+    .unwrap();
+    Command::new("node")
+        .arg("main.js")
+        .current_dir(out_dir)
+        .assert()
+        .success();
+}
+
+#[test]
 fn multiple_start_functions() {
     let out_dir = Project::new("multiple_start_functions")
         .file(

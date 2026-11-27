@@ -1,5 +1,15 @@
 /* @ts-self-types="./reference_test.d.ts" */
 
+function __wbg_destroy_instance () {
+    __wbg_instance_id++;
+    cachedUint8ArrayMemory0 = null;
+    if (typeof numBytesDecoded !== 'undefined') numBytesDecoded = 0;
+    __wbg_reinit_scheduled = false;
+    wasmInstance = undefined;
+    wasm = undefined;
+}
+exports.__wbg_destroy_instance = __wbg_destroy_instance;
+
 function __wbg_reset_state () {
     __wbg_instance_id++;
     cachedUint8ArrayMemory0 = null;
