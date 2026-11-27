@@ -3913,6 +3913,50 @@ fn emscripten_end_to_end() {
                 5
             }
 
+            // A loop let go of inside another loop's tick.
+            #[wasm_bindgen(experimental_tokio)]
+            pub async fn tokio_drops_loop_in_tick() -> u32 {
+                drop(EventLoop::new());
+                1
+            }
+
+            // A custom ambient loop, here without the I/O driver: it has no
+            // descriptor, so wakeups reach it through `on_work_available`.
+            #[wasm_bindgen]
+            pub fn tokio_set_ambient() -> bool {
+                let mut builder = tokio::runtime::Builder::new_current_thread();
+                let rt = EventLoop::from_builder(builder.enable_time()).unwrap();
+                rt.set_ambient().is_ok() && EventLoop::new().set_ambient().is_err()
+            }
+
+            // A runtime context the embedder leaves entered, as an
+            // `EnterGuard` held for the program's lifetime.
+            #[wasm_bindgen]
+            pub fn tokio_leak_enter_guard() {
+                let rt = tokio::runtime::Builder::new_current_thread().build().unwrap();
+                std::mem::forget(rt.enter());
+                std::mem::forget(rt);
+            }
+
+            #[wasm_bindgen]
+            extern "C" {
+                #[wasm_bindgen(js_name = "jsThrowsNoCatch")]
+                fn js_throws_no_catch();
+            }
+
+            // A JS exception thrown while a tokio event loop tick polls a
+            // task: in the tick on the caller's stack, and in a host tick.
+            #[wasm_bindgen(experimental_tokio)]
+            pub async fn tokio_throws_in_first_poll() {
+                js_throws_no_catch();
+            }
+
+            #[wasm_bindgen(experimental_tokio)]
+            pub async fn tokio_throws_in_host_tick() {
+                tokio::task::yield_now().await;
+                js_throws_no_catch();
+            }
+
             #[wasm_bindgen(experimental_tokio = "isolated")]
             pub async fn tokio_isolated(ms: u32) -> u32 {
                 tokio::time::sleep(std::time::Duration::from_millis(ms as u64)).await;
@@ -4139,6 +4183,26 @@ fn emscripten_end_to_end() {
             assert(cancelled, 'an isolated loop drops its other tasks as its root settles');
         }
 
+        // A loop dropped inside another loop's tick shuts down in place.
+        assert(await m.tokio_drops_loop_in_tick() === 1, 'loop dropped in a tick');
+
+        const settles = (p) => Promise.race([p, new Promise((r) => setTimeout(() => r('stalled'), 5000))]);
+        const later = (v) => new Promise((r) => setTimeout(() => r(v), 10));
+        {
+            const m2 = await Module({ print() {} });
+            assert(m2.tokio_set_ambient() === true, 'set_ambient takes the first loop only');
+            assert(await settles(m2.tokio_host_wake(later(6))) === 7, 'host wake without an I/O driver');
+            assert(await settles(m2.tokio_sleep_spawn(1)) === 2, 'timers on a custom ambient loop');
+        }
+
+        // Only a runtime being driven holds ticks back: one whose context
+        // is merely entered does not.
+        {
+            const m2 = await Module({ print() {} });
+            m2.tokio_leak_enter_guard();
+            assert(await settles(m2.tokio_host_wake(later(6))) === 7, 'host wake under an entered runtime context');
+        }
+
         // With `panic=abort` a panic goes through libc abort to emscripten's
         // abort(); `set_on_abort` is hooked into Module.onAbort, so it fires
         // here too, even though this build has no exception handling and no
@@ -4156,6 +4220,31 @@ fn emscripten_end_to_end() {
         try { m.panic_now(); } catch (_) {}
         assert(hookCalls === 1, `rust abort hook calls after a second abort ${hookCalls}`);
 
+        // A JS exception passing through a tokio event loop tick aborts.
+        // `panic=abort` runs no drops as it passes, which would leave the
+        // runtime entered and every later tick refused.
+        {
+            globalThis.jsThrowsNoCatch = () => { throw new TypeError('no catch'); };
+            const aborts = [];
+            const options = () => ({ print() {}, printErr() {}, onAbort(what) { aborts.push(what); } });
+            const m2 = await Module(options());
+            let err;
+            try { await m2.tokio_throws_in_first_poll(); } catch (e) { err = e; }
+            assert(err instanceof WebAssembly.RuntimeError, `a throw in the first poll aborts, got ${err}`);
+            assert(aborts.length === 1, `onAbort calls for the first poll: ${aborts.length}`);
+
+            const m3 = await Module(options());
+            aborts.length = 0;
+            const uncaught = new Promise((resolve) => process.once('uncaughtException', resolve));
+            m3.tokio_throws_in_host_tick();
+            err = await uncaught;
+            assert(err instanceof WebAssembly.RuntimeError, `a throw in a host tick aborts, got ${err}`);
+            assert(aborts.length === 1, `onAbort calls for the host tick: ${aborts.length}`);
+            // Emscripten fails the process for an exception out of a callback.
+            assert(process.exitCode === 1, `exit code after the abort: ${process.exitCode}`);
+            process.exitCode = 0;
+        }
+
         console.log('ok');
         "#,
     )
@@ -4167,6 +4256,131 @@ fn emscripten_end_to_end() {
         .assert()
         .success()
         .stdout(str::contains("main ran"))
+        .stdout(str::contains("ok\n"));
+}
+
+/// A loop holds the Emscripten runtime while it has tasks, so with
+/// `-sEXIT_RUNTIME` a `main` that returns with work in flight doesn't exit
+/// under it, and the runtime exits once the loop goes idle.
+#[test]
+fn emscripten_end_to_end_tokio_keepalive() {
+    let name = "emscripten_end_to_end_tokio_keepalive";
+    if !require_emcc(name) {
+        return;
+    }
+
+    let mut project = Project::new(name);
+    project.target("wasm32-unknown-emscripten");
+    project
+        .file(
+            "Cargo.toml",
+            &format!(
+                r#"
+                [package]
+                name = "{name}"
+                version = "0.0.0"
+                edition = "2021"
+
+                [dependencies]
+                wasm-bindgen = {{ path = "{root}" }}
+                wasm-bindgen-futures = {{ path = "{root}/crates/futures" }}
+                js-sys = {{ path = "{root}/crates/js-sys" }}
+                tokio = {{ version = "1", default-features = false, features = ["rt", "time"] }}
+
+                [patch.crates-io]
+                tokio = {{ git = "https://github.com/guybedford/tokio", rev = "0bade231d52b7f8dd4492be204696a6358a2901b" }}
+
+                [workspace]
+                "#,
+                root = REPO_ROOT.display(),
+            ),
+        )
+        .file(
+            ".cargo/config.toml",
+            r#"
+            [target.wasm32-unknown-emscripten]
+            rustflags = [
+              "-Cpanic=abort",
+              "-Cllvm-args=-enable-emscripten-cxx-exceptions=0",
+              "-Crelocation-model=static",
+              "--cfg=wasm_bindgen_unstable_tokio",
+              "--cfg=tokio_unstable",
+              "-Clink-arg=-sWASM_BINDGEN",
+              "-Clink-arg=-Wno-experimental",
+              "-Clink-arg=-sERROR_ON_UNDEFINED_SYMBOLS=0",
+              "-Clink-arg=-sMODULARIZE",
+              "-Clink-arg=-sEXPORT_ES6",
+              "-Clink-arg=-sEXIT_RUNTIME",
+            ]
+            "#,
+        )
+        .file(
+            "src/main.rs",
+            r#"
+            use wasm_bindgen::prelude::*;
+            use wasm_bindgen_futures::tokio::EventLoop;
+
+            #[wasm_bindgen]
+            extern "C" {
+                #[wasm_bindgen(js_name = "lateWork")]
+                fn late_work() -> js_sys::Promise;
+                #[wasm_bindgen(js_name = "lateDone")]
+                fn late_done();
+            }
+
+            fn main() {
+                // Detached, and waiting on the host alone: no timer or
+                // descriptor of its own holds the runtime.
+                drop(EventLoop::current().spawn(async {
+                    wasm_bindgen_futures::JsFuture::from(late_work()).await.unwrap();
+                    late_done();
+                }));
+            }
+            "#,
+        );
+
+    project.cargo_cmd.env("PATH", path_with_workspace_cli());
+
+    let wasm = project.build();
+    let js = wasm.with_extension("js");
+    let out_dir = project.root.join("pkg");
+    fs::create_dir_all(&out_dir).unwrap();
+    fs::copy(&js, out_dir.join(format!("{name}.js"))).unwrap();
+    fs::copy(&wasm, out_dir.join(format!("{name}.wasm"))).unwrap();
+    fs::write(out_dir.join("package.json"), r#"{ "type": "module" }"#).unwrap();
+    fs::write(
+        out_dir.join("run.mjs"),
+        format!(
+            r#"
+        import Module from './{name}.js';
+        const assert = (c, msg) => {{ if (!c) throw new Error('assertion failed: ' + msg); }};
+        const turns = () => new Promise((r) => setTimeout(r, 20));
+
+        let release, done = false, exited;
+        globalThis.lateWork = () => new Promise((r) => {{ release = r; }});
+        globalThis.lateDone = () => {{ done = true; }};
+        await Module({{ onExit(code) {{ exited = code; }} }});
+
+        await turns();
+        assert(release !== undefined && !done, 'main returned with the task in flight');
+        assert(exited === undefined, `the loop holds the runtime, exited with ${{exited}}`);
+
+        release();
+        await turns();
+        assert(done, 'the task ran after main returned');
+        assert(exited === 0, `the runtime exits once the loop is idle, got ${{exited}}`);
+
+        console.log('ok');
+        "#
+        ),
+    )
+    .unwrap();
+
+    Command::new("node")
+        .arg("run.mjs")
+        .current_dir(&out_dir)
+        .assert()
+        .success()
         .stdout(str::contains("ok\n"));
 }
 

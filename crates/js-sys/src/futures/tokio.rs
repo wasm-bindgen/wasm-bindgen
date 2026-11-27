@@ -1,5 +1,6 @@
-//! Tokio event loops for `#[wasm_bindgen(experimental_tokio)]` exports.
-//! Only available on the `wasm32-unknown-emscripten` target under
+//! Tokio event loops for `#[wasm_bindgen(experimental_tokio)]` exports,
+//! re-exported as `wasm_bindgen_futures::tokio`. Only available on the
+//! `wasm32-unknown-emscripten` target under
 //! `--cfg wasm_bindgen_unstable_tokio` (plus tokio's own `--cfg tokio_unstable`).
 //!
 //! An [`EventLoop`] is a tokio `LocalEventLoop` hosted by the JavaScript
@@ -9,6 +10,12 @@
 //! first poll. Every root and every
 //! [`EventLoop::spawn`] task holds its loop, so a loop lives while anyone
 //! holds it. A plain `tokio::spawn` task does not, and is dropped with it.
+//!
+//! A tick either completes or aborts the instance: a JavaScript exception
+//! thrown by an import while a task is polled is no Rust panic, so tokio
+//! cannot fail the task with it. Each tick runs under a JavaScript frame
+//! that catches it, so a task polled by a loop cannot suspend through JSPI
+//! either; that takes [`block_on`].
 //!
 //! An `experimental_tokio` export roots on [`EventLoop::current`]: the
 //! calling task's loop, else the innermost [`EventLoop::enter`], else the
@@ -45,11 +52,11 @@ use std::cell::{OnceCell, RefCell};
 use std::rc::{Rc, Weak};
 use std::vec::Vec;
 
-pub use ::tokio::runtime::{Builder, Runtime};
-use ::tokio::runtime::{Handle, Id};
+pub use ::tokio::runtime::Builder;
+use ::tokio::runtime::{Handle, Id, Runtime};
 pub use ::tokio::task::{JoinError, JoinHandle};
 
-use host::Host;
+use host::{Driving, Host};
 
 std::thread_local! {
     static AMBIENT: OnceCell<EventLoop> = const { OnceCell::new() };
@@ -77,7 +84,9 @@ impl EventLoop {
     }
 
     /// A loop from a custom `Builder::new_current_thread()`. The loop takes
-    /// the builder's `on_work_available`, which is how tokio notifies it.
+    /// the builder's `on_work_available`, which is how tokio notifies it,
+    /// and ticks in batches of tokio's default `event_interval` whatever the
+    /// builder's.
     pub fn from_builder(builder: &mut Builder) -> std::io::Result<EventLoop> {
         let host = Host::attach(builder)?;
         LOOPS.with(|loops| {
@@ -140,17 +149,17 @@ impl EventLoop {
     /// `Err(JoinError)`) to `on_complete`. The root holds the loop until it
     /// settles.
     ///
-    /// Called outside any runtime context (a top-level JS call) this ticks
-    /// the loop once on the caller's stack, so the first poll is synchronous
-    /// (parity with `future_to_promise`) and belongs to the calling
-    /// invocation's host task rather than to whichever one armed the loop's
-    /// next host callback. The tick runs one batch of the loop's ready tasks,
-    /// so other roots' tasks may be polled in it as well.
+    /// Called while no runtime is driven on this thread (a top-level JS
+    /// call) this ticks the loop once on the caller's stack, so the first
+    /// poll is synchronous (parity with `future_to_promise`) and belongs to
+    /// the calling invocation's host task rather than to whichever one armed
+    /// the loop's next host callback. The tick runs one batch of the loop's
+    /// ready tasks, so other roots' tasks may be polled in it as well.
     ///
-    /// Called inside a runtime context (a task's JS import invoking an
-    /// export, or while a `block_on` is suspended) no tick can nest, so the
-    /// root is only queued: the tick in progress picks it up, or the loop's
-    /// next host tick.
+    /// Called while a runtime is driven on this thread (a task's JS import
+    /// invoking an export, or while a `block_on` is suspended) no tick can
+    /// nest, so the root is only queued: the tick in progress picks it up,
+    /// or the loop's next host tick.
     pub fn schedule<F, C>(&self, future: F, on_complete: C)
     where
         F: Future + 'static,
@@ -163,7 +172,7 @@ impl EventLoop {
             on_complete(root.await);
             drop(hold);
         });
-        if Handle::try_current().is_err() {
+        if !Driving::any() {
             self.0.tick();
         }
         // A root that settled in that tick let go of the loop; if that was
@@ -193,31 +202,22 @@ fn build_parked() -> std::io::Result<Runtime> {
     Builder::new_current_thread().enable_all().build()
 }
 
-/// Reschedules the event loop ticks that arrived while the runtime of a
-/// `block_on` was entered, as it returns or unwinds.
-struct ResumeEventLoops;
-
-impl Drop for ResumeEventLoops {
-    fn drop(&mut self) {
-        host::resume_deferred();
-    }
-}
-
 /// Runs `future` to completion on the thread's ambient parked runtime, for
 /// `#[wasm_bindgen(jspi, experimental_tokio)]`: the export is a promising
 /// activation, and every wait of the runtime (timers, I/O, an idle scheduler)
 /// is a JSPI suspension of that activation. `jspi_block_on_promise` and
 /// suspending imports inside task code park it mid-poll the same way.
 ///
-/// The runtime stays entered on the thread for as long as the activation is
-/// parked, so one invocation runs at a time:
+/// The runtime is driven on the thread for as long as the activation is
+/// parked, so one invocation runs at a time. Only a runtime parked through
+/// this function or [`block_on_isolated`] is known to the event loops:
 ///
 /// * A sibling `block_on` or [`block_on_isolated`] arriving meanwhile panics
 ///   as a nested runtime.
 /// * A sibling [`EventLoop::schedule`] is queued without a first poll, and
 ///   its event loop's host ticks are deferred until this call returns.
 pub fn block_on<F: Future>(future: F) -> F::Output {
-    let _resume = ResumeEventLoops;
+    let _driving = Driving::enter();
     AMBIENT_PARKED.with(|cell| {
         cell.get_or_init(|| build_parked().expect("failed to build ambient tokio runtime"))
             .block_on(future)
@@ -228,7 +228,7 @@ pub fn block_on<F: Future>(future: F) -> F::Output {
 /// `future` settles (tasks still in flight are dropped, the reactor closed),
 /// for `#[wasm_bindgen(jspi, experimental_tokio = "isolated")]`.
 pub fn block_on_isolated<F: Future>(future: F) -> F::Output {
-    let _resume = ResumeEventLoops;
+    let _driving = Driving::enter();
     build_parked()
         .expect("failed to build isolated tokio runtime")
         .block_on(future)

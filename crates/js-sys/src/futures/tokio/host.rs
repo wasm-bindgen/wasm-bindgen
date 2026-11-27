@@ -18,6 +18,7 @@ extern crate std;
 
 use core::ffi::c_void;
 use core::future::Future;
+use core::mem::ManuallyDrop;
 use core::time::Duration;
 use std::cell::{Cell, RefCell};
 use std::io;
@@ -28,8 +29,12 @@ use std::sync::Arc;
 use std::time::Instant;
 use std::vec::Vec;
 
-use ::tokio::runtime::{Builder, Handle, Id, LocalEventLoop};
+use ::tokio::runtime::{Builder, Id, LocalEventLoop};
 use ::tokio::task::JoinHandle;
+use wasm_bindgen::closure::Closure;
+use wasm_bindgen::{JsCast, JsValue};
+
+use crate::Function;
 
 type Callback = extern "C" fn(*mut c_void);
 type EpollCallback = extern "C" fn(i32, *mut c_void);
@@ -69,14 +74,41 @@ const MAX_TIMEOUT_MS: f64 = i32::MAX as f64;
 const DEADLINE_SLACK: Duration = Duration::from_micros(500);
 
 std::thread_local! {
-    /// Loops whose host tick arrived while a runtime was entered on this
+    /// The runtimes being driven on this thread's stack: ticks in progress
+    /// and this module's `block_on`s, running or suspended through JSPI.
+    static DRIVING: Cell<usize> = const { Cell::new(0) };
+    /// Loops whose host tick arrived while a runtime was driven on this
     /// thread, where no tick can run: a `block_on` suspended through JSPI.
     static DEFERRED: RefCell<Vec<Weak<Host>>> = const { RefCell::new(Vec::new()) };
 }
 
-/// Reschedules the ticks deferred while a runtime was entered, once none is.
-pub(super) fn resume_deferred() {
-    if DEFERRED.with(|deferred| deferred.borrow().is_empty()) || Handle::try_current().is_ok() {
+/// Marks a runtime as driven on this thread until dropped. Tokio refuses to
+/// drive a second one meanwhile, and has no query for it: a runtime context
+/// that is only entered (`Runtime::enter`) is not one, and holds no tick
+/// back.
+pub(super) struct Driving(());
+
+impl Driving {
+    pub(super) fn enter() -> Driving {
+        DRIVING.set(DRIVING.get() + 1);
+        Driving(())
+    }
+
+    pub(super) fn any() -> bool {
+        DRIVING.get() > 0
+    }
+}
+
+impl Drop for Driving {
+    fn drop(&mut self) {
+        DRIVING.set(DRIVING.get() - 1);
+        resume_deferred();
+    }
+}
+
+/// Reschedules the ticks deferred while a runtime was driven, once none is.
+fn resume_deferred() {
+    if Driving::any() || DEFERRED.with(|deferred| deferred.borrow().is_empty()) {
         return;
     }
     for host in DEFERRED.take() {
@@ -150,8 +182,11 @@ pub(super) struct Host {
     this: Weak<Host>,
     pub(super) id: Id,
     /// Exclusively borrowed only for a tick, which then has this loop as the
-    /// current runtime.
-    rt: RefCell<LocalEventLoop>,
+    /// current runtime. Taken by `drop`.
+    rt: RefCell<ManuallyDrop<LocalEventLoop>>,
+    /// [`turn`](Self::turn) as a JavaScript function, which a tick calls
+    /// it through.
+    turn: Closure<dyn Fn()>,
     /// The reactor's epoll fd, with the I/O driver.
     epfd: Option<RawFd>,
     listening: Cell<bool>,
@@ -177,7 +212,15 @@ impl Host {
         let host = Rc::new_cyclic(|this| Host {
             this: this.clone(),
             id: rt.handle().id(),
-            rt: RefCell::new(rt),
+            rt: RefCell::new(ManuallyDrop::new(rt)),
+            turn: Closure::own_aborting({
+                let this = this.clone();
+                move || {
+                    if let Some(host) = this.upgrade() {
+                        host.turn();
+                    }
+                }
+            }),
             epfd,
             listening: Cell::new(false),
             deadline: Cell::new(None),
@@ -205,36 +248,30 @@ impl Host {
     }
 
     /// Runs one batch of ready tasks on this stack, then re-arms the host.
-    /// The caller is outside any runtime context.
+    /// No runtime is being driven on this thread.
+    ///
+    /// A tick either completes or the instance aborts. A JavaScript
+    /// exception thrown by an import while a task is polled is no Rust
+    /// panic: tokio's task harness cannot complete the task with it, and
+    /// under `panic=abort` it passes without running a single drop, leaving
+    /// the runtime entered for good. Only JavaScript can catch it, so the
+    /// tick runs under a JavaScript frame that does.
     pub(super) fn tick(&self) {
-        // A JavaScript exception thrown by an import while a task is polled
-        // unwinds the Rust frames, running their drops, but `catch_unwind`
-        // catches only Rust panics: tokio's task harness drops the future
-        // without completing the task, whose `JoinHandle` then never
-        // resolves. Whoever catches the exception gets a loop that has
-        // silently lost the task, so abort as it unwinds out of the tick.
-        struct AbortOnForeignUnwind;
-
-        impl Drop for AbortOnForeignUnwind {
-            fn drop(&mut self) {
-                if !std::thread::panicking() {
-                    std::eprintln!(
-                        "JavaScript exception unwound through a tokio event loop tick; aborting"
-                    );
-                    std::process::abort();
-                }
-            }
+        let driving = Driving::enter();
+        let turn: &Function = self.turn.as_ref().unchecked_ref();
+        if let Err(exception) = turn.call0(&JsValue::UNDEFINED) {
+            std::eprintln!(
+                "JavaScript exception thrown through a tokio event loop tick; aborting: {exception:?}"
+            );
+            std::process::abort();
         }
+        drop(driving);
+    }
 
-        let Ok(mut rt) = self.rt.try_borrow_mut() else {
-            return;
-        };
-        let unwinding = AbortOnForeignUnwind;
+    fn turn(&self) {
+        let mut rt = self.rt.borrow_mut();
         rt.tick(BATCH);
-        core::mem::forget(unwinding);
         self.after_turn(&rt);
-        drop(rt);
-        resume_deferred();
     }
 
     /// Re-arms the host after a tick: an immediate for ready work, a timer
@@ -332,16 +369,16 @@ impl Host {
 
     /// Ticks the loop from a host callback.
     ///
-    /// While a runtime is entered on this thread (a `block_on` suspended
-    /// through JSPI) no tick can run; the tick is deferred to
-    /// [`resume_deferred`], and the readiness listener comes off until then
-    /// rather than firing every host turn.
+    /// While a runtime is driven on this thread (a `block_on` suspended
+    /// through JSPI) no tick can run; the tick is deferred until it returns,
+    /// and the readiness listener comes off until then rather than firing
+    /// every host turn.
     ///
     /// A task may let go of the loop while it is ticked. The callback holds
     /// the `Host` until the tick returns, so the loop then detaches and
     /// shuts down here, outside the tick.
     fn host_tick(self: Rc<Self>) {
-        if Handle::try_current().is_ok() {
+        if Driving::any() {
             let _ = self.listen(false);
             DEFERRED.with(|deferred| deferred.borrow_mut().push(self.this.clone()));
             return;
@@ -359,6 +396,11 @@ impl Drop for Host {
         }
         let _ = self.listen(false);
         self.hold.detach();
+        // The last hold may go inside another loop's tick or a `block_on`,
+        // where dropping a runtime panics as a blocking wait.
+        // SAFETY: taken once, here.
+        let rt = unsafe { ManuallyDrop::take(self.rt.get_mut()) };
+        rt.shutdown_background();
     }
 }
 

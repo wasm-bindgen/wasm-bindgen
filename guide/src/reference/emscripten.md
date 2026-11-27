@@ -274,17 +274,16 @@ pub async fn fetch(req: Request) -> Response {
 }
 ```
 
-Runtimes are `wasm_bindgen_futures::tokio::EventLoop`s, and every root and
-every `EventLoop::spawn` task holds its loop; a plain `tokio::spawn` task does
-not. `EventLoop::current().spawn(fut)` keeps an isolated
+Runtimes are `wasm_bindgen_futures::tokio::EventLoop`s (the module is
+`js_sys::futures::tokio`, re-exported), and every root and every
+`EventLoop::spawn` task holds its loop; a plain `tokio::spawn` task does not. `EventLoop::current().spawn(fut)` keeps an isolated
 runtime alive until `fut` finishes, for work that outlives the response,
 such as a Workers `ctx.waitUntil`. A host that wants one runtime per
 long-lived context, such as a Durable Object instance, holds an `EventLoop`
 and calls that context's exports inside `rt.enter(|| ..)`.
 
 The support is unstable and gated behind `--cfg wasm_bindgen_unstable_tokio`.
-The cfg makes `wasm-bindgen-futures` depend on Tokio and expose the runtime
-glue; without it nothing Tokio-related is compiled or linked, and the
+The cfg makes `js-sys` depend on Tokio and expose the runtime glue; without it nothing Tokio-related is compiled or linked, and the
 attribute is a compile error (as it is on any other target).
 
 Until the Tokio side lands upstream ([tokio#8479], and [tokio#8438] for its
@@ -304,11 +303,19 @@ tokio-macros = { git = "https://github.com/guybedford/tokio", rev = "0bade231d52
 rustflags = ["--cfg=wasm_bindgen_unstable_tokio", "--cfg=tokio_unstable", ...]
 ```
 
-The event loop is a Tokio `LocalEventLoop` hosted by the JS event loop:
-`wasm-bindgen-futures` registers its reactor's readiness and its timer
-deadlines with the host and ticks it from those callbacks. An export called from JS also runs one batch on the caller's
-stack, so the future's first poll is synchronous, as it is for a plain
-`async` export.
+The event loop is a Tokio `LocalEventLoop` hosted by the JS event loop: its
+reactor's readiness and its timer deadlines are registered with the host,
+which ticks it from those callbacks. An export called from JS also runs one
+batch on the caller's stack, so the future's first poll is synchronous, as it
+is for a plain `async` export.
+
+A tick either completes or aborts the instance. A JS exception thrown by an
+import while a task is polled is not a Rust panic, so Tokio cannot fail the
+task with it, and with `panic=abort` it would leave the runtime entered for
+good: import with `#[wasm_bindgen(catch)]` what may throw. Each tick runs
+under a JS frame that catches such an exception, so a task polled by the
+loop cannot suspend through JSPI either; that takes a
+[parked runtime](#with-tokio).
 
 This needs Emscripten 6.0.12 or later, for its epoll readiness listeners
 ([emscripten#27547]), and Tokio's `net` feature needs the link flag
