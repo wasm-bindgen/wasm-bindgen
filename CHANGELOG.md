@@ -170,6 +170,10 @@
   of a sync export.
   [#5474](https://github.com/wasm-bindgen/wasm-bindgen/pull/5474)
 
+* The CLI now returns a descriptive error instead of panicking when a
+  `__wasm_bindgen_unstable` custom section is truncated.
+  [#5461](https://github.com/wasm-bindgen/wasm-bindgen/pull/5461)
+
 ### Removed
 
 ## [0.2.130](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.129...0.2.130)
