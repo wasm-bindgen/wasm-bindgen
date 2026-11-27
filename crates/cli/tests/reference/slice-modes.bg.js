@@ -73,22 +73,22 @@ export function __wbindgen_init_externref_table() {
 }
 function getArrayF64FromWasm0(ptr, len) {
     ptr = ptr >>> 0;
-    return getFloat64ArrayMemory0().subarray(ptr / 8, ptr / 8 + len);
+    return new Float64Array(getFloat64ArrayMemory0().buffer, ptr, len);
 }
 
 function getArrayU16FromWasm0(ptr, len) {
     ptr = ptr >>> 0;
-    return getUint16ArrayMemory0().subarray(ptr / 2, ptr / 2 + len);
+    return new Uint16Array(getUint16ArrayMemory0().buffer, ptr, len);
 }
 
 function getArrayU8FromWasm0(ptr, len) {
     ptr = ptr >>> 0;
-    return getUint8ArrayMemory0().subarray(ptr / 1, ptr / 1 + len);
+    return new Uint8Array(getUint8ArrayMemory0().buffer, ptr, len);
 }
 
 function getClampedArrayU8FromWasm0(ptr, len) {
     ptr = ptr >>> 0;
-    return getUint8ClampedArrayMemory0().subarray(ptr / 1, ptr / 1 + len);
+    return new Uint8ClampedArray(getUint8ClampedArrayMemory0().buffer, ptr, len);
 }
 
 let cachedDataViewMemory0 = null;
@@ -109,7 +109,7 @@ function getFloat64ArrayMemory0() {
 
 function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
-    return decodeText(getUint8ArrayMemory0().subarray(ptr, ptr + len));
+    return decodeText(new Uint8Array(getUint8ArrayMemory0().buffer, ptr, len));
 }
 
 let cachedUint16ArrayMemory0 = null;

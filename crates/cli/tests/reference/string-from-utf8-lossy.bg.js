@@ -25,12 +25,12 @@ export function __wbindgen_init_externref_table() {
 }
 function getArrayU8FromWasm0(ptr, len) {
     ptr = ptr >>> 0;
-    return getUint8ArrayMemory0().subarray(ptr / 1, ptr / 1 + len);
+    return new Uint8Array(getUint8ArrayMemory0().buffer, ptr, len);
 }
 
 function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
-    return decodeText(getUint8ArrayMemory0().subarray(ptr, ptr + len));
+    return decodeText(new Uint8Array(getUint8ArrayMemory0().buffer, ptr, len));
 }
 
 let cachedUint8ArrayMemory0 = null;
