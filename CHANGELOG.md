@@ -7,9 +7,10 @@
 
 * `wasm_bindgen::handler::set_on_abort` now fires on Emscripten: the generated
   glue hooks `Module.onAbort` at startup (wrapping an embedder-provided one,
-  which still runs afterwards) and calls the registered handler from it, so
-  it runs for every abort regardless of the panic strategy, including
+  which still runs afterwards) and calls the registered handler from it on
+  the instance's first abort, regardless of the panic strategy, including
   `panic=abort` panics and `std::process::abort()`.
+  [#5470](https://github.com/wasm-bindgen/wasm-bindgen/pull/5470)
 
 * Under `js_sys_unstable_apis`, `Date::new_with_value` creates a `Date`
   from a time value or a date string (`impl JsNumberOrStringLike`), and

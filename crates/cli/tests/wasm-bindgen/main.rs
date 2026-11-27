@@ -4084,6 +4084,11 @@ fn emscripten_end_to_end() {
         assert(panicked instanceof WebAssembly.RuntimeError, `panic=abort panic surfaces as RuntimeError, got ${panicked}`);
         assert(hookCalls === 1, `rust abort hook calls ${hookCalls}`);
 
+        // Emscripten doesn't refuse calls into an aborted instance; a later
+        // abort doesn't run the handler a second time.
+        try { m.panic_now(); } catch (_) {}
+        assert(hookCalls === 1, `rust abort hook calls after a second abort ${hookCalls}`);
+
         console.log('ok');
         "#,
     )

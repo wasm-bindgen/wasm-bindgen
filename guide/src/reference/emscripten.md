@@ -134,9 +134,14 @@ overflow, out-of-bounds access) escaping an export is passed to Emscripten's
 error reaches the caller as a `RuntimeError`. The glue hooks `Module.onAbort`
 at startup (wrapping one you passed to the module, which still runs
 afterwards) so that a [`set_on_abort`](handling-aborts.md) handler fires on
-every abort — including `panic=abort` panics and `std::process::abort()`,
-which reach the same `abort()` through libc. The rest of the machinery in
-[Handling aborts](handling-aborts.md) is not generated for Emscripten output:
+the instance's first abort — including `panic=abort` panics and
+`std::process::abort()`, which reach the same `abort()` through libc. It runs
+once: Emscripten doesn't refuse calls into an aborted instance, and later
+aborts reach only your own `onAbort`. Emscripten compiles the `onAbort` call
+out when it isn't in `INCOMING_MODULE_JS_API` (the default includes it,
+`-sSTRICT` doesn't), and the handler then never fires. The rest of the
+machinery in [Handling aborts](handling-aborts.md) is not generated for
+Emscripten output:
 later export calls are not refused, and `schedule_reinit()` is a no-op since
 Emscripten owns instantiation.
 

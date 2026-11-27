@@ -976,9 +976,10 @@ pub static mut __abort_handler: fn() = NO_OP_PTR;
 ///
 /// On Emscripten the callback is driven by Emscripten's own `abort()`: the
 /// generated glue hooks `Module.onAbort` (wrapping one the embedder set) and
-/// calls the handler from there, so it fires for every abort regardless of
-/// the panic strategy, including `panic=abort` panics and
-/// `std::process::abort()`, before the embedder's `onAbort` runs.
+/// calls the handler from there, so it fires on the instance's first abort
+/// regardless of the panic strategy, including `panic=abort` panics and
+/// `std::process::abort()`, before the embedder's `onAbort` runs. This needs
+/// `onAbort` in Emscripten's `INCOMING_MODULE_JS_API`, as it is by default.
 pub fn set_on_abort(f: fn()) -> Option<fn()> {
     let prev = unsafe { __abort_handler };
     unsafe {
