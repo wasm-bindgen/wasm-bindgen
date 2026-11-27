@@ -17,11 +17,12 @@
 
 use anyhow::{anyhow, bail, Context as _, Error};
 use std::collections::{HashMap, HashSet};
+use std::sync::Mutex;
 
 use crate::wasm_conventions;
 use crate::{INITIAL_HEAP_OFFSET, INITIAL_HEAP_VALUES};
 use walrus::{ir::*, RefType};
-use walrus::{ConstExpr, FunctionId, GlobalId, Module, TableId, ValType};
+use walrus::{ConstExpr, FunctionId, GlobalId, Module, ModuleLocals, TableId, ValType};
 use walrus::{ExportId, ImportId, InstrLocId, TypeId};
 
 // must be kept in sync with src/lib.rs and EXTERNREF_HEAP_START
@@ -599,34 +600,49 @@ impl Transform<'_> {
     }
 
     fn rewrite_calls(&mut self, module: &mut Module) -> Result<(), Error> {
-        for (id, func) in module.funcs.iter_local_mut() {
-            if self.shims.contains(&id) {
-                continue;
+        let has_calls_to_rewrite = module
+            .funcs
+            .iter_local()
+            .any(|(id, _)| !self.shims.contains(&id));
+        if !has_calls_to_rewrite {
+            return Ok(());
+        }
+        let clone_ref = self.clone_ref()?;
+        let heap_dealloc = self.heap_dealloc()?;
+        let xform = &*self;
+        let locals = Mutex::new(&mut module.locals);
+        let funcs = module.funcs.iter_local_mut().collect();
+        crate::parallel::for_each(funcs, |(id, func)| {
+            if xform.shims.contains(&id) {
+                return;
             }
             let entry = func.entry_block();
-            let scratch_i32 = module.locals.add(ValType::I32);
             dfs_pre_order_mut(
                 &mut Rewrite {
-                    clone_ref: self.clone_ref()?,
-                    heap_dealloc: self.heap_dealloc()?,
-                    xform: self,
-                    scratch_i32,
+                    xform,
+                    clone_ref,
+                    heap_dealloc,
+                    locals: &locals,
+                    scratch_i32: None,
                 },
                 func,
                 entry,
             );
-        }
+        });
 
         return Ok(());
 
-        struct Rewrite<'a, 'b> {
+        struct Rewrite<'a, 'b, 'c> {
             xform: &'a Transform<'b>,
             clone_ref: FunctionId,
             heap_dealloc: FunctionId,
-            scratch_i32: LocalId,
+            locals: &'a Mutex<&'c mut ModuleLocals>,
+            // `None` until the rewrite of the first call to the `table_grow`
+            // intrinsic in this function adds the local.
+            scratch_i32: Option<LocalId>,
         }
 
-        impl VisitorMut for Rewrite<'_, '_> {
+        impl VisitorMut for Rewrite<'_, '_, '_> {
             fn start_instr_seq_mut(&mut self, seq: &mut InstrSeq) {
                 for i in (0..seq.instrs.len()).rev() {
                     let is_return_call = matches!(seq.instrs[i].0, Instr::ReturnCall(_));
@@ -669,7 +685,10 @@ impl Transform<'_> {
                             }
                             .into();
                             let loc = seq.instrs[i].1;
-                            let local = self.scratch_i32;
+                            let locals = self.locals;
+                            let local = *self
+                                .scratch_i32
+                                .get_or_insert_with(|| locals.lock().unwrap().add(ValType::I32));
                             seq.instrs.insert(i, (LocalGet { local }.into(), loc));
                             seq.instrs.insert(i, (RefNull { ty }.into(), loc));
                             seq.instrs.insert(i, (LocalSet { local }.into(), loc));
