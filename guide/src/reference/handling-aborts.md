@@ -17,8 +17,10 @@ and optionally recovering by reinitializing the module.
 > to `wasm-bindgen`. `schedule_reinit()` works with both `panic=unwind` and
 > `panic=abort` regardless of the flag.
 >
-> None of this applies to [Emscripten](./emscripten.md#panics) output, where
-> hard aborts are handed to Emscripten's own `abort()` / `Module.onAbort`.
+> On [Emscripten](./emscripten.md#panics) hard aborts are handed to
+> Emscripten's own `abort()`, and `set_on_abort` is driven from its
+> `Module.onAbort`, so it fires with either panic strategy. Termination
+> states and reinit don't apply there.
 
 ## Termination States
 
