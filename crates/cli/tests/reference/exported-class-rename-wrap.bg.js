@@ -5,12 +5,6 @@ export class Renamed {
         RenamedFinalization.register(obj, obj.__wbg_ptr, obj);
         return obj;
     }
-    static __unwrap(jsValue) {
-        if (!(jsValue instanceof Renamed)) {
-            return 0;
-        }
-        return jsValue.__destroy_into_raw();
-    }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
@@ -54,8 +48,39 @@ export function makeRenamed(value) {
  * @returns {number}
  */
 export function readRenameds(renameds) {
-    const ptr0 = passArrayJsValueToWasm0(renameds, wasm.__wbindgen_malloc);
-    const len0 = WASM_VECTOR_LEN;
+    if (renameds.length > 536870911) throw new Error('invalid malloc request');
+    for (let n0 = 0; n0 < renameds.length; n0++) {
+        const e0 = renameds[n0];
+        if (!(e0 instanceof Renamed) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
+    }
+    let j0 = 0, len0, ptr0;
+    try {
+        len0 = renameds.length >>> 0;
+        if (len0 > 536870911) throw new Error('invalid malloc request');
+        ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
+        for (; j0 < len0; j0++) {
+            const e0 = renameds[j0];
+            if (!(e0 instanceof Renamed) || !e0.__wbg_ptr) throw new Error('array contains a value of the wrong type');
+            var ptr1 = e0.__destroy_into_raw();
+            const view0 = getDataViewMemory0();
+            const p0 = ptr0 + j0 * 4;
+            view0.setInt32(p0 + 0, ptr1, true);
+        }
+    } catch (e) {
+        if (ptr0) {
+            let view2 = getDataViewMemory0();
+            for (let k2 = 0; k2 < j0; k2++) {
+                const cell2 = ptr0 + k2 * 4;
+                const w2_0 = view2.getInt32(cell2 + 0, true) >>> 0;
+                if (w2_0) {
+                    wasm.__wbg_renamed_free(w2_0, 1);
+                    view2 = getDataViewMemory0();
+                }
+            }
+            wasm.__wbindgen_free(ptr0, len0 * 4, 4);
+        }
+        throw e;
+    }
     const ret = wasm.readRenameds(ptr0, len0);
     return ret >>> 0;
 }
@@ -64,10 +89,6 @@ export function __wbg___wbindgen_throw_4c88d8bf264fd984(arg0, arg1) {
 }
 export function __wbg_renamed_new(arg0) {
     const ret = Renamed.__wrap(arg0);
-    return ret;
-}
-export function __wbg_renamed_unwrap(arg0) {
-    const ret = Renamed.__unwrap(arg0);
     return ret;
 }
 export function __wbindgen_init_externref_table() {
@@ -81,12 +102,6 @@ export function __wbindgen_init_externref_table() {
 const RenamedFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_renamed_free(ptr, 1));
-
-function addToExternrefTable0(obj) {
-    const idx = wasm.__externref_table_alloc();
-    wasm.__wbindgen_externrefs.set(idx, obj);
-    return idx;
-}
 
 let cachedDataViewMemory0 = null;
 function getDataViewMemory0() {
@@ -109,16 +124,6 @@ function getUint8ArrayMemory0() {
     return cachedUint8ArrayMemory0;
 }
 
-function passArrayJsValueToWasm0(array, malloc) {
-    const ptr = malloc(array.length * 4, 4) >>> 0;
-    for (let i = 0; i < array.length; i++) {
-        const add = addToExternrefTable0(array[i]);
-        getDataViewMemory0().setUint32(ptr + 4 * i, add, true);
-    }
-    WASM_VECTOR_LEN = array.length;
-    return ptr;
-}
-
 let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true });
 cachedTextDecoder.decode();
 const MAX_SAFARI_DECODE_BYTES = 2146435072;
@@ -132,8 +137,6 @@ function decodeText(bytes) {
     }
     return cachedTextDecoder.decode(bytes);
 }
-
-let WASM_VECTOR_LEN = 0;
 
 
 let wasm;

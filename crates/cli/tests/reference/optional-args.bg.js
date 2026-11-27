@@ -75,9 +75,11 @@ export function optional_string_enum(f) {
  * @param {any | null} [v]
  */
 export function optional_struct(o, v) {
-    let ptr0 = 0;
     if (!isLikeNone(o)) {
         _assertClass(o, Opt);
+    }
+    let ptr0 = 0;
+    if (!isLikeNone(o)) {
         ptr0 = o.__destroy_into_raw();
     }
     wasm.optional_struct(ptr0, isLikeNone(v) ? 0 : addToExternrefTable0(v));

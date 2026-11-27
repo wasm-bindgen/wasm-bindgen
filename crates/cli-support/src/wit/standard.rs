@@ -124,6 +124,48 @@ impl OptionKind {
     }
 }
 
+/// A cell: what a value is as stored in memory. A value's own cell is the
+/// `#[repr(C)]` record of its ABI words, and a record's is the `#[repr(C)]`
+/// record of its parts' cells, which keeps their padding.
+#[derive(Debug, Clone)]
+pub enum CellLayout {
+    Words(Vec<AdapterType>),
+    // No value crosses as a record yet.
+    #[allow(dead_code)]
+    Record(Vec<CellLayout>),
+}
+
+impl CellLayout {
+    /// The cell's words in order.
+    pub fn words(&self) -> Vec<&AdapterType> {
+        match self {
+            CellLayout::Words(words) => words.iter().collect(),
+            CellLayout::Record(parts) => parts.iter().flat_map(CellLayout::words).collect(),
+        }
+    }
+}
+
+/// How many cells a buffer holds.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CellCount {
+    /// The word that follows the buffer's address: a sequence.
+    Word,
+    /// One, with no word for it: the cell a value wider than the primitives
+    /// spills to, which crosses as the value and not as an array of it.
+    // No value spills yet.
+    #[allow(dead_code)]
+    One,
+}
+
+/// What a value in stored position is checked to be.
+#[derive(Debug, Clone)]
+pub enum StoredCheck {
+    /// A string, or with a kind none of that kind.
+    String(Option<OptionKind>),
+    /// An array or a typed array, or with a kind none of that kind.
+    Sequence(Option<OptionKind>),
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AdapterType {
     S8,
@@ -450,29 +492,37 @@ pub enum Instruction {
         mode: SeqValue,
         option_kind: OptionKind,
     },
-    /// pops ptr/length of a buffer holding `length` element ABIs, each laid
-    /// out as `words`, pushes the array `elem` decodes them into (or
-    /// `undefined` for a null `optional` buffer), frees the buffer
+    /// pops ptr/length of a buffer holding `count` cells of `layout`, pushes
+    /// the array `elem` decodes them into (or `undefined` for a null
+    /// `optional` buffer), frees the buffer
     EncodedSliceLoad {
-        words: Vec<AdapterType>,
+        layout: CellLayout,
         elem: Vec<InstructionData>,
         mem: walrus::MemoryId,
         free: walrus::FunctionId,
         optional: Option<OptionKind>,
+        count: CellCount,
     },
     /// pops an array (or, `optional`, `undefined`), encodes each element with
-    /// `elem` into the `words` of its ABI in a buffer allocated with `malloc`
-    /// (freed with `free` if an element throws), pushes the buffer's
-    /// ptr/length (ptr 0 for `undefined`)
+    /// `elem` into a cell of `layout` in a buffer allocated with `malloc`
+    /// (freed with `free`, after what its elements own, if an element
+    /// throws), pushes the buffer's ptr/length (ptr 0 for `undefined`). A
+    /// debug build asserts the array when `array`, which it never has for a
+    /// sequence of `char`, `bool` or an enum.
     EncodedSliceStore {
-        words: Vec<AdapterType>,
+        layout: CellLayout,
         elem: Vec<InstructionData>,
+        array: bool,
         malloc: walrus::FunctionId,
         free: walrus::FunctionId,
         mem: walrus::MemoryId,
         optional: bool,
         option_kind: OptionKind,
+        count: CellCount,
     },
+    /// pops a value in stored position, throws unless it's of the checked
+    /// type, pushes it back
+    StoredCheck(StoredCheck),
     /// pops i32, loads externref from externref table
     TableGet,
     /// pops two i32 data pointers, pushes an externref closure
@@ -615,14 +665,12 @@ impl NonstandardWitSection {
             AdapterKind::Local { instructions } => instructions,
             AdapterKind::Import { .. } => return,
         };
-        for instr in instructions {
-            match instr.instr {
-                Instruction::Closure { adapter, .. } | Instruction::CallAdapter(adapter) => {
-                    self.add_live(adapter, live);
-                }
-                _ => {}
+        visit_instructions(instructions, &mut |instr| match instr.instr {
+            Instruction::Closure { adapter, .. } | Instruction::CallAdapter(adapter) => {
+                self.add_live(adapter, live);
             }
-        }
+            _ => {}
+        });
     }
 }
 
@@ -708,7 +756,9 @@ impl walrus::CustomSection for NonstandardWitSection {
                     roots.push_table(table);
                     roots.push_func(alloc);
                 }
-                UnwrapResult { table_and_drop } | UnwrapResultString { table_and_drop } => {
+                UnwrapResult { table_and_drop }
+                | UnwrapResultString { table_and_drop }
+                | ExternrefLoadOwned { table_and_drop } => {
                     if let Some((table, drop)) = table_and_drop {
                         roots.push_table(table);
                         roots.push_func(drop);

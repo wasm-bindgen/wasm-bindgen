@@ -118,11 +118,16 @@ export function a_levels() {
     const v1 = [];
     let p1 = ret[0];
     p1 = p1 >>> 0;
-    const view1 = getDataViewMemory0();
-    for (const end1 = p1 + ret[1] * 8; p1 < end1; p1 += 8) {
-        v1.push(view1.getFloat64(p1 + 0, true));
+    const b1 = p1;
+    try {
+        const view1 = getDataViewMemory0();
+        for (const end1 = p1 + ret[1] * 8; p1 < end1; p1 += 8) {
+            const w1_0 = view1.getFloat64(p1 + 0, true);
+            v1.push(w1_0);
+        }
+    } finally {
+        if (b1) wasm.__wbindgen_free(b1, ret[1] * 8, 8);
     }
-    wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
     return v1;
 }
 
@@ -134,11 +139,16 @@ export function b_levels() {
     const v1 = [];
     let p1 = ret[0];
     p1 = p1 >>> 0;
-    const view1 = getDataViewMemory0();
-    for (const end1 = p1 + ret[1] * 8; p1 < end1; p1 += 8) {
-        v1.push(view1.getFloat64(p1 + 0, true));
+    const b1 = p1;
+    try {
+        const view1 = getDataViewMemory0();
+        for (const end1 = p1 + ret[1] * 8; p1 < end1; p1 += 8) {
+            const w1_0 = view1.getFloat64(p1 + 0, true);
+            v1.push(w1_0);
+        }
+    } finally {
+        if (b1) wasm.__wbindgen_free(b1, ret[1] * 8, 8);
     }
-    wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
     return v1;
 }
 
@@ -147,8 +157,32 @@ export function b_levels() {
  */
 export function b_statuses() {
     const ret = wasm.b_statuses();
-    var v1 = getArrayJsValueFromWasm0(ret[0], ret[1]);
-    wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    const v1 = [];
+    let p1 = ret[0];
+    p1 = p1 >>> 0;
+    const b1 = p1;
+    try {
+        const view1 = getDataViewMemory0();
+        for (const end1 = p1 + ret[1] * 4; p1 < end1; p1 += 4) {
+            const w1_0 = view1.getInt32(p1 + 0, true);
+            const obj2 = Status2.__wrap(w1_0);
+            view1.setInt32(p1 + 0, 0, true);
+            v1.push(obj2);
+        }
+    } finally {
+        if (b1) {
+            let view3 = getDataViewMemory0();
+            for (let k3 = 0; k3 < ret[1]; k3++) {
+                const cell3 = b1 + k3 * 4;
+                const w3_0 = view3.getInt32(cell3 + 0, true) >>> 0;
+                if (w3_0) {
+                    wasm.__wbg_status2_free(w3_0, 1);
+                    view3 = getDataViewMemory0();
+                }
+            }
+            wasm.__wbindgen_free(b1, ret[1] * 4, 4);
+        }
+    }
     return v1;
 }
 
@@ -157,8 +191,12 @@ export function b_statuses() {
  */
 export function statuses() {
     const ret = wasm.statuses();
-    var v1 = getArrayJsValueFromWasm0(ret[0], ret[1]);
-    wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    var v1;
+    try {
+        v1 = getArrayJsValueFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    }
     return v1;
 }
 export function __wbg___wbindgen_throw_4c88d8bf264fd984(arg0, arg1) {
@@ -191,10 +229,13 @@ function getArrayJsValueFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     const mem = getDataViewMemory0();
     const result = [];
-    for (let i = ptr; i < ptr + 4 * len; i += 4) {
-        result.push(wasm.__wbindgen_externrefs.get(mem.getUint32(i, true)));
+    try {
+        for (let i = ptr; i < ptr + 4 * len; i += 4) {
+            result.push(wasm.__wbindgen_externrefs.get(mem.getUint32(i, true)));
+        }
+    } finally {
+        wasm.__externref_drop_slice(ptr, len);
     }
-    wasm.__externref_drop_slice(ptr, len);
     return result;
 }
 

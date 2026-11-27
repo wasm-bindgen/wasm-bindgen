@@ -114,9 +114,11 @@ export function nullable_string_enum(f) {
  * @returns {Opt | null}
  */
 export function nullable_struct(o, v) {
-    let ptr0 = o === null ? 1 : 0;
     if (o !== null) {
         _assertClass(o, Opt);
+    }
+    let ptr0 = o === null ? 1 : 0;
+    if (o !== null) {
         ptr0 = o.__destroy_into_raw();
     }
     const ret = wasm.nullable_struct(ptr0, v === null ? 1025 : addToExternrefTable0(v));
@@ -174,9 +176,11 @@ export function optional_nullable_string_enum(f) {
  * @returns {Opt | null | undefined}
  */
 export function optional_nullable_struct(o, v) {
-    let ptr0 = o === null ? 1 : 0;
     if (!isLikeNone(o)) {
         _assertClass(o, Opt);
+    }
+    let ptr0 = o === null ? 1 : 0;
+    if (!isLikeNone(o)) {
         ptr0 = o.__destroy_into_raw();
     }
     const ret = wasm.optional_nullable_struct(ptr0, v === undefined ? 0 : v === null ? 1025 : addToExternrefTable0(v));

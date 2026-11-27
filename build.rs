@@ -25,6 +25,12 @@ fn main() {
         println!("cargo:rustc-cfg=wbg_diagnostic");
     }
 
+    println!("cargo:rustc-check-cfg=cfg(wbg_do_not_recommend)");
+
+    if rustversion::cfg!(since(1.85)) {
+        println!("cargo:rustc-cfg=wbg_do_not_recommend");
+    }
+
     let target_arch = env::var_os("CARGO_CFG_TARGET_ARCH").unwrap();
     let target_os = env::var_os("CARGO_CFG_TARGET_OS").unwrap();
 

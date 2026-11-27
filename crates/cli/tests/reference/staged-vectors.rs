@@ -1,0 +1,119 @@
+// Owned vectors whose elements own memory or JS handles, or are vectors
+// themselves. An element's own glue calls into Wasm, so JS reads and writes
+// each cell through the memory as it is then, and releases what the cells
+// already written own should a later element throw. Each wrapper crosses as
+// the type it wraps.
+
+use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi};
+use wasm_bindgen::describe::WasmDescribe;
+use wasm_bindgen::prelude::*;
+
+macro_rules! encoded {
+    ($($name:ident($t:ty);)*) => ($(
+        pub struct $name(pub $t);
+
+        impl WasmDescribe for $name {
+            fn describe() {
+                <$t>::describe()
+            }
+        }
+
+        impl IntoWasmAbi for $name {
+            type Abi = <$t as IntoWasmAbi>::Abi;
+
+            fn into_abi(self) -> Self::Abi {
+                self.0.into_abi()
+            }
+        }
+
+        impl FromWasmAbi for $name {
+            type Abi = <$t as FromWasmAbi>::Abi;
+
+            unsafe fn from_abi(js: Self::Abi) -> Self {
+                $name(<$t>::from_abi(js))
+            }
+        }
+    )*)
+}
+
+encoded! {
+    Name(String);
+    MaybeName(Option<String>);
+    MaybeFoo(Option<Foo>);
+    NullableFoo(Nullable<Foo>);
+    MaybePoint(Option<Point>);
+    NullablePoint(Nullable<Point>);
+    MaybeNullablePoint(Nullable<Option<Point>>);
+    MaybeByte(Option<u8>);
+    Names(Vec<Name>);
+    MaybeFoos(Option<Vec<MaybeFoo>>);
+}
+
+#[wasm_bindgen]
+pub struct Point;
+
+#[wasm_bindgen]
+extern "C" {
+    pub type Foo;
+
+    fn js_names(v: Vec<Name>) -> Vec<Name>;
+    fn js_maybe_foos(v: Vec<MaybeFoo>) -> Vec<MaybeFoo>;
+    fn js_maybe_points(v: Vec<MaybePoint>) -> Vec<MaybePoint>;
+}
+
+#[wasm_bindgen]
+pub fn names(v: Vec<Name>) -> Vec<Name> {
+    v
+}
+
+#[wasm_bindgen]
+pub fn maybe_names(v: Option<Vec<MaybeName>>) -> Option<Vec<MaybeName>> {
+    v
+}
+
+#[wasm_bindgen]
+pub fn maybe_foos(v: Vec<MaybeFoo>) -> Vec<MaybeFoo> {
+    v
+}
+
+#[wasm_bindgen]
+pub fn nullable_foos(v: Vec<NullableFoo>) -> Vec<NullableFoo> {
+    v
+}
+
+#[wasm_bindgen]
+pub fn maybe_points(v: Vec<MaybePoint>) -> Vec<MaybePoint> {
+    v
+}
+
+#[wasm_bindgen]
+pub fn nullable_points(v: Vec<NullablePoint>) -> Vec<NullablePoint> {
+    v
+}
+
+#[wasm_bindgen]
+pub fn maybe_nullable_points(v: Vec<MaybeNullablePoint>) -> Vec<MaybeNullablePoint> {
+    v
+}
+
+#[wasm_bindgen]
+pub fn maybe_bytes(v: Vec<MaybeByte>) -> Vec<MaybeByte> {
+    v
+}
+
+#[wasm_bindgen]
+pub fn nested_names(v: Vec<Names>) -> Vec<Names> {
+    v
+}
+
+#[wasm_bindgen]
+pub fn nested_maybe_foos(v: Vec<MaybeFoos>) -> Vec<MaybeFoos> {
+    v
+}
+
+#[wasm_bindgen]
+pub fn driver() {
+    js_names(js_names(Vec::new()));
+    js_maybe_foos(js_maybe_foos(Vec::new()));
+    js_maybe_points(js_maybe_points(Vec::new()));
+}

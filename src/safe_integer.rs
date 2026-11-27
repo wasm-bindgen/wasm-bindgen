@@ -1,7 +1,6 @@
 use alloc::boxed::Box;
 use core::convert::TryFrom;
 use core::fmt;
-use core::mem;
 use core::ops::{
     Add, AddAssign, Deref, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
 };
@@ -10,9 +9,9 @@ use crate::__rt::marker::ErasableGeneric;
 use crate::convert::{
     FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, MaybeFromWasmAbi, MaybeIntoWasmAbi,
     NullableFromWasmAbi, NullableIntoWasmAbi, RefFromWasmAbi, TryFromJsValue, UpcastFrom,
-    VectorFromWasmAbi, VectorIntoWasmAbi, WasmSlice,
+    WasmSlice,
 };
-use crate::describe::{inform, WasmDescribe, WasmDescribeVector, F64, VECTOR};
+use crate::describe::{inform, WasmDescribe, F64};
 use crate::sys::{JsNullable, JsOption, Promising};
 use crate::{JsValue, Nullable};
 
@@ -385,56 +384,26 @@ impl<T: SafeIntegerPrimitive> NullableIntoWasmAbi for &SafeInteger<T> {
     }
 }
 
-// Vectors cross as `Float64Array`s. `SafeInteger<T>` has the size and
-// alignment of `f64`, so each element is converted in place and the
-// allocation is handed over as-is.
-const _: () = assert!(
-    mem::size_of::<SafeInteger<u64>>() == mem::size_of::<f64>()
-        && mem::align_of::<SafeInteger<u64>>() == mem::align_of::<f64>()
-        && mem::size_of::<SafeInteger<i64>>() == mem::size_of::<f64>()
-        && mem::align_of::<SafeInteger<i64>>() == mem::align_of::<f64>()
-);
+// Its optional ABI is wider than its own, so `&&T`'s is spelled out as the
+// numbers' is: a sequence that holds an `Option<&T>` lends an `Option<&&T>`.
+impl<T: SafeIntegerPrimitive> MaybeIntoWasmAbi for &&SafeInteger<T> {
+    type MaybeAbi = <f64 as MaybeIntoWasmAbi>::MaybeAbi;
 
-impl<T: SafeIntegerPrimitive> WasmDescribeVector for SafeInteger<T> {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe_vector() {
-        inform(VECTOR);
-        inform(F64);
+    #[inline]
+    fn into_maybe_abi(self) -> Self::MaybeAbi {
+        (**self).into_maybe_abi()
+    }
+
+    #[inline]
+    fn none() -> Self::MaybeAbi {
+        <f64 as MaybeIntoWasmAbi>::none()
     }
 }
 
-impl<T: SafeIntegerPrimitive> VectorIntoWasmAbi for SafeInteger<T> {
-    type Abi = WasmSlice;
-
-    fn vector_into_abi(vector: Box<[Self]>) -> WasmSlice {
-        let len = vector.len();
-        let ptr = Box::into_raw(vector) as *mut Self;
-        for i in 0..len {
-            unsafe {
-                let elem = ptr.add(i);
-                let n = (*elem).to_f64();
-                elem.cast::<f64>().write(n);
-            }
-        }
-        let floats =
-            unsafe { Box::from_raw(core::ptr::slice_from_raw_parts_mut(ptr.cast::<f64>(), len)) };
-        f64::vector_into_abi(floats)
-    }
-}
-
-impl<T: SafeIntegerPrimitive> VectorFromWasmAbi for SafeInteger<T> {
-    type Abi = WasmSlice;
-
-    unsafe fn vector_from_abi(js: WasmSlice) -> Box<[Self]> {
-        let floats = f64::vector_from_abi(js);
-        let len = floats.len();
-        let ptr = Box::into_raw(floats) as *mut f64;
-        for i in 0..len {
-            let elem = ptr.add(i);
-            let n = Self::from_f64(*elem);
-            elem.cast::<Self>().write(n);
-        }
-        Box::from_raw(core::ptr::slice_from_raw_parts_mut(ptr.cast::<Self>(), len))
+impl<T: SafeIntegerPrimitive> NullableIntoWasmAbi for &&SafeInteger<T> {
+    #[inline]
+    fn null() -> Self::MaybeAbi {
+        <f64 as NullableIntoWasmAbi>::null()
     }
 }
 

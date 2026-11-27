@@ -4,7 +4,7 @@
 // `__wbindgen_generic_*` JS shim, rather than erasing type parameters to
 // `JsValue`.
 
-use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, RefIntoWasmAbi, VectorIntoWasmAbi, VectorRefIntoWasmAbi, WasmSlice};
+use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, RefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -42,7 +42,7 @@ extern "C" {
 
     // `impl Trait` nested inside another type (`Vec<impl Trait>`).
     #[wasm_bindgen(experimental_generic_mono, js_name = logNestedImplTrait)]
-    fn log_nested_impl_trait(xs: Vec<impl Clone + VectorIntoWasmAbi<Abi = WasmSlice>>);
+    fn log_nested_impl_trait(xs: Vec<impl Clone + IntoWasmAbi>);
 
     // A trait-bounded generic import. The bound has to be re-emitted onto the
     // manufactured shim for `T::Item` to resolve, which is the most intricate
@@ -70,19 +70,19 @@ extern "C" {
         T: RefIntoWasmAbi;
 
     // A shared slice with a *generic* element type, bounded by
-    // `T: VectorRefIntoWasmAbi`, so each element type marshals as its own
+    // `T: RefIntoWasmAbi`, so each element type marshals as its own
     // typed-array view.
     #[wasm_bindgen(experimental_generic_mono, js_name = logGenericSlice)]
     fn log_generic_slice<T>(xs: &[T])
     where
-        T: VectorRefIntoWasmAbi;
+        T: RefIntoWasmAbi;
 
     // ...including as the `variadic` argument, which the non-sequence variadic
     // diagnostic explicitly recommends.
     #[wasm_bindgen(experimental_generic_mono, variadic, js_name = spreadGeneric)]
     fn spread_generic<T>(first: u32, rest: &[T])
     where
-        T: VectorRefIntoWasmAbi;
+        T: RefIntoWasmAbi;
 
     // `catch` produces a `handleError`-wrapped shim.
     #[wasm_bindgen(experimental_generic_mono, catch, js_name = tryLog)]

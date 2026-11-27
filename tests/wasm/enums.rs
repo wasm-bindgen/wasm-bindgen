@@ -27,6 +27,10 @@ extern "C" {
     fn js_optional_union_roundtrip(o: Option<OuterUnion>) -> Option<OuterUnion>;
     fn js_fallback_union_roundtrip(u: FallbackUnion) -> FallbackUnion;
     fn js_shade_union_roundtrip(u: ShadeUnion) -> ShadeUnion;
+    fn js_union_vec_roundtrip(v: Vec<StringEnumWithFallback>) -> Vec<StringEnumWithFallback>;
+    fn js_union_list() -> Vec<StringEnumWithFallback>;
+    #[wasm_bindgen(catch)]
+    fn js_outer_union_vec_len(with_bad_element: bool) -> Result<usize, JsValue>;
 
     // Async round-trip: imports an `async fn` returning a dynamic union,
     // exercising `Promise<Union>` resolution across the `JsFuture` seam.
@@ -285,6 +289,38 @@ fn test_string_enum_with_fallback() {
 }
 
 #[wasm_bindgen]
+pub fn union_vec_roundtrip(v: Vec<StringEnumWithFallback>) -> Vec<StringEnumWithFallback> {
+    v
+}
+
+#[wasm_bindgen_test]
+fn test_union_vec() {
+    let list = js_union_list();
+    assert!(matches!(
+        &list[..],
+        [
+            StringEnumWithFallback::Green,
+            StringEnumWithFallback::Other(s),
+            StringEnumWithFallback::Wow(Some(7)),
+        ] if s == "custom"
+    ));
+    let back = js_union_vec_roundtrip(vec![
+        StringEnumWithFallback::Red,
+        StringEnumWithFallback::AnotherColor(Color::Yellow),
+        StringEnumWithFallback::Other("x".to_string()),
+    ]);
+    assert!(matches!(
+        &back[..],
+        [
+            StringEnumWithFallback::Red,
+            StringEnumWithFallback::AnotherColor(Color::Yellow),
+            StringEnumWithFallback::Other(s),
+        ] if s == "x"
+    ));
+    assert!(js_union_vec_roundtrip(Vec::new()).is_empty());
+}
+
+#[wasm_bindgen]
 pub enum InnerUnion {
     Foo = "foo",
     Bar = "bar",
@@ -306,6 +342,22 @@ pub fn nested_union_roundtrip(o: OuterUnion) -> OuterUnion {
 #[wasm_bindgen]
 pub fn optional_union_roundtrip(o: Option<OuterUnion>) -> Option<OuterUnion> {
     o
+}
+
+#[wasm_bindgen]
+pub fn outer_union_vec_len(v: Vec<OuterUnion>) -> usize {
+    v.len()
+}
+
+#[wasm_bindgen_test]
+fn test_union_vec_rejects_an_element() {
+    assert_eq!(js_outer_union_vec_len(false).unwrap(), 3);
+    // The elements after the rejected one are dropped with those before it.
+    let live = wasm_bindgen::externref_heap_live_count();
+    let rejected = js_outer_union_vec_len(true);
+    assert!(rejected.is_err());
+    drop(rejected);
+    assert_eq!(wasm_bindgen::externref_heap_live_count(), live);
 }
 
 #[wasm_bindgen_test]

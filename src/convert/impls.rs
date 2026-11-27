@@ -1076,6 +1076,15 @@ impl FromWasmAbi for JsError {
     }
 }
 
+impl IntoWasmAbi for &JsError {
+    type Abi = <&'static JsValue as IntoWasmAbi>::Abi;
+
+    #[inline]
+    fn into_abi(self) -> Self::Abi {
+        (&self.value).into_abi()
+    }
+}
+
 impl Promising for JsError {
     type Resolution = JsError;
 }
@@ -1085,11 +1094,9 @@ impl UpcastFrom<JsError> for JsOption<JsValue> {}
 impl UpcastFrom<JsError> for JsNullable<JsValue> {}
 impl UpcastFrom<JsError> for JsError {}
 
-/// The compat form of an owned vector: an in-place sequence of `JsValue`
-/// handles, converted to or from `T` in Rust. The released `Vec<String>`,
-/// `Vec`s of exported structs and numeric enums, and third-party impls cross
-/// this way. It has no new uses: an element whose single value crosses
-/// without calling into wasm is declared as an encoded sequence instead.
+/// An owned vector as an in-place sequence of `JsValue` handles, converted
+/// to or from `T` in Rust. Soft-deprecated and unused, like the vector traits
+/// it implemented: `Vec<T>` crosses by its element's own ABI.
 ///
 /// # ⚠️ Unstable
 ///

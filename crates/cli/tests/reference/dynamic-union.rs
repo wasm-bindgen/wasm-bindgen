@@ -59,6 +59,11 @@ pub fn echo_wrapper(w: Wrapper) -> Wrapper {
 }
 
 #[wasm_bindgen]
+pub fn echo_wrappers(list: Vec<Wrapper>) -> Vec<Wrapper> {
+    list
+}
+
+#[wasm_bindgen]
 pub fn echo_optional_wrapper(w: Option<Wrapper>) -> Option<Wrapper> {
     w
 }

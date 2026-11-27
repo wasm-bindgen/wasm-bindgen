@@ -8,8 +8,8 @@
 //! the `outgoing.rs` module.
 
 use crate::descriptor::{Descriptor, SeqValue, SequenceCell};
-use crate::wit::InstructionData;
 use crate::wit::{AdapterType, Instruction, InstructionBuilder, OptionKind, StackChange};
+use crate::wit::{CellCount, CellLayout, InstructionData, StoredCheck};
 use anyhow::{bail, format_err, Error};
 use walrus::ValType;
 
@@ -161,6 +161,7 @@ impl InstructionBuilder<'_, '_> {
 
             Descriptor::String | Descriptor::CachedString => {
                 let ptr_ty = self.incoming_internal_word_ty();
+                self.stored_check(StoredCheck::String(None));
                 self.instruction(
                     &[AdapterType::String],
                     Instruction::StringToMemory {
@@ -174,6 +175,7 @@ impl InstructionBuilder<'_, '_> {
             }
 
             Descriptor::Vector(cell) => {
+                self.stored_check(StoredCheck::Sequence(None));
                 let kind = match cell.sequence_cell() {
                     SequenceCell::InPlace(kind) => kind,
                     SequenceCell::Encoded(elem) => {
@@ -200,6 +202,8 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Result(_) |
             // Only on imported function arguments
             Descriptor::SeqMode(..) |
+            // Only on sequence elements
+            Descriptor::Cell(_) |
             // Always behind a `Ref`
             Descriptor::Slice(_) => bail!(
                 "unsupported argument type for calling Rust function from JS: {arg:?}"
@@ -271,7 +275,12 @@ impl InstructionBuilder<'_, '_> {
                     &[ptr_ty.clone(), ptr_ty],
                 );
             }
-            Descriptor::Slice(_) => {
+            Descriptor::Slice(inner) => {
+                // An encoded element's slice is received as the owned vector
+                // it anchors in, so it crosses like one.
+                if let (false, Descriptor::Cell(elem)) = (mutable, &**inner) {
+                    return self.incoming_encoded_vector(elem, false, OptionKind::Option);
+                }
                 // like strings, this allocation is cleaned up after being
                 // received in Rust.
                 let kind = arg.vector_kind().ok_or_else(|| {
@@ -439,6 +448,7 @@ impl InstructionBuilder<'_, '_> {
                 let mem = self.cx.memory()?;
                 let realloc = self.cx.realloc();
                 let ptr_ty = self.incoming_internal_word_ty();
+                self.stored_check(StoredCheck::String(Some(option_kind)));
                 self.instruction(
                     &[AdapterType::String.option_kind(option_kind)],
                     Instruction::OptionString {
@@ -453,6 +463,7 @@ impl InstructionBuilder<'_, '_> {
             }
 
             Descriptor::Vector(cell) => {
+                self.stored_check(StoredCheck::Sequence(Some(option_kind)));
                 let kind = match cell.sequence_cell() {
                     SequenceCell::InPlace(kind) => kind,
                     SequenceCell::Encoded(elem) => {
@@ -630,70 +641,148 @@ impl InstructionBuilder<'_, '_> {
         );
     }
 
-    /// An owned vector with encoded cells is a buffer of its elements'
-    /// scalar ABIs, the mirror of `outgoing_encoded_slice`. JS encodes each
-    /// element with the element's own instructions, as for an argument of the
-    /// element type, and writes its ABI words into the buffer, which Rust
-    /// takes ownership of.
+    /// An owned vector with encoded cells is a buffer of its elements' cells,
+    /// the mirror of `outgoing_encoded_slice`. JS encodes each element with
+    /// the element's own instructions, as for a value of the element type,
+    /// and writes its ABI words into the buffer, which Rust takes ownership
+    /// of along with what the elements give.
     fn incoming_encoded_vector(
         &mut self,
         elem: &Descriptor,
         optional: bool,
         option_kind: OptionKind,
     ) -> Result<(), Error> {
-        let mut encode = InstructionBuilder {
-            input: Vec::new(),
-            output: Vec::new(),
-            instructions: Vec::new(),
-            cx: &mut *self.cx,
-            // The element is pushed onto the stack by the loop, not fetched
-            // as an argument.
-            return_position: true,
-            seq_value: SeqValue::View,
-        };
-        // Every element that isn't in place reaches here, so this is what
-        // rejects one the glue can't encode. Element encoders must not call
-        // into wasm: the glue writes the whole buffer through one view after
-        // allocating it. That rules out elements that own memory, such as a
-        // string.
-        match elem {
-            Descriptor::Boolean
-            | Descriptor::Char
-            | Descriptor::Enum { .. }
-            | Descriptor::StringEnum { .. } => encode._incoming(elem)?,
-            _ => {
-                bail!("unsupported vector element type for calling Rust function from JS: {elem:?}")
-            }
+        if let Some(kind) = elem.typed_cell() {
+            let malloc = self.cx.malloc()?;
+            let free = self.cx.free()?;
+            let mem = self.cx.memory()?;
+            let ptr_ty = self.incoming_internal_word_ty();
+            let (ty, instr) = if optional {
+                (
+                    AdapterType::Vector(kind.clone()).option_kind(option_kind),
+                    Instruction::OptionVector {
+                        kind,
+                        malloc,
+                        free,
+                        mem,
+                        option_kind,
+                    },
+                )
+            } else {
+                (
+                    AdapterType::Vector(kind.clone()),
+                    Instruction::VectorToMemory {
+                        kind,
+                        malloc,
+                        free,
+                        mem,
+                    },
+                )
+            };
+            self.instruction(&[ty], instr, &[ptr_ty.clone(), ptr_ty]);
+            return Ok(());
         }
-        let InstructionBuilder {
-            mut input,
-            output: words,
-            instructions: elem,
-            ..
-        } = encode;
-        let array = AdapterType::Array(Box::new(input.remove(0)));
+        self.incoming_cells(elem, optional, option_kind, CellCount::Word)
+    }
+
+    /// The buffer of `count` cells that values of `elem` cross in.
+    fn incoming_cells(
+        &mut self,
+        elem: &Descriptor,
+        optional: bool,
+        option_kind: OptionKind,
+        count: CellCount,
+    ) -> Result<(), Error> {
+        let array = !matches!(
+            elem,
+            Descriptor::Char
+                | Descriptor::Boolean
+                | Descriptor::Enum { .. }
+                | Descriptor::StringEnum { .. }
+        );
+        let (ty, layout, elem) = self.incoming_cell(elem)?;
+        let ptr_ty = self.incoming_internal_word_ty();
+        let (ty, words) = match count {
+            CellCount::Word => (
+                AdapterType::Array(Box::new(ty)),
+                vec![ptr_ty.clone(), ptr_ty],
+            ),
+            CellCount::One => (ty, vec![ptr_ty]),
+        };
         let malloc = self.cx.malloc()?;
         let free = self.cx.free()?;
         let mem = self.cx.memory()?;
-        let ptr_ty = self.incoming_internal_word_ty();
         self.instruction(
             &[if optional {
-                array.option_kind(option_kind)
+                ty.option_kind(option_kind)
             } else {
-                array
+                ty
             }],
             Instruction::EncodedSliceStore {
-                words,
+                layout,
                 elem,
+                array,
                 malloc,
                 free,
                 mem,
                 optional,
                 option_kind,
+                count,
             },
-            &[ptr_ty.clone(), ptr_ty],
+            &words,
         );
         Ok(())
+    }
+
+    /// A value in stored position: the JS type it's taken as, its cell, and
+    /// the instructions that lower it to the cell's words, which are those
+    /// of a value passed to Rust.
+    fn incoming_cell(
+        &mut self,
+        elem: &Descriptor,
+    ) -> Result<(AdapterType, CellLayout, Vec<InstructionData>), Error> {
+        let mut encode = InstructionBuilder {
+            input: Vec::new(),
+            output: Vec::new(),
+            instructions: Vec::new(),
+            cx: &mut *self.cx,
+            // The value is pushed onto the stack by what holds the cell, not
+            // fetched as an argument.
+            return_position: true,
+            returned: self.returned,
+            stored: true,
+            seq_value: SeqValue::View,
+        };
+        encode._incoming(elem)?;
+        // A cell holds one value, in at least one word.
+        if encode.input.len() != 1 || encode.output.is_empty() {
+            bail!("unsupported vector element type for calling Rust function from JS: {elem:?}")
+        }
+        let InstructionBuilder {
+            mut input,
+            output: words,
+            instructions,
+            ..
+        } = encode;
+        Ok((input.remove(0), CellLayout::Words(words), instructions))
+    }
+
+    /// A stored value is checked where an argument is only in a debug build:
+    /// a `Vec<String>` and a `Vec` of exported structs have always rejected
+    /// an element of the wrong type, and a string's glue would read anything
+    /// else as a string's bytes.
+    // Next major: validate an argument in every build too, as an element is,
+    // and assert an array for a sequence of any element.
+    fn stored_check(&mut self, check: StoredCheck) {
+        if self.stored {
+            self.instructions.push(InstructionData {
+                instr: Instruction::StoredCheck(check),
+                stack_change: StackChange::Modified {
+                    popped: 1,
+                    pushed: 1,
+                },
+            });
+        }
     }
 
     fn incoming_internal_word_ty(&self) -> AdapterType {

@@ -229,6 +229,21 @@ fn set() {
     }
 }
 
+// The object keeps what it's set, which outlives the borrowed vector.
+#[cfg(js_sys_unstable_apis)]
+#[wasm_bindgen_test]
+fn set_keeps_a_copy_of_a_borrowed_vector() {
+    let object: Object<Vec<u8>> = Object::new().unchecked_into();
+    {
+        let lent = vec![0xaa_u8; 64];
+        assert!(Reflect::set(&object, "key", &lent).unwrap());
+    }
+    let reused = vec![0x11_u8; 64];
+    let kept: Vec<u8> = Reflect::get(&object, "key").unwrap().unwrap();
+    assert_eq!(kept, [0xaa; 64]);
+    assert_eq!(reused, [0x11; 64]);
+}
+
 #[cfg(js_sys_unstable_apis)]
 #[wasm_bindgen_test]
 fn unsuffixed_methods_accept_property_keys() {
