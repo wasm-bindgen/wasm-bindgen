@@ -27,6 +27,7 @@ mod interpreter;
 mod intrinsic;
 mod js;
 mod multivalue;
+mod parallel;
 mod suggest;
 mod transforms;
 pub mod wasm2es6js;
@@ -732,16 +733,15 @@ fn demangle(module: &mut Module) {
     let (lower, upper) = module.funcs.iter().size_hint();
     let mut counter: HashMap<String, i32> = HashMap::with_capacity(upper.unwrap_or(lower));
 
-    for func in module.funcs.iter_mut() {
-        let Some(name) = &func.name else {
+    let funcs = module.funcs.iter().collect();
+    let demangled = parallel::map(funcs, |func| {
+        let sym = rustc_demangle::try_demangle(func.name.as_deref()?).ok()?;
+        Some(sym.to_string())
+    });
+    for (func, demangled) in module.funcs.iter_mut().zip(demangled) {
+        let Some(demangled) = demangled else {
             continue;
         };
-
-        let Ok(sym) = rustc_demangle::try_demangle(name) else {
-            continue;
-        };
-
-        let demangled = sym.to_string();
         match counter.entry(demangled) {
             Entry::Occupied(mut entry) => {
                 func.name = Some(format!("{}[{}]", entry.key(), entry.get()));
@@ -1128,4 +1128,40 @@ where
     let mut pairs = map.iter().collect::<Vec<_>>();
     pairs.sort_by_key(|(k, _)| *k);
     pairs.into_iter()
+}
+
+#[cfg(test)]
+mod tests {
+    use walrus::{FunctionBuilder, Module};
+
+    #[test]
+    fn demangle_adds_suffixes_in_function_order() {
+        const MANGLED: &str = "_ZN3foo3bar17h0123456789abcdefE";
+        const DEMANGLED: &str = "foo::bar::h0123456789abcdef";
+        let mut module = Module::default();
+        // More functions than one batch of `parallel::map`, so that
+        // `parallel::map` can give the names to more than one thread.
+        for i in 0..100 {
+            let id =
+                FunctionBuilder::new(&mut module.types, &[], &[]).finish(vec![], &mut module.funcs);
+            let name = if i % 7 == 0 { "not_mangled" } else { MANGLED };
+            module.funcs.get_mut(id).name = Some(name.to_string());
+        }
+
+        super::demangle(&mut module);
+
+        let mut seen = 0;
+        for (i, func) in module.funcs.iter().enumerate() {
+            let expected = if i % 7 == 0 {
+                "not_mangled".to_string()
+            } else {
+                seen += 1;
+                match seen {
+                    1 => DEMANGLED.to_string(),
+                    n => format!("{DEMANGLED}[{}]", n - 1),
+                }
+            };
+            assert_eq!(func.name.as_deref(), Some(expected.as_str()));
+        }
+    }
 }

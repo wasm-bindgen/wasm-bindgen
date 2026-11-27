@@ -60,26 +60,19 @@ pub fn detect_exception_handling_version(
         }
     }
 
-    let mut detector = EhDetector {
-        has_try: false,
-        has_try_table: false,
-    };
+    let funcs = module.funcs.iter_local().collect();
+    let detectors = crate::parallel::map(funcs, |(_id, local)| {
+        let mut detector = EhDetector {
+            has_try: false,
+            has_try_table: false,
+        };
+        walrus::ir::dfs_in_order(&mut detector, local, local.entry_block());
+        detector
+    });
+    let has_try = detectors.iter().any(|d| d.has_try);
+    let has_try_table = detectors.iter().any(|d| d.has_try_table);
 
-    for func in module.funcs.iter() {
-        if let walrus::FunctionKind::Local(local) = &func.kind {
-            walrus::ir::dfs_in_order(&mut detector, local, local.entry_block());
-        }
-        // Early exit if we've found both
-        if detector.has_try && detector.has_try_table {
-            break;
-        }
-    }
-
-    match (
-        detector.has_try_table,
-        detector.has_try,
-        enable_abort_handler,
-    ) {
+    match (has_try_table, has_try, enable_abort_handler) {
         (true, _, _) => ExceptionHandlingVersion::Modern,
         (false, true, _) => ExceptionHandlingVersion::Legacy,
         (false, false, true) => ExceptionHandlingVersion::ModernButWithPanicAbort,
