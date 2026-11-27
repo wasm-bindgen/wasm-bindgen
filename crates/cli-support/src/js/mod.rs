@@ -83,6 +83,40 @@ pub struct FinalizedOutput {
     pub emscripten_extern_pre_js: String,
 }
 
+/// A `walrus::ExportItem` that can be a `HashMap` key.
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+enum ExportKey {
+    Function(walrus::FunctionId),
+    Table(walrus::TableId),
+    Memory(walrus::MemoryId),
+    Global(walrus::GlobalId),
+    Tag(walrus::TagId),
+}
+
+/// Makes a map from each exported item to its export name. If an item has
+/// more than one export, the map contains the name of the first export.
+fn export_names(module: &Module) -> HashMap<ExportKey, String> {
+    let mut names = HashMap::new();
+    for export in module.exports.iter() {
+        names
+            .entry(ExportKey::from(export.item))
+            .or_insert_with(|| export.name.clone());
+    }
+    names
+}
+
+impl From<walrus::ExportItem> for ExportKey {
+    fn from(item: walrus::ExportItem) -> Self {
+        match item {
+            walrus::ExportItem::Function(id) => ExportKey::Function(id),
+            walrus::ExportItem::Table(id) => ExportKey::Table(id),
+            walrus::ExportItem::Memory(id) => ExportKey::Memory(id),
+            walrus::ExportItem::Global(id) => ExportKey::Global(id),
+            walrus::ExportItem::Tag(id) => ExportKey::Tag(id),
+        }
+    }
+}
+
 pub struct Context<'a> {
     globals: String,
     /// ES module `import` statements collected during codegen, emitted at the
@@ -121,6 +155,10 @@ pub struct Context<'a> {
 
     /// All identifiers defined at module scope through exports or imports.
     defined_identifiers: IdentScope,
+
+    /// The map from `export_names(module)`. To keep this map correct, add
+    /// exports only with `add_export` or `record_export`.
+    export_names: HashMap<ExportKey, String>,
 
     /// Module-scope identifiers handed out while generating the current
     /// adapter body, which its arguments must not shadow. Reset by
@@ -348,6 +386,7 @@ impl<'a> Context<'a> {
         aux: &'a WasmBindgenAux,
     ) -> Result<Context<'a>, Error> {
         let memory64 = module.memories.iter().next().is_some_and(|m| m.memory64);
+        let export_names = export_names(module);
         Ok(Context {
             globals: String::new(),
             es_module_imports: String::new(),
@@ -359,6 +398,7 @@ impl<'a> Context<'a> {
             imported_names: Default::default(),
             js_imports: Default::default(),
             defined_identifiers: Default::default(),
+            export_names,
             body_refs: Default::default(),
             wasm_import_definitions: Default::default(),
             typescript_refs: Default::default(),
@@ -889,7 +929,15 @@ impl<'a> Context<'a> {
         // up we always remove the `start` function if one is present. The JS
         // bindings glue then manually calls the start function (if it was
         // previously present).
-        let needs_manual_start = unstart_start_function(self.module);
+        let start_export = unstart_start_function(self.module);
+        let needs_manual_start = start_export.is_some();
+        if let Some(export) = start_export {
+            self.record_export(export);
+        }
+        debug_assert!(
+            self.export_names == export_names(self.module),
+            "`export_names` is different from the exports of the module"
+        );
         region!(self, "wasm loading", {
             let wrapped_content = if matches!(self.config.mode, OutputMode::Emscripten) {
                 format!("{emscripten_classes_out}\n{emscripten_exports_out}")
@@ -7363,16 +7411,8 @@ if (require('worker_threads').isMainThread) {{
         use walrus::ExportItem::*;
 
         let id = id.into();
-        let export = self.module.exports.iter().find(|e| match (e.item, id) {
-            (Function(a), Function(b)) => a == b,
-            (Table(a), Table(b)) => a == b,
-            (Memory(a), Memory(b)) => a == b,
-            (Global(a), Global(b)) => a == b,
-            (Tag(a), Tag(b)) => a == b,
-            _ => false,
-        });
-        if let Some(export) = export {
-            return export.name.clone();
+        if let Some(name) = self.export_names.get(&ExportKey::from(id)) {
+            return name.clone();
         }
         let name = match id {
             Function(f) => self.module.funcs.get(f).name.as_deref(),
@@ -7383,8 +7423,22 @@ if (require('worker_threads').isMainThread) {{
         }
         .unwrap_or("__wbindgen_export");
         let name = self.generate_identifier(&to_valid_ident(name));
-        self.module.exports.add(&name, id);
+        self.add_export(&name, id);
         name
+    }
+
+    fn add_export(&mut self, name: &str, item: impl Into<walrus::ExportItem>) {
+        let export = self.module.exports.add(name, item);
+        self.record_export(export);
+    }
+
+    /// Adds the name of an export to `export_names`. Use this function for an
+    /// export that other code added to the module.
+    fn record_export(&mut self, export: walrus::ExportId) {
+        let export = self.module.exports.get(export);
+        self.export_names
+            .entry(ExportKey::from(export.item))
+            .or_insert_with(|| export.name.clone());
     }
 
     fn export_adapter_name(&mut self, adapter_id: AdapterId) -> String {
@@ -7467,9 +7521,7 @@ if (require('worker_threads').isMainThread) {{
 
         let add_to_stack_pointer_func = builder.finish(vec![arg], &mut self.module.funcs);
 
-        self.module
-            .exports
-            .add("__wbindgen_add_to_stack_pointer", add_to_stack_pointer_func);
+        self.add_export("__wbindgen_add_to_stack_pointer", add_to_stack_pointer_func);
 
         self.stack_pointer_shim_injected = true;
 
@@ -8183,7 +8235,51 @@ fn write_es_import(dest: &mut String, module: &str, items: &[(String, Option<Str
 
 #[cfg(test)]
 mod tests {
-    use super::IdentScope;
+    use super::{Context, IdentScope};
+    use crate::transforms::parse_wat;
+    use crate::wit::{NonstandardWitSection, WasmBindgenAux};
+    use crate::Bindgen;
+
+    #[test]
+    fn export_name_of_returns_the_first_export_name() {
+        let mut module = parse_wat(
+            r#"(module
+                (func $f)
+                (export "first" (func $f))
+                (export "second" (func $f)))"#,
+        );
+        let f = module.exports.get_func("second").unwrap();
+        let (config, wit, aux) = (
+            Bindgen::new(),
+            NonstandardWitSection::default(),
+            WasmBindgenAux::default(),
+        );
+        let mut cx = Context::new(&mut module, &config, &wit, &aux).unwrap();
+        assert_eq!(cx.export_name_of(f), "first");
+        assert_eq!(cx.module.exports.iter().count(), 2);
+    }
+
+    #[test]
+    fn export_name_of_returns_the_export_that_it_added() {
+        let mut module = parse_wat(
+            r#"(module
+                (func $unexported)
+                (func $exported)
+                (export "exported" (func $exported)))"#,
+        );
+        let unexported = module.funcs.by_name("unexported").unwrap();
+        let (config, wit, aux) = (
+            Bindgen::new(),
+            NonstandardWitSection::default(),
+            WasmBindgenAux::default(),
+        );
+        let mut cx = Context::new(&mut module, &config, &wit, &aux).unwrap();
+        let name = cx.export_name_of(unexported);
+        assert_eq!(name, "unexported");
+        assert_eq!(cx.export_name_of(unexported), name);
+        assert_eq!(cx.module.exports.iter().count(), 2);
+        assert_eq!(cx.module.exports.get_func(&name).unwrap(), unexported);
+    }
 
     #[test]
     fn ident_scope_suffixes_taken_names() {

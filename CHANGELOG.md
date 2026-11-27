@@ -139,6 +139,11 @@
   so those uses need updating by hand.
   [#5468](https://github.com/wasm-bindgen/wasm-bindgen/pull/5468)
 
+* The CLI uses a map to find export names. Before, it examined all the
+  exports of the module for each name. For modules with many exports, bindgen
+  is approximately 30% faster.
+  [#5479](https://github.com/wasm-bindgen/wasm-bindgen/pull/5479)
+
 ### Fixed
 
 * Value async iterables in WebIDL (`async iterable<V>`) now only generate a
